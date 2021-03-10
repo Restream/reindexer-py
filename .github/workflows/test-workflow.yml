@@ -16,4 +16,22 @@ jobs:
         run: |
           python3 -m pip install twine
           python3 -m twine upload --verbose --repository testpypi dist/* -u __token__ -p pypi-$TESTPYPI_TOKEN
+          # wait for deploy finnishing on test pypi server
+          sleep 240
+        shell: bash
+
+  test-macos:
+    runs-on: macos-latest
+    needs: deploy
+    steps:
+      - name: Install Reindexer
+        run: ./.github/workflows/install_reindexer.sh
+        shell: bash
+      - name: Install PyReindexer
+        run: LIBRARY_PATH=$LIBRARY_PATH:/usr/local/lib python3 -m pip install -vvv --index-url https://test.pypi.org/simple/ --no-deps pyreindexer
+        shell: bash
+      - name: Test
+        run: |
+          cd /usr/local/lib/python3.9/site-packages/pyreindexer
+          ./.github/workflows/test_pyreindexer.sh
         shell: bash
