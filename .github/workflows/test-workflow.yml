@@ -12,6 +12,6 @@ jobs:
         shell: bash
       - name: Deploy PyReindexer To Test-Pypi
         env:
-          TESTPYPI_TOKEN: ${{ secret.TESTPYPI_TOKEN }}
+          TESTPYPI_TOKEN: ${{ secrets.TESTPYPI_TOKEN }}
         run: python3 -m twine upload --verbose --repository testpypi dist/* -u __token__ -p pypi-$TESTPYPI_TOKEN
         shell: bash
