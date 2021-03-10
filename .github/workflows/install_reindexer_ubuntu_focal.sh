@@ -5,4 +5,4 @@ filelist=$(wget -q -O - http://repo.reindexer.org/ubuntu-focal/amd64/ | grep "re
 filename=$(./.github/workflows/choose_latest_version.sh "$filelist")
 
 wget -O $filename http://repo.reindexer.org/ubuntu-focal/amd64/$filename
-apt install $filename
+sudo dpkg -i $filename
