@@ -1,7 +1,7 @@
 on: push
 jobs:
   deploy:
-    runs-on: macos-11.0
+    runs-on: macos-latest
     steps:
       - name: Install Reindexer
         run: ./install_reindexer.sh
