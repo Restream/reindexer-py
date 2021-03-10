@@ -17,6 +17,7 @@ do
 		filename=$x
 	fi
 done
-brew tap restream/reindexer
+
 wget -O $filename http://repo.reindexer.org/brew-bottles/$filename
+brew tap restream/reindexer
 brew install $filename
