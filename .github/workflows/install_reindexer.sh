@@ -17,5 +17,6 @@ do
 		filename=$x
 	fi
 done
+filename="reindexer-3.0.3.mojave.bottle.tar.gz"
 wget -O $filename http://repo.reindexer.org/brew-bottles/$filename
 brew install $filename
