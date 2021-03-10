@@ -12,13 +12,12 @@ static PyObject *queryResultsWrapperIterate(uintptr_t qresWrapperAddr) {
 	QueryResultsWrapper *qresWrapperPtr = getQueryResultsWrapper(qresWrapperAddr);
 
 	WrSerializer wrSer;
-	qresWrapperPtr->itPtr.GetJSON(wrSer, false);
-
-	qresWrapperPtr->next();
+	qresWrapperPtr->GetItemJSON(wrSer, false);
+	qresWrapperPtr->Next();
 
 	PyObject *dictFromJson = nullptr;
 	try {
-		dictFromJson = PyObjectFromJson(giftStr(wrSer.Slice()));  // stolen ref
+		dictFromJson = PyObjectFromJson(reindexer::giftStr(wrSer.Slice()));  // stolen ref
 	} catch (const Error &err) {
 		Py_XDECREF(dictFromJson);
 
@@ -128,7 +127,7 @@ static PyObject *IndexAdd(PyObject *self, PyObject *args) {
 	Py_DECREF(indexDefDict);
 
 	IndexDef indexDef;
-	Error err = indexDef.FromJSON(giftStr(wrSer.Slice()));
+	Error err = indexDef.FromJSON(reindexer::giftStr(wrSer.Slice()));
 	if (!err.ok()) {
 		return pyErr(err);
 	}
@@ -162,7 +161,7 @@ static PyObject *IndexUpdate(PyObject *self, PyObject *args) {
 	Py_DECREF(indexDefDict);
 
 	IndexDef indexDef;
-	Error err = indexDef.FromJSON(giftStr(wrSer.Slice()));
+	Error err = indexDef.FromJSON(reindexer::giftStr(wrSer.Slice()));
 	if (!err.ok()) {
 		return pyErr(err);
 	}
@@ -199,7 +198,7 @@ static PyObject *itemModify(PyObject *self, PyObject *args, ItemModifyMode mode)
 	Py_INCREF(itemDefDict);
 	Py_XINCREF(preceptsList);
 
-	Item item = getDB(rx)->NewItem(ns);
+	auto item = getDB(rx)->NewItem(ns);
 	Error err = item.Status();
 	if (!err.ok()) {
 		return pyErr(err);
@@ -321,12 +320,12 @@ static PyObject *Select(PyObject *self, PyObject *args) {
 		return NULL;
 	}
 
+	auto db = getDB(rx);
 	QueryResultsWrapper *qresWrapper = new QueryResultsWrapper();
 
-	Error err = getDB(rx)->Select(query, qresWrapper->qresPtr);
-	qresWrapper->iterInit();
+	Error err = db->Select(query, *qresWrapper);
 
-	return Py_BuildValue("iskI", err.code(), err.what().c_str(), reinterpret_cast<uintptr_t>(qresWrapper), qresWrapper->qresPtr.Count());
+	return Py_BuildValue("iskI", err.code(), err.what().c_str(), reinterpret_cast<uintptr_t>(qresWrapper), qresWrapper->Count());
 }
 
 static PyObject *EnumMeta(PyObject *self, PyObject *args) {
@@ -388,7 +387,7 @@ static PyObject *EnumNamespaces(PyObject *self, PyObject *args) {
 
 		PyObject *dictFromJson = nullptr;
 		try {
-			dictFromJson = PyObjectFromJson(giftStr(wrSer.Slice()));  // stolen ref
+			dictFromJson = PyObjectFromJson(reindexer::giftStr(wrSer.Slice()));  // stolen ref
 		} catch (const Error &err) {
 			Py_XDECREF(dictFromJson);
 			Py_XDECREF(list);

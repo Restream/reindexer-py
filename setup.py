@@ -36,7 +36,9 @@ class build_ext(build_ext_orig):
         lib_dir = os.path.join(extension_dir, '..')
         source_dir = os.path.join(cwd, PACKAGE_NAME)
 
-        self.spawn(['cmake', source_dir, '-DCMAKE_BUILD_TYPE=Release',
+        self.spawn(['cmake', source_dir,
+                    '-DCMAKE_BUILD_TYPE=Release',
+                    '-DCMAKE_CXX_STANDARD=17',
                     '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + lib_dir])
         if not self.dry_run:
             self.spawn(['cmake', '--build', '.'])
@@ -45,7 +47,7 @@ class build_ext(build_ext_orig):
 
 
 setup(name=PACKAGE_NAME,
-      version='0.1.17',
+      version='0.1.44',
       description='A connector that allows to interact with Reindexer',
       url='https://github.com/Restream/pyreindexer',
       author='Igor Tulmentyev',
@@ -63,9 +65,12 @@ setup(name=PACKAGE_NAME,
           'lib/include/queryresults_wrapper.h',
           'lib/src/rawpyreindexer.h',
           'lib/src/rawpyreindexer.cc',
+          'lib/src/reindexerinterface.h',
+          'lib/src/reindexerinterface.cc',
           'example/main.py',
           'tests/__init__.py',
-          'tests/test_builtin.py'
+          'tests/test_builtin.py',
+          'tests/test_cproto.py'
       ]},
       test_suite='tests', install_requires=['envoy', 'delegator', 'pytest']
       )

@@ -26,12 +26,13 @@ class RxConnector(RaiserMixin):
         """
 
         self.err_code = 0
+        self.err_msg = ''
         self.rx = 0
         self._api_import(dsn)
         self._api_init(dsn)
 
     def __del__(self):
-        """Closes an API instance on a connecter object deletion if the API is initialized
+        """Closes an API instance on a connector object deletion if the API is initialized
 
         """
 
@@ -199,8 +200,8 @@ class RxConnector(RaiserMixin):
 
         # Arguments:
             namespace (string): A name of a namespace
-            item_def (dict): A dictionary of item definiton
-            precepts (:obj:`list` of :obj:`str`): A dictionary of index definiton
+            item_def (dict): A dictionary of item definition
+            precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
 
         # Raises:
             Exception: Raises with an error message of API return if Reindexer instance is not initialized yet.
@@ -218,8 +219,8 @@ class RxConnector(RaiserMixin):
 
         # Arguments:
             namespace (string): A name of a namespace
-            item_def (dict): A dictionary of item definiton
-            precepts (:obj:`list` of :obj:`str`): A dictionary of index definiton
+            item_def (dict): A dictionary of item definition
+            precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
 
         # Raises:
             Exception: Raises with an error message of API return if Reindexer instance is not initialized yet.
@@ -237,7 +238,7 @@ class RxConnector(RaiserMixin):
 
         # Arguments:
             namespace (string): A name of a namespace
-            item_def (dict): A dictionary of item definiton
+            item_def (dict): A dictionary of item definition
 
         # Raises:
             Exception: Raises with an error message of API return if Reindexer instance is not initialized yet.
@@ -394,7 +395,7 @@ class RxConnector(RaiserMixin):
         self.raise_on_error()
 
     def _api_close(self):
-        """Desctructs Reindexer instance correctly and resets memory pointer.
+        """Destructs Reindexer instance correctly and resets memory pointer.
 
         # Returns:
             None
