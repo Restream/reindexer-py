@@ -4,5 +4,8 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Install Reindexer
-        run: ./.github/workflows/install_reindexer.sh
+        run: |
+          ls
+          pwd
+          ./.github/workflows/install_reindexer.sh
         shell: bash
