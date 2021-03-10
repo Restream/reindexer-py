@@ -6,3 +6,4 @@ filename=$(./.github/workflows/choose_latest_version.sh "$filelist")
 
 wget -O $filename http://repo.reindexer.org/ubuntu-bionic/amd64/$filename
 sudo dpkg -i $filename
+sudo apt-get install -f
