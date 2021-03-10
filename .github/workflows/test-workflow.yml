@@ -64,7 +64,9 @@ jobs:
         run: ./.github/workflows/install_reindexer_ubuntu_bionic.sh
         shell: bash
       - name: Install PyReindexer
-        run: python3 -m pip install -vvv --index-url https://test.pypi.org/simple/ --no-deps pyreindexer
+        run: |
+          python3 -m pip install setuptools
+          python3 -m pip install -vvv --index-url https://test.pypi.org/simple/ --no-deps pyreindexer
         shell: bash
       - name: Test
         run: |
