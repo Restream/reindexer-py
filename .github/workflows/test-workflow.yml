@@ -3,6 +3,7 @@ jobs:
   deploy:
     runs-on: macos-latest
     steps:
+      - uses: actions/checkout@v2
       - name: Install Reindexer
-        run: pwd
+        run: ./.github/workflows/install_reindexer.sh
         shell: bash
