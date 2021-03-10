@@ -5,7 +5,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Install Reindexer
-        run: ./.github/workflows/install_reindexer.sh
+        run: ./.github/workflows/install_reindexer_macos.sh
         shell: bash
       - name: Build PyReindexer
         run: CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:/usr/local/include/reindexer LIBRARY_PATH=$LIBRARY_PATH:/usr/local/lib python3 setup.py sdist bdist_wheel
@@ -26,7 +26,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Install Reindexer
-        run: ./.github/workflows/install_reindexer.sh
+        run: ./.github/workflows/install_reindexer_macos.sh
         shell: bash
       - name: Install PyReindexer
         run: LIBRARY_PATH=$LIBRARY_PATH:/usr/local/lib python3 -m pip install -vvv --index-url https://test.pypi.org/simple/ --no-deps pyreindexer
@@ -34,7 +34,7 @@ jobs:
       - name: Test
         run: |
           cd /usr/local/lib/python3.9/site-packages/pyreindexer
-          ./.github/workflows/test_pyreindexer.sh
+          $GITHUB_WORKSPACE/.github/workflows/test_pyreindexer.sh
         shell: bash
 
   test-ubuntu20:
@@ -43,7 +43,10 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Install Reindexer
-        run: ./.github/workflows/install_reindexer.sh
+        run: |
+          echo "deb http://repo.reindexer.org/ubuntu-focal /" >> /etc/apt/sources.list
+          apt update
+          apt install -y reindexer-dev
         shell: bash
       - name: Install PyReindexer
         run: python3 -m pip install -vvv --index-url https://test.pypi.org/simple/ --no-deps pyreindexer
@@ -52,7 +55,7 @@ jobs:
         run: |
           ls /usr/local/lib/
           cd /usr/local/lib/python3.8/dist-packages/pyreindexer
-          ./.github/workflows/test_pyreindexer.sh
+          $GITHUB_WORKSPACE/.github/workflows/test_pyreindexer.sh
         shell: bash
 
   test-ubuntu18:
@@ -61,7 +64,10 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Install Reindexer
-        run: ./.github/workflows/install_reindexer.sh
+        run: |
+          echo "deb http://repo.reindexer.org/ubuntu-bionic /" >> /etc/apt/sources.list
+          apt update
+          apt install -y reindexer-dev
         shell: bash
       - name: Install PyReindexer
         run: python3 -m pip install -vvv --index-url https://test.pypi.org/simple/ --no-deps pyreindexer
@@ -70,5 +76,5 @@ jobs:
         run: |
           ls /usr/local/lib/
           cd /usr/local/lib/python3.8/dist-packages/pyreindexer
-          ./.github/workflows/test_pyreindexer.sh
+          $GITHUB_WORKSPACE/.github/workflows/test_pyreindexer.sh
         shell: bash
