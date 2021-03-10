@@ -4,4 +4,5 @@ jobs:
     runs-on: macos-11.0
     steps:
       - name: Install Reindexer
-      - run: ./install_reindexer.sh
+        run: ./install_reindexer.sh
+        shell: bash
