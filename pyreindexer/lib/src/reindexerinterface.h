@@ -129,7 +129,7 @@ private:
 	Error putMeta(std::string_view ns, const std::string& key, std::string_view data) { return db_.PutMeta({ns.data(), ns.size()}, key, {data.data(), data.size()}); }
 	Error getMeta(std::string_view ns, const std::string& key, std::string& data) { return db_.GetMeta({ns.data(), ns.size()}, key, data); }
 	Error enumMeta(std::string_view ns, std::vector<std::string>& keys) { return db_.EnumMeta({ns.data(), ns.size()}, keys); }
-	Error select(std::string_view query, typename DBT::QueryResultsT& result) { return db_.Select(query, result); }
+	Error select(std::string_view query, typename DBT::QueryResultsT& result) { return db_.Select({query.data(), query.size()}, result); }
 	Error enumNamespaces(std::vector<NamespaceDef>& defs, EnumNamespacesOpts opts) { return db_.EnumNamespaces(defs, opts); }
 	Error stop();
 
