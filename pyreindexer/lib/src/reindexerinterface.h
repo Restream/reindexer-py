@@ -114,21 +114,21 @@ private:
 	Error execute(std::function<Error()> f);
 
 	Error connect(const std::string& dsn);
-	Error openNamespace(std::string_view ns) { return db_.OpenNamespace(ns); }
-	Error closeNamespace(std::string_view ns) { return db_.CloseNamespace(ns); }
-	Error dropNamespace(std::string_view ns) { return db_.DropNamespace(ns); }
-	Error addIndex(std::string_view ns, const IndexDef& idx) { return db_.AddIndex(ns, idx); }
-	Error updateIndex(std::string_view ns, const IndexDef& idx) { return db_.UpdateIndex(ns, idx); }
-	Error dropIndex(std::string_view ns, const IndexDef& idx) { return db_.DropIndex(ns, idx); }
-	typename DBT::ItemT newItem(std::string_view ns) { return db_.NewItem(ns); }
-	Error insert(std::string_view ns, typename DBT::ItemT& item) { return db_.Insert(ns, item); }
-	Error upsert(std::string_view ns, typename DBT::ItemT& item) { return db_.Upsert(ns, item); }
-	Error update(std::string_view ns, typename DBT::ItemT& item) { return db_.Update(ns, item); }
-	Error deleteImpl(std::string_view ns, typename DBT::ItemT& item) { return db_.Delete(ns, item); }
-	Error commit(std::string_view ns) { return db_.Commit(ns); }
-	Error putMeta(std::string_view ns, const std::string& key, std::string_view data) { return db_.PutMeta(ns, key, data); }
-	Error getMeta(std::string_view ns, const std::string& key, std::string& data) { return db_.GetMeta(ns, key, data); }
-	Error enumMeta(std::string_view ns, std::vector<std::string>& keys) { return db_.EnumMeta(ns, keys); }
+	Error openNamespace(std::string_view ns) { return db_.OpenNamespace({ns.data(), ns.size()}); }
+	Error closeNamespace(std::string_view ns) { return db_.CloseNamespace({ns.data(), ns.size()}); }
+	Error dropNamespace(std::string_view ns) { return db_.DropNamespace({ns.data(), ns.size()}); }
+	Error addIndex(std::string_view ns, const IndexDef& idx) { return db_.AddIndex({ns.data(), ns.size()}, idx); }
+	Error updateIndex(std::string_view ns, const IndexDef& idx) { return db_.UpdateIndex({ns.data(), ns.size()}, idx); }
+	Error dropIndex(std::string_view ns, const IndexDef& idx) { return db_.DropIndex({ns.data(), ns.size()}, idx); }
+	typename DBT::ItemT newItem(std::string_view ns) { return db_.NewItem({ns.data(), ns.size()}); }
+	Error insert(std::string_view ns, typename DBT::ItemT& item) { return db_.Insert({ns.data(), ns.size()}, item); }
+	Error upsert(std::string_view ns, typename DBT::ItemT& item) { return db_.Upsert({ns.data(), ns.size()}, item); }
+	Error update(std::string_view ns, typename DBT::ItemT& item) { return db_.Update({ns.data(), ns.size()}, item); }
+	Error deleteImpl(std::string_view ns, typename DBT::ItemT& item) { return db_.Delete({ns.data(), ns.size()}, item); }
+	Error commit(std::string_view ns) { return db_.Commit({ns.data(), ns.size()}); }
+	Error putMeta(std::string_view ns, const std::string& key, std::string_view data) { return db_.PutMeta({ns.data(), ns.size()}, key, data); }
+	Error getMeta(std::string_view ns, const std::string& key, std::string& data) { return db_.GetMeta({ns.data(), ns.size()}, key, data); }
+	Error enumMeta(std::string_view ns, std::vector<std::string>& keys) { return db_.EnumMeta({ns.data(), ns.size()}, keys); }
 	Error select(std::string_view query, typename DBT::QueryResultsT& result) { return db_.Select(query, result); }
 	Error enumNamespaces(std::vector<NamespaceDef>& defs, EnumNamespacesOpts opts) { return db_.EnumNamespaces(defs, opts); }
 	Error stop();
