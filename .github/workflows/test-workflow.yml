@@ -50,8 +50,7 @@ jobs:
         shell: bash
       - name: Test
         run: |
-          ls /usr/local/lib/
-          cd /usr/local/lib/python3.8/dist-packages/pyreindexer
+          cd $(python3 -m site --user-site)/pyreindexer
           $GITHUB_WORKSPACE/.github/workflows/test_pyreindexer.sh
         shell: bash
 
@@ -70,6 +69,6 @@ jobs:
         shell: bash
       - name: Test
         run: |
-          cd /usr/local/lib/python3.6/dist-packages/pyreindexer
+          cd $(python3 -m site --user-site)/pyreindexer
           $GITHUB_WORKSPACE/.github/workflows/test_pyreindexer.sh
         shell: bash
