@@ -43,10 +43,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Install Reindexer
-        run: |
-          sudo echo "deb http://repo.reindexer.org/ubuntu-focal /" >> /etc/apt/sources.list
-          apt update
-          apt install -y reindexer-dev
+        run: ./.github/workflows/install_reindexer_ubuntu_focal.sh
         shell: bash
       - name: Install PyReindexer
         run: python3 -m pip install -vvv --index-url https://test.pypi.org/simple/ --no-deps pyreindexer
@@ -64,10 +61,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Install Reindexer
-        run: |
-          sudo echo "deb http://repo.reindexer.org/ubuntu-bionic /" >> /etc/apt/sources.list
-          apt update
-          apt install -y reindexer-dev
+        run: ./.github/workflows/install_reindexer_ubuntu_bionic.sh
         shell: bash
       - name: Install PyReindexer
         run: python3 -m pip install -vvv --index-url https://test.pypi.org/simple/ --no-deps pyreindexer
