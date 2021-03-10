@@ -11,6 +11,7 @@ jobs:
         run: CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:/usr/local/include/reindexer LIBRARY_PATH=$LIBRARY_PATH:/usr/local/lib python3 setup.py sdist bdist_wheel
         shell: bash
       - name: Deploy PyReindexer To Test-Pypi
-        env: TESTPYPI_TOKEN: {{$secret.TESTPYPI_TOKEN}}
+        env:
+          TESTPYPI_TOKEN: ${{ secret.TESTPYPI_TOKEN }}
         run: python3 -m twine upload --verbose --repository testpypi dist/* -u __token__ -p pypi-$TESTPYPI_TOKEN
         shell: bash
