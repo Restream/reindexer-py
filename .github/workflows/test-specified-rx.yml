@@ -81,8 +81,6 @@ jobs:
           cmake ..
           make -j4
           STRIP=/bin/true cpack
-          pwd
-          ls -a
         shell: bash
       - name: Install Reindexer
         run: ./.github/workflows/install_reindexer_ubuntu.sh
@@ -127,8 +125,6 @@ jobs:
           cmake ..
           make -j4
           STRIP=/bin/true cpack
-          pwd
-          ls -a
         shell: bash
       - name: Install Reindexer
         run: ./.github/workflows/install_reindexer_ubuntu.sh
