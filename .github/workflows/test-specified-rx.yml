@@ -19,6 +19,7 @@ jobs:
         shell: bash
       - name: Build Reindexer
         run: |
+          cd $RX_DIR
           mkdir build
           cd build
           cmake ..
