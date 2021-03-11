@@ -30,4 +30,5 @@ jobs:
       - name: Install Reindexer-Dev
         run: |
           cd $RX_DIR
+          ls
       - uses: actions/checkout@v2
