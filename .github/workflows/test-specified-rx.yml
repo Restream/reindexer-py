@@ -29,8 +29,7 @@ jobs:
         shell: bash
       - name: Install Reindexer
         run: |
-          cd $RX_DIR
-          cd build
+          cd $RX_DIR/build
           for f in reindexer-*.tar.gz; do tar -xvzf "$f"; done
           cp -R ./usr/local/include/reindexer /usr/local/include/reindexer
           cp -R ./usr/local/lib/reindexer /usr/local/lib/reindexer
@@ -42,6 +41,96 @@ jobs:
           cp ./usr/local/bin/reindexer_server /usr/local/bin
           cp ./etc/reindexer.conf.pkg /etc
           ls
+        shell: bash
+      - name: Build PyReindexer
+        run: CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:/usr/local/include/reindexer LIBRARY_PATH=$LIBRARY_PATH:/usr/local/lib python3 setup.py install
+        shell: bash
+      - uses: actions/checkout@v2
+      - name: Test
+        run: |
+          python3 pyreindexer/example/main.py
+          python3 -m unittest pyreindexer/tests/test_builtin.py
+          reindexer_server --db /tmp/reindex_test -l0 --serverlog="" --corelog="" --httplog="" --rpclog="" &
+          server_pid=$!
+          sleep 1
+          python3 -m unittest pyreindexer/tests/test_cproto.py
+          kill $server_pid
+          wait $server_pid
+        shell: bash
+
+  test-ubuntu20:
+    runs-on: ubuntu-20.04
+    env:
+      RX_DIR: rx_build
+    steps:
+      - name: Clone Reindexer
+        env:
+          RX_COMMIT: ${{ github.event.inputs.rx_commit }}
+        run: |
+          mkdir $RX_DIR
+          git clone https://github.com/restream/reindexer.git $RX_DIR
+          cd $RX_DIR
+          git checkout $RX_COMMIT
+        shell: bash
+      - name: Build Reindexer
+        run: |
+          cd $RX_DIR
+          mkdir build
+          cd build
+          cmake ..
+          make -j4
+          STRIP=/bin/true cpack
+        shell: bash
+      - name: Install Reindexer
+        run: |
+          cd $RX_DIR/build
+          for f in reindexer*.deb; do sudo dpkg -i $f; sudo apt-get install -f; done
+        shell: bash
+      - name: Build PyReindexer
+        run: |
+          python3 setup.py build
+          sudo python3 setup.py install
+        shell: bash
+      - uses: actions/checkout@v2
+      - name: Test
+        run: |
+          python3 pyreindexer/example/main.py
+          python3 -m unittest pyreindexer/tests/test_builtin.py
+          reindexer_server --db /tmp/reindex_test -l0 --serverlog="" --corelog="" --httplog="" --rpclog="" &
+          server_pid=$!
+          sleep 1
+          python3 -m unittest pyreindexer/tests/test_cproto.py
+          kill $server_pid
+          wait $server_pid
+        shell: bash
+
+  test-ubuntu18:
+    runs-on: ubuntu-18.04
+    env:
+      RX_DIR: rx_build
+    steps:
+      - name: Clone Reindexer
+        env:
+          RX_COMMIT: ${{ github.event.inputs.rx_commit }}
+        run: |
+          mkdir $RX_DIR
+          git clone https://github.com/restream/reindexer.git $RX_DIR
+          cd $RX_DIR
+          git checkout $RX_COMMIT
+        shell: bash
+      - name: Build Reindexer
+        run: |
+          cd $RX_DIR
+          mkdir build
+          cd build
+          cmake ..
+          make -j4
+          STRIP=/bin/true cpack
+        shell: bash
+      - name: Install Reindexer
+        run: |
+          cd $RX_DIR/build
+          for f in reindexer*.deb; do sudo dpkg -i $f; sudo apt-get install -f; done
         shell: bash
       - name: Build PyReindexer
         run: |
