@@ -31,4 +31,5 @@ jobs:
         run: |
           cd $RX_DIR
           ls build
+          brew install build/reindexer*dev.tar.gz
       - uses: actions/checkout@v2
