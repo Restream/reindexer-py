@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+pwd
+ls
 python3 example/main.py
 cd tests
 python3 -m unittest test_builtin.py
