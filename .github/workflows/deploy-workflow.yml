@@ -1,4 +1,7 @@
-on: pull_request
+on:
+  push:
+    branches:
+      - main
 jobs:
   deploy:
     runs-on: macos-latest
@@ -10,12 +13,12 @@ jobs:
       - name: Build PyReindexer
         run: CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:/usr/local/include/reindexer LIBRARY_PATH=$LIBRARY_PATH:/usr/local/lib python3 setup.py sdist bdist_wheel
         shell: bash
-      - name: Deploy PyReindexer To Test-Pypi
+      - name: Deploy PyReindexer To Pypi
         env:
-          TESTPYPI_TOKEN: ${{ secrets.TESTPYPI_TOKEN }}
+          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
         run: |
           python3 -m pip install twine
-          python3 -m twine upload --verbose --repository testpypi dist/* -u __token__ -p pypi-$TESTPYPI_TOKEN
+          python3 -m twine upload --verbose dist/* -u __token__ -p pypi-$PYPI_TOKEN
           # wait for deploy finnishing on test pypi server
           sleep 240
         shell: bash
@@ -29,7 +32,7 @@ jobs:
         run: ./.github/workflows/install_reindexer_macos.sh
         shell: bash
       - name: Install PyReindexer
-        run: LIBRARY_PATH=$LIBRARY_PATH:/usr/local/lib python3 -m pip install -vvv --index-url https://test.pypi.org/simple/ --no-deps pyreindexer
+        run: LIBRARY_PATH=$LIBRARY_PATH:/usr/local/lib python3 -m pip install -vvv pyreindexer
         shell: bash
       - name: Test
         run: |
@@ -53,7 +56,7 @@ jobs:
         run: ./.github/workflows/install_reindexer_dev_ubuntu_focal.sh
         shell: bash
       - name: Install PyReindexer
-        run: python3 -m pip install -vvv --index-url https://test.pypi.org/simple/ --no-deps pyreindexer
+        run: python3 -m pip install -vvv pyreindexer
         shell: bash
       - name: Install Reindexer-Server
         run: ./.github/workflows/install_reindexer_server_ubuntu_focal.sh
@@ -82,7 +85,7 @@ jobs:
       - name: Install PyReindexer
         run: |
           python3 -m pip install setuptools
-          python3 -m pip install -vvv --index-url https://test.pypi.org/simple/ --no-deps pyreindexer
+          python3 -m pip install -vvv pyreindexer
         shell: bash
       - name: Install Reindexer-Server
         run: ./.github/workflows/install_reindexer_server_ubuntu_bionic.sh
