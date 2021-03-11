@@ -40,7 +40,7 @@ jobs:
           cp ./usr/local/lib/pkgconfig/libreindexer_server.pc /usr/local/lib/pkgconfig/libreindexer_server.pc
           cp ./usr/local/bin/reindexer_server /usr/local/bin
           ls
-          cp ./etc/reindexer.conf.pkg /etc
+          #cp ./etc/reindexer.conf.pkg /etc
         shell: bash
       - name: Build PyReindexer
         run: CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:/usr/local/include/reindexer LIBRARY_PATH=$LIBRARY_PATH:/usr/local/lib python3 setup.py install
