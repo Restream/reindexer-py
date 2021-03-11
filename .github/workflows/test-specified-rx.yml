@@ -16,12 +16,16 @@ jobs:
           git clone https://github.com/restream/reindexer.git $RX_DIR
           cd $RX_DIR
           git checkout $RX_COMMIT
+          pwd
         shell: bash
       - name: Build Reindexer
         run: |
+          pwd
           cd $RX_DIR
+          pwd
           mkdir build
           cd build
+          pwd
           cmake ..
           make -j4
           STRIP=/bin/true cpack
