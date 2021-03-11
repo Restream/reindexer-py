@@ -38,14 +38,13 @@ jobs:
           cp ./usr/local/lib/libreindexer_server_resources.a /usr/local/lib/libreindexer_server_resources.a
           cp ./usr/local/lib/pkgconfig/libreindexer.pc /usr/local/lib/pkgconfig/libreindexer.pc
           cp ./usr/local/lib/pkgconfig/libreindexer_server.pc /usr/local/lib/pkgconfig/libreindexer_server.pc
-          cp ./usr/local/bin/reindexer_server /usr/local/bin
-          ls
-          #cp ./etc/reindexer.conf.pkg /etc
+          cp ./usr/local/bin/reindexer_server /usr/local/bin/reindexer_server
+          cp ./usr/local/etc/reindexer.conf.pkg /usr/local/etc/reindexer.conf.pkg
         shell: bash
+      - uses: actions/checkout@v2
       - name: Build PyReindexer
         run: CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:/usr/local/include/reindexer LIBRARY_PATH=$LIBRARY_PATH:/usr/local/lib python3 setup.py install
         shell: bash
-      - uses: actions/checkout@v2
       - name: Test
         run: |
           python3 pyreindexer/example/main.py
@@ -86,12 +85,12 @@ jobs:
           cd $RX_DIR/build
           for f in reindexer*.deb; do $(sudo dpkg -i $f; sudo apt-get install -f); done
         shell: bash
+      - uses: actions/checkout@v2
       - name: Build PyReindexer
         run: |
           python3 setup.py build
           sudo python3 setup.py install
         shell: bash
-      - uses: actions/checkout@v2
       - name: Test
         run: |
           python3 pyreindexer/example/main.py
@@ -132,12 +131,12 @@ jobs:
           cd $RX_DIR/build
           for f in reindexer*.deb; do $(sudo dpkg -i $f; sudo apt-get install -f); done
         shell: bash
+      - uses: actions/checkout@v2
       - name: Build PyReindexer
         run: |
           python3 setup.py build
           sudo python3 setup.py install
         shell: bash
-      - uses: actions/checkout@v2
       - name: Test
         run: |
           python3 pyreindexer/example/main.py
