@@ -16,4 +16,13 @@ jobs:
           git clone https://github.com/restream/reindexer.git $RX_DIR
           cd $RX_DIR
           git checkout $RX_COMMIT
+        shell: bash
+      - name: Build Reindexer
+        run: |
+          mkdir build
+          cd build
+          cmake ..
+          make -j4
+          STRIP=/bin/true cpack
+        shell: bash
       - uses: actions/checkout@v2
