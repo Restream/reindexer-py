@@ -3,7 +3,6 @@ on:
     inputs:
       rx_commit:
         required: true
-        default: ''
 jobs:
   test-macos:
     runs-on: macos-latest
@@ -15,5 +14,7 @@ jobs:
         run: |
           mkdir $RX_DIR
           git clone https://github.com/restream/reindexer.git $RX_DIR
-          ls $RX_DIR
+          cd $RX_DIR
+          git checkout $RX_COMMIT
+          git status
       - uses: actions/checkout@v2
