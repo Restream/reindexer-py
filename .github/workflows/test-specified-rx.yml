@@ -84,7 +84,7 @@ jobs:
       - name: Install Reindexer
         run: |
           cd $RX_DIR/build
-          for f in reindexer*.deb; do sudo dpkg -i $f 2> /dev/null; sudo apt-get install -f; done
+          for f in reindexer*.deb; do $(sudo dpkg -i $f; sudo apt-get install -f); done
         shell: bash
       - name: Build PyReindexer
         run: |
@@ -130,7 +130,7 @@ jobs:
       - name: Install Reindexer
         run: |
           cd $RX_DIR/build
-          for f in reindexer*.deb; do sudo dpkg -i $f 2> /dev/null; sudo apt-get install -f; done
+          for f in reindexer*.deb; do $(sudo dpkg -i $f; sudo apt-get install -f); done
         shell: bash
       - name: Build PyReindexer
         run: |
