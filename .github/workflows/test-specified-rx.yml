@@ -80,6 +80,7 @@ jobs:
           cmake ..
           make -j4
           STRIP=/bin/true cpack
+          pwd
         shell: bash
       - uses: actions/checkout@v2
       - name: Install Reindexer
@@ -124,6 +125,7 @@ jobs:
           cmake ..
           make -j4
           STRIP=/bin/true cpack
+          pwd
         shell: bash
       - uses: actions/checkout@v2
       - name: Install Reindexer
@@ -131,6 +133,7 @@ jobs:
         shell: bash
       - name: Build PyReindexer
         run: |
+          python3 -m pip install setuptools
           python3 setup.py build
           sudo python3 setup.py install
         shell: bash
