@@ -8,5 +8,12 @@ jobs:
   test-macos:
     runs-on: macos-latest
     steps:
+      - name: Clone Reindexer
+        env:
+          RX_COMMIT: ${{ github.event.inputs.rx_commit }}
+          RX_DIR: rx_build
+        run: |
+          mkdir $RX_DIR
+          git clone https://github.com/restream/reindexer.git $RX_DIR
+          ls $RX_DIR
       - uses: actions/checkout@v2
-      - run: echo ${{ github.event.inputs.rx_commit }}
