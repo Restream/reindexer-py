@@ -9,4 +9,4 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v2
-      - run: echo $rx_commit
+      - run: echo ${{ github.event.inputs.rx_commit }}
