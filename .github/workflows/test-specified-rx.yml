@@ -3,7 +3,7 @@ on:
     inputs:
       rx_commit:
         required: true
-name: 'RX ' $rx_commit
+name: 'RX ' ${{ github.event.inputs.rx_commit }}
 jobs:
   test-macos:
     runs-on: macos-latest
