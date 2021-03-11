@@ -16,5 +16,4 @@ jobs:
           git clone https://github.com/restream/reindexer.git $RX_DIR
           cd $RX_DIR
           git checkout $RX_COMMIT
-          git status
       - uses: actions/checkout@v2
