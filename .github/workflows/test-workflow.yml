@@ -7,6 +7,9 @@ jobs:
       - name: Install Reindexer
         run: ./.github/workflows/install_reindexer_macos.sh
         shell: bash
+      - name: Build PyReindexer
+        run: CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:/usr/local/include/reindexer LIBRARY_PATH=$LIBRARY_PATH:/usr/local/lib python3 setup.py install
+        shell: bash
       - name: Test
         run: |
           python3 pyreindexer/example/main.py
@@ -25,6 +28,9 @@ jobs:
       - uses: actions/checkout@v2
       - name: Install Reindexer-Dev
         run: ./.github/workflows/install_reindexer_dev_ubuntu_focal.sh
+        shell: bash
+      - name: Build PyReindexer
+        run: python3 setup.py install
         shell: bash
       - name: Install Reindexer-Server
         run: ./.github/workflows/install_reindexer_server_ubuntu_focal.sh
