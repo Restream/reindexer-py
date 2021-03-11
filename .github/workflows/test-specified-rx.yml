@@ -3,7 +3,6 @@ on:
     inputs:
       rx_commit:
         required: true
-
 name: 'RX ' $rx_commit
 jobs:
   test-macos:
