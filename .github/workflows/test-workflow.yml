@@ -8,7 +8,9 @@ jobs:
         run: ./.github/workflows/install_reindexer_macos.sh
         shell: bash
       - name: Test
-        run: ./.github/workflows/test_pyreindexer.sh
+        run: |
+          cd pyreindexer
+          ../.github/workflows/test_pyreindexer.sh
         shell: bash
 
   test-ubuntu20:
