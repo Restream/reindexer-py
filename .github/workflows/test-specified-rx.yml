@@ -41,6 +41,7 @@ jobs:
           cp ./usr/local/lib/pkgconfig/libreindexer_server.pc /usr/local/lib/pkgconfig/libreindexer_server.pc
           cp ./usr/local/bin/reindexer_server /usr/local/bin
           cp ./etc/reindexer.conf.pkg /etc
+          ls
         shell: bash
       - name: Build PyReindexer
         run: |
