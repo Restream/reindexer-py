@@ -1,0 +1,13 @@
+on:
+  workflow_dispatch:
+    inputs:
+      rx_commit:
+        required: true
+
+name: 'RX ' $rx_commit
+jobs:
+  test-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: echo $rx_commit
