@@ -39,8 +39,8 @@ jobs:
           cp ./usr/local/lib/pkgconfig/libreindexer.pc /usr/local/lib/pkgconfig/libreindexer.pc
           cp ./usr/local/lib/pkgconfig/libreindexer_server.pc /usr/local/lib/pkgconfig/libreindexer_server.pc
           cp ./usr/local/bin/reindexer_server /usr/local/bin
-          cp ./etc/reindexer.conf.pkg /etc
           ls
+          cp ./etc/reindexer.conf.pkg /etc
         shell: bash
       - name: Build PyReindexer
         run: CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:/usr/local/include/reindexer LIBRARY_PATH=$LIBRARY_PATH:/usr/local/lib python3 setup.py install
@@ -84,7 +84,7 @@ jobs:
       - name: Install Reindexer
         run: |
           cd $RX_DIR/build
-          for f in reindexer*.deb; do sudo dpkg -i $f; sudo apt-get install -f; done
+          for f in reindexer*.deb; do sudo dpkg -i $f 2> /dev/null; sudo apt-get install -f; done
         shell: bash
       - name: Build PyReindexer
         run: |
@@ -130,7 +130,7 @@ jobs:
       - name: Install Reindexer
         run: |
           cd $RX_DIR/build
-          for f in reindexer*.deb; do sudo dpkg -i $f; sudo apt-get install -f; done
+          for f in reindexer*.deb; do sudo dpkg -i $f 2> /dev/null; sudo apt-get install -f; done
         shell: bash
       - name: Build PyReindexer
         run: |
