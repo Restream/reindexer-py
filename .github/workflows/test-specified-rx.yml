@@ -27,9 +27,35 @@ jobs:
           make -j4
           STRIP=/bin/true cpack
         shell: bash
-      - name: Install Reindexer-Dev
+      - name: Install Reindexer
         run: |
           cd $RX_DIR
-          ls build
-          brew install build/reindexer*dev.tar.gz
+          cd build
+          for f in reindexer-*.tar.gz; do tar -xvzf "$f"; done
+          cp -R ./usr/local/include/reindexer /usr/local/include/reindexer
+          cp -R ./usr/local/lib/reindexer /usr/local/lib/reindexer
+          cp ./usr/local/lib/libreindexer.a /usr/local/lib/libreindexer.a
+          cp ./usr/local/lib/libreindexer_server_library.a /usr/local/lib/libreindexer_server_library.a
+          cp ./usr/local/lib/libreindexer_server_resources.a /usr/local/lib/libreindexer_server_resources.a
+          cp ./usr/local/lib/pkgconfig/libreindexer.pc /usr/local/lib/pkgconfig/libreindexer.pc
+          cp ./usr/local/lib/pkgconfig/libreindexer_server.pc /usr/local/lib/pkgconfig/libreindexer_server.pc
+          cp ./usr/local/bin/reindexer_server /usr/local/bin
+          cp ./etc/reindexer.conf.pkg /etc
+        shell: bash
+      - name: Build PyReindexer
+        run: |
+          python3 setup.py build
+          sudo python3 setup.py install
+        shell: bash
       - uses: actions/checkout@v2
+      - name: Test
+        run: |
+          python3 pyreindexer/example/main.py
+          python3 -m unittest pyreindexer/tests/test_builtin.py
+          reindexer_server --db /tmp/reindex_test -l0 --serverlog="" --corelog="" --httplog="" --rpclog="" &
+          server_pid=$!
+          sleep 1
+          python3 -m unittest pyreindexer/tests/test_cproto.py
+          kill $server_pid
+          wait $server_pid
+        shell: bash
