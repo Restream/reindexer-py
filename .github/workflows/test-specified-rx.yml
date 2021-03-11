@@ -3,6 +3,7 @@ on:
     inputs:
       rx_commit:
         required: true
+        default: ''
 name: 'RX ' ${{ github.event.inputs.rx_commit }}
 jobs:
   test-macos:
