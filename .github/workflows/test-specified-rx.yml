@@ -63,6 +63,7 @@ jobs:
     env:
       RX_DIR: rx_build
     steps:
+      - uses: actions/checkout@v2
       - name: Clone Reindexer
         env:
           RX_COMMIT: ${{ github.event.inputs.rx_commit }}
@@ -81,8 +82,8 @@ jobs:
           make -j4
           STRIP=/bin/true cpack
           pwd
+          ls -a
         shell: bash
-      - uses: actions/checkout@v2
       - name: Install Reindexer
         run: ./.github/workflows/install_reindexer_ubuntu.sh
         shell: bash
@@ -108,6 +109,7 @@ jobs:
     env:
       RX_DIR: rx_build
     steps:
+      - uses: actions/checkout@v2
       - name: Clone Reindexer
         env:
           RX_COMMIT: ${{ github.event.inputs.rx_commit }}
@@ -126,8 +128,8 @@ jobs:
           make -j4
           STRIP=/bin/true cpack
           pwd
+          ls -a
         shell: bash
-      - uses: actions/checkout@v2
       - name: Install Reindexer
         run: ./.github/workflows/install_reindexer_ubuntu.sh
         shell: bash
