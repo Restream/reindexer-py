@@ -31,7 +31,7 @@ jobs:
         run: ./.github/workflows/install_reindexer_server_ubuntu_focal.sh
         shell: bash
       - name: Test
-        run: *run_tests
+        run: ./.github/workflows/test_pyreindexer.sh
         shell: bash
 
   test-ubuntu18:
