@@ -1,4 +1,3 @@
-name: RX COMMIT ${{ github.event.inputs.rx_commit }}
 on:
   workflow_dispatch:
     inputs:
