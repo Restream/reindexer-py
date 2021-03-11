@@ -26,5 +26,6 @@ jobs:
           cmake ..
           make -j4
           STRIP=/bin/true cpack
+          ls
         shell: bash
       - uses: actions/checkout@v2
