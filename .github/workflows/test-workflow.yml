@@ -8,14 +8,13 @@ jobs:
         run: ./.github/workflows/install_reindexer_macos.sh
         shell: bash
       - name: Test
-        run: &run_tests
+        run: |
           python3 pyreindexer/example/main.py
           python3 -m unittest pyreindexer/tests/test_builtin.py
           reindexer_server --db /tmp/reindex_test -l0 --serverlog="" --corelog="" --httplog="" --rpclog="" &
           server_pid=$!
           sleep 1
           python3 -m unittest test_cproto.py
-
           kill $server_pid
           wait $server_pid
         shell: bash
