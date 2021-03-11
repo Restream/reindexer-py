@@ -29,7 +29,9 @@ jobs:
         shell: bash
       - name: Install Reindexer
         run: |
-          cd $RX_DIR/build
+          cd $RX_DIR
+          ./dependencies.sh
+          cd build
           for f in reindexer-*.tar.gz; do tar -xvzf "$f"; done
           cp -R ./usr/local/include/reindexer /usr/local/include/reindexer
           cp -R ./usr/local/lib/reindexer /usr/local/lib/reindexer
@@ -81,9 +83,7 @@ jobs:
           STRIP=/bin/true cpack
         shell: bash
       - name: Install Reindexer
-        run: |
-          cd $RX_DIR/build
-          for f in reindexer*.deb; do $(sudo dpkg -i $f; sudo apt-get install -f); done
+        run: ./.github/workflows/install_reindexer_ubuntu.sh
         shell: bash
       - uses: actions/checkout@v2
       - name: Build PyReindexer
@@ -127,9 +127,7 @@ jobs:
           STRIP=/bin/true cpack
         shell: bash
       - name: Install Reindexer
-        run: |
-          cd $RX_DIR/build
-          for f in reindexer*.deb; do $(sudo dpkg -i $f; sudo apt-get install -f); done
+        run: ./.github/workflows/install_reindexer_ubuntu.sh
         shell: bash
       - uses: actions/checkout@v2
       - name: Build PyReindexer
