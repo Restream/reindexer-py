@@ -1,3 +1,4 @@
+name: RX COMMIT ${{ github.event.inputs.rx_commit }}
 on:
   workflow_dispatch:
     inputs:
@@ -26,6 +27,8 @@ jobs:
           cmake ..
           make -j4
           STRIP=/bin/true cpack
-          ls
         shell: bash
+      - name: Install Reindexer-Dev
+        run: |
+          cd $RX_DIR
       - uses: actions/checkout@v2
