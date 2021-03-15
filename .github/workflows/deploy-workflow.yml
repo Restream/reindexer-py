@@ -41,14 +41,7 @@ jobs:
       - name: Test
         run: |
           cd /usr/local/lib/python3.9/site-packages/pyreindexer
-          python3 example/main.py
-          python3 -m unittest tests/test_builtin.py
-          reindexer_server --db /tmp/reindex_test -l0 --serverlog="" --corelog="" --httplog="" --rpclog="" &
-          server_pid=$!
-          sleep 1
-          python3 -m unittest tests/test_cproto.py
-          kill $server_pid
-          wait $server_pid
+          ./.github/workflows/test.sh
         shell: bash
 
   test-ubuntu20:
@@ -72,14 +65,7 @@ jobs:
       - name: Test
         run: |
           cd $(python3 -m site --user-site)/pyreindexer
-          python3 example/main.py
-          python3 -m unittest tests/test_builtin.py
-          reindexer_server --db /tmp/reindex_test -l0 --serverlog="" --corelog="" --httplog="" --rpclog="" &
-          server_pid=$!
-          sleep 1
-          python3 -m unittest tests/test_cproto.py
-          kill $server_pid
-          wait $server_pid
+          ./.github/workflows/test.sh
         shell: bash
 
   test-ubuntu18:
@@ -105,12 +91,5 @@ jobs:
       - name: Test
         run: |
           cd $(python3 -m site --user-site)/pyreindexer
-          python3 example/main.py
-          python3 -m unittest tests/test_builtin.py
-          reindexer_server --db /tmp/reindex_test -l0 --serverlog="" --corelog="" --httplog="" --rpclog="" &
-          server_pid=$!
-          sleep 1
-          python3 -m unittest tests/test_cproto.py
-          kill $server_pid
-          wait $server_pid
+          ./.github/workflows/test.sh
         shell: bash
