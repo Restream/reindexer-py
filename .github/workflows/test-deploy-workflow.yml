@@ -38,7 +38,7 @@ jobs:
       - name: Test
         run: |
           cd /usr/local/lib/python3.9/site-packages/pyreindexer
-          ./.github/workflows/test.sh
+          $GITHUB_WORKSPACE/.github/workflows/test.sh
         shell: bash
 
   test-ubuntu20:
@@ -62,7 +62,7 @@ jobs:
       - name: Test
         run: |
           cd $(python3 -m site --user-site)/pyreindexer
-          ./.github/workflows/test.sh
+          $GITHUB_WORKSPACE/.github/workflows/test.sh
         shell: bash
 
   test-ubuntu18:
@@ -88,5 +88,5 @@ jobs:
       - name: Test
         run: |
           cd $(python3 -m site --user-site)/pyreindexer
-          ./.github/workflows/test.sh
+          $GITHUB_WORKSPACE/.github/workflows/test.sh
         shell: bash

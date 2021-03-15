@@ -49,7 +49,7 @@ jobs:
       - name: Test
         run: |
           cd pyreindexer
-          ./.github/workflows/test.sh
+          $GITHUB_WORKSPACE/.github/workflows/test.sh
         shell: bash
 
   test-ubuntu20:
@@ -87,7 +87,7 @@ jobs:
       - name: Test
         run: |
           cd pyreindexer
-          ./.github/workflows/test.sh
+          $GITHUB_WORKSPACE/.github/workflows/test.sh
         shell: bash
 
   test-ubuntu18:
@@ -126,5 +126,5 @@ jobs:
       - name: Test
         run: |
           cd pyreindexer
-          ./.github/workflows/test.sh
+          $GITHUB_WORKSPACE/.github/workflows/test.sh
         shell: bash
