@@ -1,0 +1,70 @@
+on: push
+jobs:
+  test-macos:
+    runs-on: macos-latest
+    steps:
+      - name: Install Reindexer
+        run: |
+          brew tap restream/reindexer
+          brew install reindexer
+        shell: bash
+      - uses: actions/checkout@v2
+      - name: Build PyReindexer
+        run: CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:/usr/local/include/reindexer LIBRARY_PATH=$LIBRARY_PATH:/usr/local/lib python3 setup.py install
+        shell: bash
+      - name: Test
+        run: |
+          cd pyreindexer
+          $GITHUB_WORKSPACE/.github/workflows/test.sh
+        shell: bash
+
+  test-ubuntu20:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Install Reindexer-Dev
+        run: |
+          curl http://repo.reindexer.org/RX-KEY.GPG | sudo apt-key add
+          echo 'deb http://repo.reindexer.org/ubuntu-focal /' | sudo tee -a /etc/apt/sources.list
+          sudo apt-get update
+          sudo apt-get install reindexer-dev
+        shell: bash
+      - uses: actions/checkout@v2
+      - name: Build PyReindexer
+        run: |
+          python3 setup.py build
+          sudo python3 setup.py install
+        shell: bash
+      - name: Install Reindexer-Server
+        run: sudo apt-get install reindexer-server
+        shell: bash
+      - name: Test
+        run: |
+          cd pyreindexer
+          $GITHUB_WORKSPACE/.github/workflows/test.sh
+        shell: bash
+
+  test-ubuntu18:
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Install Reindexer-Dev
+        run: |
+          curl http://repo.reindexer.org/RX-KEY.GPG | sudo apt-key add
+          echo 'deb http://repo.reindexer.org/ubuntu-bionic /' | sudo tee -a /etc/apt/sources.list
+          sudo apt-get update
+          sudo apt-get install reindexer-dev
+        shell: bash
+      - uses: actions/checkout@v2
+      - name: Build PyReindexer
+        run: |
+          python3 -m pip install setuptools
+          python3 setup.py build
+          sudo python3 setup.py install
+        shell: bash
+      - name: Install Reindexer-Server
+        run: sudo apt-get install reindexer-server
+        shell: bash
+      - name: Test
+        run: |
+          cd pyreindexer
+          $GITHUB_WORKSPACE/.github/workflows/test.sh
+        shell: bash

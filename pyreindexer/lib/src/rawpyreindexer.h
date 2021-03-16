@@ -17,7 +17,7 @@
 #include "tools/serializer.h"
 
 #ifdef PYREINDEXER_CPROTO
-#include "client/reindexer.h"
+#include "client/cororeindexer.h"
 #else
 #include "core/reindexer.h"
 #endif
@@ -29,26 +29,16 @@ using reindexer::IndexDef;
 using reindexer::NamespaceDef;
 using reindexer::WrSerializer;
 
-#ifdef PYREINDEXER_CPROTO
-using reindexer::client::Item;
-using reindexer::client::QueryResults;
-using reindexer::client::Reindexer;
-#else
-using reindexer::Item;
-using reindexer::QueryResults;
-using reindexer::Reindexer;
-#endif
-
 inline static uintptr_t initReindexer() {
-	Reindexer *db = new Reindexer();
+	DBInterface *db = new DBInterface();
 
 	return reinterpret_cast<uintptr_t>(db);
 }
 
-inline static Reindexer *getDB(uintptr_t rx) { return reinterpret_cast<Reindexer *>(rx); }
+inline static DBInterface *getDB(uintptr_t rx) { return reinterpret_cast<DBInterface *>(rx); }
 
 inline static void destroyReindexer(uintptr_t rx) {
-	Reindexer *db = getDB(rx);
+	DBInterface *db = getDB(rx);
 
 	delete db;
 }

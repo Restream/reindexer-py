@@ -1,0 +1,95 @@
+on:
+  push:
+    branches:
+      - main
+jobs:
+  deploy:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Reindexer
+        run: |
+          brew tap restream/reindexer
+          brew install reindexer
+        shell: bash
+      - name: Build PyReindexer
+        run: CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:/usr/local/include/reindexer LIBRARY_PATH=$LIBRARY_PATH:/usr/local/lib python3 setup.py sdist bdist_wheel
+        shell: bash
+      - name: Deploy PyReindexer To Pypi
+        env:
+          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
+        run: |
+          python3 -m pip install twine
+          python3 -m twine upload --verbose dist/* -u __token__ -p pypi-$PYPI_TOKEN
+          # wait for deploy finnishing on test pypi server
+          sleep 240
+        shell: bash
+
+  test-macos:
+    runs-on: macos-latest
+    needs: deploy
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Reindexer
+        run: |
+          brew tap restream/reindexer
+          brew install reindexer
+        shell: bash
+      - name: Install PyReindexer
+        run: LIBRARY_PATH=$LIBRARY_PATH:/usr/local/lib python3 -m pip install -vvv pyreindexer
+        shell: bash
+      - name: Test
+        run: |
+          cd /usr/local/lib/python3.9/site-packages/pyreindexer
+          $GITHUB_WORKSPACE/.github/workflows/test.sh
+        shell: bash
+
+  test-ubuntu20:
+    runs-on: ubuntu-20.04
+    needs: deploy
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Reindexer-Dev
+        run: |
+          curl http://repo.reindexer.org/RX-KEY.GPG | sudo apt-key add
+          echo 'deb http://repo.reindexer.org/ubuntu-focal /' | sudo tee -a /etc/apt/sources.list
+          sudo apt-get update
+          sudo apt-get install reindexer-dev
+        shell: bash
+      - name: Install PyReindexer
+        run: python3 -m pip install -vvv pyreindexer
+        shell: bash
+      - name: Install Reindexer-Server
+        run: sudo apt-get install reindexer-server
+        shell: bash
+      - name: Test
+        run: |
+          cd $(python3 -m site --user-site)/pyreindexer
+          $GITHUB_WORKSPACE/.github/workflows/test.sh
+        shell: bash
+
+  test-ubuntu18:
+    runs-on: ubuntu-18.04
+    needs: deploy
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Reindexer-Dev
+        run: |
+          curl http://repo.reindexer.org/RX-KEY.GPG | sudo apt-key add
+          echo 'deb http://repo.reindexer.org/ubuntu-bionic /' | sudo tee -a /etc/apt/sources.list
+          sudo apt-get update
+          sudo apt-get install reindexer-dev
+        shell: bash
+      - name: Install PyReindexer
+        run: |
+          python3 -m pip install setuptools
+          python3 -m pip install -vvv pyreindexer
+        shell: bash
+      - name: Install Reindexer-Server
+        run: sudo apt-get install reindexer-server
+        shell: bash
+      - name: Test
+        run: |
+          cd $(python3 -m site --user-site)/pyreindexer
+          $GITHUB_WORKSPACE/.github/workflows/test.sh
+        shell: bash
