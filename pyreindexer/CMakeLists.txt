@@ -16,6 +16,9 @@ find_package(PythonInterp ${PY_MIN_VERSION})
 find_package(PythonLibs ${PY_MIN_VERSION})
 find_package(reindexer CONFIG ${RX_MIN_VERSION})
 
+message("${REINDEXER_LIBRARIES}")
+message("${REINDEXER_INCLUDE_DIRS}")
+
 set(LIB_BUILTIN_NAME "rawpyreindexerb")
 set(LIB_CPROTO_NAME "rawpyreindexerc")
 set(LIBS_EXT ".so")
