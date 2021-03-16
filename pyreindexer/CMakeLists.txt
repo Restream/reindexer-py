@@ -18,6 +18,7 @@ find_package(reindexer CONFIG ${RX_MIN_VERSION})
 
 message("${REINDEXER_LIBRARIES}")
 message("${REINDEXER_INCLUDE_DIRS}")
+message("${REINDEXER_LIB_DIR}")
 
 set(LIB_BUILTIN_NAME "rawpyreindexerb")
 set(LIB_CPROTO_NAME "rawpyreindexerc")
@@ -33,6 +34,8 @@ include_directories(
     ${RESOURCES_DIR}
     ${PYTHON_INCLUDE_DIRS}
     ${REINDEXER_INCLUDE_DIRS})
+
+link_directories(${REINDEXER_LIB_DIR})
 
 add_library(${LIB_BUILTIN_NAME} SHARED ${SRCS})
 add_library(${LIB_CPROTO_NAME} SHARED ${SRCS})
