@@ -11,7 +11,7 @@ endif()
 enable_testing()
 
 set(PY_MIN_VERSION 3.6)
-set(RX_MIN_VERSION 2.10)
+set(RX_MIN_VERSION 3.2.1)
 find_package(PythonInterp ${PY_MIN_VERSION})
 find_package(PythonLibs ${PY_MIN_VERSION})
 find_package(reindexer CONFIG ${RX_MIN_VERSION})
@@ -30,6 +30,8 @@ include_directories(
     ${RESOURCES_DIR}
     ${PYTHON_INCLUDE_DIRS}
     ${REINDEXER_INCLUDE_DIRS})
+
+link_directories(${REINDEXER_LIB_DIR})
 
 add_library(${LIB_BUILTIN_NAME} SHARED ${SRCS})
 add_library(${LIB_CPROTO_NAME} SHARED ${SRCS})

@@ -13,7 +13,7 @@ jobs:
           brew install reindexer
         shell: bash
       - name: Build PyReindexer
-        run: CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:/usr/local/include/reindexer LIBRARY_PATH=$LIBRARY_PATH:/usr/local/lib python3 setup.py sdist bdist_wheel
+        run: python3 setup.py sdist bdist_wheel
         shell: bash
       - name: Deploy PyReindexer To Pypi
         env:
@@ -36,7 +36,7 @@ jobs:
           brew install reindexer
         shell: bash
       - name: Install PyReindexer
-        run: LIBRARY_PATH=$LIBRARY_PATH:/usr/local/lib python3 -m pip install -vvv pyreindexer
+        run: python3 -m pip install -vvv pyreindexer
         shell: bash
       - name: Test
         run: |
