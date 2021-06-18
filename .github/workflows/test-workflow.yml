@@ -5,7 +5,6 @@ jobs:
     steps:
       - name: Install Reindexer
         run: |
-          ls -la /usr/local/Cellar/leveldb
           brew tap restream/reindexer
           ls -la /usr/local/Cellar/leveldb
           brew install reindexer
