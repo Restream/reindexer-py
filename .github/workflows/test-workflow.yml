@@ -11,7 +11,7 @@ jobs:
         shell: bash
       - uses: actions/checkout@v2
       - name: Build PyReindexer
-        run: python3 setup.py install
+        run: LIBRARY_PATH=$LIBRARY_PATH:/usr/local/Cellar/leveldb python3 setup.py install
         shell: bash
       - name: Test
         run: |
