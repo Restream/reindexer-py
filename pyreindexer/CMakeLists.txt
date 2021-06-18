@@ -15,6 +15,7 @@ set(RX_MIN_VERSION 3.2.1)
 find_package(PythonInterp ${PY_MIN_VERSION})
 find_package(PythonLibs ${PY_MIN_VERSION})
 find_package(reindexer CONFIG ${RX_MIN_VERSION})
+find_library(LevelDB_LIBRARY NAMES ${LevelDB_NAMES} leveldb HINTS $ENV{LEVELDB_ROOT}/lib)
 
 set(LIB_BUILTIN_NAME "rawpyreindexerb")
 set(LIB_CPROTO_NAME "rawpyreindexerc")
