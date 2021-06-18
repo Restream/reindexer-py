@@ -5,20 +5,16 @@ jobs:
     steps:
       - name: Install Reindexer
         run: |
-          echo 'LevelDB_ROOT: '
-          echo $LevelDB_ROOT
+          ls -la /usr/local/Cellar/leveldb
           brew tap restream/reindexer
-          echo 'LevelDB_ROOT: '
-          echo $LevelDB_ROOT
+          ls -la /usr/local/Cellar/leveldb
           brew install reindexer
-          echo 'LevelDB_ROOT: '
-          echo $LevelDB_ROOT
+          ls -la /usr/local/Cellar/leveldb
         shell: bash
       - uses: actions/checkout@v2
       - name: Build PyReindexer
         run: |
-          echo 'LevelDB_ROOT: '
-          echo $LevelDB_ROOT
+          ls -la /usr/local/Cellar/leveldb
           LIBRARY_PATH=$LIBRARY_PATH:/usr/local/Cellar/leveldb python3 setup.py install
         shell: bash
       - name: Test
