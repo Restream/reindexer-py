@@ -7,7 +7,7 @@ jobs:
         run: |
           brew tap restream/reindexer
           brew install reindexer
-          ls -la /usr/local/Cellar/leveldb
+          ls -laR /usr/local/Cellar/leveldb
         shell: bash
       - uses: actions/checkout@v2
       - name: Build PyReindexer
