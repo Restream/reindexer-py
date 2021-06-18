@@ -16,7 +16,7 @@ find_package(PythonInterp ${PY_MIN_VERSION})
 find_package(PythonLibs ${PY_MIN_VERSION})
 find_package(reindexer CONFIG ${RX_MIN_VERSION})
 message (leveldb1)
-find_library(LevelDB_LIBRARY NAMES ${LevelDB_NAMES} leveldb HINTS $ENV{LEVELDB_ROOT}/lib)
+find_library(LevelDB_LIBRARY leveldb)
 message (leveldb2)
 
 set(LIB_BUILTIN_NAME "rawpyreindexerb")
