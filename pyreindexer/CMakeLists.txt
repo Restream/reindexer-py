@@ -31,6 +31,15 @@ include_directories(
     ${PYTHON_INCLUDE_DIRS}
     ${REINDEXER_INCLUDE_DIRS})
 
+#TODO
+message(rx link dirs)
+message(${REINDEXER_LINK_DIRS})
+message(rx link dirs)
+foreach(lib ${REINDEXER_LINK_DIRS})
+  message(${lib})
+endforeach(lib)
+message(rx link dirs)
+
 link_directories(
     ${REINDEXER_LIB_DIR}
     ${REINDEXER_LINK_DIRS})
