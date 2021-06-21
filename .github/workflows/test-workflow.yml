@@ -11,8 +11,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: Build PyReindexer
         run: |
-          ls -laR /usr/local/Cellar/snappy
-          LIBRARY_PATH=$LIBRARY_PATH:/usr/local/Cellar/leveldb/1.23/lib:/usr/local/Cellar/snappy/1.1.9/lib python3 setup.py install
+          LIBRARY_PATH=$LIBRARY_PATH:/usr/local/Cellar/leveldb/1.23/lib:/usr/local/Cellar/snappy/1.1.9/lib python3 setup.py install #TODO remove LIBRARY_PATH
         shell: bash
       - name: Test
         run: |

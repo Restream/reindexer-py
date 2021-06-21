@@ -15,9 +15,6 @@ set(RX_MIN_VERSION 3.2.1)
 find_package(PythonInterp ${PY_MIN_VERSION})
 find_package(PythonLibs ${PY_MIN_VERSION})
 find_package(reindexer CONFIG ${RX_MIN_VERSION})
-message (leveldb1)
-find_library(LevelDB_LIBRARY leveldb)
-message (leveldb2)
 
 set(LIB_BUILTIN_NAME "rawpyreindexerb")
 set(LIB_CPROTO_NAME "rawpyreindexerc")
@@ -34,12 +31,12 @@ include_directories(
     ${PYTHON_INCLUDE_DIRS}
     ${REINDEXER_INCLUDE_DIRS})
 
-link_directories(${REINDEXER_LIB_DIR})
+link_directories(
+    ${REINDEXER_LIB_DIR}
+    ${REINDEXER_LINK_DIRS})
 
 add_library(${LIB_BUILTIN_NAME} SHARED ${SRCS})
 add_library(${LIB_CPROTO_NAME} SHARED ${SRCS})
-
-message(${REINDEXER_LIBRARIES})
 
 target_link_libraries(${LIB_BUILTIN_NAME} ${PYTHON_LIBRARIES} ${REINDEXER_LIBRARIES})
 target_link_libraries(${LIB_CPROTO_NAME} ${PYTHON_LIBRARIES} ${REINDEXER_LIBRARIES})
