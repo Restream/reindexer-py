@@ -12,14 +12,14 @@ jobs:
         shell: bash
       - uses: actions/checkout@v2
       - name: Build PyReindexer
-        run: python3 setup.py sdist bdist_wheel
+        run: LIBRARY_PATH=$LIBRARY_PATH:/usr/local/Cellar/leveldb/1.23/lib:/usr/local/Cellar/snappy/1.1.9/lib python3 setup.py sdist bdist_wheel #TODO remove LIBRARY_PATH
         shell: bash
       - name: Deploy PyReindexer To Test-Pypi
         env:
           TESTPYPI_TOKEN: ${{ secrets.TESTPYPI_TOKEN }}
         run: |
           python3 -m pip install twine
-          LIBRARY_PATH=$LIBRARY_PATH:/usr/local/Cellar/leveldb/1.23/lib:/usr/local/Cellar/snappy/1.1.9/lib python3 -m twine upload --verbose --repository testpypi dist/* -u __token__ -p pypi-$TESTPYPI_TOKEN #TODO remove LIBRARY_PATH
+          python3 -m twine upload --verbose --repository testpypi dist/* -u __token__ -p pypi-$TESTPYPI_TOKEN
           # wait for deploy finnishing on test pypi server
           sleep 240
         shell: bash
