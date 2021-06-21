@@ -19,7 +19,7 @@ jobs:
           TESTPYPI_TOKEN: ${{ secrets.TESTPYPI_TOKEN }}
         run: |
           python3 -m pip install twine
-          python3 -m twine upload --verbose --repository testpypi dist/* -u __token__ -p pypi-$TESTPYPI_TOKEN
+          LIBRARY_PATH=$LIBRARY_PATH:/usr/local/Cellar/leveldb/1.23/lib:/usr/local/Cellar/snappy/1.1.9/lib python3 -m twine upload --verbose --repository testpypi dist/* -u __token__ -p pypi-$TESTPYPI_TOKEN #TODO remove LIBRARY_PATH
           # wait for deploy finnishing on test pypi server
           sleep 240
         shell: bash
@@ -35,7 +35,7 @@ jobs:
         shell: bash
       - uses: actions/checkout@v2
       - name: Install PyReindexer
-        run: python3 -m pip install -vvv --index-url https://test.pypi.org/simple/ --no-deps pyreindexer
+        run: LIBRARY_PATH=$LIBRARY_PATH:/usr/local/Cellar/leveldb/1.23/lib:/usr/local/Cellar/snappy/1.1.9/lib python3 -m pip install -vvv --index-url https://test.pypi.org/simple/ --no-deps pyreindexer #TODO remove LIBRARY_PATH
         shell: bash
       - name: Test
         run: |

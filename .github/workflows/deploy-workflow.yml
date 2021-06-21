@@ -13,7 +13,7 @@ jobs:
           brew install reindexer
         shell: bash
       - name: Build PyReindexer
-        run: python3 setup.py sdist bdist_wheel
+        run: LIBRARY_PATH=$LIBRARY_PATH:/usr/local/Cellar/leveldb/1.23/lib:/usr/local/Cellar/snappy/1.1.9/lib python3 setup.py sdist bdist_wheel #TODO remove LIBRARY_PATH
         shell: bash
       - name: Deploy PyReindexer To Pypi
         env:
@@ -36,7 +36,7 @@ jobs:
           brew install reindexer
         shell: bash
       - name: Install PyReindexer
-        run: python3 -m pip install -vvv pyreindexer
+        run: LIBRARY_PATH=$LIBRARY_PATH:/usr/local/Cellar/leveldb/1.23/lib:/usr/local/Cellar/snappy/1.1.9/lib python3 -m pip install -vvv pyreindexer #TODO remove LIBRARY_PATH
         shell: bash
       - name: Test
         run: |
