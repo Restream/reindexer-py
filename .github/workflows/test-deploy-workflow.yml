@@ -12,7 +12,7 @@ jobs:
         shell: bash
       - uses: actions/checkout@v2
       - name: Build PyReindexer
-        run: python3 setup.py sdist bdist_wheel
+        run: LIBRARY_PATH=$LIBRARY_PATH:/usr/local/Cellar/leveldb/1.23/lib:/usr/local/Cellar/snappy/1.1.9/lib python3 setup.py sdist bdist_wheel #TODO remove LIBRARY_PATH
         shell: bash
       - name: Deploy PyReindexer To Test-Pypi
         env:
@@ -35,7 +35,7 @@ jobs:
         shell: bash
       - uses: actions/checkout@v2
       - name: Install PyReindexer
-        run: python3 -m pip install -vvv --index-url https://test.pypi.org/simple/ --no-deps pyreindexer
+        run: LIBRARY_PATH=$LIBRARY_PATH:/usr/local/Cellar/leveldb/1.23/lib:/usr/local/Cellar/snappy/1.1.9/lib python3 -m pip install -vvv --index-url https://test.pypi.org/simple/ --no-deps pyreindexer #TODO remove LIBRARY_PATH
         shell: bash
       - name: Test
         run: |
@@ -43,38 +43,24 @@ jobs:
           $GITHUB_WORKSPACE/.github/workflows/test.sh
         shell: bash
 
-  test-ubuntu20:
-    runs-on: ubuntu-20.04
+  test-ubuntu:
+    strategy:
+      matrix:
+        os: [ubuntu-20.04, ubuntu-18.04]
+      fail-fast: false
+    runs-on: ${{matrix.os}}
+    env:
+      OS: ${{matrix.os}}
     needs: deploy
     steps:
       - name: Install Reindexer-Dev
         run: |
           curl http://repo.reindexer.org/RX-KEY.GPG | sudo apt-key add
-          echo 'deb http://repo.reindexer.org/ubuntu-focal /' | sudo tee -a /etc/apt/sources.list
-          sudo apt-get update
-          sudo apt-get install reindexer-dev
-        shell: bash
-      - uses: actions/checkout@v2
-      - name: Install PyReindexer
-        run: python3 -m pip install -vvv --index-url https://test.pypi.org/simple/ --no-deps pyreindexer
-        shell: bash
-      - name: Install Reindexer-Server
-        run: sudo apt-get install reindexer-server
-        shell: bash
-      - name: Test
-        run: |
-          cd $(python3 -m site --user-site)/pyreindexer
-          $GITHUB_WORKSPACE/.github/workflows/test.sh
-        shell: bash
-
-  test-ubuntu18:
-    runs-on: ubuntu-18.04
-    needs: deploy
-    steps:
-      - name: Install Reindexer-Dev
-        run: |
-          curl http://repo.reindexer.org/RX-KEY.GPG | sudo apt-key add
-          echo 'deb http://repo.reindexer.org/ubuntu-bionic /' | sudo tee -a /etc/apt/sources.list
+          if [[ $OS == ubuntu-20.04 ]]; then
+            echo 'deb http://repo.reindexer.org/ubuntu-focal /' | sudo tee -a /etc/apt/sources.list
+          else
+            echo 'deb http://repo.reindexer.org/ubuntu-bionic /' | sudo tee -a /etc/apt/sources.list
+          fi
           sudo apt-get update
           sudo apt-get install reindexer-dev
         shell: bash
