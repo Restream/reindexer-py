@@ -12,7 +12,7 @@ jobs:
         shell: bash
       - uses: actions/checkout@v2
       - name: Build PyReindexer
-        run: LIBRARY_PATH=$LIBRARY_PATH:/usr/local/Cellar/leveldb/1.23/lib:/usr/local/Cellar/snappy/1.1.9/lib python3 setup.py sdist bdist_wheel #TODO remove LIBRARY_PATH
+        run: python3 setup.py sdist bdist_wheel
         shell: bash
       - name: Deploy PyReindexer To Test-Pypi
         env:
@@ -35,7 +35,7 @@ jobs:
         shell: bash
       - uses: actions/checkout@v2
       - name: Install PyReindexer
-        run: LIBRARY_PATH=$LIBRARY_PATH:/usr/local/Cellar/leveldb/1.23/lib:/usr/local/Cellar/snappy/1.1.9/lib python3 -m pip install -vvv --index-url https://test.pypi.org/simple/ --no-deps pyreindexer #TODO remove LIBRARY_PATH
+        run: python3 -m pip install -vvv --index-url https://test.pypi.org/simple/ --no-deps pyreindexer
         shell: bash
       - name: Test
         run: |
@@ -55,11 +55,11 @@ jobs:
     steps:
       - name: Install Reindexer-Dev
         run: |
-          curl http://repo.reindexer.org/RX-KEY.GPG | sudo apt-key add
+          curl https://repo.reindexer.io/RX-KEY.GPG | sudo apt-key add
           if [[ $OS == ubuntu-20.04 ]]; then
-            echo 'deb http://repo.reindexer.org/ubuntu-focal /' | sudo tee -a /etc/apt/sources.list
+            echo 'deb https://repo.reindexer.io/ubuntu-focal /' | sudo tee -a /etc/apt/sources.list
           else
-            echo 'deb http://repo.reindexer.org/ubuntu-bionic /' | sudo tee -a /etc/apt/sources.list
+            echo 'deb https://repo.reindexer.io/ubuntu-bionic /' | sudo tee -a /etc/apt/sources.list
           fi
           sudo apt-get update
           sudo apt-get install reindexer-dev
