@@ -57,11 +57,11 @@ jobs:
       - uses: actions/checkout@v2
       - name: Install Reindexer-Dev
         run: |
-          curl http://repo.reindexer.org/RX-KEY.GPG | sudo apt-key add
+          curl https://repo.reindexer.io/RX-KEY.GPG | sudo apt-key add
           if [[ $OS == ubuntu-20.04 ]]; then
-            echo 'deb http://repo.reindexer.org/ubuntu-focal /' | sudo tee -a /etc/apt/sources.list
+            echo 'deb https://repo.reindexer.io/ubuntu-focal /' | sudo tee -a /etc/apt/sources.list
           else
-            echo 'deb http://repo.reindexer.org/ubuntu-bionic /' | sudo tee -a /etc/apt/sources.list
+            echo 'deb https://repo.reindexer.io/ubuntu-bionic /' | sudo tee -a /etc/apt/sources.list
           fi
           sudo apt-get update
           sudo apt-get install reindexer-dev
