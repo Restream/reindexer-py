@@ -2,3 +2,4 @@ __pycache__
 build/*
 dist/*
 pyreindexer.egg-info/*
+qa_test/logs/
