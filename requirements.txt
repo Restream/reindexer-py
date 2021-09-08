@@ -1,0 +1,4 @@
+delegator==0.0.3
+envoy==0.0.3
+PyHamcrest==2.0.2
+pytest==6.2.5

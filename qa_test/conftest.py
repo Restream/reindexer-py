@@ -5,6 +5,7 @@ from pyreindexer import RxConnector
 from qa_test.helpers.index import *
 from qa_test.helpers.items import *
 from qa_test.helpers.log_helper import log_fixture
+from qa_test.helpers.metadata import put_metadata
 from qa_test.helpers.namespace import *
 from qa_test.test_data.constants import index_definition, item_definition
 
@@ -76,8 +77,7 @@ def metadata(namespace):
     """
     Put metadata  to namespace
     """
-    db, namespace_name = namespace
     key, value = 'key', 'value'
-    db.meta_put(namespace_name, key, value)
+    put_metadata(namespace, key, value)
     yield key, value
 
