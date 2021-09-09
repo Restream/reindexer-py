@@ -11,9 +11,8 @@ class TestCrudItems:
         # When ("Get namespace information")
         select_result = list(db.select(f'SELECT * FROM {namespace_name}'))
         # Then ("Check that list of items in namespace is empty")
-        assert_that(select_result, has_length(0))
-        assert_that(select_result, equal_to([]),
-                    "Item list is not empty")
+        assert_that(select_result, has_length(0), "Item list is not empty")
+        assert_that(select_result, equal_to([]), "Item list is not empty")
 
     def test_create_item_insert(self, namespace, index):
         # Given("Create namespace with index")
