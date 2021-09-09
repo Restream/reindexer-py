@@ -1,6 +1,6 @@
 import logging
 
-from qa_test.helpers.log_helper import log_operation, log_error
+from qa_test.helpers.log_helper import log_operation
 
 
 def create_namespace(database, namespace_name):

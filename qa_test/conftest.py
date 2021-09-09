@@ -40,7 +40,7 @@ def database(request):
     shutil.rmtree('tmp/', ignore_errors=True)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def namespace(database):
     """
     Create a namespace
