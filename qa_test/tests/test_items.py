@@ -1,5 +1,6 @@
 from hamcrest import *
 
+from qa_test.helpers.index import create_index
 from qa_test.helpers.items import *
 from qa_test.test_data.constants import item_definition
 
@@ -26,7 +27,25 @@ class TestCrudItems:
         assert_that(select_result, has_item(item_definition),
                     "Item wasn't created"
                     )
-        db.item_delete(namespace_name, {'id': 100})
+        delete_item(namespace, item_definition)
+
+    def test_create_item_insert_with_precepts(self, namespace, index):
+        # Given("Create namespace with index")
+        db, namespace_name = namespace
+        # When ("Insert items into namespace")
+        number_items = 5
+        for _ in range(number_items):
+            db.item_insert(namespace_name, {"id": 100, "field": "value"}, ["id=serial()"])
+        # Then ("Check that item is added")
+        select_result = list(db.select(f'SELECT * FROM {namespace_name}'))
+        assert_that(select_result, has_length(number_items),
+                    "Items wasn't created")
+        for i in range(number_items):
+            assert_that(select_result[i], equal_to({'id': i+1, "field": "value"}),
+                    "Items wasn't created")
+        for i in range(number_items):
+            db.item_delete(namespace_name, {'id': i})
+
 
     def test_create_item_upsert(self, namespace, index):
         # Given("Create namespace with index")
