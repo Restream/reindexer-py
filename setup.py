@@ -47,7 +47,7 @@ class build_ext(build_ext_orig):
 
 
 setup(name=PACKAGE_NAME,
-      version='0.2.1',
+      version='0.2.2',
       description='A connector that allows to interact with Reindexer',
       url='https://github.com/Restream/reindexer-py',
       author='Igor Tulmentyev',
