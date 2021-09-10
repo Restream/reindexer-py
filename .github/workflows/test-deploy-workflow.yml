@@ -19,7 +19,7 @@ jobs:
           TESTPYPI_TOKEN: ${{ secrets.TESTPYPI_TOKEN }}
         run: |
           python3 -m pip install twine
-          python3 -m twine upload --verbose --repository testpypi dist/* -u __token__ -p pypi-$TESTPYPI_TOKEN
+          python3 -m twine upload --verbose --skip-existing --repository testpypi dist/* -u __token__ -p pypi-$TESTPYPI_TOKEN
           # wait for deploy finnishing on test pypi server
           sleep 240
         shell: bash
