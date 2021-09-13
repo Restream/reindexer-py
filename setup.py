@@ -72,5 +72,5 @@ setup(name=PACKAGE_NAME,
           'tests/test_builtin.py',
           'tests/test_cproto.py'
       ]},
-      test_suite='tests', install_requires=['envoy', 'delegator', 'pytest', 'pyhamcrest']
+      test_suite='tests', install_requires=['envoy==0.0.3', 'delegator==0.0.3', 'pytest==6.2.5', 'pyhamcrest==2.0.2']
       )
