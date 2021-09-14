@@ -1,8 +1,8 @@
 from hamcrest import *
 
-from qa_test.helpers.index import create_index
-from qa_test.helpers.items import *
-from qa_test.test_data.constants import item_definition
+from tests.helpers.index import create_index
+from tests.helpers.items import *
+from tests.test_data.constants import item_definition
 
 
 class TestCrudItems:

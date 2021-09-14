@@ -1,6 +1,6 @@
 from hamcrest import *
 
-from qa_test.helpers.sql import sql_query
+from tests.helpers.sql import sql_query
 
 
 class TestSqlQueries:

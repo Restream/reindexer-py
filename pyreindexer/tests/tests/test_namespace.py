@@ -1,6 +1,6 @@
 from hamcrest import *
 
-from qa_test.helpers.namespace import *
+from tests.helpers.namespace import *
 
 
 class TestCrudNamespace:

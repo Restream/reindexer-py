@@ -1,4 +1,4 @@
-from qa_test.helpers.log_helper import log_operation
+from tests.helpers.log_helper import log_operation
 
 
 def sql_query(namespace, query):

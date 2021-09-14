@@ -1,6 +1,6 @@
 from hamcrest import *
 
-from qa_test.helpers.metadata import *
+from tests.helpers.metadata import *
 
 
 class TestCrudMetadata:

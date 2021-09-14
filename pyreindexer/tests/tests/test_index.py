@@ -1,8 +1,8 @@
 from hamcrest import *
 
-from qa_test.helpers.index import *
-from qa_test.helpers.namespace import get_ns_description
-from qa_test.test_data.constants import index_definition, updated_index_definition
+from tests.helpers.index import *
+from tests.helpers.namespace import get_ns_description
+from tests.test_data.constants import index_definition, updated_index_definition
 
 
 class TestCrudIndexes:

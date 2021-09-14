@@ -2,12 +2,12 @@ import shutil
 import pytest
 
 from pyreindexer import RxConnector
-from qa_test.helpers.index import *
-from qa_test.helpers.items import *
-from qa_test.helpers.log_helper import log_fixture
-from qa_test.helpers.metadata import put_metadata
-from qa_test.helpers.namespace import *
-from qa_test.test_data.constants import index_definition, item_definition
+from tests.helpers.index import *
+from tests.helpers.items import *
+from tests.helpers.log_helper import log_fixture
+from tests.helpers.metadata import put_metadata
+from tests.helpers.namespace import *
+from tests.test_data.constants import index_definition, item_definition
 
 
 def pytest_addoption(parser):

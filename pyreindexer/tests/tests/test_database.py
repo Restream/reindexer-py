@@ -1,7 +1,7 @@
 import pyreindexer
 from hamcrest import *
 
-from qa_test.test_data.constants import special_namespaces
+from tests.test_data.constants import special_namespaces
 
 
 class TestCrudDb:
