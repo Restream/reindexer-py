@@ -4,7 +4,7 @@ from qa_test.helpers.metadata import *
 
 
 class TestCrudMetadata:
-    def test_initial_namespace_has_not_metadata(self, namespace):
+    def test_initial_namespace_has_no_metadata(self, namespace):
         # Given("Create namespace")
         # When ("Get list of metadata keys")
         meta_list = get_metadata_keys(namespace)
@@ -37,3 +37,13 @@ class TestCrudMetadata:
         meta_list = get_metadata_keys(namespace)
         # Then ("Check that metadata was added")
         assert_that(meta_list, has_item(meta_key), "Can't get list of meta keys")
+
+    def test_update_metadata(self, namespace, metadata):
+        # Given ("Put metadata to namespace")
+        meta_key, meta_value = metadata
+        # When ("Update metadata")
+        new_meta_value = 'new_value'
+        put_metadata(namespace, meta_key, new_meta_value)
+        # Then ("Check that metadata was updated")
+        updated_value = get_metadata_by_key(namespace, meta_key)
+        assert_that(updated_value, equal_to(new_meta_value), "Can't update metadata")

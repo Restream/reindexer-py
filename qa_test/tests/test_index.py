@@ -6,7 +6,7 @@ from qa_test.test_data.constants import index_definition, updated_index_definiti
 
 
 class TestCrudIndexes:
-    def test_initial_namespace_has_not_indexes(self, database, namespace):
+    def test_initial_namespace_has_no_indexes(self, database, namespace):
         # Given("Create namespace")
         # When ("Get namespace information")
         ns_entry = get_ns_description(database, namespace)

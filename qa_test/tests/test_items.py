@@ -6,7 +6,7 @@ from qa_test.test_data.constants import item_definition
 
 
 class TestCrudItems:
-    def test_initial_namespace_has_not_items(self, namespace, index):
+    def test_initial_namespace_has_no_items(self, namespace, index):
         # Given("Create namespace with index")
         db, namespace_name = namespace
         # When ("Get namespace information")
@@ -45,7 +45,6 @@ class TestCrudItems:
                     "Items wasn't created")
         for i in range(number_items):
             db.item_delete(namespace_name, {'id': i})
-
 
     def test_create_item_upsert(self, namespace, index):
         # Given("Create namespace with index")

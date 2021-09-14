@@ -5,7 +5,7 @@ from datetime import *
 
 
 class OneLineExceptionFormatter(logging.Formatter):
-    """ Вывод логов в одну строчку
+    """ One line log output
     https://docs.python.org/2/howto/logging-cookbook.html#logging-cookbook
     """
     def formatException(self, exc_info):

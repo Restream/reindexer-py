@@ -16,7 +16,7 @@ def pytest_addoption(parser):
 
 @pytest.fixture(scope="session", autouse=True)
 def log_setup(request):
-    """ Выполняется один раз, до запуска всех тестов и после окончания всех тестов
+    """ Execute once before test run
     """
     log_fixture.info("Work with pyreindexer connector using {} mode".format(request.config.getoption("--mode")))
 
@@ -73,6 +73,18 @@ def item(namespace):
 
 
 @pytest.fixture(scope="function")
+def items(namespace):
+    """
+    Create items to namespace
+    """
+    for i in range(10):
+        insert_item(namespace, {"id": i+1, "val": "testval" + str(i+1)})
+    yield
+    for i in range(10):
+        delete_item(namespace, {"id": i+1, "val": "testval" + str(i+1)})
+
+
+@pytest.fixture(scope="function")
 def metadata(namespace):
     """
     Put metadata  to namespace
@@ -81,3 +93,15 @@ def metadata(namespace):
     put_metadata(namespace, key, value)
     yield key, value
 
+
+@pytest.fixture(scope="function")
+def second_namespace_for_join(database):
+    db, db_name = database
+    second_namespace_name = 'test_ns_for_join'
+    db.namespace_open(second_namespace_name)
+    db.index_add(second_namespace_name, index_definition)
+    second_ns_item_definition = {"id": 100, "second_ns_val": "second_ns_testval"}
+    second_ns_item_definition_join = {"id": 1, "second_ns_val": "second_ns_testval_1"}
+    db.item_insert(second_namespace_name, second_ns_item_definition)
+    db.item_insert(second_namespace_name, second_ns_item_definition_join)
+    yield second_namespace_name, second_ns_item_definition_join
