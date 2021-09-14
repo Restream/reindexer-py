@@ -47,7 +47,7 @@ class build_ext(build_ext_orig):
 
 
 setup(name=PACKAGE_NAME,
-      version='0.2.2',
+      version='0.2.3',
       description='A connector that allows to interact with Reindexer',
       url='https://github.com/Restream/reindexer-py',
       author='Igor Tulmentyev',
@@ -68,9 +68,24 @@ setup(name=PACKAGE_NAME,
           'lib/src/reindexerinterface.h',
           'lib/src/reindexerinterface.cc',
           'example/main.py',
-          'tests/__init__.py',
-          'tests/test_builtin.py',
-          'tests/test_cproto.py'
+          'qa_test/conftest.py',
+          'qa_test/test_data/constants.py',
+          'qa_test/test_data/__init__.py',
+          'qa_test/tests/test_sql.py',
+          'qa_test/tests/test_index.py',
+          'qa_test/tests/test_items.py',
+          'qa_test/tests/test_database.py',
+          'qa_test/tests/test_namespace.py',
+          'qa_test/tests/test_metadata.py',
+          'qa_test/tests/__init__.py',
+          'qa_test/helpers/namespace.py',
+          'qa_test/helpers/sql.py',
+          'qa_test/helpers/items.py',
+          'qa_test/helpers/index.py',
+          'qa_test/helpers/metadata.py',
+          'qa_test/helpers/log_helper.py',
+          'qa_test/helpers/__init__.py',
+          'qa_test/__init__.py'
       ]},
       test_suite='tests', install_requires=['envoy==0.0.3', 'delegator==0.0.3', 'pytest==6.2.5', 'pyhamcrest==2.0.2']
       )
