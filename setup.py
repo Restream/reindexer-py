@@ -47,9 +47,9 @@ class build_ext(build_ext_orig):
 
 
 setup(name=PACKAGE_NAME,
-      version='0.2.1',
+      version='0.2.2',
       description='A connector that allows to interact with Reindexer',
-      url='https://github.com/Restream/pyreindexer',
+      url='https://github.com/Restream/reindexer-py',
       author='Igor Tulmentyev',
       author_email='igtulm@gmail.com',
       maintainer='Oleg Gerasimov',
@@ -72,5 +72,5 @@ setup(name=PACKAGE_NAME,
           'tests/test_builtin.py',
           'tests/test_cproto.py'
       ]},
-      test_suite='tests', install_requires=['envoy', 'delegator', 'pytest']
+      test_suite='tests', install_requires=['envoy==0.0.3', 'delegator==0.0.3', 'pytest==6.2.5', 'pyhamcrest==2.0.2']
       )
