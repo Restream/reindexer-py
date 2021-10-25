@@ -44,5 +44,14 @@ special_namespaces = [{"name": "#namespaces"},
         {"name": "#activitystats"},
         {"name": "#clientsstats"}]
 
+special_namespaces_cluster = [{"name": "#namespaces"},
+        {"name": "#memstats"},
+        {"name": "#perfstats"},
+        {"name": "#config"},
+        {"name": "#queriesperfstats"},
+        {"name": "#activitystats"},
+        {"name": "#clientsstats"},
+        {"name": "#replicationstats"}]
+
 item_definition = {'id': 100, 'val': "testval"}
 
