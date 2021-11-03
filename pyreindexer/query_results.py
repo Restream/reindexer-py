@@ -46,7 +46,7 @@ class QueryResults:
             self.err_code, self.err_msg, res = self.api.query_results_iterate(
                 self.qres_wrapper_ptr)
             if (self.err_code):
-                raise (self.err_msg)
+                raise Exception(self.err_msg)
             return res
         else:
             del(self)

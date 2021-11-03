@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/type_consts.h"
 #include "reindexerinterface.h"
 
 #ifdef PYREINDEXER_CPROTO
@@ -20,6 +21,7 @@ using QueryResultsT = reindexer::QueryResults;
 
 class QueryResultsWrapper {
 public:
+	QueryResultsWrapper() : qresPtr(kResultsJson) {}
 	size_t Count() const { return qresPtr.Count(); }
 	void GetItemJSON(reindexer::WrSerializer& wrser, bool withHdrLen) { itPtr.GetJSON(wrser, withHdrLen); }
 	void Next() {
