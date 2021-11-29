@@ -39,7 +39,7 @@ class TestSqlQueries:
         # Given("Create namespace with item")
         db, namespace_name = namespace
         # When ("Execute SQL query UPDATE")
-        query = f"UPDATE {namespace_name} SET 'val' = 'new_val' WHERE id = 100"
+        query = f"UPDATE {namespace_name} SET \"val\" = 'new_val' WHERE id = 100"
         item_list = sql_query(namespace, query)
         # Then ("Check that item is updated")
         assert_that(item_list, has_item(equal_to({'id': 100, 'val': 'new_val'})), "Can't SQL update data")
