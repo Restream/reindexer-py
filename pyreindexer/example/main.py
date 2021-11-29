@@ -53,7 +53,7 @@ def create_items_example(db, namespace):
 def select_item_query_example(db, namespace):
     item_name_for_lookup = 'item_0'
 
-    return db.select('SELECT * FROM ' + namespace + ' WHERE name="' + item_name_for_lookup + '"')
+    return db.select("SELECT * FROM " + namespace + " WHERE name='" + item_name_for_lookup + "'")
 
 
 def rx_example():
