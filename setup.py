@@ -37,7 +37,7 @@ class build_ext(build_ext_orig):
         source_dir = os.path.join(cwd, PACKAGE_NAME)
 
         self.spawn(['cmake', source_dir,
-                    '-DCMAKE_BUILD_TYPE=Release',
+                    '-DCMAKE_BUILD_TYPE=RelWithDebInfo',
                     '-DCMAKE_CXX_STANDARD=17',
                     '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + lib_dir])
         if not self.dry_run:
@@ -47,13 +47,13 @@ class build_ext(build_ext_orig):
 
 
 setup(name=PACKAGE_NAME,
-      version='0.2.9',
+      version='0.2.10',
       description='A connector that allows to interact with Reindexer',
       url='https://github.com/Restream/reindexer-py',
       author='Igor Tulmentyev',
       author_email='igtulm@gmail.com',
-      maintainer='Oleg Gerasimov',
-      maintainer_email='ogerasimov@gmail.com',
+      maintainer='Reindexer Team',
+      maintainer_email='contactus@reindexer.io',
       license='Apache License 2.0',
       packages=[PACKAGE_NAME],
       ext_modules=[CMakeExtension('rawpyreindexer')],

@@ -23,6 +23,10 @@ set(LIBS_EXT ".so")
 set(LIBSRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/src)
 set(RESOURCES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/include)
 
+set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror -Wno-unused-parameter -fexceptions")
+string (REPLACE "-O2" "-O3" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
+
 file(GLOB_RECURSE SRCS ${RESOURCES_DIR}/*.cc ${LIBSRC_DIR}/*.cc)
 
 include_directories(

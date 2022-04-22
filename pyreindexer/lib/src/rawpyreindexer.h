@@ -103,7 +103,8 @@ static PyMethodDef module_methods[] = {
 };
 // clang-format on
 
-static struct PyModuleDef module_definition = {PyModuleDef_HEAD_INIT, MODULE_NAME, MODULE_DESCRIPTION, -1, module_methods};
+static struct PyModuleDef module_definition = {
+	PyModuleDef_HEAD_INIT, MODULE_NAME, MODULE_DESCRIPTION, -1, module_methods, NULL, NULL, NULL, NULL};
 
 PyMODINIT_FUNC MODULE_EXPORT_FUNCTION(void) {
 	Py_Initialize();

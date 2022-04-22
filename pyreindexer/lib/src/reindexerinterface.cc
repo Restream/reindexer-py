@@ -52,7 +52,7 @@ ReindexerInterface<DBT>::~ReindexerInterface() {
 }
 
 template <typename DBT>
-Error ReindexerInterface<DBT>::Select(const std::string &query, QueryResultsWrapper& result) {
+Error ReindexerInterface<DBT>::Select(const std::string& query, QueryResultsWrapper& result) {
 	return execute([this, &query, &result] {
 		auto res = select(query, result.qresPtr);
 		result.db_ = this;
@@ -63,7 +63,7 @@ Error ReindexerInterface<DBT>::Select(const std::string &query, QueryResultsWrap
 
 template <typename DBT>
 Error ReindexerInterface<DBT>::FetchResults(QueryResultsWrapper& result) {
-	return execute([this, &result] {
+	return execute([&result] {
 		++(result.itPtr);
 		if (result.itPtr == result.qresPtr.end()) {
 			result.iterInit();
