@@ -225,7 +225,7 @@ static PyObject *itemModify(PyObject *self, PyObject *args, ItemModifyMode mode)
 	}
 
 	if (preceptsList != NULL && mode != ModeDelete) {
-		vector<string> itemPrecepts;
+		std::vector<std::string> itemPrecepts;
 
 		try {
 			itemPrecepts = ParseListToStrVec(&preceptsList);
@@ -306,7 +306,7 @@ static PyObject *GetMeta(PyObject *self, PyObject *args) {
 		return NULL;
 	}
 
-	string value;
+	std::string value;
 	Error err = getDB(rx)->GetMeta(ns, key, value);
 
 	return Py_BuildValue("iss", err.code(), err.what().c_str(), value.c_str());
@@ -336,7 +336,7 @@ static PyObject *EnumMeta(PyObject *self, PyObject *args) {
 		return NULL;
 	}
 
-	vector<string> keys;
+	std::vector<std::string> keys;
 	Error err = getDB(rx)->EnumMeta(ns, keys);
 	if (!err.ok()) {
 		return Py_BuildValue("is[]", err.code(), err.what().c_str());
@@ -367,7 +367,7 @@ static PyObject *EnumNamespaces(PyObject *self, PyObject *args) {
 		return NULL;
 	}
 
-	vector<NamespaceDef> nsDefs;
+	std::vector<NamespaceDef> nsDefs;
 	Error err = getDB(rx)->EnumNamespaces(nsDefs, reindexer::EnumNamespacesOpts().WithClosed(enumAll));
 	if (!err.ok()) {
 		return Py_BuildValue("is[]", err.code(), err.what().c_str());
