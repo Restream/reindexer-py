@@ -10,7 +10,7 @@ jobs:
           brew tap restream/reindexer
           brew install reindexer
         shell: bash
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Build PyReindexer
         run: python3 setup.py sdist bdist_wheel
         shell: bash
@@ -33,13 +33,16 @@ jobs:
           brew tap restream/reindexer
           brew install reindexer
         shell: bash
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Install PyReindexer
         run: python3 -m pip install -vvv --index-url https://test.pypi.org/simple/ --no-deps pyreindexer
         shell: bash
+      - name: Prepare Test Environment
+        run: python3 -m pip install pytest==6.2.5 delegator envoy pyhamcrest==2.0.2
+        shell: bash
       - name: Test
         run: |
-          cd /usr/local/lib/python3.9/site-packages/pyreindexer
+          cd /usr/local/lib/python3.10/site-packages/pyreindexer
           $GITHUB_WORKSPACE/.github/workflows/test.sh
         shell: bash
 
@@ -64,7 +67,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install reindexer-dev
         shell: bash
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Install PyReindexer
         run: |
           python3 -m pip install setuptools
@@ -72,6 +75,9 @@ jobs:
         shell: bash
       - name: Install Reindexer-Server
         run: sudo apt-get install reindexer-server
+        shell: bash
+      - name: Prepare Test Environment
+        run: python3 -m pip install pytest==6.2.5 delegator envoy pyhamcrest==2.0.2
         shell: bash
       - name: Test
         run: |

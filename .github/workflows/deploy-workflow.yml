@@ -6,7 +6,7 @@ jobs:
   deploy:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Install Reindexer
         run: |
           brew tap restream/reindexer
@@ -29,7 +29,7 @@ jobs:
     runs-on: macos-latest
     needs: deploy
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Install Reindexer
         run: |
           brew tap restream/reindexer
@@ -40,7 +40,7 @@ jobs:
         shell: bash
       - name: Test
         run: |
-          cd /usr/local/lib/python3.9/site-packages/pyreindexer
+          cd /usr/local/lib/python3.10/site-packages/pyreindexer
           $GITHUB_WORKSPACE/.github/workflows/test.sh
         shell: bash
 
@@ -54,7 +54,7 @@ jobs:
       OS: ${{matrix.os}}
     needs: deploy
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Install Reindexer-Dev
         run: |
           curl https://repo.reindexer.io/RX-KEY.GPG | sudo apt-key add
