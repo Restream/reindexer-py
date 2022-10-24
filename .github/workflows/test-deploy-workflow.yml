@@ -38,11 +38,11 @@ jobs:
         run: python3 -m pip install -vvv --index-url https://test.pypi.org/simple/ --no-deps pyreindexer
         shell: bash
       - name: Prepare Test Environment
-        run: python3 -m pip install pytest==6.2.5 pyhamcrest
+        run: python3 -m pip install pytest==6.2.5 delegator envoy pyhamcrest
         shell: bash
       - name: Test
         run: |
-          cd /usr/local/lib/python3.9/site-packages/pyreindexer
+          cd $(python3 -m site --user-site)/pyreindexer
           $GITHUB_WORKSPACE/.github/workflows/test.sh
         shell: bash
 
@@ -77,7 +77,7 @@ jobs:
         run: sudo apt-get install reindexer-server
         shell: bash
       - name: Prepare Test Environment
-        run: python3 -m pip install pytest==6.2.5 pyhamcrest
+        run: python3 -m pip install pytest==6.2.5 delegator envoy pyhamcrest
         shell: bash
       - name: Test
         run: |
