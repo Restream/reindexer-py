@@ -35,7 +35,7 @@ jobs:
         shell: bash
       - uses: actions/checkout@v2
       - name: Install PyReindexer
-        run: python3 -m pip install -vvv --index-url https://test.pypi.org/simple/ --no-deps pyreindexer
+        run: python3 -m pip install -vvv --index-url https://test.pypi.org/simple/ pyreindexer
         shell: bash
       - name: Test
         run: |
@@ -68,7 +68,7 @@ jobs:
       - name: Install PyReindexer
         run: |
           python3 -m pip install setuptools
-          python3 -m pip install -vvv --index-url https://test.pypi.org/simple/ --no-deps pyreindexer
+          python3 -m pip install -vvv --index-url https://test.pypi.org/simple/ pyreindexer
         shell: bash
       - name: Install Reindexer-Server
         run: sudo apt-get install reindexer-server
