@@ -28,6 +28,9 @@ jobs:
     runs-on: macos-latest
     needs: deploy
     steps:
+      - name: Prepare Environment
+        run: python3 -m pip install pytest
+        shell: bash
       - name: Install Reindexer
         run: |
           brew tap restream/reindexer
@@ -35,7 +38,7 @@ jobs:
         shell: bash
       - uses: actions/checkout@v3
       - name: Install PyReindexer
-        run: python3 -m pip install -vvv --index-url https://test.pypi.org/simple/ pyreindexer
+        run: python3 -m pip install -vvv --index-url https://test.pypi.org/simple/ --no-deps pyreindexer
         shell: bash
       - name: Test
         run: |
@@ -53,6 +56,9 @@ jobs:
       OS: ${{matrix.os}}
     needs: deploy
     steps:
+      - name: Prepare Environment
+        run: python3 -m pip install pytest
+        shell: bash
       - name: Install Reindexer-Dev
         run: |
           curl https://repo.reindexer.io/RX-KEY.GPG | sudo apt-key add
@@ -68,7 +74,7 @@ jobs:
       - name: Install PyReindexer
         run: |
           python3 -m pip install setuptools
-          python3 -m pip install -vvv --index-url https://test.pypi.org/simple/ pyreindexer
+          python3 -m pip install -vvv --index-url https://test.pypi.org/simple/ --no-deps pyreindexer
         shell: bash
       - name: Install Reindexer-Server
         run: sudo apt-get install reindexer-server
