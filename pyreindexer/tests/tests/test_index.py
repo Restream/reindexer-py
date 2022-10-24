@@ -49,8 +49,7 @@ class TestCrudIndexes:
         create_index(namespace, index_definition)
         # Then ("Check that we can't add index with the same name")
         assert_that(calling(create_index).with_args(namespace, updated_index_definition),
-                    raises(Exception, matching=has_string(string_contains_in_order(
-                        "Index", "already exists with different settings"))),
+                    raises(Exception, match="Index .* already exists with different settings"),
                     "Index with existing name was created")
 
     def test_cannot_update_not_existing_index_in_namespace(self, database, namespace):
@@ -59,7 +58,7 @@ class TestCrudIndexes:
         # When ("Update index")
         # Then ("Check that we can't update index that was not created")
         assert_that(calling(update_index).with_args(namespace, index_definition),
-                    raises(Exception, matching=has_string(f"Index 'id' not found in '{namespace_name}'")),
+                    raises(Exception, match=f"Index 'id' not found in '{namespace_name}'"),
                     "Not existing index was updated")
 
     def test_cannot_delete_not_existing_index_in_namespace(self, database, namespace):
@@ -68,5 +67,5 @@ class TestCrudIndexes:
         # Then ("Check that we can't delete index that was not created")
         index_name = 'id'
         assert_that(calling(drop_index).with_args(namespace, index_name),
-                    raises(Exception, matching=has_string(f"Cannot remove index {index_name}: doesn't exist")),
+                    raises(Exception, match=f"Cannot remove index {index_name}: doesn't exist"),
                     "Not existing index was deleted")
