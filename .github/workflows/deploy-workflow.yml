@@ -42,7 +42,7 @@ jobs:
         shell: bash
       - name: Test
         run: |
-          cd /usr/local/lib/python3.11/site-packages/pyreindexer
+          cd $(python3 -m site --user-site)/pyreindexer
           $GITHUB_WORKSPACE/.github/workflows/test.sh
         shell: bash
 
