@@ -42,14 +42,14 @@ jobs:
         shell: bash
       - name: Test
         run: |
-          cd /usr/local/lib/python3.10/site-packages/pyreindexer
+          cd /usr/local/lib/python3.11/site-packages/pyreindexer
           $GITHUB_WORKSPACE/.github/workflows/test.sh
         shell: bash
 
   test-ubuntu:
     strategy:
       matrix:
-        os: [ubuntu-20.04, ubuntu-18.04]
+        os: [ubuntu-20.04,ubuntu-22.04]
       fail-fast: false
     runs-on: ${{matrix.os}}
     env:
@@ -62,10 +62,11 @@ jobs:
           if [[ $OS == ubuntu-20.04 ]]; then
             echo 'deb https://repo.reindexer.io/ubuntu-focal /' | sudo tee -a /etc/apt/sources.list
           else
-            echo 'deb https://repo.reindexer.io/ubuntu-bionic /' | sudo tee -a /etc/apt/sources.list
+            echo 'deb https://repo.reindexer.io/ubuntu-jammy /' | sudo tee -a /etc/apt/sources.list
           fi
-          sudo apt-get update
-          sudo apt-get install reindexer-dev
+          sudo apt-get update -y
+          sudo apt-get install -y libunwind-dev
+          sudo apt-get install -y reindexer-dev
         shell: bash
       - uses: actions/checkout@v3
       - name: Install PyReindexer
