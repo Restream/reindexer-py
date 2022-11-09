@@ -42,7 +42,6 @@ jobs:
         shell: bash
       - name: Test
         run: |
-          find / -name pyreindexer 2>/dev/null
           cd /Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/site-packages/pyreindexer
           $GITHUB_WORKSPACE/.github/workflows/test.sh
         shell: bash
