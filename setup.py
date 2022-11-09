@@ -39,7 +39,8 @@ class build_ext(build_ext_orig):
         self.spawn(['cmake', source_dir,
                     '-DCMAKE_BUILD_TYPE=RelWithDebInfo',
                     '-DCMAKE_CXX_STANDARD=17',
-                    '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + lib_dir])
+                    '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + lib_dir,
+                    '-DCMAKE_OSX_DEPLOYMENT_TARGET='])
         if not self.dry_run:
             self.spawn(['cmake', '--build', '.'])
 
@@ -47,7 +48,7 @@ class build_ext(build_ext_orig):
 
 
 setup(name=PACKAGE_NAME,
-      version='0.2.23',
+      version='0.2.24',
       description='A connector that allows to interact with Reindexer',
       url='https://github.com/Restream/reindexer-py',
       author='Igor Tulmentyev',
