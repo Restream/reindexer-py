@@ -29,6 +29,8 @@ public:
 		db_->FetchResults(*this);
 	}
 
+	const std::vector<reindexer::AggregationResult>& GetAggregationResults() const { return qresPtr.GetAggregationResults(); }
+
 private:
 	friend DBInterface;
 
