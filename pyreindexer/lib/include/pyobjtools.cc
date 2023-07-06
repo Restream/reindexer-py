@@ -88,7 +88,8 @@ void pyDictSerialize(PyObject **dict, reindexer::WrSerializer &wrSer) {
 
 void PyObjectToJson(PyObject **obj, reindexer::WrSerializer &wrSer) {
 	if (!PyList_Check(*obj) && !PyDict_Check(*obj)) {
-		throw reindexer::Error(errParseJson, std::string("PyObject must be a dictionary or a list for JSON serializing, got ") + Py_TYPE(*obj)->tp_name);
+		throw reindexer::Error(errParseJson,
+							   std::string("PyObject must be a dictionary or a list for JSON serializing, got ") + Py_TYPE(*obj)->tp_name);
 	}
 
 	if (PyDict_Check(*obj)) {
@@ -141,14 +142,14 @@ PyObject *pyValueFromJsonValue(const gason::JsonValue &value) {
 			break;
 		case gason::JSON_ARRAY:
 			pyValue = PyList_New(0);
-			for (auto v : value) {
-				PyList_Append(pyValue, pyValueFromJsonValue(v->value));
+			for (const auto &v : value) {
+				PyList_Append(pyValue, pyValueFromJsonValue(v.value));
 			}
 			break;
 		case gason::JSON_OBJECT:
 			pyValue = PyDict_New();
-			for (auto v : value) {
-				PyDict_SetItem(pyValue, PyUnicode_FromStringAndSize(v->key.data(), v->key.size()), pyValueFromJsonValue(v->value));
+			for (const auto &v : value) {
+				PyDict_SetItem(pyValue, PyUnicode_FromStringAndSize(v.key.data(), v.key.size()), pyValueFromJsonValue(v.value));
 			}
 			break;
 	}
