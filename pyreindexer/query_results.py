@@ -76,3 +76,11 @@ class QueryResults:
 
         self.qres_iter_count = 0
         self.api.query_results_delete(self.qres_wrapper_ptr)
+
+
+    def get_agg_results(self):
+        """Returns aggregation results for the current query
+
+        """
+
+        return self.api.get_agg_results(self.qres_wrapper_ptr)
