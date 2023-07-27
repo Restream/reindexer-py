@@ -73,6 +73,7 @@ static PyObject *EnumNamespaces(PyObject *self, PyObject *args);
 
 static PyObject *QueryResultsWrapperIterate(PyObject *self, PyObject *args);
 static PyObject *QueryResultsWrapperDelete(PyObject *self, PyObject *args);
+static PyObject *GetAggregationResults(PyObject *self, PyObject *args);
 
 // clang-format off
 static PyMethodDef module_methods[] = {
@@ -98,6 +99,7 @@ static PyMethodDef module_methods[] = {
 
 	{"query_results_iterate", QueryResultsWrapperIterate, METH_VARARGS, "get query result"},
 	{"query_results_delete", QueryResultsWrapperDelete, METH_VARARGS, "free query results buffer"},
+	{"get_agg_results", GetAggregationResults, METH_VARARGS, "get aggregation results"},
 
 	{NULL, NULL, 0, NULL}
 };
