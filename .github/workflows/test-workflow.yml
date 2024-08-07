@@ -10,6 +10,7 @@ jobs:
         run: |
           brew tap restream/reindexer
           brew install reindexer
+          pip install setuptools
         shell: bash
       - uses: actions/checkout@v3
       - name: Build PyReindexer
