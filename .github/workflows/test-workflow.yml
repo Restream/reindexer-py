@@ -8,13 +8,17 @@ jobs:
     steps:
       - name: Install Reindexer
         run: |
+          brew update
+          brew install python3 || : # python doesn't need to be linked
           brew tap restream/reindexer
           brew install reindexer
         shell: bash
       - uses: actions/checkout@v3
+      - name: Python Dependencies
+        run: |
+          pip install setuptools
       - name: Build PyReindexer
         run:
-          python3 -m pip install setuptools
           python3 setup.py install
         shell: bash
       - name: Test
