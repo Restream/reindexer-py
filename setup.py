@@ -1,6 +1,5 @@
 import os
 import sys
-from multiprocessing import cpu_count
 
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext as build_ext_orig
@@ -10,12 +9,13 @@ if sys.version_info < (3, 6):
 
 PACKAGE_NAME = 'pyreindexer'
 
+
 class CMakeExtension(Extension):
     def __init__(self, name):
         super().__init__(name, sources=[])
 
 
-class build_ext(build_ext_orig):
+class BuildExt(build_ext_orig):
     def run(self):
         for ext in self.extensions:
             self.build_cmake(ext)
@@ -58,7 +58,7 @@ setup(name=PACKAGE_NAME,
       license='Apache License 2.0',
       packages=[PACKAGE_NAME],
       ext_modules=[CMakeExtension('rawpyreindexer')],
-      cmdclass={'build_ext': build_ext},
+      cmdclass={'build_ext': BuildExt},
       package_data={'pyreindexer': [
           'CMakeLists.txt',
           'lib/include/pyobjtools.h',
