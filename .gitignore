@@ -1,5 +1,6 @@
 __pycache__
-build/*
+.idea/
+build*/
 dist/*
 pyreindexer.egg-info/*
 qa_test/logs/

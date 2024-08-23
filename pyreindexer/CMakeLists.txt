@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.0..3.13)
 
 project(pyreindexer)
 
@@ -23,9 +23,13 @@ set(LIBS_EXT ".so")
 set(LIBSRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/src)
 set(RESOURCES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/include)
 
-set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror")
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -Wall -Wextra -Werror -Wno-unused-parameter -fexceptions")
-string (REPLACE "-O2" "-O3" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
+if(MSVC)
+  add_compile_options(/WX /EHsc -D_CRT_SECURE_NO_WARNINGS -DNOMINMAX)
+else(MSVC)
+  set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror")
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -Wall -Wextra -Werror -Wno-unused-parameter -fexceptions")
+  string (REPLACE "-O2" "-O3" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
+endif(MSVC)
 
 file(GLOB_RECURSE SRCS ${RESOURCES_DIR}/*.cc ${LIBSRC_DIR}/*.cc)
 
