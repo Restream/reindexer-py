@@ -2,7 +2,14 @@ cmake_minimum_required(VERSION 3.0..3.13)
 
 project(pyreindexer)
 
-set(CMAKE_CXX_STANDARD 17)
+# Configure cmake options
+if(MSVC)
+  # Enable C++20 for windows build to be able to use designated initializers.
+  # GCC/Clang support them even with C++17.
+  set(CMAKE_CXX_STANDARD 20)
+else()
+  set(CMAKE_CXX_STANDARD 17)
+endif()
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "RelWithDebInfo")
@@ -11,7 +18,7 @@ endif()
 enable_testing()
 
 set(PY_MIN_VERSION 3.6)
-set(RX_MIN_VERSION 3.2.2)
+set(RX_MIN_VERSION 3.24.0)
 find_package(PythonInterp ${PY_MIN_VERSION})
 find_package(PythonLibs ${PY_MIN_VERSION})
 find_package(reindexer CONFIG ${RX_MIN_VERSION})

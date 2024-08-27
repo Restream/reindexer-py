@@ -8,9 +8,10 @@ class OneLineExceptionFormatter(logging.Formatter):
     """ One line log output
     https://docs.python.org/2/howto/logging-cookbook.html#logging-cookbook
     """
+
     def formatException(self, exc_info):
         result = super(OneLineExceptionFormatter, self).formatException(exc_info)
-        return repr(result) # or format into one line however you want to
+        return repr(result)  # or format into one line however you want to
 
     def format(self, record):
         result = super(OneLineExceptionFormatter, self).format(record)
@@ -34,7 +35,7 @@ formatter = OneLineExceptionFormatter('%(levelname)-5s [%(asctime)s] [%(name)s]:
 # Save log to file
 log_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../logs/')
 if not os.path.exists(log_folder):
-            os.makedirs(log_folder)
+    os.makedirs(log_folder)
 log_filename = os.path.join(os.path.dirname(log_folder), 'test_run_%s.txt' % (datetime.now().strftime('%d%b-%H:%M:%S')))
 
 file_handler = logging.FileHandler(log_filename)

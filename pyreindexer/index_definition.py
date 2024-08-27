@@ -11,17 +11,21 @@ class IndexDefinition(dict):
     # Arguments:
         name (str): An index name.
         json_paths (:obj:`list` of :obj:`str`): A name for mapping a value to a json field.
-        field_type (str): A type of a field. Possible values are: `int`, `int64`, `double`, `string`, `bool`, `composite`.
+        field_type (str): A type of field. Possible values are: `int`, `int64`, `double`, `string`, `bool`, `composite`.
         index_type (str): An index type. Possible values are: `hash`, `tree`, `text`, `-`.
         is_pk (bool): True if a field is a primary key.
         is_array (bool): True if an index is an array.
-        is_dense (bool): True if an index is dense. reduce index size. Saves 8 bytes per unique key value for 'hash' and 'tree' index types.
-            For '-' index type saves 4-8 bytes per each element. Useful for indexes with high selectivity, but for tree and hash indexes with low selectivity could 
+        is_dense (bool): True if an index is dense. reduce index size. Saves 8 bytes per unique key value for 'hash'
+            and 'tree' index types.
+            For '-' index type saves 4-8 bytes per each element. Useful for indexes with high selectivity,
+            but for tree and hash indexes with low selectivity could
             significantly decrease update performance.
         is_sparse (bool): True if a value of an index may be not presented.
-        collate_mode (str): Sets an order of values by collate mode. Possible values are: `none`, `ascii`, `utf8`, `numeric`, `custom`.
+        collate_mode (str): Sets an order of values by collate mode. Possible values are:
+            `none`, `ascii`, `utf8`, `numeric`, `custom`.
         sort_order_letters (str): Order for a sort sequence for a custom collate mode.
-        config (dict): A config for a fulltext engine. [More](https://github.com/Restream/reindexer/blob/master/fulltext.md) .
+        config (dict): A config for a fulltext engine.
+        [More](https://github.com/Restream/reindexer/blob/master/fulltext.md) .
     """
 
     def __getitem__(self, attr):
@@ -33,11 +37,12 @@ class IndexDefinition(dict):
         super(IndexDefinition, self).update({attr: value})
         return self
 
-    def update(self, dict_part={}):
+    def update(self, dict_part=None):
         raise NotImplementedError(
             'Bulk update is not implemented for IndexDefinition instance')
 
-    def _get_known_attrs(self):
+    @staticmethod
+    def _get_known_attrs() -> list[str]:
         return ['name', 'json_paths', 'field_type', 'index_type', 'is_pk',
                 'is_array', 'is_dense', 'is_sparse', 'collate_mode', 'sort_order_letters', 'expire_after', 'config']
 

@@ -96,7 +96,7 @@ Gets a list of namespaces available
 
 __Arguments:__
 
-    enum_not_opeden (bool, optional): An enumeration mode flag. If it is
+    enum_not_opened (bool, optional): An enumeration mode flag. If it is
         set then closed namespaces are in result list too. Defaults to False.
 
 __Returns:__
@@ -238,23 +238,6 @@ __Raises:__
     Exception: Raises with an error message of API return on non-zero error code.
 
 
-<h3 id="pyreindexer.rx_connector.RxConnector.commit">commit</h3>
-
-```python
-RxConnector.commit(self, namespace)
-```
-Flushes changes to a storage of Reindexer
-
-__Arguments:__
-
-    namespace (string): A name of a namespace
-
-__Raises:__
-
-    Exception: Raises with an error message of API return if Reindexer instance is not initialized yet.
-    Exception: Raises with an error message of API return on non-zero error code.
-
-
 <h3 id="pyreindexer.rx_connector.RxConnector.meta_put">meta_put</h3>
 
 ```python
@@ -289,6 +272,24 @@ __Arguments:__
 __Returns:__
 
     string: A metadata value
+
+__Raises:__
+
+    Exception: Raises with an error message of API return if Reindexer instance is not initialized yet.
+    Exception: Raises with an error message of API return on non-zero error code.
+
+
+<h3 id="pyreindexer.rx_connector.RxConnector.meta_delete">meta_delete</h3>
+
+```python
+RxConnector.meta_delete(self, namespace, key)
+```
+Deletes metadata from a storage of Reindexer by key specified
+
+__Arguments:__
+
+    namespace (string): A name of a namespace
+    key (string): A key in a storage of Reindexer where metadata is kept
 
 __Raises:__
 
