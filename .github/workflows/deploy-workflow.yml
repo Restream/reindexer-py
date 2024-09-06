@@ -22,7 +22,7 @@ jobs:
         env:
           PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
         run: |
-          python3 -m pip install twine
+          python3 -m pip install --break-system-packages twine
           python3 -m twine upload --verbose dist/* -u __token__ -p pypi-$PYPI_TOKEN
           # wait for deploy finishing on test pypi server
           sleep 240
@@ -39,7 +39,7 @@ jobs:
           brew install reindexer
         shell: bash
       - name: Install PyReindexer
-        run: python3 -m pip install -vvv pyreindexer
+        run: python3 -m pip install --break-system-packages -vvv pyreindexer
         shell: bash
       - name: Test
         run: |

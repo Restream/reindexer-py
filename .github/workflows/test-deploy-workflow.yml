@@ -40,10 +40,10 @@ jobs:
         shell: bash
       - uses: actions/checkout@v4
       - name: Install PyReindexer
-        run: python3 -m pip install -vvv --index-url https://test.pypi.org/simple/ --no-deps pyreindexer
+        run: python3 -m pip install --break-system-packages -vvv --index-url https://test.pypi.org/simple/ --no-deps pyreindexer
         shell: bash
       - name: Prepare Test Environment
-        run: python3 -m pip install pytest==6.2.5 delegator envoy pyhamcrest==2.0.2
+        run: python3 -m pip install --break-system-packages pytest==6.2.5 delegator envoy pyhamcrest==2.0.2
         shell: bash
       - name: Test
         run: |
