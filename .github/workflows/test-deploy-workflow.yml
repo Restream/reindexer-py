@@ -16,15 +16,15 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build PyReindexer
         run: |
-          python3 -m pip install --upgrade pip
+          brew install pipx
+          pipx install setuptools
           python3 setup.py setuptools sdist bdist_wheel
         shell: bash
       - name: Deploy PyReindexer To Test-Pypi
         env:
           TESTPYPI_TOKEN: ${{ secrets.TESTPYPI_TOKEN }}
         run: |
-          python3 -m pip install --upgrade pip
-          python3 -m pip install twine
+          pipx install twine
           python3 -m twine upload --verbose --repository testpypi dist/* -u __token__ -p pypi-$TESTPYPI_TOKEN
           # wait for deploy finishing on test pypi server
           sleep 240
