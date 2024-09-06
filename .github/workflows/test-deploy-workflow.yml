@@ -47,7 +47,7 @@ jobs:
         shell: bash
       - name: Test
         run: |
-          cd /Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/site-packages/pyreindexer
+          cd /Library/Frameworks/Python.framework/Versions/3.12/lib/python3.11/site-packages/pyreindexer
           $GITHUB_WORKSPACE/.github/workflows/test.sh
         shell: bash
 
