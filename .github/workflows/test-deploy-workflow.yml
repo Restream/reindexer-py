@@ -8,27 +8,29 @@ jobs:
   deploy:
     runs-on: macos-latest
     steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
       - name: Install Reindexer
         run: |
           brew tap restream/reindexer
           brew install reindexer
         shell: bash
-      - uses: actions/checkout@v4
-      - name: Build PyReindexer
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.x'
-      - name: Install dependencies
+
+      - name: Setup PyReindexer
         run: |
-          python -m pip install --upgrade pip setuptools
-          python setup.py sdist bdist_wheel
-        shell: bash
+          python3 -m pip install --upgrade pip
+          python3 setup.py setuptools sdist bdist_wheel
+        shell: bas
+
       - name: Deploy PyReindexer To Test-Pypi
         env:
           TESTPYPI_TOKEN: ${{ secrets.TESTPYPI_TOKEN }}
         run: |
-          python -m pip install twine
-          python -m twine upload --skip-existing --verbose --repository testpypi dist/* -u __token__ -p pypi-$TESTPYPI_TOKEN
+          python3 -m pip install twine
+          python3 -m twine upload --skip-existing --verbose --repository testpypi dist/* -u __token__ -p pypi-$TESTPYPI_TOKEN
           # wait for deploy finishing on test pypi server
           sleep 240
         shell: bash
@@ -37,26 +39,30 @@ jobs:
     runs-on: macos-latest
     needs: deploy
     steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
       - name: Install Reindexer
         run: |
           brew tap restream/reindexer
           brew install reindexer
         shell: bash
-      - uses: actions/checkout@v4
+
       - name: Install PyReindexer
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.x'
         run: |
-          python -m pip install --upgrade pip 
-          python -m pip install -vvv --index-url https://test.pypi.org/simple/ --no-deps pyreindexer
+          python3 -m pip install --upgrade pip 
+          python3 -m pip install -vvv --index-url https://test.pypi.org/simple/ --no-deps pyreindexer
         shell: bash
+
       - name: Prepare Test Environment
-        run: python -m pip install pytest==6.2.5 delegator envoy pyhamcrest==2.0.2
+        run: python3 -m pip install pytest==6.2.5 delegator envoy pyhamcrest==2.0.2
         shell: bash
+
       - name: Test
         run: |
-          python pip show pyreindexer
+          python3 pip show pyreindexer
           cd /Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/pyreindexer
           $GITHUB_WORKSPACE/.github/workflows/test.sh
         shell: bash
