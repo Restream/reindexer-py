@@ -12,7 +12,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.x'
+          python-version: '3.12.5'
 
       - name: Install Reindexer
         run: |
@@ -22,16 +22,16 @@ jobs:
 
       - name: Setup PyReindexer
         run: |
-          python -m pip install --upgrade pip setuptools
-          python setup.py sdist bdist_wheel
+          python3 -m pip install --upgrade pip setuptools
+          python3 setup.py sdist bdist_wheel
         shell: bash
 
       - name: Deploy PyReindexer To Test-Pypi
         env:
           TESTPYPI_TOKEN: ${{ secrets.TESTPYPI_TOKEN }}
         run: |
-          python -m pip install twine
-          python -m twine upload --skip-existing --verbose --repository testpypi dist/* -u __token__ -p pypi-$TESTPYPI_TOKEN
+          python3 -m pip install twine
+          python3 -m twine upload --skip-existing --verbose --repository testpypi dist/* -u __token__ -p pypi-$TESTPYPI_TOKEN
           # wait for deploy finishing on test pypi server
           sleep 240
         shell: bash
@@ -44,7 +44,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.x'
+          python-version: '3.12.5'
 
       - name: Install Reindexer
         run: |
@@ -54,18 +54,18 @@ jobs:
 
       - name: Install PyReindexer
         run: |
-          python -m pip install --upgrade pip 
-          python -m pip install -vvv --index-url https://test.pypi.org/simple/ --no-deps pyreindexer
+          python3 -m pip install --upgrade pip 
+          python3 -m pip install -vvv --index-url https://test.pypi.org/simple/ --no-deps pyreindexer
         shell: bash
 
       - name: Prepare Test Environment
-        run: python -m pip install pytest==6.2.5 delegator envoy pyhamcrest==2.0.2
+        run: python3 -m pip install pytest==6.2.5 delegator envoy pyhamcrest==2.0.2
         shell: bash
 
       - name: Test
         run: |
-          python pip show pyreindexer
-          python -c "import sysconfig; print(sysconfig.get_path('purelib'))"
+          python3 pip show pyreindexer
+          python3 -c "import sysconfig; print(sysconfig.get_path('purelib'))"
           cd /Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/pyreindexer
           $GITHUB_WORKSPACE/.github/workflows/test.sh
         shell: bash
@@ -80,6 +80,7 @@ jobs:
       OS: ${{matrix.os}}
     needs: deploy
     steps:
+      - uses: actions/checkout@v4
       - name: Install Reindexer-Dev
         run: |
           curl https://repo.reindexer.io/RX-KEY.GPG | sudo apt-key add
@@ -92,18 +93,21 @@ jobs:
           sudo apt-get install -y libunwind-dev
           sudo apt-get install -y reindexer-dev
         shell: bash
-      - uses: actions/checkout@v4
+
       - name: Install PyReindexer
         run: |
           python3 -m pip install setuptools
           python3 -m pip install -vvv --index-url https://test.pypi.org/simple/ --no-deps pyreindexer
         shell: bash
+
       - name: Install Reindexer-Server
         run: sudo apt-get install reindexer-server
         shell: bash
+
       - name: Prepare Test Environment
         run: python3 -m pip install pytest==6.2.5 delegator envoy pyhamcrest==2.0.2
         shell: bash
+
       - name: Test
         run: |
           cd $(python3 -m site --user-site)/pyreindexer
