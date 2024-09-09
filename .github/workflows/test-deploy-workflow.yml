@@ -22,7 +22,7 @@ jobs:
 
       - name: Setup PyReindexer
         run: |
-          python3 -m pip install --upgrade pip setuptools
+          brew install python-setuptools
           python3 setup.py sdist bdist_wheel
         shell: bash
 
