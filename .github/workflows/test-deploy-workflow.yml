@@ -9,10 +9,14 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -y
+          curl -L https://github.com/Restream/reindexer/raw/master/dependencies.sh | bash -s
+        shell: bash
+
       - name: Build Reindexer
         run: |
-          sudo apt-get update
-          curl -L https://github.com/Restream/reindexer/raw/master/dependencies.sh | bash -s
           git clone --depth 1 https://github.com/Restream/reindexer
           cd reindexer
           mkdir -p build && cd build
