@@ -24,6 +24,10 @@ jobs:
           make -j8 reindexer_server reindexer_tool install
         shell: bash
 
+      - name: Install Reindexer
+        run: sudo make install
+        shell: bash
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
