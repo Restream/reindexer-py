@@ -12,7 +12,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update -y
-          sudo curl -L https://github.com/Restream/reindexer/raw/master/dependencies.sh | bash -s
+          curl -L https://github.com/Restream/reindexer/raw/master/dependencies.sh | sudo bash -s -y
         shell: bash
 
       - name: Build Reindexer
