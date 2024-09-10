@@ -21,7 +21,7 @@ jobs:
           cd reindexer
           mkdir -p build && cd build
           cmake ..
-          make -j8 reindexer_server reindexer_tool
+          make -j8
         shell: bash
 
       - name: Install Reindexer
