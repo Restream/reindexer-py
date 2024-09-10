@@ -12,6 +12,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update -y
+          sudo apt-get install -y libunwind-dev
           curl -L https://github.com/Restream/reindexer/raw/master/dependencies.sh | bash -s
         shell: bash
 
