@@ -6,23 +6,27 @@ on:
       - master
 jobs:
   deploy:
-    runs-on: macos-14
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - name: Install Reindexer
+      - name: Build Reindexer
         run: |
-          brew tap restream/reindexer
-          brew install reindexer
+          curl -L https://github.com/Restream/reindexer/raw/master/dependencies.sh | bash -s
+          git clone --depth 1 https://github.com/Restream/reindexer
+          cd reindexer
+          mkdir -p build && cd build
+          cmake ..
+          make -j8 reindexer_server reindexer_tool install
         shell: bash
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.9'
+          python-version: '3.12'
 
       - name: Build PyReindexer
         run: |
-          python3 -m pip install --upgrade pip setuptools
+          python3 -m pip install setuptools
           python3 setup.py sdist bdist_wheel
         shell: bash
 
@@ -50,14 +54,14 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.9'
+          python-version: '3.12'
 
       - name: Install PyReindexer
         run: python3 -m pip install -vvv --index-url https://test.pypi.org/simple/ --no-deps pyreindexer
         shell: bash
 
       - name: Prepare Test Environment
-        run: python3 -m pip install pytest==6.2.5 delegator envoy pyhamcrest==2.0.2
+        run: python3 -m pip install -r requirements.txt
         shell: bash
 
       - name: Test
@@ -103,7 +107,7 @@ jobs:
         shell: bash
 
       - name: Prepare Test Environment
-        run: python3 -m pip install pytest==6.2.5 delegator envoy pyhamcrest==2.0.2
+        run: python3 -m pip install -r requirements.txt
         shell: bash
 
       - name: Test
