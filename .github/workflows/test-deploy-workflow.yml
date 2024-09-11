@@ -75,6 +75,9 @@ jobs:
   test-macos:
     runs-on: macos-14
     needs: deploy
+    defaults:
+      run:
+        shell: bash
     steps:
       - name: Checkout PyReindexer
         uses: actions/checkout@v4
@@ -83,7 +86,6 @@ jobs:
         run: |
           brew tap restream/reindexer
           brew install reindexer
-        shell: bash
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -91,12 +93,12 @@ jobs:
           python-version: '3.12'
 
       - name: Install PyReindexer
-        run: python -m pip install -vvv --index-url https://test.pypi.org/simple/ --no-deps pyreindexer
-        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -vvv --index-url https://test.pypi.org/simple/ --no-deps pyreindexer
 
       - name: Prepare Test Environment
         run: python -m pip install -r requirements.txt
-        shell: bash
 
       - name: Test
         run: |
@@ -104,7 +106,6 @@ jobs:
           python -c "import sysconfig; print(sysconfig.get_path('purelib'))"
           cd /Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/pyreindexer
           $GITHUB_WORKSPACE/.github/workflows/test.sh
-        shell: bash
 
   test-ubuntu:
     strategy:
@@ -115,6 +116,9 @@ jobs:
     env:
       OS: ${{matrix.os}}
     needs: deploy
+    defaults:
+      run:
+        shell: bash
     steps:
       - name: Checkout PyReindexer
         uses: actions/checkout@v4
@@ -130,7 +134,6 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install -y libunwind-dev
           sudo apt-get install -y reindexer-dev
-        shell: bash
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -139,20 +142,16 @@ jobs:
 
       - name: Install PyReindexer
         run: |
-          python -m pip install setuptools
+          python -m pip install --upgrade pip setuptools
           python -m pip install -vvv --index-url https://test.pypi.org/simple/ --no-deps pyreindexer
-        shell: bash
 
       - name: Install Reindexer-Server
         run: sudo apt-get install reindexer-server
-        shell: bash
 
       - name: Prepare Test Environment
         run: python -m pip install -r requirements.txt
-        shell: bash
 
       - name: Test
         run: |
           cd $(python -m site --user-site)/pyreindexer
           $GITHUB_WORKSPACE/.github/workflows/test.sh
-        shell: bash
