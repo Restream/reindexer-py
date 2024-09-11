@@ -1,3 +1,5 @@
+name: Upload Release Package to TestPyPI with testing
+
 on:
   pull_request:
     types: [opened, reopened]
@@ -7,13 +9,17 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-22.04
+    defaults:
+      run:
+        shell: bash
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout PyReindexer
+        uses: actions/checkout@v4
+
       - name: Install dependencies
         run: |
           sudo apt-get update -y
           curl -L https://github.com/Restream/reindexer/raw/master/dependencies.sh | sudo bash -s
-        shell: bash
 
       - name: Build Reindexer
         run: |
@@ -23,34 +29,35 @@ jobs:
           cmake ..
           make -j8
           sudo make install
-        shell: bash
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
-      - name: Build PyReindexer
+      - name: Install Python dependencies
         run: |
-          python3 -m pip install setuptools
-          python3 setup.py sdist bdist_wheel
-        shell: bash
+          python -m pip install --upgrade pip
+          make install requirements
+          pip install setuptools wheel twine
 
-      - name: Deploy PyReindexer To Test-Pypi
+      - name: Build and deploy PyReindexer To Test-Pypi
         env:
-          TESTPYPI_TOKEN: ${{ secrets.TESTPYPI_TOKEN }}
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.TESTPYPI_TOKEN }}
         run: |
-          python3 -m pip install twine
-          python3 -m twine upload --skip-existing --verbose --repository testpypi dist/* -u __token__ -p pypi-$TESTPYPI_TOKEN
+          python setup.py sdist bdist_wheel
+          twine upload --skip-existing --verbose --repository testpypi dist/*
           # wait for deploy finishing on test pypi server
           sleep 240
-        shell: bash
 
   test-macos:
     runs-on: macos-14
     needs: deploy
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout PyReindexer
+        uses: actions/checkout@v4
+
       - name: Install Reindexer
         run: |
           brew tap restream/reindexer
@@ -88,7 +95,9 @@ jobs:
       OS: ${{matrix.os}}
     needs: deploy
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout PyReindexer
+        uses: actions/checkout@v4
+
       - name: Install Reindexer-Dev
         run: |
           curl https://repo.reindexer.io/RX-KEY.GPG | sudo apt-key add
