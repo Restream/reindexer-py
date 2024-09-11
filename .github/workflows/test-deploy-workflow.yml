@@ -37,8 +37,7 @@ jobs:
 
       - name: Install Python dependencies
         run: |
-          make install requirements
-          pip install setuptools wheel twine
+          python3 -m pip install setuptools wheel twine
 
       - name: Build and deploy PyReindexer To Test-Pypi
         env:
