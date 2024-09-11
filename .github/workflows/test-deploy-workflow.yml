@@ -22,10 +22,7 @@ jobs:
           mkdir -p build && cd build
           cmake ..
           make -j8
-        shell: bash
-
-      - name: Install Reindexer
-        run: sudo make install
+          sudo make install
         shell: bash
 
       - name: Set up Python
