@@ -37,7 +37,6 @@ jobs:
 
       - name: Install Python dependencies
         run: |
-          python -m pip install --upgrade pip
           make install requirements
           pip install setuptools wheel twine
 
