@@ -55,8 +55,8 @@ jobs:
     environment:
       name: testpypi
       url: https://test.pypi.org/p/pyreindexer/
-    permissions:
-      id-token: write
+    #permissions:
+    #  id-token: write
     steps:
       - name: Fetch build artifacts
         uses: actions/download-artifact@v4
@@ -92,13 +92,14 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Install PyReindexer
+      - name: Prepare Test Environment
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -vvv --index-url https://test.pypi.org/simple/ --no-deps pyreindexer
+          python -m pip install -r requirements.txt
+          python -m pip install setuptools wheel
 
-      - name: Prepare Test Environment
-        run: python -m pip install -r requirements.txt
+      - name: Install PyReindexer
+        run: python -m pip install --index-url https://test.pypi.org/simple/ --no-deps pyreindexer
 
       - name: Test
         run: |
@@ -135,21 +136,22 @@ jobs:
           sudo apt-get install -y libunwind-dev
           sudo apt-get install -y reindexer-dev
 
+      - name: Install Reindexer-Server
+        run: sudo apt-get install reindexer-server
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
-      - name: Install PyReindexer
-        run: |
-          python -m pip install --upgrade pip setuptools
-          python -m pip install -vvv --index-url https://test.pypi.org/simple/ --no-deps pyreindexer
-
-      - name: Install Reindexer-Server
-        run: sudo apt-get install reindexer-server
-
       - name: Prepare Test Environment
-        run: python -m pip install -r requirements.txt
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m pip install setuptools wheel
+
+      - name: Install PyReindexer
+        run: python -m pip install --index-url https://test.pypi.org/simple/ --no-deps pyreindexer
 
       - name: Test
         run: |
