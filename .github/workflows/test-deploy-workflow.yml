@@ -81,7 +81,7 @@ jobs:
     runs-on: ${{matrix.os}}
     env:
       OS: ${{matrix.os}}
-      PYTHON_VER: ${{ startsWith(matrix.os, 'macos') && '3.8' || '3.12' }}
+      BUILD_PYTHON_VERSION: ${{ startsWith(matrix.os, 'macos') && '3.8.10' || '3.12' }}
     needs: deploy
     defaults:
       run:
@@ -107,10 +107,12 @@ jobs:
           sudo apt-get install -y libunwind-dev
           sudo apt-get install -y reindexer-dev
           sudo apt-get install -y reindexer-server
-      - name: Set up Python
+      - name: Set up Python ${{ env.BUILD_PYTHON_VERSION }}
         uses: actions/setup-python@v5
+        env:
+          PIP_DISABLE_PIP_VERSION_CHECK: 1
         with:
-          python-version: ${{ env.PYTHON_VER }}
+          python-version: ${{ env.BUILD_PYTHON_VERSION }}
       - name: Install PyReindexer
         run: |
           python -m pip install --upgrade pip importlib_metadata setuptools wheel
@@ -121,10 +123,11 @@ jobs:
         run: |
           case ${{ matrix.os }} in
             *"macos"*)
-              cd /Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/pyreindexer
+              cd $(which python${{ env.BUILD_PYTHON_VERSION }})/site-packages/pyreindexer
+              $GITHUB_WORKSPACE/github/workflows/test.sh
               ;;
             *"ubuntu"*)
               cd $(python -c "import sysconfig; print(sysconfig.get_path('purelib'))")/pyreindexer
+              $GITHUB_WORKSPACE/github/workflows/test.sh
               ;;
           esac
-          $GITHUB_WORKSPACE/github/workflows/test.sh
