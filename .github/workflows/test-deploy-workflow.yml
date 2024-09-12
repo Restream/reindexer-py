@@ -89,12 +89,12 @@ jobs:
       - name: Checkout PyReindexer
         uses: actions/checkout@v4
       - name: Install Reindexer (MacOS)
-        if: $OS == *"macos"*
+        if: ${{ matrix.os == *"macos"* }}
         run: |
           brew tap restream/reindexer
           brew install reindexer
       - name: Install Reindexer-Dev\Server (Ubuntu)
-        if: $OS == *"ubuntu"*
+        if: ${{ matrix.os == *"ubuntu"* }}
         run: |
           curl https://repo.reindexer.io/RX-KEY.GPG | sudo apt-key add
           if [[ $OS == ubuntu-20.04 ]]; then
