@@ -66,40 +66,41 @@ jobs:
       - name: Publish package distributions to TestPyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
+          # ToDo skip-existing remove after testing
           skip-existing: true
           # verbose: true
           # user: __token__ ## used as default
           password: pypi-${{ secrets.TESTPYPI_TOKEN }}
           repository-url: https://test.pypi.org/legacy/
 
-  #test-macos:
-  #  runs-on: macos-14-large
-  #  needs: deploy
-  #  defaults:
-  #    run:
-  #      shell: bash
-  #  steps:
-  #    - name: Checkout PyReindexer
-  #      uses: actions/checkout@v4
-  #    - name: Install Reindexer
-  #      run: |
-  #        brew tap restream/reindexer
-  #        brew install reindexer
-  #    - name: Set up Python
-  #      uses: actions/setup-python@v5
-  #      with:
-  #        architecture: x64
-  #        python-version: '3.12'
-  #    - name: Install PyReindexer
-  #      run: |
-  #        python -m pip install --upgrade pip setuptools wheel
-  #        python -m pip install --index-url https://test.pypi.org/simple/ --no-deps pyreindexer
-  #    - name: Prepare Test Environment
-  #      run: python -m pip install -r requirements.txt
-  #    - name: Test
-  #      run: |
-  #        cd /Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/pyreindexer
-  #        $GITHUB_WORKSPACE/.github/workflows/test.sh
+  test-macos:
+    runs-on: macos-14-large
+    needs: deploy
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout PyReindexer
+        uses: actions/checkout@v4
+      - name: Install Reindexer
+        run: |
+          brew tap restream/reindexer
+          brew install reindexer
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          architecture: x64
+          python-version: '3.12'
+      - name: Install PyReindexer
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          python -m pip install --index-url https://test.pypi.org/simple/ --no-deps pyreindexer
+      - name: Prepare Test Environment
+        run: python -m pip install -r requirements.txt
+      - name: Test
+        run: |
+          cd /Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/pyreindexer
+          $GITHUB_WORKSPACE/.github/workflows/test.sh
 
   test-ubuntu:
     strategy:
@@ -116,7 +117,6 @@ jobs:
     steps:
       - name: Checkout PyReindexer
         uses: actions/checkout@v4
-
       - name: Install Reindexer-Dev
         run: |
           curl https://repo.reindexer.io/RX-KEY.GPG | sudo apt-key add
@@ -128,27 +128,18 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install -y libunwind-dev
           sudo apt-get install -y reindexer-dev
-
       - name: Install Reindexer-Server
-        run: sudo apt-get install reindexer-server
-
+        run: sudo apt-get install -y reindexer-server
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-
       - name: Install PyReindexer
         run: |
           python -m pip install --upgrade pip importlib_metadata setuptools wheel
           python -m pip install --index-url https://test.pypi.org/simple/ --no-deps pyreindexer
-
       - name: Prepare Test Environment
         run: python -m pip install -r requirements.txt
-
-      - run: python -m pip show pyreindexer
-      - run: python -c "import sysconfig; print(sysconfig.get_path('purelib'))"
-      - run: pwd
-      #- run: python -m site --user-site
       - name: Test
         run: |
           cd $(python -c "import sysconfig; print(sysconfig.get_path('purelib'))")/pyreindexer
