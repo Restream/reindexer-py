@@ -119,15 +119,10 @@ jobs:
           python -m pip install --index-url https://test.pypi.org/simple/ --no-deps pyreindexer
       - name: Prepare Test Environment
         run: python -m pip install -r requirements.txt
+      - run: pwd
+      - run: ls -l
+      - run: echo $GITHUB_WORKSPACE
       - name: Test
         run: |
-          case ${{ matrix.os }} in
-            *"macos"*)
-              cd $(which python${{ env.BUILD_PYTHON_VERSION }})/site-packages/pyreindexer
-              $GITHUB_WORKSPACE/github/workflows/test.sh
-              ;;
-            *"ubuntu"*)
-              cd $(python -c "import sysconfig; print(sysconfig.get_path('purelib'))")/pyreindexer
-              $GITHUB_WORKSPACE/github/workflows/test.sh
-              ;;
-          esac
+          cd $(python -c "import sys; print(sys.executable)")/pyreindexer
+          $GITHUB_WORKSPACE/github/workflows/test.sh
