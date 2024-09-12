@@ -12,6 +12,7 @@ jobs:
     runs-on: ${{matrix.os}}
     env:
       OS: ${{matrix.os}}
+      PYTHON_VER: ${{ startsWith(matrix.os, 'macos') && '3.8' || '3.12' }}
     defaults:
       run:
         shell: bash
@@ -39,7 +40,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: startsWith(matrix.os, 'macos') && '3.8' || '3.12'
+          python-version: ${{ env.PYTHON_VER }}
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip setuptools
