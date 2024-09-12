@@ -1,14 +1,13 @@
 name: Test the project
-
 on:
   push:
     branches-ignore:
       - master
 jobs:
-  test-project:
+  test:
     strategy:
       matrix:
-        os: [ubuntu-20.04,ubuntu-22.04,macos-14-large]
+        os: [ubuntu-20.04,ubuntu-22.04,macos-14]
       fail-fast: false
     runs-on: ${{matrix.os}}
     env:
@@ -19,13 +18,13 @@ jobs:
     steps:
       - name: Checkout PyReindexer
         uses: actions/checkout@v4
-      - name: Install Reindexer
-        if: ${{ matrix.os == 'macos-14-large' }}
+      - name: Install Reindexer (MacOS)
+        if: ${{ $OS== *"macos"* }}
         run: |
           brew tap restream/reindexer
           brew install reindexer
-      - name: Install Reindexer-Dev
-        if: ${{ matrix.os == 'ubuntu-20.04' || matrix.os == 'ubuntu-22.04' }}
+      - name: Install Reindexer-Dev\Server (Ubuntu)
+        if: ${{ $OS == *"ubuntu"* }}
         run: |
           curl https://repo.reindexer.io/RX-KEY.GPG | sudo apt-key add
           if [[ $OS == ubuntu-20.04 ]]; then
@@ -36,12 +35,11 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install -y libunwind-dev
           sudo apt-get install -y reindexer-dev
-      - name: Install Reindexer-Server
-        if: ${{ matrix.os == 'ubuntu-20.04' || matrix.os == 'ubuntu-22.04' }}
-        run: sudo apt-get install -y reindexer-server
+          sudo apt-get install -y reindexer-server
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
+          architecture: x64
           python-version: '3.12'
       - name: Install Python dependencies
         run: |

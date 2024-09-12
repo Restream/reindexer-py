@@ -1,5 +1,4 @@
-name: Upload Release package to TestPyPI with testing
-
+name: Upload Release package to TestPyPI (with testing)
 on:
   pull_request:
     types: [opened, reopened]
@@ -9,7 +8,7 @@ on:
       - master
 jobs:
   build:
-    name: Build project
+    name: Build project (Ubuntu)
     runs-on: ubuntu-22.04
     defaults:
       run:
@@ -50,7 +49,7 @@ jobs:
           path: dist/*
 
   deploy:
-    name: Upload to test PyPi
+    name: Upload to TestPyPI (Ubuntu)
     runs-on: ubuntu-22.04
     needs: build
     environment:
@@ -74,10 +73,10 @@ jobs:
           password: pypi-${{ secrets.TESTPYPI_TOKEN }}
           repository-url: https://test.pypi.org/legacy/
 
-  test-package:
+  test:
     strategy:
       matrix:
-        os: [ubuntu-20.04,ubuntu-22.04,macos-14-large]
+        os: [ubuntu-20.04,ubuntu-22.04,macos-14]
       fail-fast: false
     runs-on: ${{matrix.os}}
     env:
@@ -89,13 +88,13 @@ jobs:
     steps:
       - name: Checkout PyReindexer
         uses: actions/checkout@v4
-      - name: Install Reindexer
-        if: ${{ matrix.os == 'macos-14-large' }}
+      - name: Install Reindexer (MacOS)
+        if: $OS == *"macos"*
         run: |
           brew tap restream/reindexer
           brew install reindexer
-      - name: Install Reindexer-Dev
-        if: ${{ matrix.os == 'ubuntu-20.04' || matrix.os == 'ubuntu-22.04' }}
+      - name: Install Reindexer-Dev\Server (Ubuntu)
+        if: $OS == *"ubuntu"*
         run: |
           curl https://repo.reindexer.io/RX-KEY.GPG | sudo apt-key add
           if [[ $OS == ubuntu-20.04 ]]; then
@@ -106,12 +105,11 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install -y libunwind-dev
           sudo apt-get install -y reindexer-dev
-      - name: Install Reindexer-Server
-        if: ${{ matrix.os == 'ubuntu-20.04' || matrix.os == 'ubuntu-22.04' }}
-        run: sudo apt-get install -y reindexer-server
+          sudo apt-get install -y reindexer-server
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
+          architecture: x64
           python-version: '3.12'
       - name: Install PyReindexer
         run: |
@@ -119,13 +117,14 @@ jobs:
           python -m pip install --index-url https://test.pypi.org/simple/ --no-deps pyreindexer
       - name: Prepare Test Environment
         run: python -m pip install -r requirements.txt
-      - name: Test MacOS
-        if: ${{ matrix.os == 'macos-14-large' }}
-        run: |  
-          cd /Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/pyreindexer
-          $GITHUB_WORKSPACE/github/workflows/test.sh
-      - name: Test Ubuntu
-        if: ${{ matrix.os == 'ubuntu-20.04' || matrix.os == 'ubuntu-22.04' }}
+      - name: Test
         run: |
-          cd $(python -c "import sysconfig; print(sysconfig.get_path('purelib'))")/pyreindexer
-          $GITHUB_WORKSPACE/.github/workflows/test.sh
+          case $OS in
+            *"macos"*)
+              cd /Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/pyreindexer
+              ;;
+            *"ubuntu"*)
+              cd $(python -c "import sysconfig; print(sysconfig.get_path('purelib'))")/pyreindexer
+              ;;
+          esac
+          $GITHUB_WORKSPACE/github/workflows/test.sh
