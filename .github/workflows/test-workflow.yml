@@ -1,39 +1,34 @@
-on: 
+name: Test the project
+on:
   push:
     branches-ignore:
       - master
 jobs:
-  test-macos:
-    runs-on: macos-latest
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-20.04,ubuntu-22.04,ubuntu-24.04,macos-14]
+    runs-on: ${{matrix.os}}
+    env:
+      # Python 3.12 issue found on MasOS arm64 (darwin) runners, actions/setup-python@v5 incorrect venv setup
+      BUILD_PYTHON_VERSION: ${{ startsWith(matrix.os, 'macos') && '3.8' || '3.12' }}
+    defaults:
+      run:
+        shell: bash
     steps:
-      - name: Install Reindexer
+      - name: Checkout PyReindexer
+        uses: actions/checkout@v4
+      - name: Install Reindexer-Dev\Server (MacOS)
+        if: startsWith(matrix.os, 'macos')
         run: |
           brew tap restream/reindexer
           brew install reindexer
-        shell: bash
-      - uses: actions/checkout@v3
-      - name: Build PyReindexer
-        run: python3 setup.py install
-        shell: bash
-      - name: Test
-        run: |
-          cd pyreindexer
-          $GITHUB_WORKSPACE/.github/workflows/test.sh
-        shell: bash
-
-  test-ubuntu:
-    strategy:
-      matrix:
-        os: [ubuntu-20.04,ubuntu-22.04]
-      fail-fast: false
-    runs-on: ${{matrix.os}}
-    env:
-      OS: ${{matrix.os}}
-    steps:
-      - name: Install Reindexer-Dev
+      - name: Install Reindexer-Dev\Server (Ubuntu)
+        if: startsWith(matrix.os, 'ubuntu')
         run: |
           curl https://repo.reindexer.io/RX-KEY.GPG | sudo apt-key add
-          if [[ $OS == ubuntu-20.04 ]]; then
+          if [[ ${{matrix.os}} == ubuntu-20.04 ]]; then
             echo 'deb https://repo.reindexer.io/ubuntu-focal /' | sudo tee -a /etc/apt/sources.list
           else
             echo 'deb https://repo.reindexer.io/ubuntu-jammy /' | sudo tee -a /etc/apt/sources.list
@@ -41,19 +36,23 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install -y libunwind-dev
           sudo apt-get install -y reindexer-dev
-        shell: bash
-      - uses: actions/checkout@v3
+          sudo apt-get install -y reindexer-server
+      - name: Set up Python ${{ env.BUILD_PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        env:
+          PIP_DISABLE_PIP_VERSION_CHECK: 1
+        with:
+          python-version: ${{ env.BUILD_PYTHON_VERSION }}
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools build
+      - name: Prepare Test Environment
+        run: python -m pip install -r requirements.txt
       - name: Build PyReindexer
         run: |
-          python3 -m pip install setuptools
-          python3 setup.py build
-          sudo python3 setup.py install
-        shell: bash
-      - name: Install Reindexer-Server
-        run: sudo apt-get install reindexer-server
-        shell: bash
+          python -m build
+          pip install .
       - name: Test
         run: |
           cd pyreindexer
           $GITHUB_WORKSPACE/.github/workflows/test.sh
-        shell: bash

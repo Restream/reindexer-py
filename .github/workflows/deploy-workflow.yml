@@ -1,66 +1,102 @@
+name: Upload Release package
 on:
   push:
     branches:
       - master
+
 jobs:
-  deploy:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Install Reindexer
-        run: |
-          brew tap restream/reindexer
-          brew install reindexer
+  build:
+    name: Build project (ubuntu)
+    runs-on: ubuntu-22.04
+    env:
+      DEPLOY_BUILD_PYTHON_VERSION: '3.12'
+    defaults:
+      run:
         shell: bash
+    steps:
+      - name: Checkout PyReindexer
+        uses: actions/checkout@v4
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -y
+          curl -L https://github.com/Restream/reindexer/raw/master/dependencies.sh | sudo bash -s
+      - name: Checkout Reindexer repo
+        uses: actions/checkout@v4
+        with:
+          repository: Restream/reindexer
+          path: reindexer
+      - name: Build Reindexer
+        run: |
+          cd reindexer
+          mkdir -p build && cd build
+          cmake ..
+          make -j8
+          sudo make install
+      - name: Set up Python ${{ env.DEPLOY_BUILD_PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.DEPLOY_BUILD_PYTHON_VERSION }}
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install build
       - name: Build PyReindexer
-        run: |
-          python3 -m pip install wheel
-          python3 setup.py sdist bdist_wheel
-        shell: bash
-      - name: Deploy PyReindexer To Pypi
-        env:
-          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
-        run: |
-          python3 -m pip install twine
-          python3 -m twine upload --verbose dist/* -u __token__ -p pypi-$PYPI_TOKEN
-          # wait for deploy finnishing on test pypi server
-          sleep 240
-        shell: bash
+        run: python -m build --sdist
+      - name: Store build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build
+          path: dist/*
 
-  test-macos:
-    runs-on: macos-latest
-    needs: deploy
+  deploy:
+    name: Upload to PyPI (ubuntu)
+    runs-on: ubuntu-22.04
+    needs: build
+    environment:
+      name: pypi
+      url: https://pypi.org/p/pyreindexer/
+    permissions:
+       id-token: write
     steps:
-      - uses: actions/checkout@v3
-      - name: Install Reindexer
-        run: |
-          brew tap restream/reindexer
-          brew install reindexer
-        shell: bash
-      - name: Install PyReindexer
-        run: python3 -m pip install -vvv pyreindexer
-        shell: bash
-      - name: Test
-        run: |
-          cd /Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/site-packages/pyreindexer
-          $GITHUB_WORKSPACE/.github/workflows/test.sh
-        shell: bash
+      - name: Fetch build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build
+          path: dist/
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          verbose: true
+          # user: __token__ ## used as default
+          password: pypi-${{ secrets.PYPI_TOKEN }}
+          repository-url: https://pypi.org/legacy/
 
-  test-ubuntu:
+  test:
     strategy:
       matrix:
-        os: [ubuntu-20.04,ubuntu-22.04]
+        os: [ubuntu-20.04,ubuntu-22.04,ubuntu-24.04,macos-14]
       fail-fast: false
     runs-on: ${{matrix.os}}
     env:
-      OS: ${{matrix.os}}
+      # Python 3.12 issue found on MasOS arm64 (darwin) runners, actions/setup-python@v5 incorrect venv setup
+      BUILD_PYTHON_VERSION: ${{ startsWith(matrix.os, 'macos') && '3.8' || '3.12' }}
     needs: deploy
+    defaults:
+      run:
+        shell: bash
     steps:
-      - uses: actions/checkout@v3
-      - name: Install Reindexer-Dev
+      - name: Checkout PyReindexer
+        uses: actions/checkout@v4
+      - name: Install Reindexer (MacOS)
+        if: startsWith(matrix.os, 'macos')
+        run: |
+          brew tap restream/reindexer
+          brew install reindexer
+      - name: Install Reindexer-Dev\Server (Ubuntu)
+        if: startsWith(matrix.os, 'ubuntu')
         run: |
           curl https://repo.reindexer.io/RX-KEY.GPG | sudo apt-key add
-          if [[ $OS == ubuntu-20.04 ]]; then
+          if [[ ${{matrix.os}} == ubuntu-20.04 ]]; then
             echo 'deb https://repo.reindexer.io/ubuntu-focal /' | sudo tee -a /etc/apt/sources.list
           else
             echo 'deb https://repo.reindexer.io/ubuntu-jammy /' | sudo tee -a /etc/apt/sources.list
@@ -68,17 +104,20 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install -y libunwind-dev
           sudo apt-get install -y reindexer-dev
-        shell: bash
+          sudo apt-get install -y reindexer-server
+      - name: Set up Python ${{ env.BUILD_PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        env:
+          PIP_DISABLE_PIP_VERSION_CHECK: 1
+        with:
+          python-version: ${{ env.BUILD_PYTHON_VERSION }}
       - name: Install PyReindexer
         run: |
-          python3 -m pip install setuptools
-          python3 -m pip install -vvv pyreindexer
-        shell: bash
-      - name: Install Reindexer-Server
-        run: sudo apt-get install reindexer-server
-        shell: bash
+          python -m pip install --upgrade pip importlib_metadata setuptools wheel
+          python -m pip install -vvv pyreindexer
+      - name: Prepare Test Environment
+        run: python -m pip install -r requirements.txt
       - name: Test
         run: |
-          cd $(python3 -m site --user-site)/pyreindexer
+          cd $(python -c "import sysconfig; print(sysconfig.get_path('purelib'))")/pyreindexer
           $GITHUB_WORKSPACE/.github/workflows/test.sh
-        shell: bash
