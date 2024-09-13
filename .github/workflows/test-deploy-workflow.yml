@@ -8,7 +8,10 @@ on:
       - master
 
 env:
-  BUILD_PYTHON_VERSION: '3.11'
+  # Python 3.12 issue found on MasOS arm64 (darwin) runners, actions/setup-python@v5 incorrect venv setup
+  # https://github.com/actions/setup-python/issues/654
+  # https://github.com/actions/setup-python/issues/865
+  BUILD_PYTHON_VERSION: '>=3.9 <=3.12'
 
 jobs:
   build:
