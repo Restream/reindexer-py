@@ -7,12 +7,13 @@ on:
     branches-ignore:
       - master
 
+env:
+  BUILD_PYTHON_VERSION: '>=3.9 <=3.12'
+
 jobs:
   build:
     name: Build project (Ubuntu)
     runs-on: ubuntu-22.04
-    env:
-      BUILD_PYTHON_VERSION: '>=3.9'
     defaults:
       run:
         shell: bash
@@ -71,7 +72,7 @@ jobs:
         with:
           # ToDo skip-existing remove after testing
           skip-existing: true
-          # verbose: true
+          verbose: true
           # user: __token__ ## used as default
           password: pypi-${{ secrets.TESTPYPI_TOKEN }}
           repository-url: https://test.pypi.org/legacy/
@@ -118,7 +119,7 @@ jobs:
       - name: Install PyReindexer
         run: |
           python -m pip install --upgrade pip importlib_metadata setuptools wheel
-          python -m pip install --index-url https://test.pypi.org/simple/ --no-deps pyreindexer
+          python -m pip install --vvv --index-url https://test.pypi.org/simple/ --no-deps pyreindexer
       - name: Prepare Test Environment
         run: python -m pip install -r requirements.txt
       - name: Test
