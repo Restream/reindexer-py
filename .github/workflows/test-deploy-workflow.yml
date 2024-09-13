@@ -7,14 +7,12 @@ on:
     branches-ignore:
       - master
 
-env:
-  BUILD_PYTHON_VERSION: '3.12'
-
-
 jobs:
   build:
     name: Build project (Ubuntu)
     runs-on: ubuntu-22.04
+    env:
+      BUILD_PYTHON_VERSION: '3.12'
     defaults:
       run:
         shell: bash
@@ -83,8 +81,6 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-20.04,ubuntu-22.04,ubuntu-24.04,macos-14]
-        install-via: [pip]
-        arch: [x64]
     runs-on: ${{matrix.os}}
     env:
       OS: ${{matrix.os}}
@@ -119,8 +115,7 @@ jobs:
           PIP_DISABLE_PIP_VERSION_CHECK: 1
         with:
           python-version: ${{ env.BUILD_PYTHON_VERSION }}
-          arch: ${{ startsWith(matrix.os, 'macos') && 'arm64' || 'x64' }}
-          install-via: pip
+          architecture: ${{ startsWith(matrix.os, 'macos') && 'arm64' || 'x64' }}
       - name: Install PyReindexer
         run: |
           python -m pip install --upgrade pip importlib_metadata setuptools wheel
