@@ -8,7 +8,7 @@ on:
       - master
 
 env:
-  BUILD_PYTHON_VERSION: '>=3.9 <=3.12'
+  BUILD_PYTHON_VERSION: '3.11'
 
 jobs:
   build:

@@ -12,7 +12,7 @@ jobs:
     runs-on: ${{matrix.os}}
     env:
       OS: ${{matrix.os}}
-      BUILD_PYTHON_VERSION: '3.12'
+      BUILD_PYTHON_VERSION: '3.11'
     defaults:
       run:
         shell: bash
