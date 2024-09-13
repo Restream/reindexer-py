@@ -4,15 +4,12 @@ on:
     branches:
       - master
 
-env:
-  # Python 3.12 issue found on MasOS arm64 (darwin) runners, actions/setup-python@v5 incorrect venv setup
-  # https://github.com/actions/setup-python/issues/654
-  BUILD_PYTHON_VERSION: '>=3.9 <=3.12'
-
 jobs:
   build:
     name: Build project (Ubuntu)
     runs-on: ubuntu-22.04
+    env:
+      DEPLOY_BUILD_PYTHON_VERSION: '3.12'
     defaults:
       run:
         shell: bash
@@ -35,10 +32,10 @@ jobs:
           cmake ..
           make -j8
           sudo make install
-      - name: Set up Python
+      - name: Set up Python ${{ env.DEPLOY_BUILD_PYTHON_VERSION }}
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ env.BUILD_PYTHON_VERSION }}
+          python-version: ${{ env.DEPLOY_BUILD_PYTHON_VERSION }}
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
@@ -69,7 +66,7 @@ jobs:
       - name: Publish package distributions to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          # verbose: true
+          verbose: true
           # user: __token__ ## used as default
           password: pypi-${{ secrets.PYPI_TOKEN }}
           repository-url: https://pypi.org/legacy/
@@ -81,7 +78,8 @@ jobs:
       fail-fast: false
     runs-on: ${{matrix.os}}
     env:
-      OS: ${{matrix.os}}
+      # Python 3.12 issue found on MasOS arm64 (darwin) runners, actions/setup-python@v5 incorrect venv setup
+      BUILD_PYTHON_VERSION: ${{ startsWith(matrix.os, 'macos') && '3.8' || '3.12' }}
     needs: deploy
     defaults:
       run:
@@ -98,7 +96,7 @@ jobs:
         if: startsWith(matrix.os, 'ubuntu')
         run: |
           curl https://repo.reindexer.io/RX-KEY.GPG | sudo apt-key add
-          if [[ $OS == ubuntu-20.04 ]]; then
+          if [[ ${{matrix.os}} == ubuntu-20.04 ]]; then
             echo 'deb https://repo.reindexer.io/ubuntu-focal /' | sudo tee -a /etc/apt/sources.list
           else
             echo 'deb https://repo.reindexer.io/ubuntu-jammy /' | sudo tee -a /etc/apt/sources.list

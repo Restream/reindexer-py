@@ -11,10 +11,8 @@ jobs:
         os: [ubuntu-20.04,ubuntu-22.04,ubuntu-24.04,macos-14]
     runs-on: ${{matrix.os}}
     env:
-      OS: ${{matrix.os}}
       # Python 3.12 issue found on MasOS arm64 (darwin) runners, actions/setup-python@v5 incorrect venv setup
-      # https://github.com/actions/setup-python/issues/654
-      BUILD_PYTHON_VERSION: '>=3.9 <=3.12'
+      BUILD_PYTHON_VERSION: ${{ startsWith(matrix.os, 'macos') && '3.8' || '3.12' }}
     defaults:
       run:
         shell: bash
@@ -30,7 +28,7 @@ jobs:
         if: startsWith(matrix.os, 'ubuntu')
         run: |
           curl https://repo.reindexer.io/RX-KEY.GPG | sudo apt-key add
-          if [[ $OS == ubuntu-20.04 ]]; then
+          if [[ ${{matrix.os}} == ubuntu-20.04 ]]; then
             echo 'deb https://repo.reindexer.io/ubuntu-focal /' | sudo tee -a /etc/apt/sources.list
           else
             echo 'deb https://repo.reindexer.io/ubuntu-jammy /' | sudo tee -a /etc/apt/sources.list
