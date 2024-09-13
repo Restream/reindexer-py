@@ -87,15 +87,13 @@ void pyDictSerialize(PyObject **dict, reindexer::WrSerializer &wrSer) {
 }
 
 void PyObjectToJson(PyObject **obj, reindexer::WrSerializer &wrSer) {
-	if (!PyList_Check(*obj) && !PyDict_Check(*obj)) {
-		throw reindexer::Error(errParseJson,
-							   std::string("PyObject must be a dictionary or a list for JSON serializing, got ") + Py_TYPE(*obj)->tp_name);
-	}
-
 	if (PyDict_Check(*obj)) {
 		pyDictSerialize(obj, wrSer);
-	} else {
+	} else if (PyList_Check(*obj) ) {
 		pyListSerialize(obj, wrSer);
+	} else {
+	    throw reindexer::Error(errParseJson,
+							   std::string("PyObject must be a dictionary or a list for JSON serializing, got ") + Py_TYPE(*obj)->tp_name);
 	}
 }
 

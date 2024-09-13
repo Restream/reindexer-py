@@ -1,6 +1,5 @@
 import os
 import sys
-from multiprocessing import cpu_count
 
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext as build_ext_orig
@@ -10,12 +9,13 @@ if sys.version_info < (3, 6):
 
 PACKAGE_NAME = 'pyreindexer'
 
+
 class CMakeExtension(Extension):
     def __init__(self, name):
         super().__init__(name, sources=[])
 
 
-class build_ext(build_ext_orig):
+class BuildExt(build_ext_orig):
     def run(self):
         for ext in self.extensions:
             self.build_cmake(ext)
@@ -40,7 +40,7 @@ class build_ext(build_ext_orig):
                     '-DCMAKE_BUILD_TYPE=RelWithDebInfo',
                     '-DCMAKE_CXX_STANDARD=17',
                     '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + lib_dir,
-                    '-DCMAKE_OSX_DEPLOYMENT_TARGET='])
+                    '-DCMAKE_OSX_DEPLOYMENT_TARGET=11'])
         if not self.dry_run:
             self.spawn(['cmake', '--build', '.'])
 
@@ -48,17 +48,19 @@ class build_ext(build_ext_orig):
 
 
 setup(name=PACKAGE_NAME,
-      version='0.2.28',
+      version='0.2.32',
       description='A connector that allows to interact with Reindexer',
       url='https://github.com/Restream/reindexer-py',
       author='Igor Tulmentyev',
       author_email='igtulm@gmail.com',
       maintainer='Reindexer Team',
       maintainer_email='contactus@reindexer.io',
+      long_description=open("README.md", encoding="utf-8").read(),
+      long_description_content_type="text/markdown",
       license='Apache License 2.0',
       packages=[PACKAGE_NAME],
       ext_modules=[CMakeExtension('rawpyreindexer')],
-      cmdclass={'build_ext': build_ext},
+      cmdclass={'build_ext': BuildExt},
       package_data={'pyreindexer': [
           'CMakeLists.txt',
           'lib/include/pyobjtools.h',
@@ -88,5 +90,5 @@ setup(name=PACKAGE_NAME,
           'tests/helpers/__init__.py',
           'tests/__init__.py'
       ]},
-      test_suite='tests', install_requires=['envoy==0.0.3', 'delegator==0.0.3', 'pytest==6.2.5', 'pyhamcrest==2.0.2']
+      test_suite='tests', install_requires=['envoy==0.0.3', 'delegator==0.0.3', 'pyhamcrest==2.0.2', 'pytest==6.2.5']
       )

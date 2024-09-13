@@ -20,3 +20,10 @@ def get_metadata_by_key(namespace, key):
     value = db.meta_get(namespace_name, key)
     log_operation.info(f"Get metadata value by key: '{key}: {value}'")
     return value
+
+
+def delete_metadata_by_key(namespace, key):
+    db, namespace_name = namespace
+    db.meta_delete(namespace_name, key)
+    log_operation.info(f"Delete metadata value from namespace '{namespace_name}' by key '{key}'")
+    return key

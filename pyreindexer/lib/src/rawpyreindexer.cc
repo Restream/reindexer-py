@@ -269,19 +269,6 @@ static PyObject *ItemUpsert(PyObject *self, PyObject *args) { return itemModify(
 
 static PyObject *ItemDelete(PyObject *self, PyObject *args) { return itemModify(self, args, ModeDelete); }
 
-static PyObject *Commit(PyObject *self, PyObject *args) {
-	uintptr_t rx;
-	char *ns;
-
-	if (!PyArg_ParseTuple(args, "ks", &rx, &ns)) {
-		return NULL;
-	}
-
-	Error err = getDB(rx)->Commit(ns);
-
-	return pyErr(err);
-}
-
 static PyObject *PutMeta(PyObject *self, PyObject *args) {
 	uintptr_t rx;
 	char *ns;
@@ -310,6 +297,20 @@ static PyObject *GetMeta(PyObject *self, PyObject *args) {
 	Error err = getDB(rx)->GetMeta(ns, key, value);
 
 	return Py_BuildValue("iss", err.code(), err.what().c_str(), value.c_str());
+}
+
+static PyObject *DeleteMeta(PyObject *self, PyObject *args) {
+	uintptr_t rx;
+	char *ns;
+	char *key;
+
+	if (!PyArg_ParseTuple(args, "kss", &rx, &ns, &key)) {
+		return NULL;
+	}
+
+	Error err = getDB(rx)->DeleteMeta(ns, key);
+
+	return pyErr(err);
 }
 
 static PyObject *Select(PyObject *self, PyObject *args) {
