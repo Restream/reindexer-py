@@ -51,7 +51,7 @@ jobs:
       - name: Build PyReindexer
         run: |
           python -m build
-          pip install .
+          python -m pip install -e .
       - name: Test
         run: |
           cd pyreindexer
