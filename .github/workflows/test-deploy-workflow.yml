@@ -84,6 +84,7 @@ jobs:
     runs-on: ${{matrix.os}}
     env:
       # Python 3.12 issue found on MasOS arm64 (darwin) runners, actions/setup-python@v5 incorrect venv setup
+      # Error: The version '3.12' with architecture 'arm64' was not found for macOS 14.4. In real version 3.9+ not found
       # https://github.com/actions/setup-python/issues/654
       # https://github.com/actions/setup-python/issues/865
       BUILD_PYTHON_VERSION: ${{ startsWith(matrix.os, 'macos') && '3.8' || '3.12' }}
@@ -114,13 +115,11 @@ jobs:
           sudo apt-get install -y reindexer-server
       - name: Set up Python ${{ env.BUILD_PYTHON_VERSION }}
         uses: actions/setup-python@v5
-        env:
-          PIP_DISABLE_PIP_VERSION_CHECK: 1
         with:
           python-version: ${{ env.BUILD_PYTHON_VERSION }}
       - name: Install PyReindexer
         run: |
-          python -m pip install --upgrade pip importlib_metadata setuptools wheel
+          python -m pip install --upgrade --disable-pip-version-check pip importlib_metadata setuptools wheel
           python -m pip install -vvv --index-url https://test.pypi.org/simple/ --no-deps pyreindexer
       - name: Prepare Test Environment
         run: python -m pip install -r requirements.txt
