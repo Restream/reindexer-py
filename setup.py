@@ -10,6 +10,15 @@ if sys.version_info < (3, 6):
 PACKAGE_NAME = 'pyreindexer'
 
 
+def _c2(*names):
+    return ' :: '.join(names)
+
+
+def load_requirements(filename):
+    with open(f"{filename}", "r") as file:
+        return file.read().splitlines()
+
+
 class CMakeExtension(Extension):
     def __init__(self, name):
         super().__init__(name, sources=[])
@@ -61,6 +70,7 @@ setup(name=PACKAGE_NAME,
       packages=[PACKAGE_NAME],
       ext_modules=[CMakeExtension('rawpyreindexer')],
       cmdclass={'build_ext': BuildExt},
+      keywords=["python", "connector", "reindexer", "in-memory-database", "database"],
       package_data={'pyreindexer': [
           'CMakeLists.txt',
           'lib/include/pyobjtools.h',
@@ -90,5 +100,28 @@ setup(name=PACKAGE_NAME,
           'tests/helpers/__init__.py',
           'tests/__init__.py'
       ]},
-      test_suite='tests', install_requires=['envoy==0.0.3', 'delegator==0.0.3', 'pyhamcrest==2.0.2', 'pytest==6.2.5']
+      test_suite='tests',
+      python_requires=">=3.6,<3.11.5",
+      install_requires=load_requirements("requirements.txt"),
+      classifiers=[
+          _c2('Development Status', '2 - Alpha'),
+          _c2('Environment', 'Console'),
+          _c2('Intended Audience', 'Developers'),
+          _c2('License', 'OSI Approved', 'Apache Software License'),
+          _c2('Programming Language', 'Python'),
+          _c2('Programming Language', 'Python', '3.6'),
+          _c2('Programming Language', 'Python', '3.7'),
+          _c2('Programming Language', 'Python', '3.8'),
+          _c2('Programming Language', 'Python', '3.9'),
+          _c2('Programming Language', 'Python', '3.10'),
+          _c2('Programming Language', 'Python', '3.11'),
+          _c2('Programming Language', 'Python', '3.12'),
+          _c2('Topic', 'Database'),
+          _c2('Topic', 'In-Memory-Database'),
+          _c2('Topic', 'Software Development'),
+          _c2('Topic', 'Software Development', 'Libraries', 'Python Modules'),
+          _c2('Operating System', 'MacOS'),
+          _c2('Operating System', 'POSIX', 'Linux'),
+          _c2('Operating System', 'Microsoft', 'Windows'),
+      ],
       )
