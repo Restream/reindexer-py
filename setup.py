@@ -102,7 +102,7 @@ setup(name=PACKAGE_NAME,
       ]},
       test_suite='tests',
       python_requires=">=3.6,<3.11.5",
-      install_requires=load_requirements("requirements.txt"),
+      install_requires=load_requirements(PACKAGE_NAME + "/requirements.txt"),
       classifiers=[
           _c2('Development Status', '3 - Alpha'),
           _c2('Environment', 'Console'),
