@@ -14,11 +14,6 @@ def _c2(*names):
     return ' :: '.join(names)
 
 
-def load_requirements(filename):
-    with open(f"{filename}", "r") as file:
-        return file.read().splitlines()
-
-
 class CMakeExtension(Extension):
     def __init__(self, name):
         super().__init__(name, sources=[])
@@ -100,9 +95,9 @@ setup(name=PACKAGE_NAME,
           'tests/helpers/__init__.py',
           'tests/__init__.py'
       ]},
-      test_suite='tests',
       python_requires=">=3.6,<3.11.5",
-      install_requires=load_requirements(PACKAGE_NAME + "/requirements.txt"),
+      test_suite='tests',
+      install_requires=['envoy==0.0.3', 'delegator==0.0.3', 'pyhamcrest==2.0.2', 'pytest==6.2.5'],
       classifiers=[
           _c2('Development Status', '3 - Alpha'),
           _c2('Environment', 'Console'),
