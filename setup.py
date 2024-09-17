@@ -95,7 +95,7 @@ setup(name=PACKAGE_NAME,
           'tests/helpers/__init__.py',
           'tests/__init__.py'
       ]},
-      python_requires=">=3.6,<3.12.5",
+      python_requires=">=3.6,<3.13",
       test_suite='tests',
       install_requires=['envoy==0.0.3', 'delegator==0.0.3', 'pyhamcrest==2.0.2', 'pytest==6.2.5'],
       classifiers=[
