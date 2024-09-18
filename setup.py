@@ -52,9 +52,10 @@ class BuildExt(build_ext_orig):
 
 
 setup(name=PACKAGE_NAME,
-      version='0.2.32',
+      version='0.2.33',
       description='A connector that allows to interact with Reindexer',
-      url='https://github.com/Restream/reindexer-py',
+      url='https://reindexer.io',
+      github='https://github.com/Restream/reindexer-py',
       author='Igor Tulmentyev',
       author_email='igtulm@gmail.com',
       maintainer='Reindexer Team',
