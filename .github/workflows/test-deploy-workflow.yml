@@ -1,4 +1,4 @@
-name: Upload Release package to TestPyPI (with testing)
+name: Upload Release package to TestPyPI
 on:
   pull_request:
     types: [opened, reopened]
@@ -9,7 +9,7 @@ on:
 
 jobs:
   build:
-    name: Build project (Ubuntu)
+    name: Build project (ubuntu)
     runs-on: ubuntu-22.04
     env:
       DEPLOY_BUILD_PYTHON_VERSION: '3.12'
@@ -53,7 +53,7 @@ jobs:
           path: dist/*
 
   deploy:
-    name: Upload to TestPyPI (Ubuntu)
+    name: Upload to TestPyPI (ubuntu)
     runs-on: ubuntu-22.04
     needs: build
     environment:

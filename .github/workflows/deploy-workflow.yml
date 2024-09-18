@@ -6,7 +6,7 @@ on:
 
 jobs:
   build:
-    name: Build project (Ubuntu)
+    name: Build project (ubuntu)
     runs-on: ubuntu-22.04
     env:
       DEPLOY_BUILD_PYTHON_VERSION: '3.12'
@@ -50,7 +50,7 @@ jobs:
           path: dist/*
 
   deploy:
-    name: Upload to PyPI (Ubuntu)
+    name: Upload to PyPI (ubuntu)
     runs-on: ubuntu-22.04
     needs: build
     environment:
