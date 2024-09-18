@@ -10,6 +10,10 @@ if sys.version_info < (3, 6):
 PACKAGE_NAME = 'pyreindexer'
 
 
+def _c2(*names):
+    return ' :: '.join(names)
+
+
 class CMakeExtension(Extension):
     def __init__(self, name):
         super().__init__(name, sources=[])
@@ -48,19 +52,22 @@ class BuildExt(build_ext_orig):
 
 
 setup(name=PACKAGE_NAME,
-      version='0.2.32',
+      version='0.2.33',
       description='A connector that allows to interact with Reindexer',
-      url='https://github.com/Restream/reindexer-py',
       author='Igor Tulmentyev',
       author_email='igtulm@gmail.com',
       maintainer='Reindexer Team',
       maintainer_email='contactus@reindexer.io',
+      url='https://reindexer.io',
+      github='https://github.com/Restream/reindexer-py',
+      # download_url='',
       long_description=open("README.md", encoding="utf-8").read(),
       long_description_content_type="text/markdown",
       license='Apache License 2.0',
       packages=[PACKAGE_NAME],
       ext_modules=[CMakeExtension('rawpyreindexer')],
       cmdclass={'build_ext': BuildExt},
+      keywords=["reindexer", "in-memory-database", "database", "python", "connector"],
       package_data={'pyreindexer': [
           'CMakeLists.txt',
           'lib/include/pyobjtools.h',
@@ -90,5 +97,31 @@ setup(name=PACKAGE_NAME,
           'tests/helpers/__init__.py',
           'tests/__init__.py'
       ]},
-      test_suite='tests', install_requires=['envoy==0.0.3', 'delegator==0.0.3', 'pyhamcrest==2.0.2', 'pytest==6.2.5']
+      python_requires=">=3.6,<3.13",
+      test_suite='tests',
+      install_requires=['envoy==0.0.3', 'delegator==0.0.3', 'pyhamcrest==2.0.2', 'pytest==6.2.5'],
+      classifiers=[
+          _c2('Development Status', '3 - Alpha'),
+          _c2('Environment', 'Console'),
+          _c2('Intended Audience', 'End Users/Desktop'),
+          _c2('Intended Audience', 'Developers'),
+          _c2('License', 'OSI Approved', 'Apache Software License'),
+          _c2('Natural Language', 'Russian'),
+          _c2('Operating System', 'MacOS'),
+          _c2('Operating System', 'POSIX', 'Linux'),
+          _c2('Operating System', 'Microsoft', 'Windows'),
+          _c2('Programming Language', 'Python'),
+          _c2('Programming Language', 'Python', '3.6'),
+          _c2('Programming Language', 'Python', '3.7'),
+          _c2('Programming Language', 'Python', '3.8'),
+          _c2('Programming Language', 'Python', '3.9'),
+          _c2('Programming Language', 'Python', '3.10'),
+          _c2('Programming Language', 'Python', '3.11'),
+          _c2('Programming Language', 'Python', '3.12'),
+          _c2('Topic', 'Database'),
+          _c2('Topic', 'Database', 'Database Engines/Servers'),
+          _c2('Topic', 'Software Development'),
+          _c2('Topic', 'Software Development', 'Libraries', 'Python Modules'),
+      ],
+      platforms=['ALT Linux', 'RED OS', 'Astra Linux'],
       )
