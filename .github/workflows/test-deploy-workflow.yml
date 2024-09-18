@@ -13,23 +13,24 @@ jobs:
       run:
         shell: bash
     steps:
-      - name: Checkout PyReindexer
+      - name: Checkout PyReindexer repo
         uses: actions/checkout@v4
-      - name: Install dependencies
-        run: |
-          sudo apt-get update -y
-          curl -L https://github.com/Restream/reindexer/raw/master/dependencies.sh | sudo bash -s
       - name: Checkout Reindexer repo
         uses: actions/checkout@v4
         with:
           repository: Restream/reindexer
           path: reindexer
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -y
+          cd reindexer
+          sudo bash dependencies.sh
       - name: Build Reindexer
         run: |
           cd reindexer
           mkdir -p build && cd build
           cmake ..
-          make -j8
+          make -j4
           sudo make install
       - name: Set up Python ${{ env.DEPLOY_BUILD_PYTHON_VERSION }}
         uses: actions/setup-python@v5
@@ -38,7 +39,7 @@ jobs:
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install build
+          python -m pip install build
       - name: Build PyReindexer
         run: python -m build --sdist
       - name: Store build artifacts
@@ -54,8 +55,6 @@ jobs:
     environment:
       name: testpypi
       url: https://test.pypi.org/p/pyreindexer/
-    permissions:
-       id-token: write
     steps:
       - name: Fetch build artifacts
         uses: actions/download-artifact@v4
@@ -74,10 +73,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-20.04,ubuntu-22.04,ubuntu-24.04,macos-14]
+        os: [ubuntu-22.04,ubuntu-24.04,macos-14]
     runs-on: ${{matrix.os}}
     env:
       # Python 3.12 issue found on MasOS arm64 (darwin) runners, actions/setup-python@v5 incorrect venv setup
+      # Error: The version '3.12' with architecture 'arm64' was not found for macOS 14.4. In real version 3.9+ not found
       # https://github.com/actions/setup-python/issues/654
       # https://github.com/actions/setup-python/issues/865
       BUILD_PYTHON_VERSION: ${{ startsWith(matrix.os, 'macos') && '3.8' || '3.12' }}
@@ -97,10 +97,13 @@ jobs:
         if: startsWith(matrix.os, 'ubuntu')
         run: |
           curl https://repo.reindexer.io/RX-KEY.GPG | sudo apt-key add
-          if [[ ${{matrix.os}} == ubuntu-20.04 ]]; then
-            echo 'deb https://repo.reindexer.io/ubuntu-focal /' | sudo tee -a /etc/apt/sources.list
-          else
+          if [[ ${{matrix.os}} == ubuntu-22.04 ]]; then
             echo 'deb https://repo.reindexer.io/ubuntu-jammy /' | sudo tee -a /etc/apt/sources.list
+          elif [[ ${{matrix.os}} == ubuntu-24.04 ]]; then
+            echo 'deb https://repo.reindexer.io/ubuntu-noble /' | sudo tee -a /etc/apt/sources.list
+          else
+            echo "${{matrix.os}} not supported"
+            exit 1
           fi
           sudo apt-get update -y
           sudo apt-get install -y libunwind-dev
@@ -114,7 +117,7 @@ jobs:
           python-version: ${{ env.BUILD_PYTHON_VERSION }}
       - name: Install PyReindexer
         run: |
-          python -m pip install --upgrade pip importlib_metadata setuptools wheel
+          python -m pip install --upgrade --disable-pip-version-check pip importlib_metadata setuptools wheel
           python -m pip install -vvv --index-url https://test.pypi.org/simple/ --no-deps pyreindexer
       - name: Prepare Test Environment
         run: python -m pip install -r requirements.txt
