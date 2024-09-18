@@ -31,7 +31,6 @@ jobs:
           sudo bash dependencies.sh
       - name: Build Reindexer
         run: |
-          PWD
           cd reindexer
           mkdir -p build && cd build
           cmake ..
