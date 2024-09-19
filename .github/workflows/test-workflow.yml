@@ -8,7 +8,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04,ubuntu-24.04,macos-14]
+        os: [ubuntu-22.04,ubuntu-24.04,macos-14,windows-2022]
     runs-on: ${{matrix.os}}
     env:
       # Python 3.12 issue found on MasOS arm64 (darwin) runners, actions/setup-python@v5 incorrect venv setup
@@ -40,6 +40,14 @@ jobs:
           sudo apt-get install -y libunwind-dev
           sudo apt-get install -y reindexer-dev
           sudo apt-get install -y reindexer-server
+      - name: Install Reindexer-Dev\Server (Windows)
+        shell: cmd
+        if: startsWith(matrix.os, 'windows')
+        run: |
+          curl -s https://repo.reindexer.io/win/64/ > list.txt
+          For /f "tokens=15delims=<>= " %%A in ('findstr "reindexer-3.*" list.txt') do set LastRowCol=%%A
+          wget -q https://repo.reindexer.io/win/64/%LastRowCol%
+          %LastRowCol% /S
       - name: Set up Python ${{ env.BUILD_PYTHON_VERSION }}
         uses: actions/setup-python@v5
         env:
