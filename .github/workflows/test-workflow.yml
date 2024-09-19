@@ -64,7 +64,7 @@ jobs:
     runs-on: windows-2022
     defaults:
       run:
-        shell: pwsh
+        shell: cmd
     steps:
       - name: Checkout PyReindexer repo
         uses: actions/checkout@v4
@@ -72,21 +72,23 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Python initialization
+        run: py -m pip install wget
       - name: Install Reindexer-Dev\Server
         run: |
           curl -s https://repo.reindexer.io/win/64/ > list.txt
           For /f "tokens=15delims=<>= " %%A in ('findstr "reindexer-3.*" list.txt') do set LastRowCol=%%A
-          wget -q https://repo.reindexer.io/win/64/%LastRowCol%
+          py -m wget -q https://repo.reindexer.io/win/64/%LastRowCol%
           %LastRowCol% /S
       - name: Install Python dependencies
         run: |
-          python -m pip install --upgrade --disable-pip-version-check pip setuptools build
+          py -m pip install --upgrade --disable-pip-version-check pip setuptools build
       - name: Prepare Test Environment
         run: python -m pip install -r requirements.txt
       - name: Build PyReindexer
         run: |
-          python -m build
-          python -m pip install .
+          py -m build
+          py -m pip install .
       - name: Test
         run: |
           cd pyreindexer
