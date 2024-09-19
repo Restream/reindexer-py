@@ -78,9 +78,7 @@ jobs:
         run: |
           curl -s https://repo.reindexer.io/win/64/ > list.txt
           For /f "tokens=15delims=<>= " %%A in ('findstr "reindexer-3.*" list.txt') do set LastRowCol=%%A
-          echo %LastRowCol%
-          ls
-          py -m wget -q https://repo.reindexer.io/win/64/%LastRowCol%
+          py -c "import requests; r = requests.get('https://repo.reindexer.io/win/64/%LastRowCol%') ; open('%LastRowCol%' , 'wb').write(r.content)"
           %LastRowCol% /S
       - name: Install Python dependencies
         run: |
