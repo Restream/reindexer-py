@@ -72,17 +72,15 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Python initialization
-        run: py -m pip install requests
+      - name: Install Python dependencies
+        run: |
+          py -m pip install --upgrade --disable-pip-version-check pip setuptools build requests
       - name: Install Reindexer-Dev\Server
         run: |
           curl -s https://repo.reindexer.io/win/64/ > list.txt
           For /f "tokens=15delims=<>= " %%A in ('findstr "reindexer-3.*" list.txt') do set LastRowCol=%%A
           py -c "import requests; r = requests.get('https://repo.reindexer.io/win/64/%LastRowCol%') ; open('%LastRowCol%' , 'wb').write(r.content)"
           %LastRowCol% /S
-      - name: Install Python dependencies
-        run: |
-          py -m pip install --upgrade --disable-pip-version-check pip setuptools build
       - name: Prepare Test Environment
         run: python -m pip install -r requirements.txt
       - name: Build PyReindexer
