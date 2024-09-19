@@ -73,7 +73,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Python initialization
-        run: py -m pip install wget
+        run: py -m pip install requests
       - name: Install Reindexer-Dev\Server
         run: |
           curl -s https://repo.reindexer.io/win/64/ > list.txt
