@@ -52,13 +52,18 @@ class BuildExt(build_ext_orig):
 
 
 setup(name=PACKAGE_NAME,
-      version='0.2.33',
+      version='0.2.34',
       description='A connector that allows to interact with Reindexer',
       author='Igor Tulmentyev',
       author_email='igtulm@gmail.com',
       maintainer='Reindexer Team',
       maintainer_email='contactus@reindexer.io',
       url='https://github.com/Restream/reindexer-py',
+      project_urls={
+          'Documentation': 'https://reindexer.io/',
+          'Releases': 'https://github.com/Restream/reindexer-py/releases',
+          'Tracker': 'https://github.com/Restream/reindexer-py/issues',
+      },
       long_description=open("README.md", encoding="utf-8").read(),
       long_description_content_type="text/markdown",
       license='Apache License 2.0',
@@ -121,4 +126,5 @@ setup(name=PACKAGE_NAME,
           _c2('Topic', 'Software Development'),
           _c2('Topic', 'Software Development', 'Libraries', 'Python Modules'),
       ],
+      platforms=['ALT Linux', 'RED OS', 'Astra Linux'],
       )
