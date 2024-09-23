@@ -99,12 +99,12 @@ static PyMethodDef module_methods[] = {
 	{"query_results_iterate", QueryResultsWrapperIterate, METH_VARARGS, "get query result"},
 	{"query_results_delete", QueryResultsWrapperDelete, METH_VARARGS, "free query results buffer"},
 
-	{NULL, NULL, 0, NULL}
+	{nullptr, nullptr, 0, nullptr}
 };
 // clang-format on
 
 static struct PyModuleDef module_definition = {
-	PyModuleDef_HEAD_INIT, MODULE_NAME, MODULE_DESCRIPTION, -1, module_methods, NULL, NULL, NULL, NULL};
+	PyModuleDef_HEAD_INIT, MODULE_NAME, MODULE_DESCRIPTION, -1, module_methods, nullptr, nullptr, nullptr, nullptr};
 
 PyMODINIT_FUNC MODULE_EXPORT_FUNCTION(void) {
 	Py_Initialize();

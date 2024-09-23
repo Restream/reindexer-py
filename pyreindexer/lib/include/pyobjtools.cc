@@ -115,7 +115,7 @@ std::vector<std::string> ParseListToStrVec(PyObject **list) {
 }
 
 PyObject *pyValueFromJsonValue(const gason::JsonValue &value) {
-	PyObject *pyValue = NULL;
+	PyObject *pyValue = nullptr;
 
 	switch (value.getTag()) {
 		case gason::JSON_NUMBER:
