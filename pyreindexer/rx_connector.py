@@ -172,8 +172,8 @@ class RxConnector(RaiserMixin):
 
         # Arguments:
             namespace (string): A name of a namespace
-            item_def (dict): A dictionary of item definiton
-            precepts (:obj:`list` of :obj:`str`): A dictionary of index definiton
+            item_def (dict): A dictionary of item definition
+            precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
 
         # Raises:
             Exception: Raises with an error message of API return if Reindexer instance is not initialized yet.
