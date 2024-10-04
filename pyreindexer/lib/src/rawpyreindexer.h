@@ -64,9 +64,9 @@ static PyObject *ItemInsert(PyObject *self, PyObject *args);
 static PyObject *ItemUpdate(PyObject *self, PyObject *args);
 static PyObject *ItemUpsert(PyObject *self, PyObject *args);
 static PyObject *ItemDelete(PyObject *self, PyObject *args);
-static PyObject *Commit(PyObject *self, PyObject *args);
 static PyObject *PutMeta(PyObject *self, PyObject *args);
 static PyObject *GetMeta(PyObject *self, PyObject *args);
+static PyObject *DeleteMeta(PyObject *self, PyObject *args);
 static PyObject *Select(PyObject *self, PyObject *args);
 static PyObject *EnumMeta(PyObject *self, PyObject *args);
 static PyObject *EnumNamespaces(PyObject *self, PyObject *args);
@@ -91,9 +91,9 @@ static PyMethodDef module_methods[] = {
 	{"item_update", ItemUpdate, METH_VARARGS, "update item"},
 	{"item_upsert", ItemUpsert, METH_VARARGS, "upsert item"},
 	{"item_delete", ItemDelete, METH_VARARGS, "delete item"},
-	{"commit", Commit, METH_VARARGS, "commit"},
 	{"meta_put", PutMeta, METH_VARARGS, "put meta"},
 	{"meta_get", GetMeta, METH_VARARGS, "get meta"},
+	{"meta_delete", DeleteMeta, METH_VARARGS, "delete meta"},
 	{"meta_enum", EnumMeta, METH_VARARGS, "enum meta"},
 	{"select", Select, METH_VARARGS, "select query"},
 
@@ -101,12 +101,12 @@ static PyMethodDef module_methods[] = {
 	{"query_results_delete", QueryResultsWrapperDelete, METH_VARARGS, "free query results buffer"},
 	{"get_agg_results", GetAggregationResults, METH_VARARGS, "get aggregation results"},
 
-	{NULL, NULL, 0, NULL}
+	{nullptr, nullptr, 0, nullptr}
 };
 // clang-format on
 
 static struct PyModuleDef module_definition = {
-	PyModuleDef_HEAD_INIT, MODULE_NAME, MODULE_DESCRIPTION, -1, module_methods, NULL, NULL, NULL, NULL};
+	PyModuleDef_HEAD_INIT, MODULE_NAME, MODULE_DESCRIPTION, -1, module_methods, nullptr, nullptr, nullptr, nullptr};
 
 PyMODINIT_FUNC MODULE_EXPORT_FUNCTION(void) {
 	Py_Initialize();
