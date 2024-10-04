@@ -1,5 +1,5 @@
 class QueryResults:
-    """ QueryResults is a disposable iterator of Reindexer results for such queries as SELECT and etc.
+    """ QueryResults is a disposable iterator of Reindexer results for such queries as SELECT etc.
     When the results are fetched the iterator closes and frees a memory of results buffer of Reindexer
 
     # Attributes:
@@ -45,11 +45,11 @@ class QueryResults:
             self.pos += 1
             self.err_code, self.err_msg, res = self.api.query_results_iterate(
                 self.qres_wrapper_ptr)
-            if (self.err_code):
+            if self.err_code:
                 raise Exception(self.err_msg)
             return res
         else:
-            del(self)
+            del self
             raise StopIteration
 
     def __del__(self):

@@ -13,7 +13,7 @@ def create_index_example(db, namespace):
         'is_sparse': False,
         'collate_mode': 'none',
         'sort_order_letters': '',
-        'expire_after':0,
+        'expire_after': 0,
         'config': {},
     }
 
@@ -36,16 +36,16 @@ def update_index_example(db, namespace):
         'is_sparse': False,
         'collate_mode': 'none',
         'sort_order_letters': '',
-        'expire_after':0,
+        'expire_after': 0,
         'config': {},
     }
     db.index_update(namespace, index_definition_modified)
 
 
 def create_items_example(db, namespace):
-    ITEMS_COUNT = 10
+    items_count = 10
 
-    for i in range(0, ITEMS_COUNT):
+    for i in range(0, items_count):
         item = {'id': i + 1, 'name': 'item_' + str(i % 2)}
         db.item_upsert(namespace, item)
 

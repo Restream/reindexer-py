@@ -47,3 +47,17 @@ class TestCrudMetadata:
         # Then ("Check that metadata was updated")
         updated_value = get_metadata_by_key(namespace, meta_key)
         assert_that(updated_value, equal_to(new_meta_value), "Can't update metadata")
+
+    def test_delete_metadata(self, namespace, metadata):
+        # Given ("Put metadata to namespace")
+        meta_key, meta_value = metadata
+        # When ("Delete metadata")
+        delete_metadata_by_key(namespace, meta_key)
+        # Then ("Check that metadata was removed")
+        read_value = get_metadata_by_key(namespace, meta_key)
+        assert_that(read_value, equal_to(''), "Can't delete metadata")
+        # When ("Get list of metadata keys")
+        meta_list = get_metadata_keys(namespace)
+        # Then ("Check that list of metadata is empty")
+        assert_that(meta_list, has_length(0), "Metadata is not empty")
+        assert_that(meta_list, equal_to([]), "Metadata is not empty")

@@ -92,14 +92,14 @@ public:
 	Error Delete(std::string_view ns, typename DBT::ItemT& item) {
 		return execute([this, ns, &item] { return deleteImpl(ns, item); });
 	}
-	Error Commit(std::string_view ns) {
-		return execute([this, ns] { return commit(ns); });
-	}
 	Error PutMeta(std::string_view ns, const std::string& key, std::string_view data) {
 		return execute([this, ns, &key, data] { return putMeta(ns, key, data); });
 	}
 	Error GetMeta(std::string_view ns, const std::string& key, std::string& data) {
 		return execute([this, ns, &key, &data] { return getMeta(ns, key, data); });
+	}
+	Error DeleteMeta(std::string_view ns, const std::string& key) {
+		return execute([this, ns, &key] { return deleteMeta(ns, key); });
 	}
 	Error EnumMeta(std::string_view ns, std::vector<std::string>& keys) {
 		return execute([this, ns, &keys] { return enumMeta(ns, keys); });
@@ -125,9 +125,9 @@ private:
 	Error upsert(std::string_view ns, typename DBT::ItemT& item) { return db_.Upsert({ns.data(), ns.size()}, item); }
 	Error update(std::string_view ns, typename DBT::ItemT& item) { return db_.Update({ns.data(), ns.size()}, item); }
 	Error deleteImpl(std::string_view ns, typename DBT::ItemT& item) { return db_.Delete({ns.data(), ns.size()}, item); }
-	Error commit(std::string_view ns) { return db_.Commit({ns.data(), ns.size()}); }
 	Error putMeta(std::string_view ns, const std::string& key, std::string_view data) { return db_.PutMeta({ns.data(), ns.size()}, key, {data.data(), data.size()}); }
 	Error getMeta(std::string_view ns, const std::string& key, std::string& data) { return db_.GetMeta({ns.data(), ns.size()}, key, data); }
+	Error deleteMeta(std::string_view ns, const std::string& key) { return db_.DeleteMeta({ns.data(), ns.size()}, key); }
 	Error enumMeta(std::string_view ns, std::vector<std::string>& keys) { return db_.EnumMeta({ns.data(), ns.size()}, keys); }
 	Error select(const std::string &query, typename DBT::QueryResultsT& result) { return db_.Select(query, result); }
 	Error enumNamespaces(std::vector<NamespaceDef>& defs, EnumNamespacesOpts opts) { return db_.EnumNamespaces(defs, opts); }

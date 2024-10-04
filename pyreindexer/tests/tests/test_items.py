@@ -1,6 +1,5 @@
 from hamcrest import *
 
-from tests.helpers.index import create_index
 from tests.helpers.items import *
 from tests.test_data.constants import item_definition
 
@@ -41,8 +40,8 @@ class TestCrudItems:
         assert_that(select_result, has_length(number_items),
                     "Items wasn't created")
         for i in range(number_items):
-            assert_that(select_result[i], equal_to({'id': i+1, "field": "value"}),
-                    "Items wasn't created")
+            assert_that(select_result[i], equal_to({'id': i + 1, "field": "value"}),
+                        "Items wasn't created")
         for i in range(number_items):
             db.item_delete(namespace_name, {'id': i})
 
