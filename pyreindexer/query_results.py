@@ -83,4 +83,8 @@ class QueryResults:
 
         """
 
-        return self.api.get_agg_results(self.qres_wrapper_ptr)
+        self.err_code, self.err_msg, res = self.api.get_agg_results(
+            self.qres_wrapper_ptr)
+        if self.err_code:
+            raise Exception(self.err_msg)
+        return res

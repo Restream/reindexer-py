@@ -71,7 +71,9 @@ class TestSqlQueries:
         for _ in range(5):
             db.item_insert(namespace_name, {"id": 100}, ["id=serial()"])
 
-        select_result = db.select(f'SELECT min(id),  max(id), avg(id) FROM {namespace_name}').get_agg_results()[2]
+        select_result = db.select(f'SELECT min(id),  max(id), avg(id) FROM {namespace_name}').get_agg_results()
+        assert_that(select_result, not empty(), "Aggregation result should not be empty")
+
         expected_values = {"min":1,"max":10,"avg":5.5}
 
         # Then ("Check that returned agg results are correct")
