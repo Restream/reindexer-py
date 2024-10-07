@@ -72,7 +72,7 @@ class TestSqlQueries:
             db.item_insert(namespace_name, {"id": 100}, ["id=serial()"])
 
         select_result = db.select(f'SELECT min(id),  max(id), avg(id) FROM {namespace_name}').get_agg_results()
-        assert_that(select_result, not empty(), "Aggregation result should not be empty")
+        assert_that(len(select_result), 3, "The aggregation result must contain 3 elements")
 
         expected_values = {"min":1,"max":10,"avg":5.5}
 
