@@ -63,3 +63,20 @@ class TestSqlQueries:
         assert_that(calling(sql_query).with_args(namespace, query),
                     raises(Exception, matching=has_string(string_contains_in_order(
                         "Expected", "but found"))), "Error wasn't raised when syntax was incorrect")
+
+    def test_sql_select_with_aggregations(self, namespace, index, items):
+        # Given("Create namespace with item")
+        db, namespace_name = namespace
+        # When ("Insert items into namespace")
+        for _ in range(5):
+            db.item_insert(namespace_name, {"id": 100}, ["id=serial()"])
+
+        select_result = db.select(f'SELECT min(id),  max(id), avg(id) FROM {namespace_name}').get_agg_results()
+        assert_that(len(select_result), 3, "The aggregation result must contain 3 elements")
+
+        expected_values = {"min":1,"max":10,"avg":5.5}
+
+        # Then ("Check that returned agg results are correct")
+        for agg in select_result:
+            assert_that(agg['value'], equal_to(expected_values[agg['type']]),
+                        f"Incorrect aggregation result for {agg['type']}")

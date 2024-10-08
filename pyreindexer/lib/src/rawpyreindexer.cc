@@ -428,4 +428,37 @@ static PyObject *QueryResultsWrapperDelete(PyObject *self, PyObject *args) {
 
 	Py_RETURN_NONE;
 }
+
+static PyObject *GetAggregationResults(PyObject *self, PyObject *args) {
+	uintptr_t qresWrapperAddr;
+
+	if (!PyArg_ParseTuple(args, "k", &qresWrapperAddr)) {
+		return NULL;
+	}
+
+	QueryResultsWrapper *qresWrapper = getQueryResultsWrapper(qresWrapperAddr);
+
+	const auto &aggResults = qresWrapper->GetAggregationResults();
+	WrSerializer wrSer;
+	wrSer << "[";
+	for (size_t i = 0; i < aggResults.size(); ++i) {
+		if (i > 0) {
+			wrSer << ',';
+		}
+		aggResults[i].GetJSON(wrSer);
+	}
+	wrSer << "]";
+
+	PyObject *dictFromJson = nullptr;
+	try {
+		dictFromJson = PyObjectFromJson(reindexer::giftStr(wrSer.Slice()));	 // stolen ref
+	} catch (const Error &err) {
+		Py_XDECREF(dictFromJson);
+
+		return Py_BuildValue("is{}", err.code(), err.what().c_str());
+	}
+
+	return Py_BuildValue("isO", errOK, "", dictFromJson);
+}
+
 }  // namespace pyreindexer
