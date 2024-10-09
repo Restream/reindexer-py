@@ -25,6 +25,8 @@ class QueryResults:
         self.qres_wrapper_ptr = qres_wrapper_ptr
         self.qres_iter_count = qres_iter_count
         self.pos = 0
+        self.err_code = 0
+        self.err_msg = ""
 
     def __iter__(self):
         """Returns the current iteration result.

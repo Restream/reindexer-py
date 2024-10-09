@@ -19,7 +19,7 @@ def create_index_example(db, namespace):
 
     try:
         db.index_add(namespace, index_definition)
-    except Exception:
+    except (Exception,):
         db.index_drop(namespace, 'id')
         db.index_add(namespace, index_definition)
 
@@ -58,7 +58,7 @@ def select_item_query_example(db, namespace):
 
 def rx_example():
     db = RxConnector('builtin:///tmp/pyrx')
-    #db = RxConnector('cproto://127.0.0.1:6534/pyrx')
+#    db = RxConnector('cproto://127.0.0.1:6534/pyrx')
 
     namespace = 'test_table'
 

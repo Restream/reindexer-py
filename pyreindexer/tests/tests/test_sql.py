@@ -19,7 +19,8 @@ class TestSqlQueries:
         db, namespace_name = namespace
         second_namespace_name, second_ns_item_definition_join = second_namespace_for_join
         # When ("Execute SQL query SELECT with JOIN")
-        query = f'SELECT id FROM {namespace_name} INNER JOIN {second_namespace_name} ON {namespace_name}.id = {second_namespace_name}.id'
+        query = (f'SELECT id FROM {namespace_name} INNER JOIN {second_namespace_name}'
+                 f' ON {namespace_name}.id = {second_namespace_name}.id')
         item_list = sql_query(namespace, query)
         # Then ("Check that selected item is in result")
         assert_that(item_list,
@@ -74,7 +75,7 @@ class TestSqlQueries:
         select_result = db.select(f'SELECT min(id),  max(id), avg(id) FROM {namespace_name}').get_agg_results()
         assert_that(len(select_result), 3, "The aggregation result must contain 3 elements")
 
-        expected_values = {"min":1,"max":10,"avg":5.5}
+        expected_values = {"min": 1, "max": 10, "avg": 5.5}
 
         # Then ("Check that returned agg results are correct")
         for agg in select_result:

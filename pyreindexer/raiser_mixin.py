@@ -2,6 +2,9 @@ class RaiserMixin(object):
     """ RaiserMixin contains methods for checking some typical API bad events and raise if there is a necessity.
 
     """
+    err_code: int
+    err_msg: str
+    rx: int
 
     def raise_on_error(self):
         """Checks if there is an error code and raises with an error message.

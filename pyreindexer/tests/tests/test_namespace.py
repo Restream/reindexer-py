@@ -32,5 +32,3 @@ class TestCrudNamespace:
         namespace_name = 'test_ns'
         assert_that(calling(drop_namespace).with_args(database, namespace_name), raises(Exception, matching=has_string(
             f"Namespace '{namespace_name}' does not exist")))
-
-
