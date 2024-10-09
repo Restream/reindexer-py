@@ -37,7 +37,7 @@ class IndexDefinition(dict):
         super(IndexDefinition, self).update({attr: value})
         return self
 
-    def update(self, dict_part=None):
+    def update(self, *args, **kwargs):
         raise NotImplementedError(
             'Bulk update is not implemented for IndexDefinition instance')
 

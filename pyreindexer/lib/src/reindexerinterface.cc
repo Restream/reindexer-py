@@ -10,7 +10,7 @@ ReindexerInterface<reindexer::Reindexer>::ReindexerInterface() {}
 
 template <>
 ReindexerInterface<reindexer::client::CoroReindexer>::ReindexerInterface() {
-	std::atomic<bool> running{false};
+	std::atomic_bool running{false};
 	executionThr_ = std::thread([this, &running] {
 		cmdAsync_.set(loop_);
 		cmdAsync_.set([this](reindexer::net::ev::async&) {

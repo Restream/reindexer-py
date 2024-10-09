@@ -42,7 +42,7 @@ public:
 private:
 	CallableT command_;
 	Error err_;
-	std::atomic<bool> executed_ = {false};
+	std::atomic_bool executed_{false};
 };
 
 template <typename DBT>
