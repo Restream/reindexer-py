@@ -7,6 +7,11 @@ static void queryResultsWrapperDelete(uintptr_t qresWrapperAddr) {
 	delete qresWrapperPtr;
 }
 
+static void transactionWrapperDelete(uintptr_t transactionWrapperAddr) {
+	TransactionWrapper* transactionWrapperPtr = getTransactionWrapper(transactionWrapperAddr);
+	delete transactionWrapperPtr;
+}
+
 static PyObject* queryResultsWrapperIterate(uintptr_t qresWrapperAddr) {
 	QueryResultsWrapper* qresWrapperPtr = getQueryResultsWrapper(qresWrapperAddr);
 
@@ -428,5 +433,129 @@ static PyObject* GetAggregationResults(PyObject* self, PyObject* args) {
 
 	return res;
 }
+
+static PyObject* StartTransaction(PyObject* self, PyObject* args) {
+	uintptr_t rx = 0;
+	char* ns = nullptr;
+	if (!PyArg_ParseTuple(args, "ks", &rx, &ns)) {
+		return nullptr;
+	}
+
+	auto db = getDB(rx);
+	auto transaction = new TransactionWrapper(db);
+	Error err =  transaction->Start(ns);
+	if (!err.ok()) {
+		delete transaction;
+
+		return Py_BuildValue("isk", err.code(), err.what().c_str(), 0);
+	}
+
+	return Py_BuildValue("isk", err.code(), err.what().c_str(), reinterpret_cast<uintptr_t>(transaction));
+}
+
+enum class StopTransactionMode : bool { Rollback = false, Commit = true };
+
+template <StopTransactionMode stopMode>
+static PyObject* stopTransaction(PyObject* self, PyObject* args) {
+	uintptr_t transactionWrapperAddr = 0;
+	if (!PyArg_ParseTuple(args, "k", &transactionWrapperAddr)) {
+		return nullptr;
+	}
+
+	auto transaction = getTransactionWrapper(transactionWrapperAddr);
+
+	Error err = (stopMode == StopTransactionMode::Commit) ? transaction->Commit() : transaction->Rollback();
+
+	transactionWrapperDelete(transactionWrapperAddr);
+
+	return pyErr(err);
+}
+
+static PyObject* CommitTransaction(PyObject* self, PyObject* args) {
+	return stopTransaction<StopTransactionMode::Commit>(self, args);
+}
+
+static PyObject* RollbackTransaction(PyObject* self, PyObject* args) {
+	return stopTransaction<StopTransactionMode::Rollback>(self, args);
+}
+
+static PyObject* itemModifyTransaction(PyObject* self, PyObject* args, ItemModifyMode mode) {
+	uintptr_t transactionWrapperAddr = 0;
+	PyObject* itemDefDict = nullptr;	// borrowed ref after ParseTuple
+	PyObject* preceptsList = nullptr;	// borrowed ref after ParseTuple if passed
+	if (!PyArg_ParseTuple(args, "kO!|O!", &transactionWrapperAddr, &PyDict_Type, &itemDefDict, &PyList_Type, &preceptsList)) {
+		return nullptr;
+	}
+
+	Py_INCREF(itemDefDict);
+	Py_XINCREF(preceptsList);
+
+	auto transaction = getTransactionWrapper(transactionWrapperAddr);
+
+	auto item = transaction->NewItem();
+	Error err = item.Status();
+	if (!err.ok()) {
+		Py_DECREF(itemDefDict);
+		Py_XDECREF(preceptsList);
+
+		return pyErr(err);
+	}
+
+	WrSerializer wrSer;
+
+	try {
+		PyObjectToJson(&itemDefDict, wrSer);
+	} catch (const Error& err) {
+		Py_DECREF(itemDefDict);
+		Py_XDECREF(preceptsList);
+
+		return pyErr(err);
+	}
+
+	Py_DECREF(itemDefDict);
+
+	char* json = const_cast<char*>(wrSer.c_str());
+	err = item.Unsafe().FromJSON(json, 0, mode == ModeDelete);
+	if (!err.ok()) {
+		Py_XDECREF(preceptsList);
+
+		return pyErr(err);
+	}
+
+	if (preceptsList != nullptr && mode != ModeDelete) {
+		std::vector<std::string> itemPrecepts;
+
+		try {
+			itemPrecepts = ParseListToStrVec(&preceptsList);
+		} catch (const Error& err) {
+			Py_DECREF(preceptsList);
+
+			return pyErr(err);
+		}
+
+		item.SetPrecepts(itemPrecepts);
+	}
+
+	Py_XDECREF(preceptsList);
+
+	switch (mode) {
+		case ModeInsert:
+		case ModeUpdate:
+		case ModeUpsert:
+		case ModeDelete:
+			err = transaction->Modify(std::move(item), mode);
+			return pyErr(err);
+		default:
+			PyErr_SetString(PyExc_RuntimeError, "Unknown item modify transaction mode");
+			return nullptr;
+	}
+
+	return nullptr;
+}
+
+static PyObject* ItemInsertTransaction(PyObject* self, PyObject* args) { return itemModifyTransaction(self, args, ModeInsert); }
+static PyObject* ItemUpdateTransaction(PyObject* self, PyObject* args) { return itemModifyTransaction(self, args, ModeUpdate); }
+static PyObject* ItemUpsertTransaction(PyObject* self, PyObject* args) { return itemModifyTransaction(self, args, ModeUpsert); }
+static PyObject* ItemDeleteTransaction(PyObject* self, PyObject* args) { return itemModifyTransaction(self, args, ModeDelete); }
 
 }  // namespace pyreindexer

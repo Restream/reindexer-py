@@ -2,6 +2,7 @@
 #include "client/cororeindexer.h"
 #include "core/reindexer.h"
 #include "queryresults_wrapper.h"
+#include "transaction_wrapper.h"
 
 namespace pyreindexer {
 
@@ -53,7 +54,7 @@ ReindexerInterface<DBT>::~ReindexerInterface() {
 
 template <typename DBT>
 Error ReindexerInterface<DBT>::Select(const std::string& query, QueryResultsWrapper& result) {
-	return execute([this, &query, &result] {
+	return execute([this, query, &result] {
 		auto res = select(query, result.qresPtr);
 		result.db_ = this;
 		result.iterInit();
@@ -70,6 +71,38 @@ Error ReindexerInterface<DBT>::FetchResults(QueryResultsWrapper& result) {
 		}
 		return errOK;
 	});
+}
+
+template <typename DBT>
+Error ReindexerInterface<DBT>::StartTransaction(std::string_view ns, TransactionWrapper& transactionWrapper) {
+	return execute([this, ns, &transactionWrapper] {
+		auto transaction = startTransaction(ns);
+		auto error = transaction.Status();
+		transactionWrapper.Init(ns, std::move(transaction));
+		return error;
+	});
+}
+
+template <>
+Error ReindexerInterface<reindexer::Reindexer>::commitTransaction(reindexer::Transaction& transaction) {
+	reindexer::QueryResults resultDummy;
+	return db_.CommitTransaction(transaction, resultDummy);
+}
+template <>
+Error ReindexerInterface<reindexer::client::CoroReindexer>::commitTransaction(reindexer::client::CoroTransaction& transaction) {
+	return db_.CommitTransaction(transaction);
+}
+
+template <>
+Error ReindexerInterface<reindexer::Reindexer>::modify(reindexer::Transaction& transaction,
+			reindexer::Item&& item, ItemModifyMode mode) {
+	transaction.Modify(std::move(item), mode);
+	return errOK;
+}
+template <>
+Error ReindexerInterface<reindexer::client::CoroReindexer>::modify(reindexer::client::CoroTransaction& transaction,
+			reindexer::client::Item&& item, ItemModifyMode mode) {
+	return transaction.Modify(std::move(item), mode);
 }
 
 template <>
