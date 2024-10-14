@@ -26,13 +26,12 @@ public:
 		assert(db_);
 	}
 
-	void Init(std::string_view ns, TransactionT&& transaction) {
+	void Wrap(std::string_view ns, TransactionT&& transaction) {
 		transaction_ = std::move(transaction);
 		ns_ = ns;
 	}
 
 	Error Start(std::string_view ns) {
-		assert(!ns_.empty());
 		return db_->StartTransaction(ns, *this);
 	}
 
@@ -57,7 +56,7 @@ public:
 	}
 
 private:
-	DBInterface* db_ = nullptr;
+	DBInterface* db_{nullptr};
 	TransactionT transaction_;
 	std::string ns_;
 };

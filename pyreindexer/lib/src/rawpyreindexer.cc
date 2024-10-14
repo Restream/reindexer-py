@@ -2,9 +2,31 @@
 
 namespace pyreindexer {
 
+static uintptr_t initReindexer() {
+	DBInterface* db = new DBInterface();
+	return reinterpret_cast<uintptr_t>(db);
+}
+
+static DBInterface* getDB(uintptr_t rx) { return reinterpret_cast<DBInterface*>(rx); }
+
+static void destroyReindexer(uintptr_t rx) {
+	DBInterface* db = getDB(rx);
+	delete db;
+}
+
+static PyObject* pyErr(const Error& err) { return Py_BuildValue("is", err.code(), err.what().c_str()); }
+
+static QueryResultsWrapper* getQueryResultsWrapper(uintptr_t qresWrapperAddr) {
+	return reinterpret_cast<QueryResultsWrapper*>(qresWrapperAddr);
+}
+
 static void queryResultsWrapperDelete(uintptr_t qresWrapperAddr) {
 	QueryResultsWrapper* qresWrapperPtr = getQueryResultsWrapper(qresWrapperAddr);
 	delete qresWrapperPtr;
+}
+
+static TransactionWrapper* getTransactionWrapper(uintptr_t transactionWrapperAddr) {
+	return reinterpret_cast<TransactionWrapper*>(transactionWrapperAddr);
 }
 
 static void transactionWrapperDelete(uintptr_t transactionWrapperAddr) {
@@ -293,8 +315,9 @@ static PyObject* Select(PyObject* self, PyObject* args) {
 		return nullptr;
 	}
 
-	auto qresWrapper = new QueryResultsWrapper();
-	Error err = getDB(rx)->Select(query, *qresWrapper);
+	auto db = getDB(rx);
+	auto qresWrapper = new QueryResultsWrapper(db);
+	Error err = qresWrapper->Select(query);
 
 	if (!err.ok()) {
 		delete qresWrapper;
@@ -454,9 +477,7 @@ static PyObject* StartTransaction(PyObject* self, PyObject* args) {
 }
 
 enum class StopTransactionMode : bool { Rollback = false, Commit = true };
-
-template <StopTransactionMode stopMode>
-static PyObject* stopTransaction(PyObject* self, PyObject* args) {
+static PyObject* stopTransaction(PyObject* self, PyObject* args, StopTransactionMode stopMode) {
 	uintptr_t transactionWrapperAddr = 0;
 	if (!PyArg_ParseTuple(args, "k", &transactionWrapperAddr)) {
 		return nullptr;
@@ -464,20 +485,15 @@ static PyObject* stopTransaction(PyObject* self, PyObject* args) {
 
 	auto transaction = getTransactionWrapper(transactionWrapperAddr);
 
-	Error err = (stopMode == StopTransactionMode::Commit) ? transaction->Commit() : transaction->Rollback();
+	assert((StopTransactionMode::Commit == stopMode) || (StopTransactionMode::Rollback == stopMode));
+	Error err = (StopTransactionMode::Commit == stopMode) ? transaction->Commit() : transaction->Rollback();
 
 	transactionWrapperDelete(transactionWrapperAddr);
 
 	return pyErr(err);
 }
-
-static PyObject* CommitTransaction(PyObject* self, PyObject* args) {
-	return stopTransaction<StopTransactionMode::Commit>(self, args);
-}
-
-static PyObject* RollbackTransaction(PyObject* self, PyObject* args) {
-	return stopTransaction<StopTransactionMode::Rollback>(self, args);
-}
+static PyObject* CommitTransaction(PyObject* self, PyObject* args) { return stopTransaction(self, args, StopTransactionMode::Commit); }
+static PyObject* RollbackTransaction(PyObject* self, PyObject* args) { return stopTransaction(self, args, StopTransactionMode::Rollback); }
 
 static PyObject* itemModifyTransaction(PyObject* self, PyObject* args, ItemModifyMode mode) {
 	uintptr_t transactionWrapperAddr = 0;
@@ -552,7 +568,6 @@ static PyObject* itemModifyTransaction(PyObject* self, PyObject* args, ItemModif
 
 	return nullptr;
 }
-
 static PyObject* ItemInsertTransaction(PyObject* self, PyObject* args) { return itemModifyTransaction(self, args, ModeInsert); }
 static PyObject* ItemUpdateTransaction(PyObject* self, PyObject* args) { return itemModifyTransaction(self, args, ModeUpdate); }
 static PyObject* ItemUpsertTransaction(PyObject* self, PyObject* args) { return itemModifyTransaction(self, args, ModeUpsert); }

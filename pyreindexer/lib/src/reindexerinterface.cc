@@ -55,9 +55,9 @@ ReindexerInterface<DBT>::~ReindexerInterface() {
 template <typename DBT>
 Error ReindexerInterface<DBT>::Select(const std::string& query, QueryResultsWrapper& result) {
 	return execute([this, query, &result] {
-		auto res = select(query, result.qresPtr);
-		result.db_ = this;
-		result.iterInit();
+		typename DBT::QueryResultsT qres;
+		auto res = select(query, qres);
+		result.Wrap(std::move(qres));
 		return res;
 	});
 }
@@ -65,10 +65,7 @@ Error ReindexerInterface<DBT>::Select(const std::string& query, QueryResultsWrap
 template <typename DBT>
 Error ReindexerInterface<DBT>::FetchResults(QueryResultsWrapper& result) {
 	return execute([&result] {
-		++(result.itPtr);
-		if (result.itPtr == result.qresPtr.end()) {
-			result.iterInit();
-		}
+		result.FetchResults();
 		return errOK;
 	});
 }
@@ -78,7 +75,7 @@ Error ReindexerInterface<DBT>::StartTransaction(std::string_view ns, Transaction
 	return execute([this, ns, &transactionWrapper] {
 		auto transaction = startTransaction(ns);
 		auto error = transaction.Status();
-		transactionWrapper.Init(ns, std::move(transaction));
+		transactionWrapper.Wrap(ns, std::move(transaction));
 		return error;
 	});
 }

@@ -30,32 +30,6 @@ using reindexer::IndexDef;
 using reindexer::NamespaceDef;
 using reindexer::WrSerializer;
 
-inline static uintptr_t initReindexer() {
-	DBInterface* db = new DBInterface();
-	return reinterpret_cast<uintptr_t>(db);
-}
-
-inline static DBInterface* getDB(uintptr_t rx) { return reinterpret_cast<DBInterface*>(rx); }
-
-inline static void destroyReindexer(uintptr_t rx) {
-	DBInterface* db = getDB(rx);
-	delete db;
-}
-
-inline static PyObject* pyErr(const Error& err) { return Py_BuildValue("is", err.code(), err.what().c_str()); }
-
-inline static QueryResultsWrapper* getQueryResultsWrapper(uintptr_t qresWrapperAddr) {
-	return reinterpret_cast<QueryResultsWrapper*>(qresWrapperAddr);
-}
-
-static void queryResultsWrapperDelete(uintptr_t qresWrapperAddr);
-
-inline static TransactionWrapper* getTransactionWrapper(uintptr_t transactionWrapperAddr) {
-	return reinterpret_cast<TransactionWrapper*>(transactionWrapperAddr);
-}
-
-static void transactionWrapperDelete(uintptr_t transactionWrapperAddr);
-
 static PyObject* Init(PyObject* self, PyObject* args);
 static PyObject* Destroy(PyObject* self, PyObject* args);
 static PyObject* Connect(PyObject* self, PyObject* args);
