@@ -75,19 +75,9 @@ Error ReindexerInterface<DBT>::StartTransaction(std::string_view ns, Transaction
 	return execute([this, ns, &transactionWrapper] {
 		auto transaction = startTransaction(ns);
 		auto error = transaction.Status();
-		transactionWrapper.Wrap(ns, std::move(transaction));
+		transactionWrapper.Wrap(std::move(transaction));
 		return error;
 	});
-}
-
-template <>
-Error ReindexerInterface<reindexer::Reindexer>::commitTransaction(reindexer::Transaction& transaction) {
-	reindexer::QueryResults resultDummy;
-	return db_.CommitTransaction(transaction, resultDummy);
-}
-template <>
-Error ReindexerInterface<reindexer::client::CoroReindexer>::commitTransaction(reindexer::client::CoroTransaction& transaction) {
-	return db_.CommitTransaction(transaction);
 }
 
 template <>
@@ -100,6 +90,16 @@ template <>
 Error ReindexerInterface<reindexer::client::CoroReindexer>::modify(reindexer::client::CoroTransaction& transaction,
 			reindexer::client::Item&& item, ItemModifyMode mode) {
 	return transaction.Modify(std::move(item), mode);
+}
+
+template <>
+Error ReindexerInterface<reindexer::Reindexer>::commitTransaction(reindexer::Transaction& transaction) {
+	reindexer::QueryResults resultDummy;
+	return db_.CommitTransaction(transaction, resultDummy);
+}
+template <>
+Error ReindexerInterface<reindexer::client::CoroReindexer>::commitTransaction(reindexer::client::CoroTransaction& transaction) {
+	return db_.CommitTransaction(transaction);
 }
 
 template <>

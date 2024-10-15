@@ -55,12 +55,12 @@ static PyObject* QueryResultsWrapperDelete(PyObject* self, PyObject* args);
 static PyObject* GetAggregationResults(PyObject* self, PyObject* args);
 
 static PyObject* StartTransaction(PyObject* self, PyObject* args);
-static PyObject* CommitTransaction(PyObject* self, PyObject* args);
-static PyObject* RollbackTransaction(PyObject* self, PyObject* args);
 static PyObject* ItemInsertTransaction(PyObject* self, PyObject* args);
 static PyObject* ItemUpdateTransaction(PyObject* self, PyObject* args);
 static PyObject* ItemUpsertTransaction(PyObject* self, PyObject* args);
 static PyObject* ItemDeleteTransaction(PyObject* self, PyObject* args);
+static PyObject* CommitTransaction(PyObject* self, PyObject* args);
+static PyObject* RollbackTransaction(PyObject* self, PyObject* args);
 
 // clang-format off
 static PyMethodDef module_methods[] = {
@@ -88,13 +88,13 @@ static PyMethodDef module_methods[] = {
 	{"query_results_delete", QueryResultsWrapperDelete, METH_VARARGS, "free query results buffer"},
 	{"get_agg_results", GetAggregationResults, METH_VARARGS, "get aggregation results"},
 
-	{"start_transaction", StartTransaction, METH_VARARGS, "start transaction"},
-	{"commit_transaction", CommitTransaction, METH_VARARGS, "commit transaction"},
-	{"rollback_transaction", RollbackTransaction, METH_VARARGS, "rollback transaction"},
+	{"start_transaction", StartTransaction, METH_VARARGS, "start transaction. New transaction"},
 	{"item_insert_transaction", ItemInsertTransaction, METH_VARARGS, "item insert transaction"},
 	{"item_update_transaction", ItemUpdateTransaction, METH_VARARGS, "item update transaction"},
 	{"item_upsert_transaction", ItemUpsertTransaction, METH_VARARGS, "item upsert transaction"},
 	{"item_delete_transaction", ItemDeleteTransaction, METH_VARARGS, "item delete transaction"},
+	{"commit_transaction", CommitTransaction, METH_VARARGS, "commit transaction. Free transaction buffer"},
+	{"rollback_transaction", RollbackTransaction, METH_VARARGS, "rollback transaction. Free transaction buffer"},
 
 	{nullptr, nullptr, 0, nullptr}
 };

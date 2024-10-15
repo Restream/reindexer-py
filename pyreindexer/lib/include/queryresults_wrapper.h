@@ -28,21 +28,30 @@ public:
 	void Wrap(QueryResultsT&& qres) {
 		qres_ = std::move(qres);
 		it_ = qres_.begin();
+		wrap_ = true;
 	}
 
 	Error Select(const std::string& query) {
 		return db_->Select(query, *this);
 	}
 
-	size_t Count() const { return qres_.Count(); }
+	size_t Count() const {
+		assert(wrap_);
+		return qres_.Count();
+	}
 
-	void GetItemJSON(reindexer::WrSerializer& wrser, bool withHdrLen) { it_.GetJSON(wrser, withHdrLen); }
+	void GetItemJSON(reindexer::WrSerializer& wrser, bool withHdrLen) {
+		assert(wrap_);
+		it_.GetJSON(wrser, withHdrLen);
+	}
 
 	void Next() {
+		assert(wrap_);
 		db_->FetchResults(*this);
 	}
 
 	void FetchResults() {
+		assert(wrap_);
 		++it_;
 		if (it_ == qres_.end()) {
 			it_ = qres_.begin();
@@ -56,6 +65,7 @@ private:
 	DBInterface* db_{nullptr};
 	QueryResultsT qres_;
 	QueryResultsT::Iterator it_;
+	bool wrap_{false};
 };
 
 }  // namespace pyreindexer

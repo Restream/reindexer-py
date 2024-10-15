@@ -111,14 +111,22 @@ public:
 	}
 	Error FetchResults(QueryResultsWrapper& result);
 	Error StartTransaction(std::string_view ns, TransactionWrapper& transactionWrapper);
+	typename DBT::ItemT NewItem(typename DBT::TransactionT& tr) {
+		typename DBT::ItemT item;
+		execute([this, &tr, &item] {
+			item = newItem(tr);
+			return item.Status();
+		});
+		return item;
+	}
+	Error Modify(typename DBT::TransactionT& tr, typename DBT::ItemT&& item, ItemModifyMode mode) {
+		return execute([this, &tr, &item, mode] { return modify(tr, std::move(item), mode); });
+	}
 	Error CommitTransaction(typename DBT::TransactionT& tr) {
 		return execute([this, &tr] { return commitTransaction(tr); });
 	}
 	Error RollbackTransaction(typename DBT::TransactionT& tr) {
 		return execute([this, &tr] { return rollbackTransaction(tr); });
-	}
-	Error Modify(typename DBT::TransactionT& tr, typename DBT::ItemT&& item, ItemModifyMode mode) {
-		return execute([this, &tr, &item, mode] { return modify(tr, std::move(item), mode); });
 	}
 
 private:
@@ -143,9 +151,10 @@ private:
 	Error select(const std::string& query, typename DBT::QueryResultsT& result) { return db_.Select(query, result); }
 	Error enumNamespaces(std::vector<NamespaceDef>& defs, EnumNamespacesOpts opts) { return db_.EnumNamespaces(defs, opts); }
 	typename DBT::TransactionT startTransaction(std::string_view ns) { return db_.NewTransaction({ns.data(), ns.size()}); }
+	typename DBT::ItemT newItem(typename DBT::TransactionT& tr) { return tr.NewItem(); }
+	Error modify(typename DBT::TransactionT& tr, typename DBT::ItemT&& item, ItemModifyMode mode);
 	Error commitTransaction(typename DBT::TransactionT& tr);
 	Error rollbackTransaction(typename DBT::TransactionT& tr) { return db_.RollBackTransaction(tr); }
-	Error modify(typename DBT::TransactionT& tr, typename DBT::ItemT&& item, ItemModifyMode mode);
 	Error stop();
 
 	DBT db_;

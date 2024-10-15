@@ -476,25 +476,6 @@ static PyObject* StartTransaction(PyObject* self, PyObject* args) {
 	return Py_BuildValue("isk", err.code(), err.what().c_str(), reinterpret_cast<uintptr_t>(transaction));
 }
 
-enum class StopTransactionMode : bool { Rollback = false, Commit = true };
-static PyObject* stopTransaction(PyObject* self, PyObject* args, StopTransactionMode stopMode) {
-	uintptr_t transactionWrapperAddr = 0;
-	if (!PyArg_ParseTuple(args, "k", &transactionWrapperAddr)) {
-		return nullptr;
-	}
-
-	auto transaction = getTransactionWrapper(transactionWrapperAddr);
-
-	assert((StopTransactionMode::Commit == stopMode) || (StopTransactionMode::Rollback == stopMode));
-	Error err = (StopTransactionMode::Commit == stopMode) ? transaction->Commit() : transaction->Rollback();
-
-	transactionWrapperDelete(transactionWrapperAddr);
-
-	return pyErr(err);
-}
-static PyObject* CommitTransaction(PyObject* self, PyObject* args) { return stopTransaction(self, args, StopTransactionMode::Commit); }
-static PyObject* RollbackTransaction(PyObject* self, PyObject* args) { return stopTransaction(self, args, StopTransactionMode::Rollback); }
-
 static PyObject* itemModifyTransaction(PyObject* self, PyObject* args, ItemModifyMode mode) {
 	uintptr_t transactionWrapperAddr = 0;
 	PyObject* itemDefDict = nullptr;	// borrowed ref after ParseTuple
@@ -572,5 +553,24 @@ static PyObject* ItemInsertTransaction(PyObject* self, PyObject* args) { return 
 static PyObject* ItemUpdateTransaction(PyObject* self, PyObject* args) { return itemModifyTransaction(self, args, ModeUpdate); }
 static PyObject* ItemUpsertTransaction(PyObject* self, PyObject* args) { return itemModifyTransaction(self, args, ModeUpsert); }
 static PyObject* ItemDeleteTransaction(PyObject* self, PyObject* args) { return itemModifyTransaction(self, args, ModeDelete); }
+
+enum class StopTransactionMode : bool { Rollback = false, Commit = true };
+static PyObject* stopTransaction(PyObject* self, PyObject* args, StopTransactionMode stopMode) {
+	uintptr_t transactionWrapperAddr = 0;
+	if (!PyArg_ParseTuple(args, "k", &transactionWrapperAddr)) {
+		return nullptr;
+	}
+
+	auto transaction = getTransactionWrapper(transactionWrapperAddr);
+
+	assert((StopTransactionMode::Commit == stopMode) || (StopTransactionMode::Rollback == stopMode));
+	Error err = (StopTransactionMode::Commit == stopMode) ? transaction->Commit() : transaction->Rollback();
+
+	transactionWrapperDelete(transactionWrapperAddr);
+
+	return pyErr(err);
+}
+static PyObject* CommitTransaction(PyObject* self, PyObject* args) { return stopTransaction(self, args, StopTransactionMode::Commit); }
+static PyObject* RollbackTransaction(PyObject* self, PyObject* args) { return stopTransaction(self, args, StopTransactionMode::Rollback); }
 
 }  // namespace pyreindexer
