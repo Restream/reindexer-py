@@ -457,7 +457,7 @@ static PyObject* GetAggregationResults(PyObject* self, PyObject* args) {
 	return res;
 }
 
-static PyObject* StartTransaction(PyObject* self, PyObject* args) {
+static PyObject* NewTransaction(PyObject* self, PyObject* args) {
 	uintptr_t rx = 0;
 	char* ns = nullptr;
 	if (!PyArg_ParseTuple(args, "ks", &rx, &ns)) {

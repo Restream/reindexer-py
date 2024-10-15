@@ -54,7 +54,7 @@ static PyObject* QueryResultsWrapperIterate(PyObject* self, PyObject* args);
 static PyObject* QueryResultsWrapperDelete(PyObject* self, PyObject* args);
 static PyObject* GetAggregationResults(PyObject* self, PyObject* args);
 
-static PyObject* StartTransaction(PyObject* self, PyObject* args);
+static PyObject* NewTransaction(PyObject* self, PyObject* args);
 static PyObject* ItemInsertTransaction(PyObject* self, PyObject* args);
 static PyObject* ItemUpdateTransaction(PyObject* self, PyObject* args);
 static PyObject* ItemUpsertTransaction(PyObject* self, PyObject* args);
@@ -88,7 +88,7 @@ static PyMethodDef module_methods[] = {
 	{"query_results_delete", QueryResultsWrapperDelete, METH_VARARGS, "free query results buffer"},
 	{"get_agg_results", GetAggregationResults, METH_VARARGS, "get aggregation results"},
 
-	{"start_transaction", StartTransaction, METH_VARARGS, "start transaction. New transaction"},
+	{"new_transaction", NewTransaction, METH_VARARGS, "start new transaction"},
 	{"item_insert_transaction", ItemInsertTransaction, METH_VARARGS, "item insert transaction"},
 	{"item_update_transaction", ItemUpdateTransaction, METH_VARARGS, "item update transaction"},
 	{"item_upsert_transaction", ItemUpsertTransaction, METH_VARARGS, "item upsert transaction"},

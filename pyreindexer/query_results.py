@@ -6,7 +6,7 @@ class QueryResults:
         api (module): An API module for Reindexer calls
         err_code (int): the API error code
         err_msg (string): the API error message
-        qres_wrapper_ptr (int): A memory pointer to Reindexer iterator object 
+        qres_wrapper_ptr (int): A memory pointer to Reindexer iterator object
         qres_iter_count (int): A count of results for iterations
         pos (int): The current result position in iterator
     """
@@ -16,7 +16,7 @@ class QueryResults:
 
         # Arguments:
             api (module): An API module for Reindexer calls
-            qres_wrapper_ptr (int): A memory pointer to Reindexer iterator object 
+            qres_wrapper_ptr (int): A memory pointer to Reindexer iterator object
             qres_iter_count (int): A count of results for iterations
 
         """

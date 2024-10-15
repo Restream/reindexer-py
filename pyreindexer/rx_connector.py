@@ -1,5 +1,6 @@
 from pyreindexer.raiser_mixin import RaiserMixin
 from pyreindexer.query_results import QueryResults
+from pyreindexer.transaction import Transaction
 
 
 class RxConnector(RaiserMixin):
@@ -339,6 +340,25 @@ class RxConnector(RaiserMixin):
         self.err_code, self.err_msg, qres_wrapper_ptr, qres_iter_count = self.api.select(self.rx, query)
         self.raise_on_error()
         return QueryResults(self.api, qres_wrapper_ptr, qres_iter_count)
+
+    def new_transaction(self, namespace):
+        """Start a new transaction and return the transaction object to processing
+
+        # Arguments:
+            namespace (string): A name of a namespace
+
+        # Returns:
+            (:obj:`Transaction`): A new transaction.
+
+        # Raises:
+            Exception: Raises with an error message of API return if Reindexer instance is not initialized yet.
+            Exception: Raises with an error message of API return on non-zero error code.
+
+        """
+        self.raise_on_not_init()
+        self.err_code, self.err_msg, transaction_wrapper_ptr = self.api.new_transaction(self.rx, namespace)
+        self.raise_on_error()
+        return Transaction(self.api, transaction_wrapper_ptr)
 
     def _api_import(self, dsn):
         """Imports an API dynamically depending on protocol specified in dsn.
