@@ -21,11 +21,8 @@ class TestCrudItems:
         insert_item(namespace, item_definition)
         # Then ("Check that item is added")
         select_result = list(db.select(f'SELECT * FROM {namespace_name}'))
-        assert_that(select_result, has_length(1),
-                    "Item wasn't created")
-        assert_that(select_result, has_item(item_definition),
-                    "Item wasn't created"
-                    )
+        assert_that(select_result, has_length(1), "Item wasn't created")
+        assert_that(select_result, has_item(item_definition), "Item wasn't created")
         delete_item(namespace, item_definition)
 
     def test_create_item_insert_with_precepts(self, namespace, index):
@@ -37,8 +34,7 @@ class TestCrudItems:
             db.item_insert(namespace_name, {"id": 100, "field": "value"}, ["id=serial()"])
         # Then ("Check that item is added")
         select_result = list(db.select(f'SELECT * FROM {namespace_name}'))
-        assert_that(select_result, has_length(number_items),
-                    "Items wasn't created")
+        assert_that(select_result, has_length(number_items), "Items wasn't created")
         for i in range(number_items):
             assert_that(select_result[i], equal_to({'id': i + 1, "field": "value"}),
                         "Items wasn't created")
@@ -52,10 +48,8 @@ class TestCrudItems:
         upsert_item(namespace, item_definition)
         # Then ("Check that item is added")
         select_result = list(db.select(f'SELECT * FROM {namespace_name}'))
-        assert_that(select_result, has_length(1),
-                    "Item wasn't created")
-        assert_that(select_result, has_item(item_definition),
-                    "Item wasn't created")
+        assert_that(select_result, has_length(1), "Item wasn't created")
+        assert_that(select_result, has_item(item_definition), "Item wasn't created")
         delete_item(namespace, item_definition)
 
     def test_update_item_upsert(self, namespace, index, item):
@@ -66,10 +60,8 @@ class TestCrudItems:
         upsert_item(namespace, item_definition_updated)
         # Then ("Check that item is updated")
         select_result = list(db.select(f'SELECT * FROM {namespace_name}'))
-        assert_that(select_result, has_length(1),
-                    "Item wasn't updated")
-        assert_that(select_result, has_item(item_definition_updated),
-                    "Item wasn't updated")
+        assert_that(select_result, has_length(1), "Item wasn't updated")
+        assert_that(select_result, has_item(item_definition_updated), "Item wasn't updated")
 
     def test_update_item_update(self, namespace, index, item):
         # Given("Create namespace with item")

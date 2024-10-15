@@ -21,7 +21,7 @@ def upsert_item(namespace, item_def):
 
 def update_item(namespace, item_def):
     """
-    Update item to namespace
+    Update item in namespace
     """
     db, namespace_name = namespace
     log_operation.info(f"Update item: {item_def} to namespace {namespace_name}")
