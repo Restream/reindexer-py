@@ -12,7 +12,7 @@ class QueryResults:
     """
 
     def __init__(self, api, qres_wrapper_ptr, qres_iter_count):
-        """Constructs a new Reindexer query results iterator object.
+        """Constructs a new Reindexer query results iterator object
 
         # Arguments:
             api (module): An API module for Reindexer calls
@@ -29,17 +29,17 @@ class QueryResults:
         self.err_msg = ""
 
     def __iter__(self):
-        """Returns the current iteration result.
+        """Returns the current iteration result
 
         """
 
         return self
 
     def __next__(self):
-        """Returns the next iteration result.
+        """Returns the next iteration result
 
         # Raises:
-            StopIteration: Frees results on end of iterator and raises with iteration stop.
+            StopIteration: Frees results on end of iterator and raises with iteration stop
 
         """
 
@@ -81,6 +81,12 @@ class QueryResults:
 
     def get_agg_results(self):
         """Returns aggregation results for the current query
+
+        # Returns
+            (:obj:`dict`): Dictionary with all results for the current query
+
+        # Raises:
+            Exception: Raises with an error message of API return on non-zero error code
 
         """
 

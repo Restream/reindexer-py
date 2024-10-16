@@ -19,10 +19,10 @@ class RxConnector(RaiserMixin):
 
     def __init__(self, dsn):
         """Constructs a new connector object.
-        Initializes an error code and a Reindexer instance descriptor to zero.
+        Initializes an error code and a Reindexer instance descriptor to zero
 
         # Arguments:
-            dsn (string): The connection string which contains a protocol.
+            dsn (string): The connection string which contains a protocol
             Examples: 'builtin:///tmp/pyrx', 'cproto://127.0.0.1:6534/pyrx
 
         """
@@ -55,8 +55,8 @@ class RxConnector(RaiserMixin):
             namespace (string): A name of a namespace
 
         # Raises:
-            Exception: Raises with an error message of API return if Reindexer instance is not initialized yet.
-            Exception: Raises with an error message of API return on non-zero error code.
+            Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
+            Exception: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -71,8 +71,8 @@ class RxConnector(RaiserMixin):
             namespace (string): A name of a namespace
 
         # Raises:
-            Exception: Raises with an error message of API return if Reindexer instance is not initialized yet.
-            Exception: Raises with an error message of API return on non-zero error code.
+            Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
+            Exception: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -87,8 +87,8 @@ class RxConnector(RaiserMixin):
             namespace (string): A name of a namespace
 
         # Raises:
-            Exception: Raises with an error message of API return if Reindexer instance is not initialized yet.
-            Exception: Raises with an error message of API return on non-zero error code.
+            Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
+            Exception: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -101,14 +101,14 @@ class RxConnector(RaiserMixin):
 
         # Arguments:
             enum_not_opened (bool, optional): An enumeration mode flag. If it is
-                set then closed namespaces are in result list too. Defaults to False.
+                set then closed namespaces are in result list too. Defaults to False
 
         # Returns:
-            (:obj:`list` of :obj:`dict`): A list of dictionaries which describe each namespace.
+            (:obj:`list` of :obj:`dict`): A list of dictionaries which describe each namespace
 
         # Raises:
-            Exception: Raises with an error message of API return if Reindexer instance is not initialized yet.
-            Exception: Raises with an error message of API return on non-zero error code.
+            Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
+            Exception: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -125,8 +125,8 @@ class RxConnector(RaiserMixin):
             index_def (dict): A dictionary of index definition
 
         # Raises:
-            Exception: Raises with an error message of API return if Reindexer instance is not initialized yet.
-            Exception: Raises with an error message of API return on non-zero error code.
+            Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
+            Exception: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -142,8 +142,8 @@ class RxConnector(RaiserMixin):
             index_def (dict): A dictionary of index definition
 
         # Raises:
-            Exception: Raises with an error message of API return if Reindexer instance is not initialized yet.
-            Exception: Raises with an error message of API return on non-zero error code.
+            Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
+            Exception: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -159,8 +159,8 @@ class RxConnector(RaiserMixin):
             index_name (string): A name of an index
 
         # Raises:
-            Exception: Raises with an error message of API return if Reindexer instance is not initialized yet.
-            Exception: Raises with an error message of API return on non-zero error code.
+            Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
+            Exception: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -169,7 +169,7 @@ class RxConnector(RaiserMixin):
         self.raise_on_error()
 
     def item_insert(self, namespace, item_def, precepts=None):
-        """Inserts an item with its precepts to the namespace specified.
+        """Inserts an item with its precepts to the namespace specified
 
         # Arguments:
             namespace (string): A name of a namespace
@@ -177,8 +177,8 @@ class RxConnector(RaiserMixin):
             precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
 
         # Raises:
-            Exception: Raises with an error message of API return if Reindexer instance is not initialized yet.
-            Exception: Raises with an error message of API return on non-zero error code.
+            Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
+            Exception: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -189,7 +189,7 @@ class RxConnector(RaiserMixin):
         self.raise_on_error()
 
     def item_update(self, namespace, item_def, precepts=None):
-        """Updates an item with its precepts in the namespace specified.
+        """Updates an item with its precepts in the namespace specified
 
         # Arguments:
             namespace (string): A name of a namespace
@@ -197,8 +197,8 @@ class RxConnector(RaiserMixin):
             precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
 
         # Raises:
-            Exception: Raises with an error message of API return if Reindexer instance is not initialized yet.
-            Exception: Raises with an error message of API return on non-zero error code.
+            Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
+            Exception: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -209,7 +209,7 @@ class RxConnector(RaiserMixin):
         self.raise_on_error()
 
     def item_upsert(self, namespace, item_def, precepts=None):
-        """Updates an item with its precepts in the namespace specified. Creates the item if it not exists.
+        """Updates an item with its precepts in the namespace specified. Creates the item if it not exists
 
         # Arguments:
             namespace (string): A name of a namespace
@@ -217,8 +217,8 @@ class RxConnector(RaiserMixin):
             precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
 
         # Raises:
-            Exception: Raises with an error message of API return if Reindexer instance is not initialized yet.
-            Exception: Raises with an error message of API return on non-zero error code.
+            Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
+            Exception: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -229,15 +229,15 @@ class RxConnector(RaiserMixin):
         self.raise_on_error()
 
     def item_delete(self, namespace, item_def):
-        """Deletes an item from the namespace specified.
+        """Deletes an item from the namespace specified
 
         # Arguments:
             namespace (string): A name of a namespace
             item_def (dict): A dictionary of item definition
 
         # Raises:
-            Exception: Raises with an error message of API return if Reindexer instance is not initialized yet.
-            Exception: Raises with an error message of API return on non-zero error code.
+            Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
+            Exception: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -254,8 +254,8 @@ class RxConnector(RaiserMixin):
             value (string): A metadata for storage
 
         # Raises:
-            Exception: Raises with an error message of API return if Reindexer instance is not initialized yet.
-            Exception: Raises with an error message of API return on non-zero error code.
+            Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
+            Exception: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -274,8 +274,8 @@ class RxConnector(RaiserMixin):
             string: A metadata value
 
         # Raises:
-            Exception: Raises with an error message of API return if Reindexer instance is not initialized yet.
-            Exception: Raises with an error message of API return on non-zero error code.
+            Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
+            Exception: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -292,8 +292,8 @@ class RxConnector(RaiserMixin):
             key (string): A key in a storage of Reindexer where metadata is kept
 
         # Raises:
-            Exception: Raises with an error message of API return if Reindexer instance is not initialized yet.
-            Exception: Raises with an error message of API return on non-zero error code.
+            Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
+            Exception: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -308,11 +308,11 @@ class RxConnector(RaiserMixin):
             namespace (string): A name of a namespace
 
         # Returns:
-            (:obj:`list` of :obj:`str`): A list of all metadata keys.
+            (:obj:`list` of :obj:`str`): A list of all metadata keys
 
         # Raises:
-            Exception: Raises with an error message of API return if Reindexer instance is not initialized yet.
-            Exception: Raises with an error message of API return on non-zero error code.
+            Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
+            Exception: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -328,11 +328,11 @@ class RxConnector(RaiserMixin):
             query (string): An SQL query
 
         # Returns:
-            (:obj:`QueryResults`): A QueryResults iterator.
+            (:obj:`QueryResults`): A QueryResults iterator
 
         # Raises:
-            Exception: Raises with an error message of API return if Reindexer instance is not initialized yet.
-            Exception: Raises with an error message of API return on non-zero error code.
+            Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
+            Exception: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -348,11 +348,11 @@ class RxConnector(RaiserMixin):
             namespace (string): A name of a namespace
 
         # Returns:
-            (:obj:`Transaction`): A new transaction.
+            (:obj:`Transaction`): A new transaction
 
         # Raises:
-            Exception: Raises with an error message of API return if Reindexer instance is not initialized yet.
-            Exception: Raises with an error message of API return on non-zero error code.
+            Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
+            Exception: Raises with an error message of API return on non-zero error code
 
         """
         self.raise_on_not_init()
@@ -361,13 +361,13 @@ class RxConnector(RaiserMixin):
         return Transaction(self.api, transaction_wrapper_ptr)
 
     def _api_import(self, dsn):
-        """Imports an API dynamically depending on protocol specified in dsn.
+        """Imports an API dynamically depending on protocol specified in dsn
 
         # Arguments:
-            dsn (string): The connection string which contains a protocol.
+            dsn (string): The connection string which contains a protocol
 
         # Raises:
-            Exception: Raises an exception if a connection protocol is unrecognized.
+            Exception: Raises an exception if a connection protocol is unrecognized
 
         """
 
@@ -380,15 +380,15 @@ class RxConnector(RaiserMixin):
                 "Unknown Reindexer connection protocol for dsn: ", dsn)
 
     def _api_init(self, dsn):
-        """Initializes Reindexer instance and connects to a database specified in dsn.
-        Obtains a pointer to Reindexer instance.
+        """Initializes Reindexer instance and connects to a database specified in dsn
+        Obtains a pointer to Reindexer instance
 
         # Arguments:
-            dsn (string): The connection string which contains a protocol.
+            dsn (string): The connection string which contains a protocol
 
         # Raises:
-            Exception: Raises with an error message of API return if Reindexer instance is not initialized yet.
-            Exception: Raises with an error message of API return on non-zero error code.
+            Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
+            Exception: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -398,10 +398,10 @@ class RxConnector(RaiserMixin):
         self.raise_on_error()
 
     def _api_close(self):
-        """Destructs Reindexer instance correctly and resets memory pointer.
+        """Destructs Reindexer instance correctly and resets memory pointer
 
         # Raises:
-            Exception: Raises with an error message of API return if Reindexer instance is not initialized yet.
+            Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
 
         """
 
