@@ -58,8 +58,8 @@ public:
 		}
 	}
 
-	const std::vector<reindexer::AggregationResult>& GetAggregationResults() const& { return qres_.GetAggregationResults(); }
-	const std::vector<reindexer::AggregationResult>& GetAggregationResults() const&& = delete;
+	const std::vector<reindexer::AggregationResult>& GetAggregationResults() & { return qres_.GetAggregationResults(); }
+	const std::vector<reindexer::AggregationResult>& GetAggregationResults() && = delete;
 
 private:
 	DBInterface* db_{nullptr};
