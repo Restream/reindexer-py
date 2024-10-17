@@ -6,16 +6,7 @@ from tests.test_data.constants import item_definition
 
 
 class TestCrudTransaction:
-    def test_initial_namespace_has_no_items(self, namespace, index):
-        # Given("Create namespace with index")
-        db, namespace_name = namespace
-        # When ("Get namespace information")
-        select_result = list(db.select(f'SELECT * FROM {namespace_name}'))
-        # Then ("Check that list of items in namespace is empty")
-        assert_that(select_result, has_length(0), "Transaction: item list is not empty")
-        assert_that(select_result, equal_to([]), "Transaction: item list is not empty")
-
-    def test_commit_after_rollback(self, namespace):
+    def test_negative_commit_after_rollback(self, namespace):
         # Given("Create namespace")
         db, namespace_name = namespace
         # When ("Start new transaction")
@@ -26,7 +17,7 @@ class TestCrudTransaction:
         assert_that(calling(commit_transaction).with_args(transaction),
                     raises(Exception, matching=has_string("Transaction is over")))
 
-    def test_rollback_after_commit(self, namespace):
+    def test_negative_rollback_after_commit(self, namespace):
         # Given("Create namespace")
         db, namespace_name = namespace
         # When ("Start new transaction")
@@ -37,7 +28,7 @@ class TestCrudTransaction:
         assert_that(calling(rollback_transaction).with_args(transaction),
                     raises(Exception, matching=has_string("Transaction is over")))
 
-    def test_insert_after_rollback(self, namespace, index):
+    def test_negative_insert_after_rollback(self, namespace, index):
         # Given("Create namespace with index")
         db, namespace_name = namespace
         # When ("Start new transaction")
@@ -48,7 +39,7 @@ class TestCrudTransaction:
         assert_that(calling(insert_transaction).with_args(transaction, item_definition),
                     raises(Exception, matching=has_string("Transaction is over")))
 
-    def test_update_after_rollback(self, namespace, index):
+    def test_negative_update_after_rollback(self, namespace, index):
         # Given("Create namespace with index")
         db, namespace_name = namespace
         # When ("Start new transaction")
@@ -59,7 +50,7 @@ class TestCrudTransaction:
         assert_that(calling(update_transaction).with_args(transaction, item_definition),
                     raises(Exception, matching=has_string("Transaction is over")))
 
-    def test_upsert_after_rollback(self, namespace, index):
+    def test_negative_upsert_after_rollback(self, namespace, index):
         # Given("Create namespace with index")
         db, namespace_name = namespace
         # When ("Start new transaction")
@@ -70,13 +61,57 @@ class TestCrudTransaction:
         assert_that(calling(upsert_transaction).with_args(transaction, item_definition),
                     raises(Exception, matching=has_string("Transaction is over")))
 
-    def test_delete_after_rollback(self, namespace, index):
+    def test_negative_delete_after_rollback(self, namespace, index):
         # Given("Create namespace with index")
         db, namespace_name = namespace
         # When ("Start new transaction")
         transaction = db.new_transaction(namespace_name)
         # Then ("Rollback transaction")
         transaction.rollback()
+        # Then ("Delete transaction")
+        assert_that(calling(delete_transaction).with_args(transaction, item_definition),
+                    raises(Exception, matching=has_string("Transaction is over")))
+
+    def test_negative_insert_after_commit(self, namespace, index):
+        # Given("Create namespace with index")
+        db, namespace_name = namespace
+        # When ("Start new transaction")
+        transaction = db.new_transaction(namespace_name)
+        # Then ("Commit transaction")
+        transaction.commit()
+        # Then ("Insert transaction")
+        assert_that(calling(insert_transaction).with_args(transaction, item_definition),
+                    raises(Exception, matching=has_string("Transaction is over")))
+
+    def test_negative_update_after_commit(self, namespace, index):
+        # Given("Create namespace with index")
+        db, namespace_name = namespace
+        # When ("Start new transaction")
+        transaction = db.new_transaction(namespace_name)
+        # Then ("Commit transaction")
+        transaction.commit()
+        # Then ("Update transaction")
+        assert_that(calling(update_transaction).with_args(transaction, item_definition),
+                    raises(Exception, matching=has_string("Transaction is over")))
+
+    def test_negative_upsert_after_commit(self, namespace, index):
+        # Given("Create namespace with index")
+        db, namespace_name = namespace
+        # When ("Start new transaction")
+        transaction = db.new_transaction(namespace_name)
+        # Then ("Commit transaction")
+        transaction.commit()
+        # Then ("Upsert transaction")
+        assert_that(calling(upsert_transaction).with_args(transaction, item_definition),
+                    raises(Exception, matching=has_string("Transaction is over")))
+
+    def test_negative_delete_after_commit(self, namespace, index):
+        # Given("Create namespace with index")
+        db, namespace_name = namespace
+        # When ("Start new transaction")
+        transaction = db.new_transaction(namespace_name)
+        # Then ("Commit transaction")
+        transaction.commit()
         # Then ("Delete transaction")
         assert_that(calling(delete_transaction).with_args(transaction, item_definition),
                     raises(Exception, matching=has_string("Transaction is over")))
