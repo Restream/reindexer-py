@@ -320,7 +320,8 @@ static PyObject* EnumMeta(PyObject* self, PyObject* args) {
 
 	Py_ssize_t pos = 0;
 	for (const auto& key : keys) {
-		PyList_SetItem(list, pos, Py_BuildValue("s", key.c_str()));	 // stolen ref
+		PyObject* pyKey = PyUnicode_FromStringAndSize(key.data(), key.size()); // new ref
+		PyList_SetItem(list, pos, pyKey);  // stolen ref
 		++pos;
 	}
 
