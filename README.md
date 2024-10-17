@@ -409,34 +409,6 @@ __Raises__
     Exception: Raises with an error message of API return on non-zero error code
 
 
-<h1 id="pyreindexer.index_definition">pyreindexer.index_definition</h1>
-
-
-<h2 id="pyreindexer.index_definition.IndexDefinition">IndexDefinition</h2>
-
-```python
-IndexDefinition(dict)
-```
-IndexDefinition is a dictionary subclass which allows to construct and manage indexes more efficiently.
-NOT IMPLEMENTED YET. USE FIELDS DESCRIPTION ONLY.
-
-__Arguments:__
-
-    name (str): An index name.
-    json_paths (:obj:`list` of :obj:`str`): A name for mapping a value to a json field.
-    field_type (str): A type of a field. Possible values are: `int`, `int64`, `double`, `string`, `bool`, `composite`.
-    index_type (str): An index type. Possible values are: `hash`, `tree`, `text`, `-`.
-    is_pk (bool): True if a field is a primary key.
-    is_array (bool): True if an index is an array.
-    is_dense (bool): True if an index is dense. reduce index size. Saves 8 bytes per unique key value for 'hash' and 'tree' index types.
-        For '-' index type saves 4-8 bytes per each element. Useful for indexes with high selectivity, but for tree and hash indexes with low selectivity could
-        significantly decrease update performance.
-    is_sparse (bool): True if a value of an index may be not presented.
-    collate_mode (str): Sets an order of values by collate mode. Possible values are: `none`, `ascii`, `utf8`, `numeric`, `custom`.
-    sort_order_letters (str): Order for a sort sequence for a custom collate mode.
-    config (dict): A config for a fulltext engine. [More](https://github.com/Restream/reindexer/blob/master/fulltext.md) .
-
-
 <h1 id="pyreindexer.transaction">pyreindexer.transaction</h1>
 
 
@@ -550,3 +522,31 @@ __Raises:__
 
     Exception: Raises with an error message of API return if Transaction is over
     Exception: Raises with an error message of API return on non-zero error code
+
+
+<h1 id="pyreindexer.index_definition">pyreindexer.index_definition</h1>
+
+
+<h2 id="pyreindexer.index_definition.IndexDefinition">IndexDefinition</h2>
+
+```python
+IndexDefinition(dict)
+```
+IndexDefinition is a dictionary subclass which allows to construct and manage indexes more efficiently.
+NOT IMPLEMENTED YET. USE FIELDS DESCRIPTION ONLY.
+
+__Arguments:__
+
+    name (str): An index name.
+    json_paths (:obj:`list` of :obj:`str`): A name for mapping a value to a json field.
+    field_type (str): A type of a field. Possible values are: `int`, `int64`, `double`, `string`, `bool`, `composite`.
+    index_type (str): An index type. Possible values are: `hash`, `tree`, `text`, `-`.
+    is_pk (bool): True if a field is a primary key.
+    is_array (bool): True if an index is an array.
+    is_dense (bool): True if an index is dense. reduce index size. Saves 8 bytes per unique key value for 'hash' and 'tree' index types.
+        For '-' index type saves 4-8 bytes per each element. Useful for indexes with high selectivity, but for tree and hash indexes with low selectivity could
+        significantly decrease update performance.
+    is_sparse (bool): True if a value of an index may be not presented.
+    collate_mode (str): Sets an order of values by collate mode. Possible values are: `none`, `ascii`, `utf8`, `numeric`, `custom`.
+    sort_order_letters (str): Order for a sort sequence for a custom collate mode.
+    config (dict): A config for a fulltext engine. [More](https://github.com/Restream/reindexer/blob/master/fulltext.md).
