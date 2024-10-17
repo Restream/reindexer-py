@@ -50,7 +50,7 @@ static PyObject* queryResultsWrapperIterate(uintptr_t qresWrapperAddr) {
 		return Py_BuildValue("is{}", err.code(), err.what().c_str());
 	}
 
-	PyObject* res = Py_BuildValue("isO", errOK, "", dictFromJson); // new ref
+	PyObject* res = Py_BuildValue("isO", errOK, "", dictFromJson);  // new ref
 	Py_DECREF(dictFromJson);
 
 	return res;
@@ -125,7 +125,7 @@ static PyObject* NamespaceDrop(PyObject* self, PyObject* args) {
 static PyObject* IndexAdd(PyObject* self, PyObject* args) {
 	uintptr_t rx = 0;
 	char* ns = nullptr;
-	PyObject* indexDefDict = nullptr;	// borrowed ref after ParseTuple
+	PyObject* indexDefDict = nullptr;  // borrowed ref after ParseTuple
 	if (!PyArg_ParseTuple(args, "ksO!", &rx, &ns, &PyDict_Type, &indexDefDict)) {
 		return nullptr;
 	}
@@ -155,7 +155,7 @@ static PyObject* IndexAdd(PyObject* self, PyObject* args) {
 static PyObject* IndexUpdate(PyObject* self, PyObject* args) {
 	uintptr_t rx = 0;
 	char* ns = nullptr;
-	PyObject* indexDefDict = nullptr;	// borrowed ref after ParseTuple
+	PyObject* indexDefDict = nullptr;  // borrowed ref after ParseTuple
 	if (!PyArg_ParseTuple(args, "ksO!", &rx, &ns, &PyDict_Type, &indexDefDict)) {
 		return nullptr;
 	}
@@ -196,8 +196,8 @@ static PyObject* IndexDrop(PyObject* self, PyObject* args) {
 static PyObject* itemModify(PyObject* self, PyObject* args, ItemModifyMode mode) {
 	uintptr_t rx = 0;
 	char* ns = nullptr;
-	PyObject* itemDefDict = nullptr;	// borrowed ref after ParseTuple
-	PyObject* preceptsList = nullptr;	// borrowed ref after ParseTuple if passed
+	PyObject* itemDefDict = nullptr;  	// borrowed ref after ParseTuple
+	PyObject* preceptsList = nullptr;  	// borrowed ref after ParseTuple if passed
 	if (!PyArg_ParseTuple(args, "ksO!|O!", &rx, &ns, &PyDict_Type, &itemDefDict, &PyList_Type, &preceptsList)) {
 		return nullptr;
 	}
@@ -348,7 +348,7 @@ static PyObject* EnumMeta(PyObject* self, PyObject* args) {
 
 	Py_ssize_t pos = 0;
 	for (const auto& key : keys) {
-		PyObject* pyKey = PyUnicode_FromStringAndSize(key.data(), key.size()); // new ref
+		PyObject* pyKey = PyUnicode_FromStringAndSize(key.data(), key.size());  // new ref
 		PyList_SetItem(list, pos, pyKey);  // stolen ref
 		++pos;
 	}
@@ -445,14 +445,14 @@ static PyObject* GetAggregationResults(PyObject* self, PyObject* args) {
 
 	PyObject* dictFromJson = nullptr;
 	try {
-		dictFromJson = PyObjectFromJson(reindexer::giftStr(wrSer.Slice()));	// stolen ref
+		dictFromJson = PyObjectFromJson(reindexer::giftStr(wrSer.Slice()));  // stolen ref
 	} catch (const Error& err) {
 		Py_XDECREF(dictFromJson);
 
 		return Py_BuildValue("is{}", err.code(), err.what().c_str());
 	}
 
-	PyObject* res = Py_BuildValue("isO", errOK, "", dictFromJson); // new ref
+	PyObject* res = Py_BuildValue("isO", errOK, "", dictFromJson);  // new ref
 	Py_DECREF(dictFromJson);
 
 	return res;
@@ -479,8 +479,8 @@ static PyObject* NewTransaction(PyObject* self, PyObject* args) {
 
 static PyObject* itemModifyTransaction(PyObject* self, PyObject* args, ItemModifyMode mode) {
 	uintptr_t transactionWrapperAddr = 0;
-	PyObject* itemDefDict = nullptr;	// borrowed ref after ParseTuple
-	PyObject* preceptsList = nullptr;	// borrowed ref after ParseTuple if passed
+	PyObject* itemDefDict = nullptr;  	// borrowed ref after ParseTuple
+	PyObject* preceptsList = nullptr;  	// borrowed ref after ParseTuple if passed
 	if (!PyArg_ParseTuple(args, "kO!|O!", &transactionWrapperAddr, &PyDict_Type, &itemDefDict, &PyList_Type, &preceptsList)) {
 		return nullptr;
 	}
