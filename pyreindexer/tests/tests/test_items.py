@@ -38,8 +38,6 @@ class TestCrudItems:
         for i in range(number_items):
             assert_that(select_result[i], equal_to({'id': i + 1, "field": "value"}),
                         "Items wasn't created")
-        for i in range(number_items):
-            db.item_delete(namespace_name, {'id': i})
 
     def test_create_item_upsert(self, namespace, index):
         # Given("Create namespace with index")
