@@ -56,7 +56,7 @@ def select_item_query_example(db, namespace):
     return db.select("SELECT * FROM " + namespace + " WHERE name='" + item_name_for_lookup + "'")
 
 
-def using_transaction_example(db, namespace, items_in_base):
+def transaction_example(db, namespace, items_in_base):
     transaction = db.new_transaction(namespace)
 
     items_count = len(items_in_base)
@@ -112,7 +112,7 @@ def rx_example():
     for item in selected_items:
         print('Item: ', item)
 
-    using_transaction_example(db, namespace, items_copy)
+    transaction_example(db, namespace, items_copy)
 
     db.close()
 

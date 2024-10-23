@@ -1,6 +1,16 @@
 #include "rawpyreindexer.h"
 
+#include "pyobjtools.h"
+#include "queryresults_wrapper.h"
+#include "transaction_wrapper.h"
+#include "tools/serializer.h"
+
 namespace pyreindexer {
+
+using reindexer::Error;
+using reindexer::IndexDef;
+using reindexer::NamespaceDef;
+using reindexer::WrSerializer;
 
 static uintptr_t initReindexer() {
 	DBInterface* db = new DBInterface();
@@ -16,26 +26,19 @@ static void destroyReindexer(uintptr_t rx) {
 
 static PyObject* pyErr(const Error& err) { return Py_BuildValue("is", err.code(), err.what().c_str()); }
 
-static QueryResultsWrapper* getQueryResultsWrapper(uintptr_t qresWrapperAddr) {
-	return reinterpret_cast<QueryResultsWrapper*>(qresWrapperAddr);
+template <typename T>
+static T* getWrapper(uintptr_t wrapperAddr) {
+	return reinterpret_cast<T*>(wrapperAddr);
 }
 
-static void queryResultsWrapperDelete(uintptr_t qresWrapperAddr) {
-	QueryResultsWrapper* qresWrapperPtr = getQueryResultsWrapper(qresWrapperAddr);
-	delete qresWrapperPtr;
-}
-
-static TransactionWrapper* getTransactionWrapper(uintptr_t transactionWrapperAddr) {
-	return reinterpret_cast<TransactionWrapper*>(transactionWrapperAddr);
-}
-
-static void transactionWrapperDelete(uintptr_t transactionWrapperAddr) {
-	TransactionWrapper* transactionWrapperPtr = getTransactionWrapper(transactionWrapperAddr);
-	delete transactionWrapperPtr;
+template <typename T>
+static void wrapperDelete(uintptr_t wrapperAddr) {
+	T* queryWrapperPtr = getWrapper<T>(wrapperAddr);
+	delete queryWrapperPtr;
 }
 
 static PyObject* queryResultsWrapperIterate(uintptr_t qresWrapperAddr) {
-	QueryResultsWrapper* qresWrapperPtr = getQueryResultsWrapper(qresWrapperAddr);
+	QueryResultsWrapper* qresWrapperPtr = getWrapper<QueryResultsWrapper>(qresWrapperAddr);
 
 	WrSerializer wrSer;
 	qresWrapperPtr->GetItemJSON(wrSer, false);
@@ -418,7 +421,7 @@ static PyObject* QueryResultsWrapperDelete(PyObject* self, PyObject* args) {
 		return nullptr;
 	}
 
-	queryResultsWrapperDelete(qresWrapperAddr);
+	wrapperDelete<QueryResultsWrapper>(qresWrapperAddr);
 
 	Py_RETURN_NONE;
 }
@@ -429,7 +432,7 @@ static PyObject* GetAggregationResults(PyObject* self, PyObject* args) {
 		return nullptr;
 	}
 
-	QueryResultsWrapper* qresWrapper = getQueryResultsWrapper(qresWrapperAddr);
+	QueryResultsWrapper* qresWrapper = getWrapper<QueryResultsWrapper>(qresWrapperAddr);
 
 	const auto& aggResults = qresWrapper->GetAggregationResults();
 	WrSerializer wrSer;
@@ -488,7 +491,7 @@ static PyObject* itemModifyTransaction(PyObject* self, PyObject* args, ItemModif
 	Py_INCREF(itemDefDict);
 	Py_XINCREF(preceptsList);
 
-	auto transaction = getTransactionWrapper(transactionWrapperAddr);
+	auto transaction = getWrapper<TransactionWrapper>(transactionWrapperAddr);
 
 	auto item = transaction->NewItem();
 	Error err = item.Status();
@@ -562,12 +565,12 @@ static PyObject* stopTransaction(PyObject* self, PyObject* args, StopTransaction
 		return nullptr;
 	}
 
-	auto transaction = getTransactionWrapper(transactionWrapperAddr);
+	auto transaction = getWrapper<TransactionWrapper>(transactionWrapperAddr);
 
 	assert((StopTransactionMode::Commit == stopMode) || (StopTransactionMode::Rollback == stopMode));
 	Error err = (StopTransactionMode::Commit == stopMode) ? transaction->Commit() : transaction->Rollback();
 
-	transactionWrapperDelete(transactionWrapperAddr);
+	wrapperDelete<TransactionWrapper>(transactionWrapperAddr);
 
 	return pyErr(err);
 }

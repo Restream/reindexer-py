@@ -12,23 +12,7 @@
 
 #include <Python.h>
 
-#include "pyobjtools.h"
-#include "queryresults_wrapper.h"
-#include "transaction_wrapper.h"
-#include "tools/serializer.h"
-
-#ifdef PYREINDEXER_CPROTO
-#include "client/cororeindexer.h"
-#else
-#include "core/reindexer.h"
-#endif
-
 namespace pyreindexer {
-
-using reindexer::Error;
-using reindexer::IndexDef;
-using reindexer::NamespaceDef;
-using reindexer::WrSerializer;
 
 static PyObject* Init(PyObject* self, PyObject* args);
 static PyObject* Destroy(PyObject* self, PyObject* args);
@@ -93,8 +77,8 @@ static PyMethodDef module_methods[] = {
 	{"item_update_transaction", ItemUpdateTransaction, METH_VARARGS, "item update transaction"},
 	{"item_upsert_transaction", ItemUpsertTransaction, METH_VARARGS, "item upsert transaction"},
 	{"item_delete_transaction", ItemDeleteTransaction, METH_VARARGS, "item delete transaction"},
-	{"commit_transaction", CommitTransaction, METH_VARARGS, "commit transaction. Free transaction buffer"},
-	{"rollback_transaction", RollbackTransaction, METH_VARARGS, "rollback transaction. Free transaction buffer"},
+	{"commit_transaction", CommitTransaction, METH_VARARGS, "commit transaction. Free transaction object memory"},
+	{"rollback_transaction", RollbackTransaction, METH_VARARGS, "rollback transaction. Free transaction object memory"},
 
 	{nullptr, nullptr, 0, nullptr}
 };
