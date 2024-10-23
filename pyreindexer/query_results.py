@@ -1,4 +1,4 @@
-class QueryResults:
+class QueryResults(object):
     """ QueryResults is a disposable iterator of Reindexer results for such queries as SELECT etc.
     When the results are fetched the iterator closes and frees a memory of results buffer of Reindexer
 
@@ -9,6 +9,7 @@ class QueryResults:
         qres_wrapper_ptr (int): A memory pointer to Reindexer iterator object
         qres_iter_count (int): A count of results for iterations
         pos (int): The current result position in iterator
+
     """
 
     def __init__(self, api, qres_wrapper_ptr, qres_iter_count):
