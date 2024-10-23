@@ -133,17 +133,16 @@ class TestCrudTransaction:
         # When ("Insert items into namespace")
         transaction = db.new_transaction(namespace_name)
         number_items = 5
-        for _ in range(number_items):
-            transaction.insert({"id": 100, "field": "value"}, ["id=serial()"])
+        for i in range(number_items):
+            transaction.insert({'id': 100, 'field': 'value' + str(100 + i)}, ['id=serial()'])
         transaction.commit()
         # Then ("Check that item is added")
         select_result = list(db.select(f'SELECT * FROM {namespace_name}'))
         assert_that(select_result, has_length(number_items), "Transaction: items wasn't created")
         for i in range(number_items):
-            assert_that(select_result[i], equal_to({'id': i + 1, "field": "value"}),
+            assert_that(select_result[i],
+                        equal_to({'id': i + 1, 'field': 'value' + str(100 + i)}),
                         "Transaction: items wasn't created")
-        for i in range(number_items):
-            db.item_delete(namespace_name, {'id': i})
 
     def test_create_item_upsert(self, namespace, index):
         # Given("Create namespace with index")
@@ -195,7 +194,7 @@ class TestCrudTransaction:
         transaction = db.new_transaction(namespace_name)
         number_items = 5
         for _ in range(number_items):
-            transaction.insert({"id": 100, "field": "value"}, ["id=serial()"])
+            transaction.insert({"id": 100, "field": "value"})
         # Then ("Rollback transaction")
         transaction.rollback()
         # When ("Get namespace information")
