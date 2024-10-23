@@ -2,6 +2,7 @@
 
 #include "pyobjtools.h"
 #include "queryresults_wrapper.h"
+#include "query_wrapper.h"
 #include "transaction_wrapper.h"
 #include "tools/serializer.h"
 
@@ -576,5 +577,29 @@ static PyObject* stopTransaction(PyObject* self, PyObject* args, StopTransaction
 }
 static PyObject* CommitTransaction(PyObject* self, PyObject* args) { return stopTransaction(self, args, StopTransactionMode::Commit); }
 static PyObject* RollbackTransaction(PyObject* self, PyObject* args) { return stopTransaction(self, args, StopTransactionMode::Rollback); }
+
+
+static PyObject* CreateQuery(PyObject* self, PyObject* args) {
+	uintptr_t rx = 0;
+	char* ns = nullptr;
+	if (!PyArg_ParseTuple(args, "ks", &rx, &ns)) {
+		return nullptr;
+	}
+
+	auto db = getDB(rx);
+	auto query = new QueryWrapper(db, ns);
+	return Py_BuildValue("isK", errOK, "", reinterpret_cast<uintptr_t>(query));
+}
+
+static PyObject* DeleteQuery(PyObject* self, PyObject* args) {
+	uintptr_t queryWrapperAddr = 0;
+	if (!PyArg_ParseTuple(args, "k", &queryWrapperAddr)) {
+		return nullptr;
+	}
+
+	wrapperDelete<QueryWrapper>(queryWrapperAddr);
+
+	Py_RETURN_NONE;
+}
 
 }  // namespace pyreindexer

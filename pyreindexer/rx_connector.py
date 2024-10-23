@@ -1,6 +1,8 @@
+from typing import List, Dict
 from pyreindexer.raiser_mixin import RaiserMixin
 from pyreindexer.query_results import QueryResults
 from pyreindexer.transaction import Transaction
+from pyreindexer.query import Query
 
 
 class RxConnector(RaiserMixin):
@@ -41,14 +43,14 @@ class RxConnector(RaiserMixin):
         if self.rx > 0:
             self._api_close()
 
-    def close(self):
+    def close(self) -> None:
         """Closes an API instance with Reindexer resources freeing
 
         """
 
         self._api_close()
 
-    def namespace_open(self, namespace):
+    def namespace_open(self, namespace) -> None:
         """Opens a namespace specified or creates a namespace if it does not exist
 
         # Arguments:
@@ -64,7 +66,7 @@ class RxConnector(RaiserMixin):
         self.err_code, self.err_msg = self.api.namespace_open(self.rx, namespace)
         self.raise_on_error()
 
-    def namespace_close(self, namespace):
+    def namespace_close(self, namespace) -> None:
         """Closes a namespace specified
 
         # Arguments:
@@ -80,7 +82,7 @@ class RxConnector(RaiserMixin):
         self.err_code, self.err_msg = self.api.namespace_close(self.rx, namespace)
         self.raise_on_error()
 
-    def namespace_drop(self, namespace):
+    def namespace_drop(self, namespace) -> None:
         """Drops a namespace specified
 
         # Arguments:
@@ -96,7 +98,7 @@ class RxConnector(RaiserMixin):
         self.err_code, self.err_msg = self.api.namespace_drop(self.rx, namespace)
         self.raise_on_error()
 
-    def namespaces_enum(self, enum_not_opened=False):
+    def namespaces_enum(self, enum_not_opened=False) -> List[Dict[str, str]]:
         """Gets a list of namespaces available
 
         # Arguments:
@@ -117,7 +119,7 @@ class RxConnector(RaiserMixin):
         self.raise_on_error()
         return res
 
-    def index_add(self, namespace, index_def):
+    def index_add(self, namespace, index_def) -> None:
         """Adds an index to the namespace specified
 
         # Arguments:
@@ -134,7 +136,7 @@ class RxConnector(RaiserMixin):
         self.err_code, self.err_msg = self.api.index_add(self.rx, namespace, index_def)
         self.raise_on_error()
 
-    def index_update(self, namespace, index_def):
+    def index_update(self, namespace, index_def) -> None:
         """Updates an index in the namespace specified
 
         # Arguments:
@@ -151,7 +153,7 @@ class RxConnector(RaiserMixin):
         self.err_code, self.err_msg = self.api.index_update(self.rx, namespace, index_def)
         self.raise_on_error()
 
-    def index_drop(self, namespace, index_name):
+    def index_drop(self, namespace, index_name) -> None:
         """Drops an index from the namespace specified
 
         # Arguments:
@@ -168,7 +170,7 @@ class RxConnector(RaiserMixin):
         self.err_code, self.err_msg = self.api.index_drop(self.rx, namespace, index_name)
         self.raise_on_error()
 
-    def item_insert(self, namespace, item_def, precepts=None):
+    def item_insert(self, namespace, item_def, precepts=None) -> None:
         """Inserts an item with its precepts to the namespace specified
 
         # Arguments:
@@ -188,7 +190,7 @@ class RxConnector(RaiserMixin):
         self.err_code, self.err_msg = self.api.item_insert(self.rx, namespace, item_def, precepts)
         self.raise_on_error()
 
-    def item_update(self, namespace, item_def, precepts=None):
+    def item_update(self, namespace, item_def, precepts=None) -> None:
         """Updates an item with its precepts in the namespace specified
 
         # Arguments:
@@ -208,7 +210,7 @@ class RxConnector(RaiserMixin):
         self.err_code, self.err_msg = self.api.item_update(self.rx, namespace, item_def, precepts)
         self.raise_on_error()
 
-    def item_upsert(self, namespace, item_def, precepts=None):
+    def item_upsert(self, namespace, item_def, precepts=None) -> None:
         """Updates an item with its precepts in the namespace specified. Creates the item if it not exists
 
         # Arguments:
@@ -228,7 +230,7 @@ class RxConnector(RaiserMixin):
         self.err_code, self.err_msg = self.api.item_upsert(self.rx, namespace, item_def, precepts)
         self.raise_on_error()
 
-    def item_delete(self, namespace, item_def):
+    def item_delete(self, namespace, item_def) -> None:
         """Deletes an item from the namespace specified
 
         # Arguments:
@@ -245,7 +247,7 @@ class RxConnector(RaiserMixin):
         self.err_code, self.err_msg = self.api.item_delete(self.rx, namespace, item_def)
         self.raise_on_error()
 
-    def meta_put(self, namespace, key, value):
+    def meta_put(self, namespace, key, value) -> None:
         """Puts metadata to a storage of Reindexer by key
 
         # Arguments:
@@ -263,7 +265,7 @@ class RxConnector(RaiserMixin):
         self.err_code, self.err_msg = self.api.meta_put(self.rx, namespace, key, value)
         self.raise_on_error()
 
-    def meta_get(self, namespace, key):
+    def meta_get(self, namespace, key) -> str :
         """Gets metadata from a storage of Reindexer by key specified
 
         # Arguments:
@@ -284,7 +286,7 @@ class RxConnector(RaiserMixin):
         self.raise_on_error()
         return res
 
-    def meta_delete(self, namespace, key):
+    def meta_delete(self, namespace, key) -> None:
         """Deletes metadata from a storage of Reindexer by key specified
 
         # Arguments:
@@ -301,7 +303,7 @@ class RxConnector(RaiserMixin):
         self.err_code, self.err_msg = self.api.meta_delete(self.rx, namespace, key)
         self.raise_on_error()
 
-    def meta_enum(self, namespace):
+    def meta_enum(self, namespace) -> List[str] :
         """Gets a list of metadata keys from a storage of Reindexer
 
         # Arguments:
@@ -321,7 +323,7 @@ class RxConnector(RaiserMixin):
         self.raise_on_error()
         return res
 
-    def select(self, query):
+    def select(self, query) -> QueryResults:
         """Executes an SQL query and returns query results
 
         # Arguments:
@@ -341,7 +343,7 @@ class RxConnector(RaiserMixin):
         self.raise_on_error()
         return QueryResults(self.api, qres_wrapper_ptr, qres_iter_count)
 
-    def new_transaction(self, namespace):
+    def new_transaction(self, namespace) -> Transaction:
         """Start a new transaction and return the transaction object to processing
 
         # Arguments:
@@ -355,10 +357,29 @@ class RxConnector(RaiserMixin):
             Exception: Raises with an error message of API return on non-zero error code
 
         """
+
         self.raise_on_not_init()
         self.err_code, self.err_msg, transaction_wrapper_ptr = self.api.new_transaction(self.rx, namespace)
         self.raise_on_error()
         return Transaction(self.api, transaction_wrapper_ptr)
+
+    def new_query(self, namespace: str) -> Query:
+        """Create a new query and return the query object to processing
+
+        # Arguments:
+            namespace (string): A name of a namespace
+
+        # Returns:
+            (:obj:`Query`): A new query
+
+        # Raises:
+            Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
+
+        """
+
+        self.raise_on_not_init()
+        query_wrapper_ptr = self.api.create_query(self.rx, namespace)
+        return Query(self.api, query_wrapper_ptr)
 
     def _api_import(self, dsn):
         """Imports an API dynamically depending on protocol specified in dsn

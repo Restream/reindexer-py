@@ -83,6 +83,11 @@ def transaction_example(db, namespace, items_in_base):
     for item in selected_items_tr:
         print('Item: ', item)
 
+def query_example(db, namespace):
+    transaction = db.new_transaction(namespace)
+    query = db.new_query(namespace, transaction)
+    query.where("name = 'item_0'")
+    transaction.commit()
 
 def rx_example():
     db = RxConnector('builtin:///tmp/pyrx')
@@ -113,6 +118,8 @@ def rx_example():
         print('Item: ', item)
 
     transaction_example(db, namespace, items_copy)
+
+    query_example(db, namespace)
 
     db.close()
 

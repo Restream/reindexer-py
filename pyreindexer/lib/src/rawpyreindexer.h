@@ -46,6 +46,9 @@ static PyObject* ItemDeleteTransaction(PyObject* self, PyObject* args);
 static PyObject* CommitTransaction(PyObject* self, PyObject* args);
 static PyObject* RollbackTransaction(PyObject* self, PyObject* args);
 
+static PyObject* CreateQuery(PyObject* self, PyObject* args);
+static PyObject* DeleteQuery(PyObject* self, PyObject* args);
+
 // clang-format off
 static PyMethodDef module_methods[] = {
 	{"init", Init, METH_NOARGS, "init reindexer instance"},
@@ -79,6 +82,9 @@ static PyMethodDef module_methods[] = {
 	{"item_delete_transaction", ItemDeleteTransaction, METH_VARARGS, "item delete transaction"},
 	{"commit_transaction", CommitTransaction, METH_VARARGS, "commit transaction. Free transaction object memory"},
 	{"rollback_transaction", RollbackTransaction, METH_VARARGS, "rollback transaction. Free transaction object memory"},
+
+	{"create_query", CreateQuery, METH_VARARGS, "create new query"},
+	{"delete_query", DeleteQuery, METH_VARARGS, "delete query. Free query object memory"},
 
 	{nullptr, nullptr, 0, nullptr}
 };
