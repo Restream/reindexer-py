@@ -49,6 +49,15 @@ static PyObject* RollbackTransaction(PyObject* self, PyObject* args);
 static PyObject* CreateQuery(PyObject* self, PyObject* args);
 static PyObject* DeleteQuery(PyObject* self, PyObject* args);
 
+static PyObject* WhereBetweenFields(PyObject* self, PyObject* args);
+static PyObject* OpenBracket(PyObject* self, PyObject* args);
+static PyObject* CloseBracket(PyObject* self, PyObject* args);
+static PyObject* WhereInt(PyObject* self, PyObject* args);
+static PyObject* WhereInt32(PyObject* self, PyObject* args);
+static PyObject* WhereInt64(PyObject* self, PyObject* args);
+static PyObject* WhereString(PyObject* self, PyObject* args);
+static PyObject* WhereUUID(PyObject* self, PyObject* args);
+
 // clang-format off
 static PyMethodDef module_methods[] = {
 	{"init", Init, METH_NOARGS, "init reindexer instance"},
@@ -70,11 +79,11 @@ static PyMethodDef module_methods[] = {
 	{"meta_delete", DeleteMeta, METH_VARARGS, "delete meta"},
 	{"meta_enum", EnumMeta, METH_VARARGS, "enum meta"},
 	{"select", Select, METH_VARARGS, "select query"},
-
+	// query results
 	{"query_results_iterate", QueryResultsWrapperIterate, METH_VARARGS, "get query result"},
 	{"query_results_delete", QueryResultsWrapperDelete, METH_VARARGS, "free query results buffer"},
 	{"get_agg_results", GetAggregationResults, METH_VARARGS, "get aggregation results"},
-
+	// transaction (sync)
 	{"new_transaction", NewTransaction, METH_VARARGS, "start new transaction"},
 	{"item_insert_transaction", ItemInsertTransaction, METH_VARARGS, "item insert transaction"},
 	{"item_update_transaction", ItemUpdateTransaction, METH_VARARGS, "item update transaction"},
@@ -82,9 +91,19 @@ static PyMethodDef module_methods[] = {
 	{"item_delete_transaction", ItemDeleteTransaction, METH_VARARGS, "item delete transaction"},
 	{"commit_transaction", CommitTransaction, METH_VARARGS, "commit transaction. Free transaction object memory"},
 	{"rollback_transaction", RollbackTransaction, METH_VARARGS, "rollback transaction. Free transaction object memory"},
-
+	// query
 	{"create_query", CreateQuery, METH_VARARGS, "create new query"},
 	{"delete_query", DeleteQuery, METH_VARARGS, "delete query. Free query object memory"},
+
+	//{"where", Where, METH_VARARGS, "add where condition"},
+	{"where_between_fields", WhereBetweenFields, METH_VARARGS, "add comparing two fields where condition"},
+	{"open_bracket", OpenBracket, METH_VARARGS, "open bracket for where condition"},
+	{"close_bracket", CloseBracket, METH_VARARGS, "close bracket for where condition"},
+    {"where_int", WhereInt, METH_VARARGS, "add where condition with int args"},
+    {"where_int32", WhereInt32, METH_VARARGS, "add where condition with int32 args"},
+    {"where_int64", WhereInt64, METH_VARARGS, "add where condition with int64 args"},
+	{"where_string", WhereString, METH_VARARGS, "add where condition with string args"},
+	{"where_uuid", WhereUUID, METH_VARARGS, "add where condition with UUID as string args"},
 
 	{nullptr, nullptr, 0, nullptr}
 };

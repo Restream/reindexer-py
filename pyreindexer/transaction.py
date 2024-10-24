@@ -9,7 +9,7 @@ class Transaction(object):
 
     """
 
-    def __init__(self, api, transaction_wrapper_ptr):
+    def __init__(self, api, transaction_wrapper_ptr: int):
         """Constructs a new Reindexer transaction object
 
         # Arguments:

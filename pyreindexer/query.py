@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import List
 from enum import Enum
 
@@ -21,10 +22,12 @@ class Query(object):
     # Attributes:
         api (module): An API module for Reindexer calls
         query_wrapper_ptr (int): A memory pointer to Reindexer query object
+        err_code (int): the API error code
+        err_msg (string): the API error message
 
     """
 
-    def __init__(self, api, query_wrapper_ptr):
+    def __init__(self, api, query_wrapper_ptr: int):
         """Constructs a new Reindexer query object
 
         # Arguments:
@@ -35,6 +38,8 @@ class Query(object):
 
         self.api = api
         self.query_wrapper_ptr = query_wrapper_ptr
+        self.err_code = 0
+        self.err_msg = ""
 
     def __del__(self):
         """Free query memory
@@ -44,29 +49,163 @@ class Query(object):
         if self.query_wrapper_ptr > 0:
             self.api.delete_query(self.query_wrapper_ptr)
 
-    def Where(self, index: str, condition: CondType, keys: List[str]):
-        """Where - Add where condition to DB query
+    def _raise_on_error(self):
+        """Checks if there is an error code and raises with an error message
+
+        # Raises:
+            Exception: Raises with an error message of API return on non-zero error code
+
+        """
+
+        if self.err_code:
+            raise Exception(self.err_msg)
+
+###################################################################
+#func (q *Query) Where(index string, condition int, keys interface{}) *Query {
+#func (q *Query) WhereQuery(subQuery *Query, condition int, keys interface{}) *Query {
+#################################################################
+
+    def where_between_fields(self, first_field: str, condition: CondType, second_field: str) -> Query: # ToDo
+        """Where - Add comparing two fields where condition to DB query
+
+        # Arguments:
+            first_field (string): First field name used in condition clause
+            condition (:enum:`CondType`): Type of condition
+            second_field (string): Second field name used in condition clause
+
+        # Returns:
+            (:obj:`Query`): Query object ready to be executed
+
+        """
+
+        self.api.where_between_fields(self.query_wrapper_ptr, first_field, condition.value, second_field)
+        return self
+
+    def open_bracket(self) -> Query:
+        """OpenBracket - Open bracket for where condition to DB query
+
+        # Returns:
+            (:obj:`Query`): Query object ready to be executed
+
+        """
+
+        self.api.open_bracket(self.query_wrapper_ptr)
+        return self
+
+    def close_bracket(self) -> Query:
+        """CloseBracket - Close bracket for where condition to DB query
+
+        # Returns:
+            (:obj:`Query`): Query object ready to be executed
+
+        """
+
+        self.api.close_bracket(self.query_wrapper_ptr)
+        return self
+
+    def where_int(self, index: str, condition: CondType, keys: List[int]) -> Query:
+        """Where - Add where condition to DB query with int args
+
+        # Arguments:
+            index (string): Field name used in condition clause
+            condition (:enum:`CondType`): Type of condition
+            keys (list[int]): Value of index to be compared with. For composite indexes keys must be list, with value of each subindex
+
+        # Returns:
+            (:obj:`Query`): Query object ready to be executed
+
+        # Raises:
+            Exception: Raises with an error message of API return on non-zero error code
+
+        """
+
+        self.err_code, self.err_msg = self.api.where_int(self.query_wrapper_ptr, index, condition.value, keys)
+        self._raise_on_error()
+        return self
+
+    def where_int32(self, index: str, condition: CondType, keys: List[int]) -> Query:
+        """Where - Add where condition to DB query with Int32 args
+
+        # Arguments:
+            index (string): Field name used in condition clause
+            condition (:enum:`CondType`): Type of condition
+            keys (list[Int32]): Value of index to be compared with. For composite indexes keys must be list, with value of each subindex
+
+        # Returns:
+            (:obj:`Query`): Query object ready to be executed
+
+        # Raises:
+            Exception: Raises with an error message of API return on non-zero error code
+
+        """
+
+        self.err_code, self.err_msg = self.api.where_int32(self.query_wrapper_ptr, index, condition.value, keys)
+        self._raise_on_error()
+        return self
+
+    def where_int64(self, index: str, condition: CondType, keys: List[int]) -> Query:
+        """Where - Add where condition to DB query with Int64 args
+
+        # Arguments:
+            index (string): Field name used in condition clause
+            condition (:enum:`CondType`): Type of condition
+            keys (list[Int64]): Value of index to be compared with. For composite indexes keys must be list, with value of each subindex
+
+        # Returns:
+            (:obj:`Query`): Query object ready to be executed
+
+        # Raises:
+            Exception: Raises with an error message of API return on non-zero error code
+
+        """
+
+        self.err_code, self.err_msg = self.api.where_int64(self.query_wrapper_ptr, index, condition.value, keys)
+        self._raise_on_error()
+        return self
+
+    def where_string(self, index: str, condition: CondType, keys: List[str]) -> Query:
+        """Where - Add where condition to DB query with string args
 
         # Arguments:
             index (string): Field name used in condition clause
             condition (:enum:`CondType`): Type of condition
             keys (list[string]): Value of index to be compared with. For composite indexes keys must be list, with value of each subindex
 
-        #Returns:
+        # Returns:
             (:obj:`Query`): Query object ready to be executed
+
+        # Raises:
+            Exception: Raises with an error message of API return on non-zero error code
 
         """
 
+        self.err_code, self.err_msg = self.api.where_string(self.query_wrapper_ptr, index, condition.value, keys)
+        self._raise_on_error()
         return self
 
-#func (q *Query) WhereQuery(subQuery *Query, condition int, keys interface{}) *Query {
-#func (q *Query) WhereBetweenFields(firstField string, condition int, secondField string) *Query {
-#func (q *Query) OpenBracket() *Query {
-#func (q *Query) CloseBracket() *Query {
-#func (q *Query) WhereInt(index string, condition int, keys ...int) *Query {
-#func (q *Query) WhereInt32(index string, condition int, keys ...int32) *Query {
-#func (q *Query) WhereInt64(index string, condition int, keys ...int64) *Query {
-#func (q *Query) WhereString(index string, condition int, keys ...string) *Query {
+    def where_uuid(self, index: str, condition: CondType, keys: List[str]) -> Query:
+        """Where - Add where condition to DB query with UUID as string args.
+            This function applies binary encoding to the UUID value.
+            'index' MUST be declared as uuid index in this case
+
+        # Arguments:
+            index (string): Field name used in condition clause
+            condition (:enum:`CondType`): Type of condition
+            keys (list[string]): Value of index to be compared with. For composite indexes keys must be list, with value of each subindex
+
+        # Returns:
+            (:obj:`Query`): Query object ready to be executed
+
+        # Raises:
+            Exception: Raises with an error message of API return on non-zero error code
+
+        """
+
+        self.err_code, self.err_msg = self.api.where_uuid(self.query_wrapper_ptr, index, condition.value, keys)
+        self._raise_on_error()
+        return self
+
+################################################################
 #func (q *Query) WhereUuid(index string, condition int, keys ...string) *Query {
 #func (q *Query) WhereComposite(index string, condition int, keys ...interface{}) *Query {
 #func (q *Query) Match(index string, keys ...string) *Query {

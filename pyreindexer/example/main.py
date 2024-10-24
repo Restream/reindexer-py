@@ -1,4 +1,5 @@
 from pyreindexer import RxConnector
+from pyreindexer.query import CondType
 
 
 def create_index_example(db, namespace):
@@ -84,10 +85,14 @@ def transaction_example(db, namespace, items_in_base):
         print('Item: ', item)
 
 def query_example(db, namespace):
-    transaction = db.new_transaction(namespace)
-    query = db.new_query(namespace, transaction)
-    query.where("name = 'item_0'")
-    transaction.commit()
+    (db.new_query(namespace)
+        .open_bracket()
+        .where_between_fields('fld1', CondType.CondEq, 'fld2')
+        .close_bracket()
+        .where_int64('fld2', CondType.CondLe, [42]))
+
+    query = db.new_query(namespace)
+    query.where_string('fld1', CondType.CondSet, ['s','t','o','p'])
 
 def rx_example():
     db = RxConnector('builtin:///tmp/pyrx')

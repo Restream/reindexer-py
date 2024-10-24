@@ -378,7 +378,8 @@ class RxConnector(RaiserMixin):
         """
 
         self.raise_on_not_init()
-        query_wrapper_ptr = self.api.create_query(self.rx, namespace)
+        self.err_code, self.err_msg, query_wrapper_ptr = self.api.create_query(self.rx, namespace)
+        self.raise_on_error()
         return Query(self.api, query_wrapper_ptr)
 
     def _api_import(self, dsn):
