@@ -43,6 +43,18 @@ public:
 		return errOK;
 	}
 
+	void AND() {
+		query_ = std::move(query_.And());
+	}
+
+	void OR() {
+		query_ = std::move(query_.Or());
+	}
+
+	void NOT() {
+		query_ = std::move(query_.Not());
+	}
+
 private:
 	DBInterface* db_{nullptr};
 	reindexer::Query query_;

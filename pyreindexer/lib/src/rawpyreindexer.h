@@ -60,6 +60,10 @@ static PyObject* WhereUUID(PyObject* self, PyObject* args);
 static PyObject* WhereBool(PyObject* self, PyObject* args);
 static PyObject* WhereDouble(PyObject* self, PyObject* args);
 
+static PyObject* AND(PyObject* self, PyObject* args);
+static PyObject* OR(PyObject* self, PyObject* args);
+static PyObject* NOT(PyObject* self, PyObject* args);
+
 // clang-format off
 static PyMethodDef module_methods[] = {
 	{"init", Init, METH_NOARGS, "init reindexer instance"},
@@ -98,16 +102,22 @@ static PyMethodDef module_methods[] = {
 	{"delete_query", DeleteQuery, METH_VARARGS, "delete query. Free query object memory"},
 
 	//{"where", Where, METH_VARARGS, "add where condition"},
+	//{"where_query", WhereQuery, METH_VARARGS, "add where condition"},
+
 	{"where_between_fields", WhereBetweenFields, METH_VARARGS, "add comparing two fields where condition"},
 	{"open_bracket", OpenBracket, METH_VARARGS, "open bracket for where condition"},
 	{"close_bracket", CloseBracket, METH_VARARGS, "close bracket for where condition"},
-    {"where_int", WhereInt, METH_VARARGS, "add where condition with int args"},
-    {"where_int32", WhereInt32, METH_VARARGS, "add where condition with int32 args"},
-    {"where_int64", WhereInt64, METH_VARARGS, "add where condition with int64 args"},
+	{"where_int", WhereInt, METH_VARARGS, "add where condition with int args"},
+	{"where_int32", WhereInt32, METH_VARARGS, "add where condition with int32 args"},
+	{"where_int64", WhereInt64, METH_VARARGS, "add where condition with int64 args"},
 	{"where_string", WhereString, METH_VARARGS, "add where condition with string args"},
 	{"where_uuid", WhereUUID, METH_VARARGS, "add where condition with UUID as string args"},
 	{"where_bool", WhereBool, METH_VARARGS, "add where condition with bool args"},
 	{"where_float64", WhereDouble, METH_VARARGS, "add where condition with double args"},
+
+    {"AND", AND, METH_VARARGS, "next condition will be added with AND"},
+    {"OR", OR, METH_VARARGS, "next condition will be added with OR"},
+    {"NOT", NOT, METH_VARARGS, "next condition will be added with NOT AND"},
 
 	{nullptr, nullptr, 0, nullptr}
 };

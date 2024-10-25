@@ -92,7 +92,8 @@ def query_example(db, namespace):
         .where_int64('fld2', CondType.CondLe, [42]))
 
     query = db.new_query(namespace)
-    query.where_string('fld1', CondType.CondSet, ['s','t','o','p'])
+    (query.where_string('fld1', CondType.CondSet, ['s','t','o','p'])
+        .NOT().where_float64('fld2', CondType.CondSet, [3.14]))
 
 def rx_example():
     db = RxConnector('builtin:///tmp/pyrx')

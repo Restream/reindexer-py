@@ -737,8 +737,7 @@ static PyObject* WhereInt64(PyObject* self, PyObject* args) {
 	return pyErr(errOK);
 }
 
-static PyObject* WhereString(PyObject* self, PyObject* args)
-{
+static PyObject* WhereString(PyObject* self, PyObject* args) {
 	uintptr_t queryWrapperAddr = 0;
 	char* index = nullptr;
 	unsigned condition = 0;
@@ -769,8 +768,7 @@ static PyObject* WhereString(PyObject* self, PyObject* args)
 	return pyErr(errOK);
 }
 
-static PyObject* WhereUUID(PyObject* self, PyObject* args)
-{
+static PyObject* WhereUUID(PyObject* self, PyObject* args) {
 	uintptr_t queryWrapperAddr = 0;
 	char* index = nullptr;
 	unsigned condition = 0;
@@ -831,8 +829,7 @@ static PyObject* WhereBool(PyObject* self, PyObject* args) {
 	return pyErr(errOK);
 }
 
-static PyObject* WhereDouble(PyObject* self, PyObject* args)
- {
+static PyObject* WhereDouble(PyObject* self, PyObject* args) {
 	uintptr_t queryWrapperAddr = 0;
 	char* index = nullptr;
 	unsigned condition = 0;
@@ -861,6 +858,47 @@ static PyObject* WhereDouble(PyObject* self, PyObject* args)
 	query->Where(index, CondType(condition), keys);
 
 	return pyErr(errOK);
+}
+
+static PyObject* AND(PyObject* self, PyObject* args) {
+	uintptr_t queryWrapperAddr = 0;
+	if (!PyArg_ParseTuple(args, "k", &queryWrapperAddr)) {
+		return nullptr;
+	}
+
+	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
+
+	query->AND();
+
+	Py_RETURN_NONE;
+}
+
+
+static PyObject* OR(PyObject* self, PyObject* args) {
+	uintptr_t queryWrapperAddr = 0;
+	if (!PyArg_ParseTuple(args, "k", &queryWrapperAddr)) {
+		return nullptr;
+	}
+
+	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
+
+	query->OR();
+
+	Py_RETURN_NONE;
+}
+
+
+static PyObject* NOT(PyObject* self, PyObject* args) {
+	uintptr_t queryWrapperAddr = 0;
+	if (!PyArg_ParseTuple(args, "k", &queryWrapperAddr)) {
+		return nullptr;
+	}
+
+	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
+
+	query->NOT();
+
+	Py_RETURN_NONE;
 }
 
 }  // namespace pyreindexer
