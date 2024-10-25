@@ -800,4 +800,67 @@ static PyObject* WhereUUID(PyObject* self, PyObject* args)
 	return pyErr(err);
 }
 
+static PyObject* WhereBool(PyObject* self, PyObject* args) {
+	uintptr_t queryWrapperAddr = 0;
+	char* index = nullptr;
+	unsigned condition = 0;
+	PyObject* keysList = nullptr;  	// borrowed ref after ParseTuple if passed
+	if (!PyArg_ParseTuple(args, "ksIO!", &queryWrapperAddr, &index, &condition, &PyList_Type, &keysList)) {
+		return nullptr;
+	}
+
+	Py_XINCREF(keysList);
+
+	std::vector<bool> keys;
+	if (keysList != nullptr) {
+		try {
+			keys = ParseListToBoolVec(&keysList);
+		} catch (const Error& err) {
+			Py_DECREF(keysList);
+
+			return pyErr(err);
+		}
+	}
+
+	Py_XDECREF(keysList);
+
+	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
+
+	query->Where(index, CondType(condition), keys);
+
+	return pyErr(errOK);
+}
+
+static PyObject* WhereDouble(PyObject* self, PyObject* args)
+ {
+	uintptr_t queryWrapperAddr = 0;
+	char* index = nullptr;
+	unsigned condition = 0;
+	PyObject* keysList = nullptr;  	// borrowed ref after ParseTuple if passed
+	if (!PyArg_ParseTuple(args, "ksIO!", &queryWrapperAddr, &index, &condition, &PyList_Type, &keysList)) {
+		return nullptr;
+	}
+
+	Py_XINCREF(keysList);
+
+	std::vector<double> keys;
+	if (keysList != nullptr) {
+		try {
+			keys = ParseListToDoubleVec(&keysList);
+		} catch (const Error& err) {
+			Py_DECREF(keysList);
+
+			return pyErr(err);
+		}
+	}
+
+	Py_XDECREF(keysList);
+
+	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
+
+	query->Where(index, CondType(condition), keys);
+
+	return pyErr(errOK);
+}
+
 }  // namespace pyreindexer

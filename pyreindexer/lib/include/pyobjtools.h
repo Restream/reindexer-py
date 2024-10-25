@@ -9,6 +9,8 @@
 namespace pyreindexer {
 
 std::vector<std::string> ParseListToStrVec(PyObject** list);
+std::vector<bool> ParseListToBoolVec(PyObject** list);
+std::vector<double> ParseListToDoubleVec(PyObject** list);
 
 template <typename T>
 std::vector<T> ParseListToIntVec(PyObject** list) {

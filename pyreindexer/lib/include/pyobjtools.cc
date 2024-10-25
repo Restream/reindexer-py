@@ -112,6 +112,46 @@ std::vector<std::string> ParseListToStrVec(PyObject** list) {
 	return vec;
 }
 
+std::vector<bool> ParseListToBoolVec(PyObject** list) {
+	std::vector<bool> vec;
+
+	Py_ssize_t sz = PyList_Size(*list);
+	for (Py_ssize_t i = 0; i < sz; i++) {
+		PyObject* item = PyList_GetItem(*list, i);
+
+		if (!PyBool_Check(item)) {
+			throw reindexer::Error(errParseJson, std::string("Bool expected, got ") + Py_TYPE(item)->tp_name);
+		}
+
+		vec.push_back(PyLong_AsLong(item) != 0);
+	}
+
+	return vec;
+}
+
+std::vector<double> ParseListToDoubleVec(PyObject** list) {
+	std::vector<double> vec;
+
+	Py_ssize_t sz = PyList_Size(*list);
+	for (Py_ssize_t i = 0; i < sz; i++) {
+		PyObject* item = PyList_GetItem(*list, i);
+
+		if (!PyFloat_Check(item)) {
+			throw reindexer::Error(errParseJson, std::string("Double expected, got ") + Py_TYPE(item)->tp_name);
+		}
+
+		double v = PyFloat_AsDouble(item);
+		double intpart = 0.0;
+		if (std::modf(v, &intpart) == 0.0) {
+			vec.push_back(int64_t(v));
+		} else {
+			vec.push_back(v);
+		}
+	}
+
+	return vec;
+}
+
 PyObject* pyValueFromJsonValue(const gason::JsonValue& value) {
 	PyObject* pyValue = nullptr;
 

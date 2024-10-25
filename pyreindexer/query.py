@@ -65,7 +65,7 @@ class Query(object):
 #func (q *Query) WhereQuery(subQuery *Query, condition int, keys interface{}) *Query {
 #################################################################
 
-    def where_between_fields(self, first_field: str, condition: CondType, second_field: str) -> Query: # ToDo
+    def where_between_fields(self, first_field: str, condition: CondType, second_field: str) -> Query:
         """Where - Add comparing two fields where condition to DB query
 
         # Arguments:
@@ -205,12 +205,50 @@ class Query(object):
         self._raise_on_error()
         return self
 
+    def where_bool(self, index: str, condition: CondType, keys: List[bool]) -> Query:
+        """Where - Add where condition to DB query with bool args
+
+        # Arguments:
+            index (string): Field name used in condition clause
+            condition (:enum:`CondType`): Type of condition
+            keys (list[bool]): Value of index to be compared with. For composite indexes keys must be list, with value of each subindex
+
+        # Returns:
+            (:obj:`Query`): Query object ready to be executed
+
+        # Raises:
+            Exception: Raises with an error message of API return on non-zero error code
+
+        """
+
+        self.err_code, self.err_msg = self.api.where_bool(self.query_wrapper_ptr, index, condition.value, keys)
+        self._raise_on_error()
+        return self
+
+    def where_float64(self, index: str, condition: CondType, keys: List[float]) -> Query:
+        """Where - Add where condition to DB query with float args
+
+        # Arguments:
+            index (string): Field name used in condition clause
+            condition (:enum:`CondType`): Type of condition
+            keys (list[float]): Value of index to be compared with. For composite indexes keys must be list, with value of each subindex
+
+        # Returns:
+            (:obj:`Query`): Query object ready to be executed
+
+        # Raises:
+            Exception: Raises with an error message of API return on non-zero error code
+
+        """
+
+        self.err_code, self.err_msg = self.api.where_float64(self.query_wrapper_ptr, index, condition.value, keys)
+        self._raise_on_error()
+        return self
+
 ################################################################
-#func (q *Query) WhereUuid(index string, condition int, keys ...string) *Query {
+#func (q *Query) WhereDouble(index string, condition int, keys ...float64) *Query {
 #func (q *Query) WhereComposite(index string, condition int, keys ...interface{}) *Query {
 #func (q *Query) Match(index string, keys ...string) *Query {
-#func (q *Query) WhereBool(index string, condition int, keys ...bool) *Query {
-#func (q *Query) WhereDouble(index string, condition int, keys ...float64) *Query {
 #func (q *Query) DWithin(index string, point Point, distance float64) *Query {
 #func (q *Query) AggregateSum(field string) *Query {
 #func (q *Query) AggregateAvg(field string) *Query {

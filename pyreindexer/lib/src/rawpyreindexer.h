@@ -57,6 +57,8 @@ static PyObject* WhereInt32(PyObject* self, PyObject* args);
 static PyObject* WhereInt64(PyObject* self, PyObject* args);
 static PyObject* WhereString(PyObject* self, PyObject* args);
 static PyObject* WhereUUID(PyObject* self, PyObject* args);
+static PyObject* WhereBool(PyObject* self, PyObject* args);
+static PyObject* WhereDouble(PyObject* self, PyObject* args);
 
 // clang-format off
 static PyMethodDef module_methods[] = {
@@ -104,6 +106,8 @@ static PyMethodDef module_methods[] = {
     {"where_int64", WhereInt64, METH_VARARGS, "add where condition with int64 args"},
 	{"where_string", WhereString, METH_VARARGS, "add where condition with string args"},
 	{"where_uuid", WhereUUID, METH_VARARGS, "add where condition with UUID as string args"},
+	{"where_bool", WhereBool, METH_VARARGS, "add where condition with bool args"},
+	{"where_float64", WhereDouble, METH_VARARGS, "add where condition with double args"},
 
 	{nullptr, nullptr, 0, nullptr}
 };

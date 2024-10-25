@@ -24,10 +24,6 @@ public:
 		query_ = std::move(query_.CloseBracket());
 	}
 
-//	template <typename T>
-//	void Where(std::string&& index, CondType condition, const std::vector<T>& keys) {
-//		query_ = std::move(query_.Where<std::string, T>(std::move(index), condition, keys));
-//	}
 	template <typename T>
 	void Where(std::string_view index, CondType condition, const std::vector<T>& keys) {
 		query_ = std::move(query_.Where(index, condition, keys));
