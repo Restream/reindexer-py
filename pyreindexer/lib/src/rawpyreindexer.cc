@@ -970,4 +970,17 @@ static PyObject* Strict(PyObject* self, PyObject* args) {
 	Py_RETURN_NONE;
 }
 
+static PyObject* Explain(PyObject* self, PyObject* args) {
+	uintptr_t queryWrapperAddr = 0;
+	if (!PyArg_ParseTuple(args, "k", &queryWrapperAddr)) {
+		return nullptr;
+	}
+
+	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
+
+	query->Explain();
+
+	Py_RETURN_NONE;
+}
+
 }  // namespace pyreindexer

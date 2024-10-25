@@ -84,16 +84,23 @@ def transaction_example(db, namespace, items_in_base):
     for item in selected_items_tr:
         print('Item: ', item)
 
+
 def query_example(db, namespace):
     (db.new_query(namespace)
         .open_bracket()
         .where_between_fields('fld1', CondType.CondEq, 'fld2')
         .close_bracket()
-        .where_int64('fld2', CondType.CondLe, [42]))
+        .where_int64('fld2', CondType.CondLe, [42])
+        .limit(10)
+        .debug(1)
+        .request_total())
 
-    query = db.new_query(namespace)
+    query = db.new_query(namespace).offset(1).cached_total()
     (query.where_string('fld1', CondType.CondSet, ['s','t','o','p'])
-        .not_op().where_float64('fld2', CondType.CondSet, [3.14]))
+        .not_op()
+        .where_float64('fld2', CondType.CondSet, [3.14])
+        .explain())
+
 
 def rx_example():
     db = RxConnector('builtin:///tmp/pyrx')

@@ -455,8 +455,18 @@ class Query(object):
         self.api.strict(self.query_wrapper_ptr, mode.value)
         return self
 
+    def explain(self) -> Query:
+        """Enable explain query
+
+        # Returns:
+            (:obj:`Query`): Query object for further customizations
+
+        """
+
+        self.api.explain(self.query_wrapper_ptr)
+        return self
+
 ################################################################ ToDo
-#func (q *Query) Explain() *Query {
 #func (q *Query) SetContext(ctx interface{}) *Query {
 #func (q *Query) Exec() *Iterator {
 #func (q *Query) ExecCtx(ctx context.Context) *Iterator {
@@ -486,4 +496,4 @@ class Query(object):
 #func (q *Query) FetchCount(n int) *Query {
 #func (q *Query) Functions(fields ...string) *Query {
 #func (q *Query) EqualPosition(fields ...string) *Query {
-# 66 / 21
+# 66 / 22

@@ -93,6 +93,11 @@ public:
 		query_ = std::move(query_.Strict(mode));
 	}
 
+	void Explain() {
+		constexpr static bool on = true;
+		query_ = std::move(query_.Explain(on));
+	}
+
 private:
 	DBInterface* db_{nullptr};
 	reindexer::Query query_;
