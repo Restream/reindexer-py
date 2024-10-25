@@ -860,35 +860,35 @@ static PyObject* WhereDouble(PyObject* self, PyObject* args) {
 	return pyErr(errOK);
 }
 
-static PyObject* AND(PyObject* self, PyObject* args) {
+static PyObject* LogOp(PyObject* self, PyObject* args) {
 	uintptr_t queryWrapperAddr = 0;
-	if (!PyArg_ParseTuple(args, "k", &queryWrapperAddr)) {
+	unsigned opID = 0;
+	if (!PyArg_ParseTuple(args, "kI", &queryWrapperAddr, &opID)) {
 		return nullptr;
 	}
 
 	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
 
-	query->AND();
+	query->LogOp(LogOpType(opID));
 
 	Py_RETURN_NONE;
 }
 
-
-static PyObject* OR(PyObject* self, PyObject* args) {
+static PyObject* Distinct(PyObject* self, PyObject* args) {
 	uintptr_t queryWrapperAddr = 0;
-	if (!PyArg_ParseTuple(args, "k", &queryWrapperAddr)) {
+	char* index = nullptr;
+	if (!PyArg_ParseTuple(args, "ks", &queryWrapperAddr, &index)) {
 		return nullptr;
 	}
 
 	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
 
-	query->OR();
+	query->Distinct(index);
 
 	Py_RETURN_NONE;
 }
 
-
-static PyObject* NOT(PyObject* self, PyObject* args) {
+static PyObject* ReqTotal(PyObject* self, PyObject* args) {
 	uintptr_t queryWrapperAddr = 0;
 	if (!PyArg_ParseTuple(args, "k", &queryWrapperAddr)) {
 		return nullptr;
@@ -896,7 +896,76 @@ static PyObject* NOT(PyObject* self, PyObject* args) {
 
 	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
 
-	query->NOT();
+	query->ReqTotal();
+
+	Py_RETURN_NONE;
+}
+
+static PyObject* CachedTotal(PyObject* self, PyObject* args) {
+	uintptr_t queryWrapperAddr = 0;
+	if (!PyArg_ParseTuple(args, "k", &queryWrapperAddr)) {
+		return nullptr;
+	}
+
+	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
+
+	query->CachedTotal();
+
+	Py_RETURN_NONE;
+}
+
+static PyObject* Limit(PyObject* self, PyObject* args) {
+	uintptr_t queryWrapperAddr = 0;
+	unsigned limitItems = 0;
+	if (!PyArg_ParseTuple(args, "kI", &queryWrapperAddr, &limitItems)) {
+		return nullptr;
+	}
+
+	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
+
+	query->Limit(limitItems);
+
+	Py_RETURN_NONE;
+}
+
+static PyObject* Offset(PyObject* self, PyObject* args) {
+	uintptr_t queryWrapperAddr = 0;
+	int startOffset = 0;
+	if (!PyArg_ParseTuple(args, "ki", &queryWrapperAddr, &startOffset)) {
+		return nullptr;
+	}
+
+	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
+
+	query->Offset(startOffset);
+
+	Py_RETURN_NONE;
+}
+
+static PyObject* Debug(PyObject* self, PyObject* args) {
+	uintptr_t queryWrapperAddr = 0;
+	unsigned level = 0;
+	if (!PyArg_ParseTuple(args, "kI", &queryWrapperAddr, &level)) {
+		return nullptr;
+	}
+
+	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
+
+	query->Debug(level);
+
+	Py_RETURN_NONE;
+}
+
+static PyObject* Strict(PyObject* self, PyObject* args) {
+	uintptr_t queryWrapperAddr = 0;
+	unsigned mode = 0;
+	if (!PyArg_ParseTuple(args, "kI", &queryWrapperAddr, &mode)) {
+		return nullptr;
+	}
+
+	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
+
+	query->Strict(StrictMode(mode));
 
 	Py_RETURN_NONE;
 }

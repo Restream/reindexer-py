@@ -6,6 +6,12 @@
 
 namespace pyreindexer {
 
+enum class LogOpType {
+	And = 1,
+	Or = 2,
+	Not = 3
+};
+
 class QueryWrapper {
 public:
 	QueryWrapper(DBInterface* db, std::string_view ns) : db_{db}, query_(ns) {
@@ -43,16 +49,48 @@ public:
 		return errOK;
 	}
 
-	void AND() {
-		query_ = std::move(query_.And());
+	void LogOp(LogOpType op) {
+		switch (op) {
+			case LogOpType::And:
+				query_ = std::move(query_.And());
+				break;
+			case LogOpType::Or:
+				query_ = std::move(query_.Or());
+				break;
+			case LogOpType::Not:
+				query_ = std::move(query_.Not());
+				break;
+			default:
+				assert(false);
+		}
 	}
 
-	void OR() {
-		query_ = std::move(query_.Or());
+	void Distinct(const std::string& index) {
+		query_ = std::move(query_.Distinct(index));
 	}
 
-	void NOT() {
-		query_ = std::move(query_.Not());
+	void ReqTotal() {
+		query_ = std::move(query_.ReqTotal());
+	}
+
+	void CachedTotal() {
+		query_ = std::move(query_.CachedTotal());
+	}
+
+	void Limit(unsigned limitItems) {
+		query_ = std::move(query_.Limit(limitItems));
+	}
+
+	void Offset(int startOffset) {
+		query_ = std::move(query_.Offset(startOffset));
+	}
+
+	void Debug(int level) {
+		query_ = std::move(query_.Debug(level));
+	}
+
+	void Strict(StrictMode mode) {
+		query_ = std::move(query_.Strict(mode));
 	}
 
 private:

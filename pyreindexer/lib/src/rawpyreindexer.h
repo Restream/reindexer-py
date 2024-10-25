@@ -59,10 +59,15 @@ static PyObject* WhereString(PyObject* self, PyObject* args);
 static PyObject* WhereUUID(PyObject* self, PyObject* args);
 static PyObject* WhereBool(PyObject* self, PyObject* args);
 static PyObject* WhereDouble(PyObject* self, PyObject* args);
+static PyObject* LogOp(PyObject* self, PyObject* args);
+static PyObject* Distinct(PyObject* self, PyObject* args);
+static PyObject* ReqTotal(PyObject* self, PyObject* args);
+static PyObject* CachedTotal(PyObject* self, PyObject* args);
 
-static PyObject* AND(PyObject* self, PyObject* args);
-static PyObject* OR(PyObject* self, PyObject* args);
-static PyObject* NOT(PyObject* self, PyObject* args);
+static PyObject* Limit(PyObject* self, PyObject* args);
+static PyObject* Offset(PyObject* self, PyObject* args);
+static PyObject* Debug(PyObject* self, PyObject* args);
+static PyObject* Strict(PyObject* self, PyObject* args);
 
 // clang-format off
 static PyMethodDef module_methods[] = {
@@ -110,14 +115,20 @@ static PyMethodDef module_methods[] = {
 	{"where_int", WhereInt, METH_VARARGS, "add where condition with int args"},
 	{"where_int32", WhereInt32, METH_VARARGS, "add where condition with int32 args"},
 	{"where_int64", WhereInt64, METH_VARARGS, "add where condition with int64 args"},
-	{"where_string", WhereString, METH_VARARGS, "add where condition with string args"},
-	{"where_uuid", WhereUUID, METH_VARARGS, "add where condition with UUID as string args"},
+	{"where_string", WhereString, METH_VARARGS, "add where condition with strings"},
+	{"where_uuid", WhereUUID, METH_VARARGS, "add where condition with UUIDs"},
 	{"where_bool", WhereBool, METH_VARARGS, "add where condition with bool args"},
 	{"where_float64", WhereDouble, METH_VARARGS, "add where condition with double args"},
+	{"log_op", LogOp, METH_VARARGS, "next condition will be added with AND|OR|NOT AND"},
 
-    {"AND", AND, METH_VARARGS, "next condition will be added with AND"},
-    {"OR", OR, METH_VARARGS, "next condition will be added with OR"},
-    {"NOT", NOT, METH_VARARGS, "next condition will be added with NOT AND"},
+	{"distinct", Distinct, METH_VARARGS, "perform distinct for index"},
+	{"request_total", ReqTotal, METH_VARARGS, "request total items calculation"},
+	{"cached_total", CachedTotal, METH_VARARGS, "request cached total items calculation"},
+
+	{"limit", Limit, METH_VARARGS, "request cached total items calculation"},
+	{"offset", Offset, METH_VARARGS, "request cached total items calculation"},
+	{"debug", Debug, METH_VARARGS, "request cached total items calculation"},
+	{"strict", Strict, METH_VARARGS, "request cached total items calculation"},
 
 	{nullptr, nullptr, 0, nullptr}
 };

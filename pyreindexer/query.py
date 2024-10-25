@@ -16,6 +16,12 @@ class CondType(Enum):
     CondLike = 10
     CondDWithin = 11
 
+class StrictMode(Enum):
+    NotSet = 0
+    Empty = 1
+    Names = 2
+    Indexes = 3
+
 class Query(object):
     """ An object representing the context of a Reindexer query
 
@@ -26,6 +32,10 @@ class Query(object):
         err_msg (string): the API error message
 
     """
+    class _LogOp(Enum):
+        And = 1
+        Or = 2
+        Not = 3
 
     def __init__(self, api, query_wrapper_ptr: int):
         """Constructs a new Reindexer query object
@@ -74,7 +84,7 @@ class Query(object):
             second_field (string): Second field name used in condition clause
 
         # Returns:
-            (:obj:`Query`): Query object ready to be executed
+            (:obj:`Query`): Query object for further customizations
 
         """
 
@@ -85,7 +95,7 @@ class Query(object):
         """Open bracket for where condition to DB query
 
         # Returns:
-            (:obj:`Query`): Query object ready to be executed
+            (:obj:`Query`): Query object for further customizations
 
         """
 
@@ -96,7 +106,7 @@ class Query(object):
         """CloseBracket - Close bracket for where condition to DB query
 
         # Returns:
-            (:obj:`Query`): Query object ready to be executed
+            (:obj:`Query`): Query object for further customizations
 
         """
 
@@ -112,7 +122,7 @@ class Query(object):
             keys (list[int]): Value of index to be compared with. For composite indexes keys must be list, with value of each subindex
 
         # Returns:
-            (:obj:`Query`): Query object ready to be executed
+            (:obj:`Query`): Query object for further customizations
 
         # Raises:
             Exception: Raises with an error message of API return on non-zero error code
@@ -132,7 +142,7 @@ class Query(object):
             keys (list[Int32]): Value of index to be compared with. For composite indexes keys must be list, with value of each subindex
 
         # Returns:
-            (:obj:`Query`): Query object ready to be executed
+            (:obj:`Query`): Query object for further customizations
 
         # Raises:
             Exception: Raises with an error message of API return on non-zero error code
@@ -152,7 +162,7 @@ class Query(object):
             keys (list[Int64]): Value of index to be compared with. For composite indexes keys must be list, with value of each subindex
 
         # Returns:
-            (:obj:`Query`): Query object ready to be executed
+            (:obj:`Query`): Query object for further customizations
 
         # Raises:
             Exception: Raises with an error message of API return on non-zero error code
@@ -172,7 +182,7 @@ class Query(object):
             keys (list[string]): Value of index to be compared with. For composite indexes keys must be list, with value of each subindex
 
         # Returns:
-            (:obj:`Query`): Query object ready to be executed
+            (:obj:`Query`): Query object for further customizations
 
         # Raises:
             Exception: Raises with an error message of API return on non-zero error code
@@ -194,7 +204,7 @@ class Query(object):
             keys (list[string]): Value of index to be compared with. For composite indexes keys must be list, with value of each subindex
 
         # Returns:
-            (:obj:`Query`): Query object ready to be executed
+            (:obj:`Query`): Query object for further customizations
 
         # Raises:
             Exception: Raises with an error message of API return on non-zero error code
@@ -214,7 +224,7 @@ class Query(object):
             keys (list[bool]): Value of index to be compared with. For composite indexes keys must be list, with value of each subindex
 
         # Returns:
-            (:obj:`Query`): Query object ready to be executed
+            (:obj:`Query`): Query object for further customizations
 
         # Raises:
             Exception: Raises with an error message of API return on non-zero error code
@@ -234,7 +244,7 @@ class Query(object):
             keys (list[float]): Value of index to be compared with. For composite indexes keys must be list, with value of each subindex
 
         # Returns:
-            (:obj:`Query`): Query object ready to be executed
+            (:obj:`Query`): Query object for further customizations
 
         # Raises:
             Exception: Raises with an error message of API return on non-zero error code
@@ -257,7 +267,7 @@ class Query(object):
             keys (list[string]): Value of index to be compared with. For composite indexes keys must be list, with value of each subindex
 
         # Returns:
-            (:obj:`Query`): Query object ready to be executed
+            (:obj:`Query`): Query object for further customizations
 
         # Raises:
             Exception: Raises with an error message of API return on non-zero error code
@@ -296,7 +306,7 @@ class Query(object):
 #            desc (bool): Descending flag
 
 #        # Returns:
-#            (:obj:`Query`): Query object ready to be executed
+#            (:obj:`Query`): Query object for further customizations
 
 #        # Raises:
 #            Exception: Raises with an error message of API return on non-zero error code
@@ -312,42 +322,140 @@ class Query(object):
 #        return self.sort(request, desc)
 ################################################################
 
-    def AND(self) -> Query:
+    def and_op(self) -> Query:
         """Next condition will be added with AND.
             This is the default operation for WHERE statement. Do not have to be called explicitly in user's code.
             Used in DSL conversion
 
+        # Returns:
+            (:obj:`Query`): Query object for further customizations
         """
-        self.api.AND(self.query_wrapper_ptr)
+
+        self.api.log_op(self.query_wrapper_ptr, self._LogOp.And.value)
         return self
 
-    def OR(self) -> Query:
+    def or_op(self) -> Query:
         """Next condition will be added with OR.
             Implements short-circuiting:
             if the previous condition is successful the next will not be evaluated, but except Join conditions
 
+        # Returns:
+            (:obj:`Query`): Query object for further customizations
 
         """
-        self.api.OR(self.query_wrapper_ptr)
+
+        self.api.log_op(self.query_wrapper_ptr, self._LogOp.Or.value)
         return self
 
-    def NOT(self) -> Query:
+    def not_op(self) -> Query:
         """Next condition will be added with NOT AND.
             Implements short-circuiting: if the previous condition is failed the next will not be evaluated
 
+        # Returns:
+            (:obj:`Query`): Query object for further customizations
+
         """
 
-        self.api.NOT(self.query_wrapper_ptr)
+        self.api.log_op(self.query_wrapper_ptr, self._LogOp.Not.value)
+        return self
+
+    def distinct(self, index: str) -> Query:
+        """Performs distinct for a certain index.
+            Return only items with uniq value of field
+
+        # Arguments:
+            index (string): Field name for distinct operation
+
+        # Returns:
+            (:obj:`Query`): Query object for further customizations
+
+        """
+
+        self.api.distinct(self.query_wrapper_ptr, index)
+        return self
+
+    def request_total(self) -> Query:
+        """Request total items calculation
+
+        # Returns:
+            (:obj:`Query`): Query object for further customizations
+
+        """
+
+        # q.totalName = totalNames[0] // ToDo
+        self.api.request_total(self.query_wrapper_ptr)
+        return self
+
+    def cached_total(self) -> Query:
+        """Request cached total items calculation
+
+        # Returns:
+            (:obj:`Query`): Query object for further customizations
+
+        """
+
+        # q.totalName = totalNames[0] // ToDo
+        self.api.cached_total(self.query_wrapper_ptr)
+        return self
+
+    def limit(self, limit_items: int) -> Query:
+        """Set a limit (count) of returned items.
+            Analog to sql LIMIT rowsNumber
+
+        # Arguments:
+            limit_items (int): Number of rows to get from result set
+
+        # Returns:
+            (:obj:`Query`): Query object for further customizations
+
+        """
+
+        self.api.limit(self.query_wrapper_ptr, limit_items)
+        return self
+
+    def offset(self, start_offset: int) -> Query:
+        """Sets the number of the first selected row from result query
+
+        # Arguments:
+            limit_items (int): Index of the first row to get from result set
+
+        # Returns:
+            (:obj:`Query`): Query object for further customizations
+
+        """
+
+        self.api.offset(self.query_wrapper_ptr, start_offset)
+        return self
+
+    def debug(self, level: int) -> Query:
+        """Changes debug level
+
+        # Arguments:
+            level (int): Debug level
+
+        # Returns:
+            (:obj:`Query`): Query object for further customizations
+
+        """
+
+        self.api.debug(self.query_wrapper_ptr, level)
+        return self
+
+    def strict(self, mode: StrictMode) -> Query:
+        """Changes strict mode
+
+        # Arguments:
+            level (:enum:`StrictMode`): Strict mode
+
+        # Returns:
+            (:obj:`Query`): Query object for further customizations
+
+        """
+
+        self.api.strict(self.query_wrapper_ptr, mode.value)
         return self
 
 ################################################################ ToDo
-#func (q *Query) Distinct(distinctIndex string) *Query {
-#func (q *Query) ReqTotal(totalNames ...string) *Query {
-#func (q *Query) CachedTotal(totalNames ...string) *Query {
-#func (q *Query) Limit(limitItems int) *Query {
-#func (q *Query) Offset(startOffset int) *Query {
-#func (q *Query) Debug(level int) *Query {
-#func (q *Query) Strict(mode QueryStrictMode) *Query {
 #func (q *Query) Explain() *Query {
 #func (q *Query) SetContext(ctx interface{}) *Query {
 #func (q *Query) Exec() *Iterator {
@@ -378,4 +486,4 @@ class Query(object):
 #func (q *Query) FetchCount(n int) *Query {
 #func (q *Query) Functions(fields ...string) *Query {
 #func (q *Query) EqualPosition(fields ...string) *Query {
-# 66 / 10 + 1 + 3
+# 66 / 21
