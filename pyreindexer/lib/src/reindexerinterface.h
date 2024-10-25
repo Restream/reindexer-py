@@ -104,7 +104,7 @@ public:
 	Error EnumMeta(std::string_view ns, std::vector<std::string>& keys) {
 		return execute([this, ns, &keys] { return enumMeta(ns, keys); });
 	}
-	Error Select(const std::string &query, QueryResultsWrapper& result);
+	Error Select(const std::string& query, QueryResultsWrapper& result);
 	Error EnumNamespaces(std::vector<NamespaceDef>& defs, EnumNamespacesOpts opts) {
 		return execute([this, &defs, &opts] { return enumNamespaces(defs, opts); });
 	}
@@ -129,7 +129,7 @@ private:
 	Error getMeta(std::string_view ns, const std::string& key, std::string& data) { return db_.GetMeta({ns.data(), ns.size()}, key, data); }
 	Error deleteMeta(std::string_view ns, const std::string& key) { return db_.DeleteMeta({ns.data(), ns.size()}, key); }
 	Error enumMeta(std::string_view ns, std::vector<std::string>& keys) { return db_.EnumMeta({ns.data(), ns.size()}, keys); }
-	Error select(const std::string &query, typename DBT::QueryResultsT& result) { return db_.Select(query, result); }
+	Error select(const std::string& query, typename DBT::QueryResultsT& result) { return db_.Select(query, result); }
 	Error enumNamespaces(std::vector<NamespaceDef>& defs, EnumNamespacesOpts opts) { return db_.EnumNamespaces(defs, opts); }
 	Error stop();
 

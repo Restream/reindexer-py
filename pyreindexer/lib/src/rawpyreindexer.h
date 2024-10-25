@@ -30,50 +30,48 @@ using reindexer::NamespaceDef;
 using reindexer::WrSerializer;
 
 inline static uintptr_t initReindexer() {
-	DBInterface *db = new DBInterface();
-
+	DBInterface* db = new DBInterface();
 	return reinterpret_cast<uintptr_t>(db);
 }
 
-inline static DBInterface *getDB(uintptr_t rx) { return reinterpret_cast<DBInterface *>(rx); }
+inline static DBInterface* getDB(uintptr_t rx) { return reinterpret_cast<DBInterface*>(rx); }
 
 inline static void destroyReindexer(uintptr_t rx) {
-	DBInterface *db = getDB(rx);
-
+	DBInterface* db = getDB(rx);
 	delete db;
 }
 
-inline static PyObject *pyErr(const Error &err) { return Py_BuildValue("is", err.code(), err.what().c_str()); }
+inline static PyObject* pyErr(const Error& err) { return Py_BuildValue("is", err.code(), err.what().c_str()); }
 
-inline static QueryResultsWrapper *getQueryResultsWrapper(uintptr_t qresWrapperAddr) {
-	return reinterpret_cast<QueryResultsWrapper *>(qresWrapperAddr);
+inline static QueryResultsWrapper* getQueryResultsWrapper(uintptr_t qresWrapperAddr) {
+	return reinterpret_cast<QueryResultsWrapper*>(qresWrapperAddr);
 }
 
 static void queryResultsWrapperDelete(uintptr_t qresWrapperAddr);
 
-static PyObject *Init(PyObject *self, PyObject *args);
-static PyObject *Destroy(PyObject *self, PyObject *args);
-static PyObject *Connect(PyObject *self, PyObject *args);
-static PyObject *NamespaceOpen(PyObject *self, PyObject *args);
-static PyObject *NamespaceClose(PyObject *self, PyObject *args);
-static PyObject *NamespaceDrop(PyObject *self, PyObject *args);
-static PyObject *IndexAdd(PyObject *self, PyObject *args);
-static PyObject *IndexUpdate(PyObject *self, PyObject *args);
-static PyObject *IndexDrop(PyObject *self, PyObject *args);
-static PyObject *ItemInsert(PyObject *self, PyObject *args);
-static PyObject *ItemUpdate(PyObject *self, PyObject *args);
-static PyObject *ItemUpsert(PyObject *self, PyObject *args);
-static PyObject *ItemDelete(PyObject *self, PyObject *args);
-static PyObject *PutMeta(PyObject *self, PyObject *args);
-static PyObject *GetMeta(PyObject *self, PyObject *args);
-static PyObject *DeleteMeta(PyObject *self, PyObject *args);
-static PyObject *Select(PyObject *self, PyObject *args);
-static PyObject *EnumMeta(PyObject *self, PyObject *args);
-static PyObject *EnumNamespaces(PyObject *self, PyObject *args);
+static PyObject* Init(PyObject* self, PyObject* args);
+static PyObject* Destroy(PyObject* self, PyObject* args);
+static PyObject* Connect(PyObject* self, PyObject* args);
+static PyObject* NamespaceOpen(PyObject* self, PyObject* args);
+static PyObject* NamespaceClose(PyObject* self, PyObject* args);
+static PyObject* NamespaceDrop(PyObject* self, PyObject* args);
+static PyObject* IndexAdd(PyObject* self, PyObject* args);
+static PyObject* IndexUpdate(PyObject* self, PyObject* args);
+static PyObject* IndexDrop(PyObject* self, PyObject* args);
+static PyObject* ItemInsert(PyObject* self, PyObject* args);
+static PyObject* ItemUpdate(PyObject* self, PyObject* args);
+static PyObject* ItemUpsert(PyObject* self, PyObject* args);
+static PyObject* ItemDelete(PyObject* self, PyObject* args);
+static PyObject* PutMeta(PyObject* self, PyObject* args);
+static PyObject* GetMeta(PyObject* self, PyObject* args);
+static PyObject* DeleteMeta(PyObject* self, PyObject* args);
+static PyObject* Select(PyObject* self, PyObject* args);
+static PyObject* EnumMeta(PyObject* self, PyObject* args);
+static PyObject* EnumNamespaces(PyObject* self, PyObject* args);
 
-static PyObject *QueryResultsWrapperIterate(PyObject *self, PyObject *args);
-static PyObject *QueryResultsWrapperDelete(PyObject *self, PyObject *args);
-static PyObject *GetAggregationResults(PyObject *self, PyObject *args);
+static PyObject* QueryResultsWrapperIterate(PyObject* self, PyObject* args);
+static PyObject* QueryResultsWrapperDelete(PyObject* self, PyObject* args);
+static PyObject* GetAggregationResults(PyObject* self, PyObject* args);
 
 // clang-format off
 static PyMethodDef module_methods[] = {

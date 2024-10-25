@@ -58,7 +58,7 @@ class TestSqlQueries:
     def test_sql_select_with_syntax_error(self, namespace, index, item):
         # Given("Create namespace with item")
         # When ("Execute SQL query SELECT with incorrect syntax")
-        query = f'SELECT *'
+        query = 'SELECT *'
         # Then ("Check that selected item is in result")
         assert_that(calling(sql_query).with_args(namespace, query),
                     raises(Exception, matching=has_string(string_contains_in_order(
