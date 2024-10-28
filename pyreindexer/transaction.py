@@ -127,7 +127,7 @@ class Transaction(object):
         self._raise_on_error()
 
     def commit(self):
-        """Commit a transaction
+        """Apply changes
 
         # Raises:
             Exception: Raises with an error message of API return if Transaction is over
@@ -136,12 +136,27 @@ class Transaction(object):
         """
 
         self._raise_on_is_over()
-        self.err_code, self.err_msg = self.api.commit_transaction(self.transaction_wrapper_ptr)
+        self.err_code, self.err_msg, _ = self.api.commit_transaction(self.transaction_wrapper_ptr)
         self.transaction_wrapper_ptr = 0
         self._raise_on_error()
 
+    def commit_with_count(self) -> int:
+        """Apply changes and return the number of count of changed items
+
+        # Raises:
+            Exception: Raises with an error message of API return if Transaction is over
+            Exception: Raises with an error message of API return on non-zero error code
+
+        """
+
+    self._raise_on_is_over()
+    self.err_code, self.err_msg, count = self.api.commit_transaction(self.transaction_wrapper_ptr)
+    self.transaction_wrapper_ptr = 0
+    self._raise_on_error()
+    return count
+
     def rollback(self):
-        """Roll back a transaction
+        """Rollback changes
 
         # Raises:
             Exception: Raises with an error message of API return if Transaction is over

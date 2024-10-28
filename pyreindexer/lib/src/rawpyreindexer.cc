@@ -558,8 +558,7 @@ static PyObject* ItemUpdateTransaction(PyObject* self, PyObject* args) { return 
 static PyObject* ItemUpsertTransaction(PyObject* self, PyObject* args) { return itemModifyTransaction(self, args, ModeUpsert); }
 static PyObject* ItemDeleteTransaction(PyObject* self, PyObject* args) { return itemModifyTransaction(self, args, ModeDelete); }
 
-enum class StopTransactionMode : bool { Rollback = false, Commit = true };
-static PyObject* stopTransaction(PyObject* self, PyObject* args, StopTransactionMode stopMode) {
+static PyObject* CommitTransaction(PyObject* self, PyObject* args) {
 	uintptr_t transactionWrapperAddr = 0;
 	if (!PyArg_ParseTuple(args, "k", &transactionWrapperAddr)) {
 		return nullptr;
@@ -568,13 +567,28 @@ static PyObject* stopTransaction(PyObject* self, PyObject* args, StopTransaction
 	auto transaction = getWrapper<TransactionWrapper>(transactionWrapperAddr);
 
 	assert((StopTransactionMode::Commit == stopMode) || (StopTransactionMode::Rollback == stopMode));
-	Error err = (StopTransactionMode::Commit == stopMode) ? transaction->Commit() : transaction->Rollback();
+	size_t count = 0;
+	Error err = transaction->CommitTransaction(count);
+
+	wrapperDelete<TransactionWrapper>(transactionWrapperAddr);
+
+	return Py_BuildValue("isI", err.code(), err.what().c_str(), count);
+}
+
+static PyObject* RollbackTransaction(PyObject* self, PyObject* args) {
+	uintptr_t transactionWrapperAddr = 0;
+	if (!PyArg_ParseTuple(args, "k", &transactionWrapperAddr)) {
+		return nullptr;
+	}
+
+	auto transaction = getWrapper<TransactionWrapper>(transactionWrapperAddr);
+
+	assert((StopTransactionMode::Commit == stopMode) || (StopTransactionMode::Rollback == stopMode));
+	Error err = transaction->Rollback();
 
 	wrapperDelete<TransactionWrapper>(transactionWrapperAddr);
 
 	return pyErr(err);
 }
-static PyObject* CommitTransaction(PyObject* self, PyObject* args) { return stopTransaction(self, args, StopTransactionMode::Commit); }
-static PyObject* RollbackTransaction(PyObject* self, PyObject* args) { return stopTransaction(self, args, StopTransactionMode::Rollback); }
 
 }  // namespace pyreindexer

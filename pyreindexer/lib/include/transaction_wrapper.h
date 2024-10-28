@@ -13,10 +13,12 @@ namespace pyreindexer {
 #ifdef PYREINDEXER_CPROTO
 using DBInterface = ReindexerInterface<reindexer::client::CoroReindexer>;
 using TransactionT = reindexer::client::CoroTransaction;
+using QueryResultsT = reindexer::client::CoroQueryResults;
 using ItemT = reindexer::client::Item;
 #else
 using DBInterface = ReindexerInterface<reindexer::Reindexer>;
 using TransactionT = reindexer::Transaction;
+using QueryResultsT = reindexer::QueryResults;
 using ItemT = reindexer::Item;
 #endif
 
@@ -45,9 +47,9 @@ public:
 		return db_->Modify(transaction_, std::move(item), mode);
 	}
 
-	Error Commit() {
+	Error Commit(size_t& count) {
 		assert(wrap_);
-		return db_->CommitTransaction(transaction_);
+		return db_->CommitTransaction(transaction_, count);
 	}
 
 	Error Rollback() {

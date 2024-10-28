@@ -122,8 +122,8 @@ public:
 	Error Modify(typename DBT::TransactionT& tr, typename DBT::ItemT&& item, ItemModifyMode mode) {
 		return execute([this, &tr, &item, mode] { return modify(tr, std::move(item), mode); });
 	}
-	Error CommitTransaction(typename DBT::TransactionT& tr) {
-		return execute([this, &tr] { return commitTransaction(tr); });
+	Error CommitTransaction(typename DBT::TransactionT& tr, size_t& count) {
+		return execute([this, &tr, &count] { return commitTransaction(tr, count); });
 	}
 	Error RollbackTransaction(typename DBT::TransactionT& tr) {
 		return execute([this, &tr] { return rollbackTransaction(tr); });
@@ -153,7 +153,7 @@ private:
 	typename DBT::TransactionT startTransaction(std::string_view ns) { return db_.NewTransaction({ns.data(), ns.size()}); }
 	typename DBT::ItemT newItem(typename DBT::TransactionT& tr) { return tr.NewItem(); }
 	Error modify(typename DBT::TransactionT& tr, typename DBT::ItemT&& item, ItemModifyMode mode);
-	Error commitTransaction(typename DBT::TransactionT& tr);
+	Error commitTransaction(typename DBT::TransactionT& transaction, size_t& count);
 	Error rollbackTransaction(typename DBT::TransactionT& tr) { return db_.RollBackTransaction(tr); }
 	Error stop();
 
