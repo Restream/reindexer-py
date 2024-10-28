@@ -63,12 +63,17 @@ static PyObject* LogOp(PyObject* self, PyObject* args);
 static PyObject* Distinct(PyObject* self, PyObject* args);
 static PyObject* ReqTotal(PyObject* self, PyObject* args);
 static PyObject* CachedTotal(PyObject* self, PyObject* args);
-
 static PyObject* Limit(PyObject* self, PyObject* args);
 static PyObject* Offset(PyObject* self, PyObject* args);
 static PyObject* Debug(PyObject* self, PyObject* args);
 static PyObject* Strict(PyObject* self, PyObject* args);
 static PyObject* Explain(PyObject* self, PyObject* args);
+static PyObject* Drop(PyObject* self, PyObject* args);
+static PyObject* SetExpression(PyObject* self, PyObject* args);
+static PyObject* On(PyObject* self, PyObject* args);
+static PyObject* SelectQuery(PyObject* self, PyObject* args);
+static PyObject* AddFunctions(PyObject* self, PyObject* args);
+static PyObject* AddEqualPosition(PyObject* self, PyObject* args);
 
 // clang-format off
 static PyMethodDef module_methods[] = {
@@ -129,6 +134,12 @@ static PyMethodDef module_methods[] = {
 	{"debug", Debug, METH_VARARGS, "request cached total items calculation"},
 	{"strict", Strict, METH_VARARGS, "request cached total items calculation"},
 	{"explain", Explain, METH_VARARGS, "enable explain query"},
+	{"drop", Drop, METH_VARARGS, "drop values"},
+	{"expression", SetExpression, METH_VARARGS, "set expression"},
+	{"on", On, METH_VARARGS, "on specifies join condition"},
+	{"select_query", SelectQuery, METH_VARARGS, "select add filter to fields of result's objects"},
+	{"functions", AddFunctions, METH_VARARGS, "add sql-functions to query"},
+	{"equal_position", AddEqualPosition, METH_VARARGS, "add equal position fields"},
 
 	{nullptr, nullptr, 0, nullptr}
 };

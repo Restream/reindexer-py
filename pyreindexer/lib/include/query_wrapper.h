@@ -98,6 +98,36 @@ public:
 		query_ = std::move(query_.Explain(on));
 	}
 
+	void Drop(std::string_view index) {
+		query_ = std::move(query_.Drop(index));
+	}
+
+	void SetExpression(std::string_view field, std::string_view value) {
+		constexpr static bool hasExpressions = true;
+		query_ = std::move(query_.Set(field, value, hasExpressions));
+	}
+
+	void On(std::string_view index, CondType condition, std::string_view joinIndex) {
+		// ToDo
+		(void)index;
+		(void)condition;
+		(void)joinIndex;
+	}
+
+	void Select(const std::vector<std::string>& fields) {
+		query_ = std::move(query_.Select(fields));
+	}
+
+	void AddFunctions(const std::vector<std::string>& functions) {
+		for (const auto& function : functions) {
+			query_.AddFunction(function);
+		}
+	}
+
+	void AddEqualPosition(const std::vector<std::string>& equalPositions) {
+		query_ = std::move(query_.AddEqualPosition(equalPositions));
+	}
+
 private:
 	DBInterface* db_{nullptr};
 	reindexer::Query query_;

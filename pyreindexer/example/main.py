@@ -100,6 +100,7 @@ def query_example(db, namespace):
         .not_op()
         .where_float64('fld2', CondType.CondSet, [3.14])
         .explain())
+    query.expression("fld1", "array_remove(integer_array, [5,6,7,8]) || [1,2,3]").drop("fld2")
 
 
 def rx_example():

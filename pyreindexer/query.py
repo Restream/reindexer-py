@@ -445,7 +445,7 @@ class Query(object):
         """Changes strict mode
 
         # Arguments:
-            level (:enum:`StrictMode`): Strict mode
+            mode (:enum:`StrictMode`): Strict mode
 
         # Returns:
             (:obj:`Query`): Query object for further customizations
@@ -476,8 +476,38 @@ class Query(object):
 #func (q *Query) DeleteCtx(ctx context.Context) (int, error) {
 #func (q *Query) SetObject(field string, values interface{}) *Query {
 #func (q *Query) Set(field string, values interface{}) *Query {
-#func (q *Query) Drop(field string) *Query {
-#func (q *Query) SetExpression(field string, value string) *Query {
+################################################################
+
+    def drop(self, index: str) -> Query:
+        """Drops a value for a field
+
+        # Arguments:
+            index (string): Field name for drop operation
+
+        # Returns:
+            (:obj:`Query`): Query object for further customizations
+
+        """
+
+        self.api.drop(self.query_wrapper_ptr, index)
+        return self
+
+    def expression(self, field: str, value: str) -> Query:
+        """Updates indexed field by arithmetical expression
+
+        # Arguments:
+            field (string): Field name
+            value (string): New value expression for field
+
+        # Returns:
+            (:obj:`Query`): Query object for further customizations
+
+        """
+
+        self.api.expression(self.query_wrapper_ptr, field, value)
+        return self
+
+################################################################ // ToDo
 #func (q *Query) Update() *Iterator {
 #func (q *Query) UpdateCtx(ctx context.Context) *Iterator {
 #func (q *Query) MustExec() *Iterator {
@@ -491,9 +521,80 @@ class Query(object):
 #func (q *Query) LeftJoin(q2 *Query, field string) *Query {
 #func (q *Query) JoinHandler(field string, handler JoinHandler) *Query {
 #func (q *Query) Merge(q2 *Query) *Query {
-#func (q *Query) On(index string, condition int, joinIndex string) *Query {
-#func (q *Query) Select(fields ...string) *Query {
+################################################################
+
+    def on(self, index: str, condition: CondType, join_index: str) -> Query:
+        """On specifies join condition.
+
+        # Arguments:
+            index (string): Field name from `Query` namespace should be used during join
+            condition (:enum:`CondType`): Type of condition, specifies how `Query` will be joined with the latest join query issued on `Query` (e.g. `EQ`/`GT`/`SET`/...)
+            join_index (string): Index-field name from namespace for the latest join query issued on `Query` should be used during join
+
+        # Returns:
+            (:obj:`Query`): Query object for further customizations
+
+        """
+
+        self.api.on(self.query_wrapper_ptr, index, condition, join_index)
+        return self
+
+    def select(self, fields: List[str]) -> Query:
+        """Sets list of columns in this namespace to be finally selected.
+            The columns should be specified in the same case as the jsonpaths corresponding to them.
+            Non-existent fields and fields in the wrong case are ignored.
+            If there are no fields in this list that meet these conditions, then the filter works as "*".
+
+        # Arguments:
+            fields (list[string]): List of columns to be selected
+
+        # Returns:
+            (:obj:`Query`): Query object for further customizations
+
+        # Raises:
+            Exception: Raises with an error message of API return on non-zero error code
+        """
+
+        self.err_code, self.err_msg = self.api.select_query(self.query_wrapper_ptr, fields)
+        self._raise_on_error()
+        return self
+
+################################################################ // ToDo
 #func (q *Query) FetchCount(n int) *Query {
-#func (q *Query) Functions(fields ...string) *Query {
-#func (q *Query) EqualPosition(fields ...string) *Query {
-# 66 / 22
+################################################################
+
+    def functions(self, functions: List[str]) -> Query:
+        """Adds sql-functions to query
+
+        # Arguments:
+            functions (list[string]): Functions declaration
+
+        # Returns:
+            (:obj:`Query`): Query object for further customizations
+
+        # Raises:
+            Exception: Raises with an error message of API return on non-zero error code
+        """
+
+        self.err_code, self.err_msg = self.api.functions(self.query_wrapper_ptr, functions)
+        self._raise_on_error()
+        return self
+
+    def equal_position(self, equal_position: List[str]) -> Query:
+        """Adds equal position fields to arrays queries
+
+        # Arguments:
+            equal_poses (list[string]): Equal position fields to arrays queries
+
+        # Returns:
+            (:obj:`Query`): Query object for further customizations
+
+        # Raises:
+            Exception: Raises with an error message of API return on non-zero error code
+        """
+
+        self.err_code, self.err_msg = self.api.equal_position(self.query_wrapper_ptr, equal_position)
+        self._raise_on_error()
+        return self
+
+# 66 / 28

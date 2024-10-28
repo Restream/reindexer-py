@@ -983,4 +983,136 @@ static PyObject* Explain(PyObject* self, PyObject* args) {
 	Py_RETURN_NONE;
 }
 
+static PyObject* Drop(PyObject* self, PyObject* args) {
+	uintptr_t queryWrapperAddr = 0;
+	char* index = nullptr;
+	if (!PyArg_ParseTuple(args, "ks", &queryWrapperAddr, &index)) {
+		return nullptr;
+	}
+
+	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
+
+	query->Drop(index);
+
+	Py_RETURN_NONE;
+}
+
+static PyObject* SetExpression(PyObject* self, PyObject* args) {
+	uintptr_t queryWrapperAddr = 0;
+	char* field = nullptr;
+	char* value = nullptr;
+	if (!PyArg_ParseTuple(args, "kss", &queryWrapperAddr, &field, &value)) {
+		return nullptr;
+	}
+
+	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
+
+	query->SetExpression(field, value);
+
+	Py_RETURN_NONE;
+}
+
+static PyObject* On(PyObject* self, PyObject* args) {
+	uintptr_t queryWrapperAddr = 0;
+	char* index = nullptr;
+	unsigned condition = 0;
+	char* joinIndex = nullptr;
+	if (!PyArg_ParseTuple(args, "ksIs", &queryWrapperAddr, &index, &condition, &joinIndex)) {
+		return nullptr;
+	}
+
+	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
+
+	query->On(index, CondType(condition), joinIndex);
+
+	Py_RETURN_NONE;
+}
+
+static PyObject* SelectQuery(PyObject* self, PyObject* args) {
+	uintptr_t queryWrapperAddr = 0;
+	PyObject* fieldsList = nullptr;  	// borrowed ref after ParseTuple if passed
+	if (!PyArg_ParseTuple(args, "kO!", &queryWrapperAddr, &PyList_Type, &fieldsList)) {
+		return nullptr;
+	}
+
+	Py_XINCREF(fieldsList);
+
+	std::vector<std::string> fields;
+	if (fieldsList != nullptr) {
+		try {
+			fields = ParseListToStrVec(&fieldsList);
+		} catch (const Error& err) {
+			Py_DECREF(fieldsList);
+
+			return pyErr(err);
+		}
+	}
+
+	Py_XDECREF(fieldsList);
+
+	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
+
+	query->Select(fields);
+
+	return pyErr(errOK);
+}
+
+static PyObject* AddFunctions(PyObject* self, PyObject* args) {
+	uintptr_t queryWrapperAddr = 0;
+	PyObject* functionsList = nullptr;  	// borrowed ref after ParseTuple if passed
+	if (!PyArg_ParseTuple(args, "kO!", &queryWrapperAddr, &PyList_Type, &functionsList)) {
+		return nullptr;
+	}
+
+	Py_XINCREF(functionsList);
+
+	std::vector<std::string> functions;
+	if (functionsList != nullptr) {
+		try {
+			functions = ParseListToStrVec(&functionsList);
+		} catch (const Error& err) {
+			Py_DECREF(functionsList);
+
+			return pyErr(err);
+		}
+	}
+
+	Py_XDECREF(functionsList);
+
+	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
+
+	query->AddFunctions(functions);
+
+	return pyErr(errOK);
+}
+
+static PyObject* AddEqualPosition(PyObject* self, PyObject* args) {
+	uintptr_t queryWrapperAddr = 0;
+	PyObject* equalPosesList = nullptr;  	// borrowed ref after ParseTuple if passed
+	if (!PyArg_ParseTuple(args, "kO!", &queryWrapperAddr, &PyList_Type, &equalPosesList)) {
+		return nullptr;
+	}
+
+	Py_XINCREF(equalPosesList);
+
+	std::vector<std::string> equalPoses;
+	if (equalPosesList != nullptr) {
+		try {
+			equalPoses = ParseListToStrVec(&equalPosesList);
+		} catch (const Error& err) {
+			Py_DECREF(equalPosesList);
+
+			return pyErr(err);
+		}
+	}
+
+	Py_XDECREF(equalPosesList);
+
+	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
+
+	query->AddEqualPosition(equalPoses);
+
+	return pyErr(errOK);
+}
+
 }  // namespace pyreindexer
