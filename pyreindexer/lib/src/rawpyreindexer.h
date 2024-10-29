@@ -106,8 +106,8 @@ static PyMethodDef module_methods[] = {
 	{"item_update_transaction", ItemUpdateTransaction, METH_VARARGS, "item update transaction"},
 	{"item_upsert_transaction", ItemUpsertTransaction, METH_VARARGS, "item upsert transaction"},
 	{"item_delete_transaction", ItemDeleteTransaction, METH_VARARGS, "item delete transaction"},
-	{"commit_transaction", CommitTransaction, METH_VARARGS, "commit transaction. Free transaction object memory"},
-	{"rollback_transaction", RollbackTransaction, METH_VARARGS, "rollback transaction. Free transaction object memory"},
+	{"commit_transaction", CommitTransaction, METH_VARARGS, "apply changes. Free transaction object memory"},
+	{"rollback_transaction", RollbackTransaction, METH_VARARGS, "rollback changes. Free transaction object memory"},
 	// query
 	{"create_query", CreateQuery, METH_VARARGS, "create new query"},
 	{"delete_query", DeleteQuery, METH_VARARGS, "delete query. Free query object memory"},

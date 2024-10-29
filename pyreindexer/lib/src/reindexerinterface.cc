@@ -92,14 +92,12 @@ Error ReindexerInterface<reindexer::client::CoroReindexer>::modify(reindexer::cl
 	return transaction.Modify(std::move(item), mode);
 }
 
-template <>
-Error ReindexerInterface<reindexer::Reindexer>::commitTransaction(reindexer::Transaction& transaction) {
-	reindexer::QueryResults resultDummy;
-	return db_.CommitTransaction(transaction, resultDummy);
-}
-template <>
-Error ReindexerInterface<reindexer::client::CoroReindexer>::commitTransaction(reindexer::client::CoroTransaction& transaction) {
-	return db_.CommitTransaction(transaction);
+template <typename DBT>
+Error ReindexerInterface<DBT>::commitTransaction(typename DBT::TransactionT& transaction, size_t& count) {
+	typename DBT::QueryResultsT qr;
+	auto err = db_.CommitTransaction(transaction, qr);
+	count = qr.Count();
+	return err;
 }
 
 template <>
