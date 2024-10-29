@@ -32,10 +32,6 @@ class Query(object):
         err_msg (string): the API error message
 
     """
-    class _LogOp(Enum):
-        And = 1
-        Or = 2
-        Not = 3
 
     def __init__(self, api, query_wrapper_ptr: int):
         """Constructs a new Reindexer query object
@@ -97,9 +93,13 @@ class Query(object):
         # Returns:
             (:obj:`Query`): Query object for further customizations
 
+        # Raises:
+            Exception: Raises with an error message of API return on non-zero error code
+
         """
 
-        self.api.open_bracket(self.query_wrapper_ptr)
+        self.err_code, self.err_msg = self.api.open_bracket(self.query_wrapper_ptr)
+        self._raise_on_error()
         return self
 
     def close_bracket(self) -> Query:
@@ -108,9 +108,13 @@ class Query(object):
         # Returns:
             (:obj:`Query`): Query object for further customizations
 
+        # Raises:
+            Exception: Raises with an error message of API return on non-zero error code
+
         """
 
-        self.api.close_bracket(self.query_wrapper_ptr)
+        self.err_code, self.err_msg = self.api.close_bracket(self.query_wrapper_ptr)
+        self._raise_on_error()
         return self
 
     def where_int(self, index: str, condition: CondType, keys: List[int]) -> Query:
@@ -322,7 +326,7 @@ class Query(object):
 #        return self.sort(request, desc)
 ################################################################
 
-    def and_op(self) -> Query:
+    def op_and(self) -> Query:
         """Next condition will be added with AND.
             This is the default operation for WHERE statement. Do not have to be called explicitly in user's code.
             Used in DSL conversion
@@ -331,10 +335,10 @@ class Query(object):
             (:obj:`Query`): Query object for further customizations
         """
 
-        self.api.log_op(self.query_wrapper_ptr, self._LogOp.And.value)
+        self.api.op_and(self.query_wrapper_ptr)
         return self
 
-    def or_op(self) -> Query:
+    def op_or(self) -> Query:
         """Next condition will be added with OR.
             Implements short-circuiting:
             if the previous condition is successful the next will not be evaluated, but except Join conditions
@@ -344,10 +348,10 @@ class Query(object):
 
         """
 
-        self.api.log_op(self.query_wrapper_ptr, self._LogOp.Or.value)
+        self.api.op_or(self.query_wrapper_ptr)
         return self
 
-    def not_op(self) -> Query:
+    def op_not(self) -> Query:
         """Next condition will be added with NOT AND.
             Implements short-circuiting: if the previous condition is failed the next will not be evaluated
 
@@ -356,7 +360,7 @@ class Query(object):
 
         """
 
-        self.api.log_op(self.query_wrapper_ptr, self._LogOp.Not.value)
+        self.api.op_not(self.query_wrapper_ptr)
         return self
 
     def distinct(self, index: str) -> Query:
@@ -374,28 +378,32 @@ class Query(object):
         self.api.distinct(self.query_wrapper_ptr, index)
         return self
 
-    def request_total(self) -> Query:
+    def request_total(self, total_name: str= '') -> Query:
         """Request total items calculation
 
+        # Arguments:
+            total_name (string): Name to be requested
+
         # Returns:
             (:obj:`Query`): Query object for further customizations
 
         """
 
-        # q.totalName = totalNames[0] // ToDo
-        self.api.request_total(self.query_wrapper_ptr)
+        self.api.request_total(self.query_wrapper_ptr, total_name)
         return self
 
-    def cached_total(self) -> Query:
+    def cached_total(self, total_name: str= '') -> Query:
         """Request cached total items calculation
+
+        # Arguments:
+            total_name (string): Name to be requested
 
         # Returns:
             (:obj:`Query`): Query object for further customizations
 
         """
 
-        # q.totalName = totalNames[0] // ToDo
-        self.api.cached_total(self.query_wrapper_ptr)
+        self.api.cached_total(self.query_wrapper_ptr, total_name)
         return self
 
     def limit(self, limit_items: int) -> Query:
@@ -464,6 +472,17 @@ class Query(object):
         """
 
         self.api.explain(self.query_wrapper_ptr)
+        return self
+
+    def with_rank(self) -> Query:
+        """Output fulltext rank. Allowed only with fulltext query
+
+        # Returns:
+            (:obj:`Query`): Query object for further customizations
+
+        """
+
+        self.api.with_rank(self.query_wrapper_ptr)
         return self
 
 ################################################################ ToDo
@@ -559,9 +578,20 @@ class Query(object):
         self._raise_on_error()
         return self
 
-################################################################ // ToDo
-#func (q *Query) FetchCount(n int) *Query {
-################################################################
+    def fetch_count(self, n: int) -> Query:
+        """Sets the number of items that will be fetched by one operation.
+            When n <= 0 query will fetch all results in one operation
+
+        # Arguments:
+            n (int): Number of items
+
+        # Returns:
+            (:obj:`Query`): Query object for further customizations
+
+        """
+
+        self.api.fetch_count(self.query_wrapper_ptr, n)
+        return self
 
     def functions(self, functions: List[str]) -> Query:
         """Adds sql-functions to query
@@ -597,4 +627,4 @@ class Query(object):
         self._raise_on_error()
         return self
 
-# 66 / 28
+# 66 / 30

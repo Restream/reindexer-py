@@ -59,7 +59,9 @@ static PyObject* WhereString(PyObject* self, PyObject* args);
 static PyObject* WhereUUID(PyObject* self, PyObject* args);
 static PyObject* WhereBool(PyObject* self, PyObject* args);
 static PyObject* WhereDouble(PyObject* self, PyObject* args);
-static PyObject* LogOp(PyObject* self, PyObject* args);
+static PyObject* And(PyObject* self, PyObject* args);
+static PyObject* Or(PyObject* self, PyObject* args);
+static PyObject* Not(PyObject* self, PyObject* args);
 static PyObject* Distinct(PyObject* self, PyObject* args);
 static PyObject* ReqTotal(PyObject* self, PyObject* args);
 static PyObject* CachedTotal(PyObject* self, PyObject* args);
@@ -68,10 +70,12 @@ static PyObject* Offset(PyObject* self, PyObject* args);
 static PyObject* Debug(PyObject* self, PyObject* args);
 static PyObject* Strict(PyObject* self, PyObject* args);
 static PyObject* Explain(PyObject* self, PyObject* args);
+static PyObject* WithRank(PyObject* self, PyObject* args);
 static PyObject* Drop(PyObject* self, PyObject* args);
 static PyObject* SetExpression(PyObject* self, PyObject* args);
 static PyObject* On(PyObject* self, PyObject* args);
 static PyObject* SelectQuery(PyObject* self, PyObject* args);
+static PyObject* FetchCount(PyObject* self, PyObject* args);
 static PyObject* AddFunctions(PyObject* self, PyObject* args);
 static PyObject* AddEqualPosition(PyObject* self, PyObject* args);
 
@@ -111,10 +115,8 @@ static PyMethodDef module_methods[] = {
 	// query
 	{"create_query", CreateQuery, METH_VARARGS, "create new query"},
 	{"delete_query", DeleteQuery, METH_VARARGS, "delete query. Free query object memory"},
-
 	//{"where", Where, METH_VARARGS, "add where condition"},
 	//{"where_query", WhereQuery, METH_VARARGS, "add where condition"},
-
 	{"where_between_fields", WhereBetweenFields, METH_VARARGS, "add comparing two fields where condition"},
 	{"open_bracket", OpenBracket, METH_VARARGS, "open bracket for where condition"},
 	{"close_bracket", CloseBracket, METH_VARARGS, "close bracket for where condition"},
@@ -125,7 +127,9 @@ static PyMethodDef module_methods[] = {
 	{"where_uuid", WhereUUID, METH_VARARGS, "add where condition with UUIDs"},
 	{"where_bool", WhereBool, METH_VARARGS, "add where condition with bool args"},
 	{"where_float64", WhereDouble, METH_VARARGS, "add where condition with double args"},
-	{"log_op", LogOp, METH_VARARGS, "next condition will be added with AND|OR|NOT AND"},
+	{"op_and", And, METH_VARARGS, "next condition will be added with AND AND"},
+	{"op_or", Or, METH_VARARGS, "next condition will be added with OR AND"},
+	{"op_not", Not, METH_VARARGS, "next condition will be added with NOT AND"},
 	{"distinct", Distinct, METH_VARARGS, "perform distinct for index"},
 	{"request_total", ReqTotal, METH_VARARGS, "request total items calculation"},
 	{"cached_total", CachedTotal, METH_VARARGS, "request cached total items calculation"},
@@ -134,10 +138,12 @@ static PyMethodDef module_methods[] = {
 	{"debug", Debug, METH_VARARGS, "request cached total items calculation"},
 	{"strict", Strict, METH_VARARGS, "request cached total items calculation"},
 	{"explain", Explain, METH_VARARGS, "enable explain query"},
+	{"with_rank", WithRank, METH_VARARGS, "enable fulltext rank"},
 	{"drop", Drop, METH_VARARGS, "drop values"},
 	{"expression", SetExpression, METH_VARARGS, "set expression"},
 	{"on", On, METH_VARARGS, "on specifies join condition"},
 	{"select_query", SelectQuery, METH_VARARGS, "select add filter to fields of result's objects"},
+	{"fetch_count", FetchCount, METH_VARARGS, "limit number of items"},
 	{"functions", AddFunctions, METH_VARARGS, "add sql-functions to query"},
 	{"equal_position", AddEqualPosition, METH_VARARGS, "add equal position fields"},
 

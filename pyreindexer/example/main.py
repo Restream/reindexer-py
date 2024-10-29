@@ -97,9 +97,10 @@ def query_example(db, namespace):
 
     query = db.new_query(namespace).offset(1).cached_total()
     (query.where_string('fld1', CondType.CondSet, ['s','t','o','p'])
-        .not_op()
+        .op_not()
         .where_float64('fld2', CondType.CondSet, [3.14])
-        .explain())
+        .explain()
+        .fetch_count(10))
     query.expression("fld1", "array_remove(integer_array, [5,6,7,8]) || [1,2,3]").drop("fld2")
 
 
