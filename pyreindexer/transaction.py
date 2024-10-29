@@ -149,11 +149,11 @@ class Transaction(object):
 
         """
 
-    self._raise_on_is_over()
-    self.err_code, self.err_msg, count = self.api.commit_transaction(self.transaction_wrapper_ptr)
-    self.transaction_wrapper_ptr = 0
-    self._raise_on_error()
-    return count
+        self._raise_on_is_over()
+        self.err_code, self.err_msg, count = self.api.commit_transaction(self.transaction_wrapper_ptr)
+        self.transaction_wrapper_ptr = 0
+        self._raise_on_error()
+        return count
 
     def rollback(self):
         """Rollback changes

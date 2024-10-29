@@ -568,7 +568,7 @@ static PyObject* CommitTransaction(PyObject* self, PyObject* args) {
 
 	assert((StopTransactionMode::Commit == stopMode) || (StopTransactionMode::Rollback == stopMode));
 	size_t count = 0;
-	Error err = transaction->CommitTransaction(count);
+	Error err = transaction->Commit(count);
 
 	wrapperDelete<TransactionWrapper>(transactionWrapperAddr);
 

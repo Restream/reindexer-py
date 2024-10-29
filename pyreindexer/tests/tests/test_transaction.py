@@ -135,7 +135,8 @@ class TestCrudTransaction:
         number_items = 5
         for i in range(number_items):
             transaction.insert({'id': 100, 'field': 'value' + str(100 + i)}, ['id=serial()'])
-        transaction.commit()
+        count = transaction.commit_with_count()
+        assert_that(count, equal_to(number_items), "Transaction: items wasn't created")
         # Then ("Check that item is added")
         select_result = list(db.select(f'SELECT * FROM {namespace_name}'))
         assert_that(select_result, has_length(number_items), "Transaction: items wasn't created")
