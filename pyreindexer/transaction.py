@@ -1,5 +1,5 @@
 class Transaction(object):
-    """ An object representing the context of a Reindexer transaction
+    """An object representing the context of a Reindexer transaction
 
     # Attributes:
         api (module): An API module for Reindexer calls

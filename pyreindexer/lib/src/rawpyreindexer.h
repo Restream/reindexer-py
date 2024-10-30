@@ -60,6 +60,7 @@ static PyObject* WhereUUID(PyObject* self, PyObject* args);
 static PyObject* WhereBetweenFields(PyObject* self, PyObject* args);
 static PyObject* OpenBracket(PyObject* self, PyObject* args);
 static PyObject* CloseBracket(PyObject* self, PyObject* args);
+static PyObject* DWithin(PyObject* self, PyObject* args);
 static PyObject* And(PyObject* self, PyObject* args);
 static PyObject* Or(PyObject* self, PyObject* args);
 static PyObject* Not(PyObject* self, PyObject* args);
@@ -127,6 +128,7 @@ static PyMethodDef module_methods[] = {
 	{"where_between_fields", WhereBetweenFields, METH_VARARGS, "add comparing two fields where condition"},
 	{"open_bracket", OpenBracket, METH_VARARGS, "open bracket for where condition"},
 	{"close_bracket", CloseBracket, METH_VARARGS, "close bracket for where condition"},
+	{"dwithin", DWithin, METH_VARARGS, "add dwithin condition"},
 	{"op_and", And, METH_VARARGS, "next condition will be added with AND AND"},
 	{"op_or", Or, METH_VARARGS, "next condition will be added with OR AND"},
 	{"op_not", Not, METH_VARARGS, "next condition will be added with NOT AND"},

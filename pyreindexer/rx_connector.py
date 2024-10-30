@@ -6,10 +6,10 @@ from pyreindexer.query import Query
 
 
 class RxConnector(RaiserMixin):
-    """ RxConnector provides a binding to Reindexer upon two shared libraries (hereinafter - APIs): 'rawpyreindexerb.so'
-    and 'rawpyreindexerc.so'. The first one is aimed to a builtin way usage. That API embeds Reindexer, so it could be
-    used right in-place as is. The second one acts as a lightweight client which establishes a connection to Reindexer
-    server via RPC. The APIs interfaces are completely the same.
+    """RxConnector provides a binding to Reindexer upon two shared libraries (hereinafter - APIs): 'rawpyreindexerb.so'
+        and 'rawpyreindexerc.so'. The first one is aimed to a builtin way usage. That API embeds Reindexer, so it could
+        be used right in-place as is. The second one acts as a lightweight client which establishes a connection to
+        Reindexer server via RPC. The APIs interfaces are completely the same.
 
     # Attributes:
         api (module): An API module loaded dynamically for Reindexer calls

@@ -636,38 +636,6 @@ static PyObject* DeleteQuery(PyObject* self, PyObject* args) {
 	Py_RETURN_NONE;
 }
 
-static PyObject* WhereBetweenFields(PyObject* self, PyObject* args) {
-	uintptr_t queryWrapperAddr = 0;
-	char* first_field = nullptr;
-	unsigned condition = 0;
-	char* second_field = nullptr;
-	if (!PyArg_ParseTuple(args, "ksIs", &queryWrapperAddr, &first_field, &condition, &second_field)) {
-		return nullptr;
-	}
-
-	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
-
-	query->WhereBetweenFields(first_field, CondType(condition), second_field);
-
-	Py_RETURN_NONE;
-}
-
-namespace {
-enum class BracketType { Open, Closed };
-PyObject* addBracket(PyObject* self, PyObject* args, BracketType type) {
-	uintptr_t queryWrapperAddr = 0;
-	if (!PyArg_ParseTuple(args, "k", &queryWrapperAddr)) {
-		return nullptr;
-	}
-
-	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
-
-	auto err = (type == BracketType::Open)? query->OpenBracket() : query->CloseBracket();
-	return pyErr(err);
-}
-} // namespace
-static PyObject* OpenBracket(PyObject* self, PyObject* args) { return addBracket(self, args, BracketType::Open); }
-static PyObject* CloseBracket(PyObject* self, PyObject* args) { return addBracket(self, args, BracketType::Closed); }
 
 static PyObject* Where(PyObject* self, PyObject* args) {
 	uintptr_t queryWrapperAddr = 0;
@@ -778,6 +746,54 @@ static PyObject* WhereUUID(PyObject* self, PyObject* args) {
 	query->WhereUUID(index, CondType(condition), keys);
 
 	return pyErr(errOK);
+}
+
+static PyObject* WhereBetweenFields(PyObject* self, PyObject* args) {
+	uintptr_t queryWrapperAddr = 0;
+	char* first_field = nullptr;
+	unsigned condition = 0;
+	char* second_field = nullptr;
+	if (!PyArg_ParseTuple(args, "ksIs", &queryWrapperAddr, &first_field, &condition, &second_field)) {
+		return nullptr;
+	}
+
+	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
+
+	query->WhereBetweenFields(first_field, CondType(condition), second_field);
+
+	Py_RETURN_NONE;
+}
+
+namespace {
+enum class BracketType { Open, Closed };
+PyObject* addBracket(PyObject* self, PyObject* args, BracketType type) {
+	uintptr_t queryWrapperAddr = 0;
+	if (!PyArg_ParseTuple(args, "k", &queryWrapperAddr)) {
+		return nullptr;
+	}
+
+	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
+
+	auto err = (type == BracketType::Open)? query->OpenBracket() : query->CloseBracket();
+	return pyErr(err);
+}
+} // namespace
+static PyObject* OpenBracket(PyObject* self, PyObject* args) { return addBracket(self, args, BracketType::Open); }
+static PyObject* CloseBracket(PyObject* self, PyObject* args) { return addBracket(self, args, BracketType::Closed); }
+
+static PyObject* DWithin(PyObject* self, PyObject* args) {
+	uintptr_t queryWrapperAddr = 0;
+	char* index = nullptr;
+	double x = 0, y = 0, distance = 0;
+	if (!PyArg_ParseTuple(args, "ksddd", &queryWrapperAddr, &x, &y, &distance)) {
+		return nullptr;
+	}
+
+	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
+
+	query->DWithin(index, x, y, distance);
+
+	Py_RETURN_NONE;
 }
 
 namespace {

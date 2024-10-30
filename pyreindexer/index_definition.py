@@ -5,7 +5,7 @@
 
 
 class IndexDefinition(dict):
-    """ IndexDefinition is a dictionary subclass which allows to construct and manage indexes more efficiently.
+    """IndexDefinition is a dictionary subclass which allows to construct and manage indexes more efficiently.
     NOT IMPLEMENTED YET. USE FIELDS DESCRIPTION ONLY.
 
     # Arguments:

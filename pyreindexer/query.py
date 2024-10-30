@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import List, Union
 from enum import Enum
+from pyreindexer.point import Point
 
 class CondType(Enum):
     CondAny = 0
@@ -23,7 +24,7 @@ class StrictMode(Enum):
     Indexes = 3
 
 class Query(object):
-    """ An object representing the context of a Reindexer query
+    """An object representing the context of a Reindexer query
 
     # Attributes:
         api (module): An API module for Reindexer calls
@@ -209,8 +210,24 @@ class Query(object):
         self._raise_on_error()
         return self
 
+    #func (q *Query) DWithin(index string, point Point, distance float64) *Query {
+    def dwithin(self, index: str, point: Point, distance: float) -> Query:
+        """Add DWithin condition to DB query
+
+        # Arguments:
+            index (string): Field name used in condition clause
+            point (:obj:`Point`): Point object used in condition clause
+            distance (float): Distance in meters between point
+
+        # Returns:
+            (:obj:`Query`): Query object for further customizations
+
+        """
+
+        self.api.dwithin(self.query_wrapper_ptr, index, point.x, point.y, distance)
+        return self
+
 ################################################################ ToDo
-#func (q *Query) DWithin(index string, point Point, distance float64) *Query {
 #func (q *Query) AggregateSum(field string) *Query {
 #func (q *Query) AggregateAvg(field string) *Query {
 #func (q *Query) AggregateMin(field string) *Query {

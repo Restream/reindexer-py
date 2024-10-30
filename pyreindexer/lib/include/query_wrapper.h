@@ -25,11 +25,6 @@ class QueryWrapper {
 public:
 	QueryWrapper(DBInterface* db, std::string_view ns);
 
-	void WhereBetweenFields(std::string_view firstField, CondType condition, std::string_view secondField);
-
-	reindexer::Error OpenBracket();
-	reindexer::Error CloseBracket();
-
 	template <typename T>
 	void Where(std::string_view index, CondType condition, const std::vector<T>& keys) {
 		ser_.PutVarUint(QueryItemType::QueryCondition);
@@ -62,6 +57,13 @@ public:
 	}
 	void WhereComposite(std::string_view index, CondType condition, QueryWrapper& query);
 	void WhereUUID(std::string_view index, CondType condition, const std::vector<std::string>& keys);
+
+	void WhereBetweenFields(std::string_view firstField, CondType condition, std::string_view secondField);
+
+	reindexer::Error OpenBracket();
+	reindexer::Error CloseBracket();
+
+	void DWithin(std::string_view index, double x, double y, double distance);
 
 	void LogOp(OpType op);
 

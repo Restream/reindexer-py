@@ -1,5 +1,5 @@
 class RaiserMixin(object):
-    """ RaiserMixin contains methods for checking some typical API bad events and raise if there is a necessity
+    """RaiserMixin contains methods for checking some typical API bad events and raise if there is a necessity
 
     """
     err_code: int

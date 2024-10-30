@@ -1,6 +1,6 @@
 class QueryResults(object):
-    """ QueryResults is a disposable iterator of Reindexer results for such queries as SELECT etc.
-    When the results are fetched the iterator closes and frees a memory of results buffer of Reindexer
+    """QueryResults is a disposable iterator of Reindexer results for such queries as SELECT etc.
+        When the results are fetched the iterator closes and frees a memory of results buffer of Reindexer
 
     # Attributes:
         api (module): An API module for Reindexer calls
