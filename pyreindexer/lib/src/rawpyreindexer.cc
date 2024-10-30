@@ -924,8 +924,8 @@ static PyObject* CachedTotal(PyObject* self, PyObject* args) {
 
 static PyObject* Limit(PyObject* self, PyObject* args) {
 	uintptr_t queryWrapperAddr = 0;
-	unsigned limitItems = 0;
-	if (!PyArg_ParseTuple(args, "kI", &queryWrapperAddr, &limitItems)) {
+	int limitItems = 0;
+	if (!PyArg_ParseTuple(args, "ki", &queryWrapperAddr, &limitItems)) {
 		return nullptr;
 	}
 

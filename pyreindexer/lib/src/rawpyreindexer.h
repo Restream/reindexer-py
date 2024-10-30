@@ -126,7 +126,7 @@ static PyMethodDef module_methods[] = {
 	{"where_string", WhereString, METH_VARARGS, "add where condition with strings"},
 	{"where_uuid", WhereUUID, METH_VARARGS, "add where condition with UUIDs"},
 	{"where_bool", WhereBool, METH_VARARGS, "add where condition with bool args"},
-	{"where_float64", WhereDouble, METH_VARARGS, "add where condition with double args"},
+	{"where_float32", WhereDouble, METH_VARARGS, "add where condition with double args"},
 	{"op_and", And, METH_VARARGS, "next condition will be added with AND AND"},
 	{"op_or", Or, METH_VARARGS, "next condition will be added with OR AND"},
 	{"op_not", Not, METH_VARARGS, "next condition will be added with NOT AND"},

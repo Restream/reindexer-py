@@ -117,7 +117,7 @@ class Query(object):
         self._raise_on_error()
         return self
 
-    def where_int(self, index: str, condition: CondType, keys: List[int]) -> Query:
+    def where_int32(self, index: str, condition: CondType, keys: List[int]) -> Query:
         """Add where condition to DB query with int args
 
         # Arguments:
@@ -137,7 +137,7 @@ class Query(object):
         self._raise_on_error()
         return self
 
-    def where_int32(self, index: str, condition: CondType, keys: List[int]) -> Query:
+    def where_uint32(self, index: str, condition: CondType, keys: List[int]) -> Query:
         """Add where condition to DB query with Int32 args
 
         # Arguments:
@@ -153,7 +153,7 @@ class Query(object):
 
         """
 
-        self.err_code, self.err_msg = self.api.where_int32(self.query_wrapper_ptr, index, condition.value, keys)
+        self.err_code, self.err_msg = self.api.where_uint32(self.query_wrapper_ptr, index, condition.value, keys)
         self._raise_on_error()
         return self
 
@@ -174,6 +174,26 @@ class Query(object):
         """
 
         self.err_code, self.err_msg = self.api.where_int64(self.query_wrapper_ptr, index, condition.value, keys)
+        self._raise_on_error()
+        return self
+
+    def where_uint64(self, index: str, condition: CondType, keys: List[int]) -> Query:
+        """Add where condition to DB query with Int64 args
+
+        # Arguments:
+            index (string): Field name used in condition clause
+            condition (:enum:`CondType`): Type of condition
+            keys (list[Int64]): Value of index to be compared with. For composite indexes keys must be list, with value of each subindex
+
+        # Returns:
+            (:obj:`Query`): Query object for further customizations
+
+        # Raises:
+            Exception: Raises with an error message of API return on non-zero error code
+
+        """
+
+        self.err_code, self.err_msg = self.api.where_uint64(self.query_wrapper_ptr, index, condition.value, keys)
         self._raise_on_error()
         return self
 
@@ -239,7 +259,7 @@ class Query(object):
         self._raise_on_error()
         return self
 
-    def where_float64(self, index: str, condition: CondType, keys: List[float]) -> Query:
+    def where_float32(self, index: str, condition: CondType, keys: List[float]) -> Query:
         """Add where condition to DB query with float args
 
         # Arguments:
@@ -255,7 +275,7 @@ class Query(object):
 
         """
 
-        self.err_code, self.err_msg = self.api.where_float64(self.query_wrapper_ptr, index, condition.value, keys)
+        self.err_code, self.err_msg = self.api.where_float32(self.query_wrapper_ptr, index, condition.value, keys)
         self._raise_on_error()
         return self
 
@@ -382,7 +402,7 @@ class Query(object):
         """Request total items calculation
 
         # Arguments:
-            total_name (string): Name to be requested
+            total_name (string, optional): Name to be requested
 
         # Returns:
             (:obj:`Query`): Query object for further customizations
@@ -396,7 +416,7 @@ class Query(object):
         """Request cached total items calculation
 
         # Arguments:
-            total_name (string): Name to be requested
+            total_name (string, optional): Name to be requested
 
         # Returns:
             (:obj:`Query`): Query object for further customizations
