@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List
+from typing import List, Union
 from enum import Enum
 
 class CondType(Enum):
@@ -114,6 +114,26 @@ class Query(object):
         """
 
         self.err_code, self.err_msg = self.api.close_bracket(self.query_wrapper_ptr)
+        self._raise_on_error()
+        return self
+
+    def where(self, index: str, condition: CondType, keys: List[Union[int,bool,float,str]] = []) -> Query:
+        """Add where condition to DB query with int args
+
+        # Arguments:
+            index (string): Field name used in condition clause
+            condition (:enum:`CondType`): Type of condition
+            keys (list[Union[int,bool,float,str]]): Value of index to be compared with. For composite indexes keys must be list, with value of each subindex
+
+        # Returns:
+            (:obj:`Query`): Query object for further customizations
+
+        # Raises:
+            Exception: Raises with an error message of API return on non-zero error code
+
+        """
+
+        self.err_code, self.err_msg = self.api.where(self.query_wrapper_ptr, index, condition.value, keys)
         self._raise_on_error()
         return self
 

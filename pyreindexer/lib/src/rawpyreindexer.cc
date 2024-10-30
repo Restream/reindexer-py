@@ -647,6 +647,37 @@ static PyObject* addBracket(PyObject* self, PyObject* args, BracketType type) {
 static PyObject* OpenBracket(PyObject* self, PyObject* args) { return addBracket(self, args, BracketType::Open); }
 static PyObject* CloseBracket(PyObject* self, PyObject* args) { return addBracket(self, args, BracketType::Closed); }
 
+static PyObject* Where(PyObject* self, PyObject* args) {
+	uintptr_t queryWrapperAddr = 0;
+	char* index = nullptr;
+	unsigned condition = 0;
+	PyObject* keysList = nullptr;  	// borrowed ref after ParseTuple if passed
+	if (!PyArg_ParseTuple(args, "ksIO!", &queryWrapperAddr, &index, &condition, &PyList_Type, &keysList)) {
+		return nullptr;
+	}
+
+	Py_XINCREF(keysList);
+
+	std::vector<reindexer::Variant> keys;
+	if (keysList != nullptr) {
+		try {
+			keys = ParseListToVec(&keysList);
+		} catch (const Error& err) {
+			Py_DECREF(keysList);
+
+			return pyErr(err);
+		}
+	}
+
+	Py_XDECREF(keysList);
+
+	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
+
+	query->Where(index, CondType(condition), keys);
+
+	return pyErr(errOK);
+}
+
 static PyObject* WhereInt(PyObject* self, PyObject* args) {
 	uintptr_t queryWrapperAddr = 0;
 	char* index = nullptr;
@@ -673,7 +704,7 @@ static PyObject* WhereInt(PyObject* self, PyObject* args) {
 
 	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
 
-	query->Where(index, CondType(condition), keys); // ToDo
+	query->Where(index, CondType(condition), keys);
 
 	return pyErr(errOK);
 }
@@ -704,7 +735,7 @@ static PyObject* WhereInt32(PyObject* self, PyObject* args) {
 
 	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
 
-	query->Where(index, CondType(condition), keys); // ToDo
+	query->Where(index, CondType(condition), keys);
 
 	return pyErr(errOK);
 }
@@ -735,7 +766,7 @@ static PyObject* WhereInt64(PyObject* self, PyObject* args) {
 
 	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
 
-	query->Where(index, CondType(condition), keys); // ToDo
+	query->Where(index, CondType(condition), keys);
 
 	return pyErr(errOK);
 }
@@ -766,7 +797,7 @@ static PyObject* WhereString(PyObject* self, PyObject* args) {
 
 	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
 
-	query->Where(index, CondType(condition), keys); // ToDo
+	query->Where(index, CondType(condition), keys);
 
 	return pyErr(errOK);
 }

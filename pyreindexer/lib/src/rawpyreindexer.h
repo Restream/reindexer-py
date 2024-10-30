@@ -52,6 +52,7 @@ static PyObject* DeleteQuery(PyObject* self, PyObject* args);
 static PyObject* WhereBetweenFields(PyObject* self, PyObject* args);
 static PyObject* OpenBracket(PyObject* self, PyObject* args);
 static PyObject* CloseBracket(PyObject* self, PyObject* args);
+static PyObject* Where(PyObject* self, PyObject* args);
 static PyObject* WhereInt(PyObject* self, PyObject* args);
 static PyObject* WhereInt32(PyObject* self, PyObject* args);
 static PyObject* WhereInt64(PyObject* self, PyObject* args);
@@ -120,6 +121,7 @@ static PyMethodDef module_methods[] = {
 	{"where_between_fields", WhereBetweenFields, METH_VARARGS, "add comparing two fields where condition"},
 	{"open_bracket", OpenBracket, METH_VARARGS, "open bracket for where condition"},
 	{"close_bracket", CloseBracket, METH_VARARGS, "close bracket for where condition"},
+	{"where", Where, METH_VARARGS, "add where condition with args"},
 	{"where_int", WhereInt, METH_VARARGS, "add where condition with int args"},
 	{"where_int32", WhereInt32, METH_VARARGS, "add where condition with int32 args"},
 	{"where_int64", WhereInt64, METH_VARARGS, "add where condition with int64 args"},

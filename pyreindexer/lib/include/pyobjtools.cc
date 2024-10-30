@@ -1,6 +1,8 @@
 #include "pyobjtools.h"
 
-#include <cmath>
+//#include <cmath>
+#include "tools/serializer.h"
+#include "vendor/gason/gason.h"
 
 namespace pyreindexer {
 
@@ -96,9 +98,10 @@ void PyObjectToJson(PyObject** obj, reindexer::WrSerializer& wrSer) {
 }
 
 std::vector<std::string> ParseListToStrVec(PyObject** list) {
-	std::vector<std::string> vec;
+	std::vector<std::string> result;
 
 	Py_ssize_t sz = PyList_Size(*list);
+	result.reserve(sz);
 	for (Py_ssize_t i = 0; i < sz; i++) {
 		PyObject* item = PyList_GetItem(*list, i);
 
@@ -106,16 +109,17 @@ std::vector<std::string> ParseListToStrVec(PyObject** list) {
 			throw reindexer::Error(errParseJson, std::string("String expected, got ") + Py_TYPE(item)->tp_name);
 		}
 
-		vec.push_back(PyUnicode_AsUTF8(item));
+		result.push_back(PyUnicode_AsUTF8(item));
 	}
 
-	return vec;
+	return result;
 }
 
 std::vector<bool> ParseListToBoolVec(PyObject** list) {
-	std::vector<bool> vec;
+	std::vector<bool> result;
 
 	Py_ssize_t sz = PyList_Size(*list);
+	result.reserve(sz);
 	for (Py_ssize_t i = 0; i < sz; i++) {
 		PyObject* item = PyList_GetItem(*list, i);
 
@@ -123,16 +127,17 @@ std::vector<bool> ParseListToBoolVec(PyObject** list) {
 			throw reindexer::Error(errParseJson, std::string("Bool expected, got ") + Py_TYPE(item)->tp_name);
 		}
 
-		vec.push_back(PyLong_AsLong(item) != 0);
+		result.push_back(PyLong_AsLong(item) != 0);
 	}
 
-	return vec;
+	return result;
 }
 
 std::vector<double> ParseListToDoubleVec(PyObject** list) {
-	std::vector<double> vec;
+	std::vector<double> result;
 
 	Py_ssize_t sz = PyList_Size(*list);
+	result.reserve(sz);
 	for (Py_ssize_t i = 0; i < sz; i++) {
 		PyObject* item = PyList_GetItem(*list, i);
 
@@ -143,13 +148,47 @@ std::vector<double> ParseListToDoubleVec(PyObject** list) {
 		double v = PyFloat_AsDouble(item);
 		double intpart = 0.0;
 		if (std::modf(v, &intpart) == 0.0) {
-			vec.push_back(int64_t(v));
+			result.push_back(int64_t(v));
 		} else {
-			vec.push_back(v);
+			result.push_back(v);
 		}
 	}
 
-	return vec;
+	return result;
+}
+
+reindexer::Variant convert(PyObject** value) {
+	if (PyFloat_Check(*value)) {
+		double v = PyFloat_AsDouble(*value);
+		double intpart = 0.0;
+		if (std::modf(v, &intpart) == 0.0) {
+			return reindexer::Variant(int64_t(v));
+		} else {
+			return reindexer::Variant(v);
+		}
+	} else if (PyBool_Check(*value)) {
+		return reindexer::Variant(PyLong_AsLong(*value) != 0);
+	} else if (PyLong_Check(*value)) {
+		return reindexer::Variant(int64_t(PyLong_AsLong(*value)));
+	} else if (PyUnicode_Check(*value)) {
+		return reindexer::Variant(std::string_view(PyUnicode_AsUTF8(*value)));
+	} else {
+		throw reindexer::Error(errParseJson, std::string("Unexpected type, got ") + Py_TYPE(*value)->tp_name);
+	}
+	return {};
+}
+
+std::vector<reindexer::Variant> ParseListToVec(PyObject** list) {
+	std::vector<reindexer::Variant> result;
+
+	Py_ssize_t sz = PyList_Size(*list);
+	result.reserve(sz);
+	for (Py_ssize_t i = 0; i < sz; i++) {
+		PyObject* item = PyList_GetItem(*list, i);
+		result.push_back(convert(&item));
+	}
+
+	return result;
 }
 
 PyObject* pyValueFromJsonValue(const gason::JsonValue& value) {

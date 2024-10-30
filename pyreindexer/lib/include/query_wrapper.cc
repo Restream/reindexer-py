@@ -251,5 +251,10 @@ namespace {
 		ser_.PutVarUint(VALUE_DOUBLE);
 		ser_.PutDouble(value);
 	}
+	template <>
+	void QueryWrapper::putValue(const reindexer::Variant& value) {
+		ser_.PutVarUint(VALUE_INT);
+		ser_.PutVariant(value);
+	}
 
 }  // namespace pyreindexer

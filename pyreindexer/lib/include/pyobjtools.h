@@ -2,21 +2,23 @@
 
 #include <Python.h>
 #include <vector>
-#include "estl/span.h"
-#include "vendor/gason/gason.h"
-#include "tools/serializer.h"
+//#include "estl/span.h"
+#include "core/keyvalue/variant.h"
+//#include "tools/serializer.h"
 
 namespace pyreindexer {
 
 std::vector<std::string> ParseListToStrVec(PyObject** list);
 std::vector<bool> ParseListToBoolVec(PyObject** list);
 std::vector<double> ParseListToDoubleVec(PyObject** list);
+std::vector<reindexer::Variant> ParseListToVec(PyObject** list);
 
 template <typename T>
 std::vector<T> ParseListToIntVec(PyObject** list) {
-	std::vector<T> vec;
+	std::vector<T> result;
 
 	Py_ssize_t sz = PyList_Size(*list);
+	result.reserve(sz);
 	for (Py_ssize_t i = 0; i < sz; i++) {
 		PyObject* item = PyList_GetItem(*list, i);
 
@@ -25,10 +27,10 @@ std::vector<T> ParseListToIntVec(PyObject** list) {
 		}
 
 		long v = PyLong_AsLong(item);
-		vec.push_back(T(v));
+		result.push_back(T(v));
 	}
 
-	return vec;
+	return result;
 }
 
 void PyObjectToJson(PyObject** dict, reindexer::WrSerializer& wrSer);
