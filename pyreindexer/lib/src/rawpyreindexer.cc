@@ -797,6 +797,27 @@ static PyObject* DWithin(PyObject* self, PyObject* args) {
 }
 
 namespace {
+PyObject* aggregate(PyObject* self, PyObject* args, AggType type) {
+	uintptr_t queryWrapperAddr = 0;
+	char* field = nullptr;
+	if (!PyArg_ParseTuple(args, "ks", &queryWrapperAddr, &field)) {
+		return nullptr;
+	}
+
+	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
+
+	query->Aggregate(field, type);
+
+	Py_RETURN_NONE;
+}
+} // namespace
+static PyObject* AggregateDistinct(PyObject* self, PyObject* args) { return aggregate(self, args, AggType::AggDistinct); }
+static PyObject* AggregateSum(PyObject* self, PyObject* args) { return aggregate(self, args, AggType::AggSum); }
+static PyObject* AggregateAvg(PyObject* self, PyObject* args) { return aggregate(self, args, AggType::AggAvg); }
+static PyObject* AggregateMin(PyObject* self, PyObject* args) { return aggregate(self, args, AggType::AggMin); }
+static PyObject* AggregateMax(PyObject* self, PyObject* args) { return aggregate(self, args, AggType::AggMax); }
+
+namespace {
 PyObject* logOp(PyObject* self, PyObject* args, OpType opID) {
 	uintptr_t queryWrapperAddr = 0;
 	if (!PyArg_ParseTuple(args, "k", &queryWrapperAddr)) {
@@ -814,21 +835,8 @@ static PyObject* And(PyObject* self, PyObject* args) { return logOp(self, args, 
 static PyObject* Or(PyObject* self, PyObject* args) { return logOp(self, args, OpType::OpOr); }
 static PyObject* Not(PyObject* self, PyObject* args) { return logOp(self, args, OpType::OpNot); }
 
-static PyObject* Distinct(PyObject* self, PyObject* args) {
-	uintptr_t queryWrapperAddr = 0;
-	char* index = nullptr;
-	if (!PyArg_ParseTuple(args, "ks", &queryWrapperAddr, &index)) {
-		return nullptr;
-	}
-
-	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
-
-	query->Distinct(index);
-
-	Py_RETURN_NONE;
-}
-
-static PyObject* ReqTotal(PyObject* self, PyObject* args) {
+namespace {
+static PyObject* total(PyObject* self, PyObject* args, CalcTotalMode mode) {
 	uintptr_t queryWrapperAddr = 0;
 	char* totalName = nullptr;
 	if (!PyArg_ParseTuple(args, "ks", &queryWrapperAddr, &totalName)) {
@@ -837,24 +845,13 @@ static PyObject* ReqTotal(PyObject* self, PyObject* args) {
 
 	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
 
-	query->ReqTotal(totalName);
+	query->Total(totalName, mode);
 
 	Py_RETURN_NONE;
 }
-
-static PyObject* CachedTotal(PyObject* self, PyObject* args) {
-	uintptr_t queryWrapperAddr = 0;
-	char* totalName = nullptr;
-	if (!PyArg_ParseTuple(args, "ks", &queryWrapperAddr, &totalName)) {
-		return nullptr;
-	}
-
-	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
-
-	query->CachedTotal(totalName);
-
-	Py_RETURN_NONE;
-}
+} // namespace
+static PyObject* ReqTotal(PyObject* self, PyObject* args) { return total(self, args, CalcTotalMode::ModeAccurateTotal); }
+static PyObject* CachedTotal(PyObject* self, PyObject* args) { return total(self, args, CalcTotalMode::ModeCachedTotal); }
 
 static PyObject* Limit(PyObject* self, PyObject* args) {
 	uintptr_t queryWrapperAddr = 0;

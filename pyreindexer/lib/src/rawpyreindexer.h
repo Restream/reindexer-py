@@ -61,10 +61,14 @@ static PyObject* WhereBetweenFields(PyObject* self, PyObject* args);
 static PyObject* OpenBracket(PyObject* self, PyObject* args);
 static PyObject* CloseBracket(PyObject* self, PyObject* args);
 static PyObject* DWithin(PyObject* self, PyObject* args);
+static PyObject* AggregateDistinct(PyObject* self, PyObject* args);
+static PyObject* AggregateSum(PyObject* self, PyObject* args);
+static PyObject* AggregateAvg(PyObject* self, PyObject* args);
+static PyObject* AggregateMin(PyObject* self, PyObject* args);
+static PyObject* AggregateMax(PyObject* self, PyObject* args);
 static PyObject* And(PyObject* self, PyObject* args);
 static PyObject* Or(PyObject* self, PyObject* args);
 static PyObject* Not(PyObject* self, PyObject* args);
-static PyObject* Distinct(PyObject* self, PyObject* args);
 static PyObject* ReqTotal(PyObject* self, PyObject* args);
 static PyObject* CachedTotal(PyObject* self, PyObject* args);
 static PyObject* Limit(PyObject* self, PyObject* args);
@@ -129,10 +133,14 @@ static PyMethodDef module_methods[] = {
 	{"open_bracket", OpenBracket, METH_VARARGS, "open bracket for where condition"},
 	{"close_bracket", CloseBracket, METH_VARARGS, "close bracket for where condition"},
 	{"dwithin", DWithin, METH_VARARGS, "add dwithin condition"},
+	{"aggregate_distinct", AggregateDistinct, METH_VARARGS, "list of unique values of field"},
+	{"aggregate_sum", AggregateSum, METH_VARARGS, "sum field value"},
+	{"aggregate_avg", AggregateAvg, METH_VARARGS, "average field value"},
+	{"aggregate_min", AggregateMin, METH_VARARGS, "minimum field value"},
+	{"aggregate_max", AggregateMax, METH_VARARGS, "maximum field value"},
 	{"op_and", And, METH_VARARGS, "next condition will be added with AND AND"},
 	{"op_or", Or, METH_VARARGS, "next condition will be added with OR AND"},
 	{"op_not", Not, METH_VARARGS, "next condition will be added with NOT AND"},
-	{"distinct", Distinct, METH_VARARGS, "perform distinct for index"},
 	{"request_total", ReqTotal, METH_VARARGS, "request total items calculation"},
 	{"cached_total", CachedTotal, METH_VARARGS, "request cached total items calculation"},
 	{"limit", Limit, METH_VARARGS, "request cached total items calculation"},

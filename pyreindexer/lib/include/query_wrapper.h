@@ -65,12 +65,11 @@ public:
 
 	void DWithin(std::string_view index, double x, double y, double distance);
 
+	void Aggregate(std::string_view index, AggType type);
+
 	void LogOp(OpType op);
 
-	void Distinct(std::string_view index);
-
-	void ReqTotal(std::string_view totalName);
-	void CachedTotal(std::string_view totalName);
+	void Total(std::string_view totalName, CalcTotalMode mode);
 
 	void Limit(unsigned limitItems);
 	void Offset(unsigned startOffset);
@@ -97,7 +96,7 @@ private:
 	void putValue(T) {}
 
 private:
-	DBInterface* db_{nullptr};
+	DBInterface* db_{nullptr}; // ToDo
 	reindexer::WrSerializer ser_;
 
 	OpType nextOperation_{OpType::OpAnd};

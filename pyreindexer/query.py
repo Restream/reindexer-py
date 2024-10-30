@@ -210,7 +210,6 @@ class Query(object):
         self._raise_on_error()
         return self
 
-    #func (q *Query) DWithin(index string, point Point, distance float64) *Query {
     def dwithin(self, index: str, point: Point, distance: float) -> Query:
         """Add DWithin condition to DB query
 
@@ -227,11 +226,78 @@ class Query(object):
         self.api.dwithin(self.query_wrapper_ptr, index, point.x, point.y, distance)
         return self
 
+    def distinct(self, index: str) -> Query:
+        """Performs distinct for a certain index.
+            Return only items with uniq value of field
+
+        # Arguments:
+            index (string): Field name for distinct operation
+
+        # Returns:
+            (:obj:`Query`): Query object for further customizations
+
+        """
+
+        self.api.aggregate_distinct(self.query_wrapper_ptr, index)
+        return self
+
+    def  aggregate_sum(self, index: str) -> Query:
+        """Performs a summation of values for a specified index
+
+        # Arguments:
+            index (string): Field name for sum operation
+
+        # Returns:
+            (:obj:`Query`): Query object for further customizations
+
+        """
+
+        self.api.aggregate_sum(self.query_wrapper_ptr, index)
+        return self
+
+    def aggregate_avg(self, index: str) -> Query:
+        """Finds for the average at the specified index
+
+        # Arguments:
+            index (string): Field name for sum operation
+
+        # Returns:
+            (:obj:`Query`): Query object for further customizations
+
+        """
+
+        self.api.aggregate_avg(self.query_wrapper_ptr, index)
+        return self
+
+    def aggregate_min(self, index: str) -> Query:
+        """Finds for the minimum at the specified index
+
+        # Arguments:
+            index (string): Field name for sum operation
+
+        # Returns:
+            (:obj:`Query`): Query object for further customizations
+
+        """
+
+        self.api.aggregate_min(self.query_wrapper_ptr, index)
+        return self
+
+    def aggregate_max(self, index: str) -> Query:
+        """Finds for the maximum at the specified index
+
+        # Arguments:
+            index (string): Field name for sum operation
+
+        # Returns:
+            (:obj:`Query`): Query object for further customizations
+
+        """
+
+        self.api.aggregate_max(self.query_wrapper_ptr, index)
+        return self
+
 ################################################################ ToDo
-#func (q *Query) AggregateSum(field string) *Query {
-#func (q *Query) AggregateAvg(field string) *Query {
-#func (q *Query) AggregateMin(field string) *Query {
-#func (q *Query) AggregateMax(field string) *Query {
 #type AggregateFacetRequest struct {
 #    query *Query
 #}
@@ -305,21 +371,6 @@ class Query(object):
         """
 
         self.api.op_not(self.query_wrapper_ptr)
-        return self
-
-    def distinct(self, index: str) -> Query:
-        """Performs distinct for a certain index.
-            Return only items with uniq value of field
-
-        # Arguments:
-            index (string): Field name for distinct operation
-
-        # Returns:
-            (:obj:`Query`): Query object for further customizations
-
-        """
-
-        self.api.distinct(self.query_wrapper_ptr, index)
         return self
 
     def request_total(self, total_name: str= '') -> Query:
@@ -571,4 +622,4 @@ class Query(object):
         self._raise_on_error()
         return self
 
-# 66 / 30
+# ToDo 66/33
