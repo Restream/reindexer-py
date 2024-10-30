@@ -66,10 +66,83 @@ class Query(object):
         if self.err_code:
             raise Exception(self.err_msg)
 
-################################################################### ToDo
-#func (q *Query) Where(index string, condition int, keys interface{}) *Query {
-#func (q *Query) WhereQuery(subQuery *Query, condition int, keys interface{}) *Query {
-#################################################################
+    def where(self, index: str, condition: CondType, keys: List[Union[int,bool,float,str]] = ()) -> Query:
+        """Add where condition to DB query with int args
+
+        # Arguments:
+            index (string): Field name used in condition clause
+            condition (:enum:`CondType`): Type of condition
+            keys (list[Union[int,bool,float,str]]): Value of index to be compared with. For composite indexes keys must be list, with value of each subindex
+
+        # Returns:
+            (:obj:`Query`): Query object for further customizations
+
+        # Raises:
+            Exception: Raises with an error message of API return on non-zero error code
+
+        """
+
+        self.err_code, self.err_msg = self.api.where(self.query_wrapper_ptr, index, condition.value, keys)
+        self._raise_on_error()
+        return self
+
+    def where_query(self, sub_query: Query, condition: CondType, keys: List[Union[int,bool,float,str]] = ()) -> Query:
+        """Add sub query where condition to DB query with int args
+
+        # Arguments:
+            sub_query (:obj:`Query`): Field name used in condition clause
+            condition (:enum:`CondType`): Type of condition
+            keys (list[Union[int,bool,float,str]]): Value of index to be compared with. For composite indexes keys must be list, with value of each subindex
+
+        # Returns:
+            (:obj:`Query`): Query object for further customizations
+
+        # Raises:
+            Exception: Raises with an error message of API return on non-zero error code
+
+        """
+
+        self.err_code, self.err_msg = self.api.where_query(self.query_wrapper_ptr, sub_query.query_wrapper_ptr, condition.value, keys)
+        self._raise_on_error()
+        return self
+
+    def where_composite(self, index: str, condition: CondType, sub_query: Query) -> Query:
+        """Add where condition to DB query with interface args for composite indexes
+
+        # Arguments:
+            index (string): Field name used in condition clause
+            condition (:enum:`CondType`): Type of condition
+            sub_query (:obj:`Query`): Field name used in condition clause
+
+        # Returns:
+            (:obj:`Query`): Query object for further customizations
+
+        """
+
+        self.api.where_composite(self.query_wrapper_ptr, index, condition.value, sub_query.query_wrapper_ptr)
+        return self
+
+    def where_uuid(self, index: str, condition: CondType, keys: List[str]) -> Query:
+        """Add where condition to DB query with UUID as string args.
+            This function applies binary encoding to the UUID value.
+            'index' MUST be declared as uuid index in this case
+
+        # Arguments:
+            index (string): Field name used in condition clause
+            condition (:enum:`CondType`): Type of condition
+            keys (list[string]): Value of index to be compared with. For composite indexes keys must be list, with value of each subindex
+
+        # Returns:
+            (:obj:`Query`): Query object for further customizations
+
+        # Raises:
+            Exception: Raises with an error message of API return on non-zero error code
+
+        """
+
+        self.err_code, self.err_msg = self.api.where_uuid(self.query_wrapper_ptr, index, condition.value, keys)
+        self._raise_on_error()
+        return self
 
     def where_between_fields(self, first_field: str, condition: CondType, second_field: str) -> Query:
         """Add comparing two fields where condition to DB query
@@ -117,52 +190,6 @@ class Query(object):
         self._raise_on_error()
         return self
 
-    def where(self, index: str, condition: CondType, keys: List[Union[int,bool,float,str]] = []) -> Query:
-        """Add where condition to DB query with int args
-
-        # Arguments:
-            index (string): Field name used in condition clause
-            condition (:enum:`CondType`): Type of condition
-            keys (list[Union[int,bool,float,str]]): Value of index to be compared with. For composite indexes keys must be list, with value of each subindex
-
-        # Returns:
-            (:obj:`Query`): Query object for further customizations
-
-        # Raises:
-            Exception: Raises with an error message of API return on non-zero error code
-
-        """
-
-        self.err_code, self.err_msg = self.api.where(self.query_wrapper_ptr, index, condition.value, keys)
-        self._raise_on_error()
-        return self
-
-    def where_uuid(self, index: str, condition: CondType, keys: List[str]) -> Query:
-        """Add where condition to DB query with UUID as string args.
-            This function applies binary encoding to the UUID value.
-            'index' MUST be declared as uuid index in this case
-
-        # Arguments:
-            index (string): Field name used in condition clause
-            condition (:enum:`CondType`): Type of condition
-            keys (list[string]): Value of index to be compared with. For composite indexes keys must be list, with value of each subindex
-
-        # Returns:
-            (:obj:`Query`): Query object for further customizations
-
-        # Raises:
-            Exception: Raises with an error message of API return on non-zero error code
-
-        """
-
-        self.err_code, self.err_msg = self.api.where_uuid(self.query_wrapper_ptr, index, condition.value, keys)
-        self._raise_on_error()
-        return self
-
-################################################################ ToDo
-#func (q *Query) WhereComposite(index string, condition int, keys ...interface{}) *Query { // ToDo
-################################################################
-
     def match(self, index: str, keys: List[str]) -> Query:
         """Add string EQ-condition to DB query with string args
 
@@ -178,7 +205,7 @@ class Query(object):
 
         """
 
-        self.err_code, self.err_msg = self.api.where_string(self.query_wrapper_ptr, index, CondType.CondEq.value, keys)
+        self.err_code, self.err_msg = self.api.where(self.query_wrapper_ptr, index, CondType.CondEq.value, keys)
         self._raise_on_error()
         return self
 

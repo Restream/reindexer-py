@@ -1,6 +1,5 @@
 #include "pyobjtools.h"
 
-//#include <cmath>
 #include "tools/serializer.h"
 #include "vendor/gason/gason.h"
 

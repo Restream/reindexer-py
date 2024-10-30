@@ -99,6 +99,7 @@ def query_example(db, namespace):
     (query.where('fld1', CondType.CondSet, ['s','t','o','p'])
         .op_not()
         .where('fld2', CondType.CondSet, [3.14])
+        .where_query(db.new_query(namespace), CondType.CondSet, ['to','check'])
         .explain()
         .fetch_count(10))
     query.expression("fld1", "array_remove(integer_array, [5,6,7,8]) || [1,2,3]").drop("fld2")

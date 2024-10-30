@@ -14,30 +14,35 @@
 
 namespace pyreindexer {
 
+// common
 static PyObject* Init(PyObject* self, PyObject* args);
 static PyObject* Destroy(PyObject* self, PyObject* args);
 static PyObject* Connect(PyObject* self, PyObject* args);
+static PyObject* Select(PyObject* self, PyObject* args);
+// namespace
 static PyObject* NamespaceOpen(PyObject* self, PyObject* args);
 static PyObject* NamespaceClose(PyObject* self, PyObject* args);
 static PyObject* NamespaceDrop(PyObject* self, PyObject* args);
+static PyObject* EnumNamespaces(PyObject* self, PyObject* args);
+// index
 static PyObject* IndexAdd(PyObject* self, PyObject* args);
 static PyObject* IndexUpdate(PyObject* self, PyObject* args);
 static PyObject* IndexDrop(PyObject* self, PyObject* args);
+// item
 static PyObject* ItemInsert(PyObject* self, PyObject* args);
 static PyObject* ItemUpdate(PyObject* self, PyObject* args);
 static PyObject* ItemUpsert(PyObject* self, PyObject* args);
 static PyObject* ItemDelete(PyObject* self, PyObject* args);
+// meta
 static PyObject* PutMeta(PyObject* self, PyObject* args);
 static PyObject* GetMeta(PyObject* self, PyObject* args);
 static PyObject* DeleteMeta(PyObject* self, PyObject* args);
-static PyObject* Select(PyObject* self, PyObject* args);
 static PyObject* EnumMeta(PyObject* self, PyObject* args);
-static PyObject* EnumNamespaces(PyObject* self, PyObject* args);
-
+// query results
 static PyObject* QueryResultsWrapperIterate(PyObject* self, PyObject* args);
 static PyObject* QueryResultsWrapperDelete(PyObject* self, PyObject* args);
 static PyObject* GetAggregationResults(PyObject* self, PyObject* args);
-
+// transaction (sync)
 static PyObject* NewTransaction(PyObject* self, PyObject* args);
 static PyObject* ItemInsertTransaction(PyObject* self, PyObject* args);
 static PyObject* ItemUpdateTransaction(PyObject* self, PyObject* args);
@@ -45,15 +50,16 @@ static PyObject* ItemUpsertTransaction(PyObject* self, PyObject* args);
 static PyObject* ItemDeleteTransaction(PyObject* self, PyObject* args);
 static PyObject* CommitTransaction(PyObject* self, PyObject* args);
 static PyObject* RollbackTransaction(PyObject* self, PyObject* args);
-
+// query
 static PyObject* CreateQuery(PyObject* self, PyObject* args);
 static PyObject* DeleteQuery(PyObject* self, PyObject* args);
-
+static PyObject* Where(PyObject* self, PyObject* args);
+static PyObject* WhereQuery(PyObject* self, PyObject* args);
+static PyObject* WhereComposite(PyObject* self, PyObject* args);
+static PyObject* WhereUUID(PyObject* self, PyObject* args);
 static PyObject* WhereBetweenFields(PyObject* self, PyObject* args);
 static PyObject* OpenBracket(PyObject* self, PyObject* args);
 static PyObject* CloseBracket(PyObject* self, PyObject* args);
-static PyObject* Where(PyObject* self, PyObject* args);
-static PyObject* WhereUUID(PyObject* self, PyObject* args);
 static PyObject* And(PyObject* self, PyObject* args);
 static PyObject* Or(PyObject* self, PyObject* args);
 static PyObject* Not(PyObject* self, PyObject* args);
@@ -79,22 +85,26 @@ static PyMethodDef module_methods[] = {
 	{"init", Init, METH_NOARGS, "init reindexer instance"},
 	{"destroy", Destroy, METH_VARARGS, "destroy reindexer instance"},
 	{"connect", Connect, METH_VARARGS, "connect to reindexer database"},
+	{"select", Select, METH_VARARGS, "select query"},
+	// namespace
 	{"namespace_open", NamespaceOpen, METH_VARARGS, "open namespace"},
 	{"namespace_close", NamespaceClose, METH_VARARGS, "close namespace"},
 	{"namespace_drop", NamespaceDrop, METH_VARARGS, "drop namespace"},
 	{"namespaces_enum", EnumNamespaces, METH_VARARGS, "enum namespaces"},
+	// index
 	{"index_add", IndexAdd, METH_VARARGS, "add index"},
 	{"index_update", IndexUpdate, METH_VARARGS, "update index"},
 	{"index_drop", IndexDrop, METH_VARARGS, "drop index"},
+	// item
 	{"item_insert", ItemInsert, METH_VARARGS, "insert item"},
 	{"item_update", ItemUpdate, METH_VARARGS, "update item"},
 	{"item_upsert", ItemUpsert, METH_VARARGS, "upsert item"},
 	{"item_delete", ItemDelete, METH_VARARGS, "delete item"},
+	// meta
 	{"meta_put", PutMeta, METH_VARARGS, "put meta"},
 	{"meta_get", GetMeta, METH_VARARGS, "get meta"},
 	{"meta_delete", DeleteMeta, METH_VARARGS, "delete meta"},
 	{"meta_enum", EnumMeta, METH_VARARGS, "enum meta"},
-	{"select", Select, METH_VARARGS, "select query"},
 	// query results
 	{"query_results_iterate", QueryResultsWrapperIterate, METH_VARARGS, "get query result"},
 	{"query_results_delete", QueryResultsWrapperDelete, METH_VARARGS, "free query results buffer"},
@@ -110,13 +120,13 @@ static PyMethodDef module_methods[] = {
 	// query
 	{"create_query", CreateQuery, METH_VARARGS, "create new query"},
 	{"delete_query", DeleteQuery, METH_VARARGS, "delete query. Free query object memory"},
-	//{"where", Where, METH_VARARGS, "add where condition"},
-	//{"where_query", WhereQuery, METH_VARARGS, "add where condition"},
+	{"where", Where, METH_VARARGS, "add where condition with args"},
+	{"where_query", WhereQuery, METH_VARARGS, "add sub-query where condition"},
+	{"where_composite", WhereComposite, METH_VARARGS, "add where condition for composite indexes"},
+	{"where_uuid", WhereUUID, METH_VARARGS, "add where condition with UUIDs"},
 	{"where_between_fields", WhereBetweenFields, METH_VARARGS, "add comparing two fields where condition"},
 	{"open_bracket", OpenBracket, METH_VARARGS, "open bracket for where condition"},
 	{"close_bracket", CloseBracket, METH_VARARGS, "close bracket for where condition"},
-	{"where", Where, METH_VARARGS, "add where condition with args"},
-	{"where_uuid", WhereUUID, METH_VARARGS, "add where condition with UUIDs"},
 	{"op_and", And, METH_VARARGS, "next condition will be added with AND AND"},
 	{"op_or", Or, METH_VARARGS, "next condition will be added with OR AND"},
 	{"op_not", Not, METH_VARARGS, "next condition will be added with NOT AND"},

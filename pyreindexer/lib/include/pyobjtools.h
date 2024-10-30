@@ -2,9 +2,7 @@
 
 #include <Python.h>
 #include <vector>
-//#include "estl/span.h"
 #include "core/keyvalue/variant.h"
-//#include "tools/serializer.h"
 
 namespace pyreindexer {
 

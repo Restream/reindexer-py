@@ -57,6 +57,17 @@ namespace {
 		return errOK;
 	}
 
+	void QueryWrapper::WhereComposite(std::string_view index, CondType condition, QueryWrapper& query) {
+		ser_.PutVarUint(QueryItemType::QueryFieldSubQueryCondition);
+		ser_.PutVarUint(nextOperation_);
+		ser_.PutVString(index);
+		ser_.PutVarUint(condition);
+		ser_.PutVString(query.ser_.Slice());
+
+		nextOperation_ = OpType::OpAnd;
+		++queriesCount_;
+	}
+
 	void QueryWrapper::WhereUUID(std::string_view index, CondType condition, const std::vector<std::string>& keys) {
 		ser_.PutVarUint(QueryItemType::QueryCondition);
 		ser_.PutVString(index);

@@ -45,7 +45,22 @@ public:
 		nextOperation_ = OpType::OpAnd;
 		++queriesCount_;
 	}
+	template <typename T>
+	void WhereQuery(QueryWrapper& query, CondType condition, const std::vector<T>& keys) {
+		ser_.PutVarUint(QueryItemType::QuerySubQueryCondition);
+		ser_.PutVarUint(nextOperation_);
+		ser_.PutVString(query.ser_.Slice());
+		ser_.PutVarUint(condition);
 
+		ser_.PutVarUint(keys.size());
+		for (const auto& key : keys) {
+			putValue(key);
+		}
+
+		nextOperation_ = OpType::OpAnd;
+		++queriesCount_;
+	}
+	void WhereComposite(std::string_view index, CondType condition, QueryWrapper& query);
 	void WhereUUID(std::string_view index, CondType condition, const std::vector<std::string>& keys);
 
 	void LogOp(OpType op);
@@ -73,7 +88,6 @@ public:
 	void FetchCount(int count);
 
 	void AddFunctions(const std::vector<std::string>& functions);
-
 	void AddEqualPosition(const std::vector<std::string>& equalPositions);
 
 private:
