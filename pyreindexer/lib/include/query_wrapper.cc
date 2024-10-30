@@ -242,9 +242,19 @@ namespace {
 		ser_.PutVString(value);
 	}
 	template <>
+	void QueryWrapper::putValue(const std::string& value) {
+		ser_.PutVarUint(VALUE_STRING);
+		ser_.PutVString(value);
+	}
+	template <>
 	void QueryWrapper::putValue(bool value) {
 		ser_.PutVarUint(VALUE_BOOL);
 		ser_.PutBool(value);
+	}
+	template <>
+	void QueryWrapper::putValue(float value) {
+		ser_.PutVarUint(VALUE_DOUBLE);
+		ser_.PutDouble(value);
 	}
 	template <>
 	void QueryWrapper::putValue(double value) {

@@ -115,48 +115,6 @@ std::vector<std::string> ParseListToStrVec(PyObject** list) {
 	return result;
 }
 
-std::vector<bool> ParseListToBoolVec(PyObject** list) {
-	std::vector<bool> result;
-
-	Py_ssize_t sz = PyList_Size(*list);
-	result.reserve(sz);
-	for (Py_ssize_t i = 0; i < sz; i++) {
-		PyObject* item = PyList_GetItem(*list, i);
-
-		if (!PyBool_Check(item)) {
-			throw reindexer::Error(errParseJson, std::string("Bool expected, got ") + Py_TYPE(item)->tp_name);
-		}
-
-		result.push_back(PyLong_AsLong(item) != 0);
-	}
-
-	return result;
-}
-
-std::vector<double> ParseListToDoubleVec(PyObject** list) {
-	std::vector<double> result;
-
-	Py_ssize_t sz = PyList_Size(*list);
-	result.reserve(sz);
-	for (Py_ssize_t i = 0; i < sz; i++) {
-		PyObject* item = PyList_GetItem(*list, i);
-
-		if (!PyFloat_Check(item)) {
-			throw reindexer::Error(errParseJson, std::string("Double expected, got ") + Py_TYPE(item)->tp_name);
-		}
-
-		double v = PyFloat_AsDouble(item);
-		double intpart = 0.0;
-		if (std::modf(v, &intpart) == 0.0) {
-			result.push_back(int64_t(v));
-		} else {
-			result.push_back(v);
-		}
-	}
-
-	return result;
-}
-
 reindexer::Variant convert(PyObject** value) {
 	if (PyFloat_Check(*value)) {
 		double v = PyFloat_AsDouble(*value);

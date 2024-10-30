@@ -53,13 +53,7 @@ static PyObject* WhereBetweenFields(PyObject* self, PyObject* args);
 static PyObject* OpenBracket(PyObject* self, PyObject* args);
 static PyObject* CloseBracket(PyObject* self, PyObject* args);
 static PyObject* Where(PyObject* self, PyObject* args);
-static PyObject* WhereInt(PyObject* self, PyObject* args);
-static PyObject* WhereInt32(PyObject* self, PyObject* args);
-static PyObject* WhereInt64(PyObject* self, PyObject* args);
-static PyObject* WhereString(PyObject* self, PyObject* args);
 static PyObject* WhereUUID(PyObject* self, PyObject* args);
-static PyObject* WhereBool(PyObject* self, PyObject* args);
-static PyObject* WhereDouble(PyObject* self, PyObject* args);
 static PyObject* And(PyObject* self, PyObject* args);
 static PyObject* Or(PyObject* self, PyObject* args);
 static PyObject* Not(PyObject* self, PyObject* args);
@@ -122,13 +116,7 @@ static PyMethodDef module_methods[] = {
 	{"open_bracket", OpenBracket, METH_VARARGS, "open bracket for where condition"},
 	{"close_bracket", CloseBracket, METH_VARARGS, "close bracket for where condition"},
 	{"where", Where, METH_VARARGS, "add where condition with args"},
-	{"where_int", WhereInt, METH_VARARGS, "add where condition with int args"},
-	{"where_int32", WhereInt32, METH_VARARGS, "add where condition with int32 args"},
-	{"where_int64", WhereInt64, METH_VARARGS, "add where condition with int64 args"},
-	{"where_string", WhereString, METH_VARARGS, "add where condition with strings"},
 	{"where_uuid", WhereUUID, METH_VARARGS, "add where condition with UUIDs"},
-	{"where_bool", WhereBool, METH_VARARGS, "add where condition with bool args"},
-	{"where_float32", WhereDouble, METH_VARARGS, "add where condition with double args"},
 	{"op_and", And, METH_VARARGS, "next condition will be added with AND AND"},
 	{"op_or", Or, METH_VARARGS, "next condition will be added with OR AND"},
 	{"op_not", Not, METH_VARARGS, "next condition will be added with NOT AND"},
