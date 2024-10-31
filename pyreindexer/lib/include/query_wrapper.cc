@@ -113,11 +113,26 @@ void QueryWrapper::DWithin(std::string_view index, double x, double y, double di
 	++queriesCount_;
 }
 
+void QueryWrapper::AggregationSort(std::string_view field, bool desc) {
+	ser_.PutVarUint(QueryItemType::QueryAggregationSort);
+	ser_.PutVString(field);
+	ser_.PutVarUint(desc? 1 : 0);
+}
+
 void QueryWrapper::Aggregate(std::string_view index, AggType type) {
 	ser_.PutVarUint(QueryItemType::QueryAggregation);
 	ser_.PutVarUint(type);
 	ser_.PutVarUint(1);
 	ser_.PutVString(index);
+}
+
+void QueryWrapper::Aggregation(const std::vector<std::string>& fields) {
+	ser_.PutVarUint(QueryItemType::QueryAggregation);
+	ser_.PutVarUint(AggType::AggFacet);
+	ser_.PutVarUint(fields.size());
+	for (const auto& field : fields) {
+		ser_.PutVString(field);
+	}
 }
 
 void QueryWrapper::LogOp(OpType op) {
@@ -140,19 +155,9 @@ void QueryWrapper::Total(std::string_view totalName, CalcTotalMode mode) {
 	}
 }
 
-void QueryWrapper::Limit(unsigned limitItems) {
-	ser_.PutVarUint(QueryItemType::QueryLimit);
-	ser_.PutVarUint(limitItems);
-}
-
-void QueryWrapper::Offset(unsigned startOffset) {
-	ser_.PutVarUint(QueryItemType::QueryOffset);
-	ser_.PutVarUint(startOffset);
-}
-
-void QueryWrapper::Debug(unsigned level) {
-	ser_.PutVarUint(QueryItemType::QueryDebugLevel);
-	ser_.PutVarUint(level);
+void QueryWrapper::AddValue(QueryItemType type, unsigned value) {
+	ser_.PutVarUint(type);
+	ser_.PutVarUint(value);
 }
 
 void QueryWrapper::Strict(StrictMode mode) {
@@ -292,7 +297,6 @@ void QueryWrapper::putValue(double value) {
 }
 template <>
 void QueryWrapper::putValue(const reindexer::Variant& value) {
-	ser_.PutVarUint(VALUE_INT);
 	ser_.PutVariant(value);
 }
 

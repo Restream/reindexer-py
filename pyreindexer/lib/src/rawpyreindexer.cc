@@ -669,7 +669,7 @@ static PyObject* Where(PyObject* self, PyObject* args) {
 }
 
 static PyObject* WhereQuery(PyObject* self, PyObject* args) {
-    uintptr_t queryWrapperAddr = 0;
+	uintptr_t queryWrapperAddr = 0;
 	uintptr_t subQueryWrapperAddr = 0;
 	unsigned condition = 0;
 	PyObject* keysList = nullptr;  	// borrowed ref after ParseTuple if passed
@@ -817,6 +817,68 @@ static PyObject* AggregateAvg(PyObject* self, PyObject* args) { return aggregate
 static PyObject* AggregateMin(PyObject* self, PyObject* args) { return aggregate(self, args, AggType::AggMin); }
 static PyObject* AggregateMax(PyObject* self, PyObject* args) { return aggregate(self, args, AggType::AggMax); }
 
+namespace {
+static PyObject* addValue(PyObject* self, PyObject* args, QueryItemType type) {
+	uintptr_t queryWrapperAddr = 0;
+	int value = 0;
+	if (!PyArg_ParseTuple(args, "ki", &queryWrapperAddr, &value)) {
+		return nullptr;
+	}
+
+	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
+
+	query->AddValue(type, value);
+
+	Py_RETURN_NONE;
+}
+} // namespace
+static PyObject* AggregationLimit(PyObject* self, PyObject* args) { return addValue(self, args, QueryItemType::QueryAggregationLimit); }
+static PyObject* AggregationOffset(PyObject* self, PyObject* args) { return addValue(self, args, QueryItemType::QueryAggregationOffset); }
+
+static PyObject* AggregationSort(PyObject* self, PyObject* args) {
+	uintptr_t queryWrapperAddr = 0;
+	char* field = nullptr;
+	unsigned desc = 0;
+	if (!PyArg_ParseTuple(args, "ksI", &queryWrapperAddr, &field, &desc)) {
+		return nullptr;
+	}
+
+	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
+
+	query->AggregationSort(field, (desc != 0));
+
+	return pyErr(errOK);
+}
+
+static PyObject* Aggregation(PyObject* self, PyObject* args) {
+	uintptr_t queryWrapperAddr = 0;
+	PyObject* fieldsList = nullptr;  	// borrowed ref after ParseTuple if passed
+	if (!PyArg_ParseTuple(args, "kO!", &queryWrapperAddr, &PyList_Type, &fieldsList)) {
+		return nullptr;
+	}
+
+	Py_XINCREF(fieldsList);
+
+	std::vector<std::string> fields;
+	if (fieldsList != nullptr) {
+		try {
+			fields = ParseListToStrVec(&fieldsList);
+		} catch (const Error& err) {
+			Py_DECREF(fieldsList);
+
+			return pyErr(err);
+		}
+	}
+
+	Py_XDECREF(fieldsList);
+
+	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
+
+	query->Aggregation(fields);
+
+	return pyErr(errOK);
+}
+
 static PyObject* Sort(PyObject* self, PyObject* args) {
 	uintptr_t queryWrapperAddr = 0;
 	char* index = nullptr;
@@ -884,47 +946,9 @@ static PyObject* total(PyObject* self, PyObject* args, CalcTotalMode mode) {
 static PyObject* ReqTotal(PyObject* self, PyObject* args) { return total(self, args, CalcTotalMode::ModeAccurateTotal); }
 static PyObject* CachedTotal(PyObject* self, PyObject* args) { return total(self, args, CalcTotalMode::ModeCachedTotal); }
 
-static PyObject* Limit(PyObject* self, PyObject* args) {
-	uintptr_t queryWrapperAddr = 0;
-	int limitItems = 0;
-	if (!PyArg_ParseTuple(args, "ki", &queryWrapperAddr, &limitItems)) {
-		return nullptr;
-	}
-
-	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
-
-	query->Limit(limitItems);
-
-	Py_RETURN_NONE;
-}
-
-static PyObject* Offset(PyObject* self, PyObject* args) {
-	uintptr_t queryWrapperAddr = 0;
-	int startOffset = 0;
-	if (!PyArg_ParseTuple(args, "ki", &queryWrapperAddr, &startOffset)) {
-		return nullptr;
-	}
-
-	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
-
-	query->Offset(startOffset);
-
-	Py_RETURN_NONE;
-}
-
-static PyObject* Debug(PyObject* self, PyObject* args) {
-	uintptr_t queryWrapperAddr = 0;
-	int level = 0;
-	if (!PyArg_ParseTuple(args, "ki", &queryWrapperAddr, &level)) {
-		return nullptr;
-	}
-
-	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
-
-	query->Debug(level);
-
-	Py_RETURN_NONE;
-}
+static PyObject* Limit(PyObject* self, PyObject* args) { return addValue(self, args, QueryItemType::QueryLimit); }
+static PyObject* Offset(PyObject* self, PyObject* args) { return addValue(self, args, QueryItemType::QueryOffset); }
+static PyObject* Debug(PyObject* self, PyObject* args) { return addValue(self, args, QueryItemType::QueryDebugLevel); }
 
 static PyObject* Strict(PyObject* self, PyObject* args) {
 	uintptr_t queryWrapperAddr = 0;

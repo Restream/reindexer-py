@@ -66,6 +66,8 @@ public:
 	void DWithin(std::string_view index, double x, double y, double distance);
 
 	void Aggregate(std::string_view index, AggType type);
+	void Aggregation(const std::vector<std::string>& fields);
+	void AggregationSort(std::string_view field, bool desc);
 
 	template <typename T>
 	void Sort(std::string_view index, bool desc, const std::vector<T>& keys) {
@@ -83,9 +85,8 @@ public:
 
 	void Total(std::string_view totalName, CalcTotalMode mode);
 
-	void Limit(unsigned limitItems);
-	void Offset(unsigned startOffset);
-	void Debug(unsigned level);
+	void AddValue(QueryItemType type, unsigned value);
+
 	void Strict(StrictMode mode);
 
 	void Modifier(QueryItemType type);

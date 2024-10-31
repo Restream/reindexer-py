@@ -44,9 +44,9 @@ class Query(object):
         """
 
         self.api = api
-        self.query_wrapper_ptr = query_wrapper_ptr
-        self.err_code = 0
-        self.err_msg = ""
+        self.query_wrapper_ptr: int = query_wrapper_ptr
+        self.err_code: int = 0
+        self.err_msg: str = ''
 
     def __del__(self):
         """Free query memory
@@ -67,13 +67,30 @@ class Query(object):
         if self.err_code:
             raise Exception(self.err_msg)
 
-    def where(self, index: str, condition: CondType, keys: List[Union[int,bool,float,str]] = None) -> Query:
+    @staticmethod
+    def _convert_to_list(param: Union[int, bool, float, str, List[Union[int, bool, float, str]]]) -> List[Union[int,bool,float,str]]:
+        """Convert an input parameter to a list
+
+        # Arguments:
+            param (Union[None, int, bool, float, str, List[Union[int, bool, float, str]]]): The input parameter
+
+        # Returns:
+            List[Union[int, bool, float, str]]: Always converted to a list
+
+        """
+
+        param_copy = param.copy() if param is not None else []
+        param_copy = param_copy if not isinstance(param_copy, list) else [param_copy]
+        return param_copy
+
+    def where(self, index: str, condition: CondType, keys: Union[int, bool, float, str, List[Union[int, bool, float, str]]] = None) -> Query:
         """Add where condition to DB query with int args
 
         # Arguments:
             index (string): Field name used in condition clause
             condition (:enum:`CondType`): Type of condition
-            keys (list[Union[int,bool,float,str]]): Value of index to be compared with. For composite indexes keys must be list, with value of each subindex
+            keys (Union[None, int, bool, float, str, list[Union[int, bool, float, str]]]):
+                Value of index to be compared with. For composite indexes keys must be list, with value of each subindex
 
         # Returns:
             (:obj:`Query`): Query object for further customizations
@@ -83,18 +100,20 @@ class Query(object):
 
         """
 
-        keys = keys or []
-        self.err_code, self.err_msg = self.api.where(self.query_wrapper_ptr, index, condition.value, keys)
+        params: list = self._convert_to_list(keys)
+
+        self.err_code, self.err_msg = self.api.where(self.query_wrapper_ptr, index, condition.value, params)
         self._raise_on_error()
         return self
 
-    def where_query(self, sub_query: Query, condition: CondType, keys: List[Union[int,bool,float,str]] = None) -> Query:
+    def where_query(self, sub_query: Query, condition: CondType, keys: Union[int, bool, float, str, List[Union[int, bool, float, str]]] = None) -> Query:
         """Add sub query where condition to DB query with int args
 
         # Arguments:
             sub_query (:obj:`Query`): Field name used in condition clause
             condition (:enum:`CondType`): Type of condition
-            keys (list[Union[int,bool,float,str]]): Value of index to be compared with. For composite indexes keys must be list, with value of each subindex
+            keys (Union[None, int, bool, float, str, List[Union[int, bool, float, str]]]):
+                Value of index to be compared with. For composite indexes keys must be list, with value of each subindex
 
         # Returns:
             (:obj:`Query`): Query object for further customizations
@@ -104,8 +123,9 @@ class Query(object):
 
         """
 
-        keys = keys or []
-        self.err_code, self.err_msg = self.api.where_query(self.query_wrapper_ptr, sub_query.query_wrapper_ptr, condition.value, keys)
+        params: list = self._convert_to_list(keys)
+
+        self.err_code, self.err_msg = self.api.where_query(self.query_wrapper_ptr, sub_query.query_wrapper_ptr, condition.value, params)
         self._raise_on_error()
         return self
 
@@ -299,26 +319,96 @@ class Query(object):
         self.api.aggregate_max(self.query_wrapper_ptr, index)
         return self
 
-################################################################ ToDo
-#type AggregateFacetRequest struct {
-#    query *Query
-#}
-#// fields should not be empty.
-#func (q *Query) AggregateFacet(fields ...string) *AggregateFacetRequest {
-#func (r *AggregateFacetRequest) Limit(limit int) *AggregateFacetRequest {
-#func (r *AggregateFacetRequest) Offset(offset int) *AggregateFacetRequest {
-#func (r *AggregateFacetRequest) Sort(field string, desc bool) *AggregateFacetRequest {
-################################################################
+    class _AggregateFacet(object) :
+        """An object representing the context of a Reindexer aggregate facet
 
-    def sort(self, index: str, desc: bool, keys: List[Union[int,bool,float,str]] = None) -> Query:
+        # Attributes:
+            api (module): An API module for Reindexer calls
+            query_wrapper_ptr (int): A memory pointer to Reindexer query object
+
+        """
+
+        def __init__(self, query: Query):
+            """Constructs a new Reindexer AggregateFacetRequest object
+
+            # Arguments:
+                api (module): An API module for Reindexer calls
+                query_wrapper_ptr (int): A memory pointer to Reindexer query object
+
+            """
+
+            self.api = query.api
+            self.query_wrapper_ptr = query.query_wrapper_ptr
+
+        def limit(self, limit: int) -> Query._AggregateFacet:
+            """Limit facet aggregation results
+
+            # Arguments:
+                limit (int): Limit of aggregation of facet
+
+            # Returns:
+                (:obj:`_AggregateFacet`): Facet object for further customizations
+
+            """
+
+            self.api.aggregation_limit(self.query_wrapper_ptr, limit)
+            return self
+
+        def offset(self, offset: int) -> Query._AggregateFacet:
+            """Set offset of the facet aggregation results
+
+            # Arguments:
+                limit (int): Offset in facet aggregation results
+
+            # Returns:
+                (:obj:`_AggregateFacet`): Facet object for further customizations
+
+            """
+
+            self.api.aggregation_offset(self.query_wrapper_ptr, offset)
+            return self
+
+        def sort(self, field: str, desc: bool) -> Query._AggregateFacet:
+            """Sort facets by field value
+
+            # Arguments:
+                field (str): Item field. Use field 'count' to sort by facet's count value
+                desc (bool): Sort in descending order
+
+            # Returns:
+                (:obj:`_AggregateFacet`): Facet object for further customizations
+
+            """
+
+            self.api.aggregation_sort(self.query_wrapper_ptr, field, desc)
+            return self
+
+    def aggregate_facet(self, fields: List[str]) -> Query._AggregateFacet:
+        """Get fields facet value. Applicable to multiple data fields and the result of that could be sorted by any data
+            column or 'count' and cut off by offset and limit. In order to support this functionality this method
+            returns AggregationFacetRequest which has methods sort, limit and offset
+
+        # Arguments:
+            fields (list[string]): Fields any data column name or 'count', fields should not be empty
+
+        # Returns:
+            (:obj:`_AggregateFacet`): Request object for further customizations
+
+        """
+
+        self.err_code, self.err_msg = self.api.aggregation(self.query_wrapper_ptr, fields)
+        self._raise_on_error()
+        return self._AggregateFacet(self)
+
+    def sort(self, index: str, desc: bool, keys: Union[int, bool, float, str, List[Union[int, bool, float, str]]] = None) -> Query:
         """Apply sort order to return from query items. If values argument specified, then items equal to values,
             if found will be placed in the top positions. Forced sort is support for the first sorting field only
 
         # Arguments:
             index (string): The index name
-            desc (bool): True if sorting in descending order
-            keys (list[Union[int,bool,float,str]]): Value of index to match. For composite indexes keys must be list, with value of each subindex
-            # ToDo List[List[Union[int,bool,float,str]]]
+            desc (bool): Sort in descending order
+            keys (Union[None, int, bool, float, str, List[Union[int, bool, float, str]]]):
+                Value of index to match. For composite indexes keys must be list, with value of each subindex
 
         # Returns:
             (:obj:`Query`): Query object for further customizations
@@ -328,8 +418,9 @@ class Query(object):
 
         """
 
-        keys = keys or []
-        self.err_code, self.err_msg = self.api.sort(self.query_wrapper_ptr, index, desc, keys)
+        params: list = self._convert_to_list(keys)
+
+        self.err_code, self.err_msg = self.api.sort(self.query_wrapper_ptr, index, desc, params)
         self._raise_on_error()
         return self
 
@@ -340,7 +431,7 @@ class Query(object):
         # Arguments:
             index (string): The index name
             point (:obj:`Point`): Point object used in sorting operation
-            desc (bool): True if sorting in descending order
+            desc (bool): Sort in descending order
 
         # Returns:
             (:obj:`Query`): Query object for further customizations
@@ -361,7 +452,7 @@ class Query(object):
         # Arguments:
             first_field (string): First field name used in condition
             second_field (string): Second field name used in condition
-            desc (bool): Descending flag
+            desc (bool): Sort in descending order
 
         # Returns:
             (:obj:`Query`): Query object for further customizations
@@ -661,4 +752,4 @@ class Query(object):
         self._raise_on_error()
         return self
 
-# ToDo 66/35
+# ToDo 66/39

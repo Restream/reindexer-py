@@ -1,5 +1,5 @@
 from pyreindexer import RxConnector
-from pyreindexer.query import CondType
+from pyreindexer.query import CondType, StrictMode
 
 
 def create_index_example(db, namespace):
@@ -102,9 +102,11 @@ def query_example(db, namespace):
         .where_query(db.new_query(namespace), CondType.CondSet, ['to','check'])
         .explain()
         .fetch_count(10))
-    query.expression('fld1', 'array_remove(integer_array, [5,6,7,8]) || [1,2,3]').drop('fld2')
+    query.expression('fld1', 'array_remove(integer_array, [5,6,7,8]) || [1,2,3]').drop('fld2').strict(StrictMode.Names)
 
     db.new_query(namespace).sort_stfield_distance('fldGeom1', 'fldGeom2', False)
+
+    db.new_query(namespace).aggregate_facet(['fld1', 'fld2']).limit(100)
 
 
 def rx_example():
