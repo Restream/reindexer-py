@@ -67,7 +67,7 @@ class Query(object):
         if self.err_code:
             raise Exception(self.err_msg)
 
-    def where(self, index: str, condition: CondType, keys: List[Union[int,bool,float,str]] = ()) -> Query:
+    def where(self, index: str, condition: CondType, keys: List[Union[int,bool,float,str]] = None) -> Query:
         """Add where condition to DB query with int args
 
         # Arguments:
@@ -83,11 +83,12 @@ class Query(object):
 
         """
 
+        keys = keys or []
         self.err_code, self.err_msg = self.api.where(self.query_wrapper_ptr, index, condition.value, keys)
         self._raise_on_error()
         return self
 
-    def where_query(self, sub_query: Query, condition: CondType, keys: List[Union[int,bool,float,str]] = ()) -> Query:
+    def where_query(self, sub_query: Query, condition: CondType, keys: List[Union[int,bool,float,str]] = None) -> Query:
         """Add sub query where condition to DB query with int args
 
         # Arguments:
@@ -103,6 +104,7 @@ class Query(object):
 
         """
 
+        keys = keys or []
         self.err_code, self.err_msg = self.api.where_query(self.query_wrapper_ptr, sub_query.query_wrapper_ptr, condition.value, keys)
         self._raise_on_error()
         return self
@@ -306,35 +308,72 @@ class Query(object):
 #func (r *AggregateFacetRequest) Limit(limit int) *AggregateFacetRequest {
 #func (r *AggregateFacetRequest) Offset(offset int) *AggregateFacetRequest {
 #func (r *AggregateFacetRequest) Sort(field string, desc bool) *AggregateFacetRequest {
-#func (q *Query) Sort(sortIndex string, desc bool, values ...interface{}) *Query {
-#func (q *Query) SortStPointDistance(field string, p Point, desc bool) *Query {
 ################################################################
 
-#func (q *Query) SortStFieldDistance(field1 string, field2 string, desc bool) *Query { // ToDo
-#    def sort_stfield_distance(self, first_field: str, second_field: str, desc: bool) -> Query:
-#        """Wrapper for geometry sorting by shortest distance between 2 geometry fields (ST_Distance)
+    def sort(self, index: str, desc: bool, keys: List[Union[int,bool,float,str]] = None) -> Query:
+        """Apply sort order to return from query items. If values argument specified, then items equal to values,
+            if found will be placed in the top positions. Forced sort is support for the first sorting field only
 
-#        # Arguments:
-#            first_field (string): First field name used in condition
-#            second_field (string): Second field name used in condition
-#            desc (bool): Descending flag
+        # Arguments:
+            index (string): The index name
+            desc (bool): True if sorting in descending order
+            keys (list[Union[int,bool,float,str]]): Value of index to match. For composite indexes keys must be list, with value of each subindex
+            # ToDo List[List[Union[int,bool,float,str]]]
 
-#        # Returns:
-#            (:obj:`Query`): Query object for further customizations
+        # Returns:
+            (:obj:`Query`): Query object for further customizations
 
-#        # Raises:
-#            Exception: Raises with an error message of API return on non-zero error code
+        # Raises:
+            Exception: Raises with an error message of API return on non-zero error code
 
-#        """
+        """
 
-#        request : str = "ST_Distance("
-#        request += first_field
-#        request += ','
-#        request += second_field
-#        request += ')'
+        keys = keys or []
+        self.err_code, self.err_msg = self.api.sort(self.query_wrapper_ptr, index, desc, keys)
+        self._raise_on_error()
+        return self
 
-#        return self.sort(request, desc)
-################################################################
+    def sort_stpoint_distance(self, index: str, point: Point, desc: bool) -> Query:
+        """Apply geometry sort order to return from query items. Wrapper for geometry sorting by shortest distance
+            between geometry field and point (ST_Distance)
+
+        # Arguments:
+            index (string): The index name
+            point (:obj:`Point`): Point object used in sorting operation
+            desc (bool): True if sorting in descending order
+
+        # Returns:
+            (:obj:`Query`): Query object for further customizations
+
+        """
+
+        request : str = "ST_Distance(" + index
+        request += ",ST_GeomFromText('point("
+        request += "{:.10f}".format(point.x) + " " + "{:.10f}".format(point.y)
+        request += ")'))"
+
+        return self.sort(request, desc)
+
+    def sort_stfield_distance(self, first_field: str, second_field: str, desc: bool) -> Query:
+        """Apply geometry sort order to return from query items. Wrapper for geometry sorting by shortest distance
+            between 2 geometry fields (ST_Distance)
+
+        # Arguments:
+            first_field (string): First field name used in condition
+            second_field (string): Second field name used in condition
+            desc (bool): Descending flag
+
+        # Returns:
+            (:obj:`Query`): Query object for further customizations
+
+        # Raises:
+            Exception: Raises with an error message of API return on non-zero error code
+
+        """
+
+        request : str = 'ST_Distance(' + first_field + ',' + second_field + ')'
+
+        return self.sort(request, desc)
 
     def op_and(self) -> Query:
         """Next condition will be added with AND.
@@ -622,4 +661,4 @@ class Query(object):
         self._raise_on_error()
         return self
 
-# ToDo 66/33
+# ToDo 66/35

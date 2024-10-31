@@ -817,6 +817,37 @@ static PyObject* AggregateAvg(PyObject* self, PyObject* args) { return aggregate
 static PyObject* AggregateMin(PyObject* self, PyObject* args) { return aggregate(self, args, AggType::AggMin); }
 static PyObject* AggregateMax(PyObject* self, PyObject* args) { return aggregate(self, args, AggType::AggMax); }
 
+static PyObject* Sort(PyObject* self, PyObject* args) {
+	uintptr_t queryWrapperAddr = 0;
+	char* index = nullptr;
+	unsigned desc = 0;
+	PyObject* keysList = nullptr;  	// borrowed ref after ParseTuple if passed
+	if (!PyArg_ParseTuple(args, "ksIO!", &queryWrapperAddr, &index, &desc, &PyList_Type, &keysList)) {
+		return nullptr;
+	}
+
+	Py_XINCREF(keysList);
+
+	std::vector<reindexer::Variant> keys;
+	if (keysList != nullptr) {
+		try {
+			keys = ParseListToVec(&keysList);
+		} catch (const Error& err) {
+			Py_DECREF(keysList);
+
+			return pyErr(err);
+		}
+	}
+
+	Py_XDECREF(keysList);
+
+	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
+
+	query->Sort(index, (desc != 0), keys);
+
+	return pyErr(errOK);
+}
+
 namespace {
 PyObject* logOp(PyObject* self, PyObject* args, OpType opID) {
 	uintptr_t queryWrapperAddr = 0;

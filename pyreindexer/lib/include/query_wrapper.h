@@ -67,6 +67,18 @@ public:
 
 	void Aggregate(std::string_view index, AggType type);
 
+	template <typename T>
+	void Sort(std::string_view index, bool desc, const std::vector<T>& keys) {
+		ser_.PutVarUint(QueryItemType::QuerySortIndex);
+		ser_.PutVString(index);
+		ser_.PutVarUint(desc? 1 : 0);
+
+		ser_.PutVarUint(keys.size());
+		for (const auto& key : keys) {
+			putValue(key);
+		}
+	}
+
 	void LogOp(OpType op);
 
 	void Total(std::string_view totalName, CalcTotalMode mode);

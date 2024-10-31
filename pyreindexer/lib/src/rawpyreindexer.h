@@ -66,6 +66,7 @@ static PyObject* AggregateSum(PyObject* self, PyObject* args);
 static PyObject* AggregateAvg(PyObject* self, PyObject* args);
 static PyObject* AggregateMin(PyObject* self, PyObject* args);
 static PyObject* AggregateMax(PyObject* self, PyObject* args);
+static PyObject* Sort(PyObject* self, PyObject* args);
 static PyObject* And(PyObject* self, PyObject* args);
 static PyObject* Or(PyObject* self, PyObject* args);
 static PyObject* Not(PyObject* self, PyObject* args);
@@ -138,6 +139,7 @@ static PyMethodDef module_methods[] = {
 	{"aggregate_avg", AggregateAvg, METH_VARARGS, "average field value"},
 	{"aggregate_min", AggregateMin, METH_VARARGS, "minimum field value"},
 	{"aggregate_max", AggregateMax, METH_VARARGS, "maximum field value"},
+	{"sort", Sort, METH_VARARGS, "apply sort order"},
 	{"op_and", And, METH_VARARGS, "next condition will be added with AND AND"},
 	{"op_or", Or, METH_VARARGS, "next condition will be added with OR AND"},
 	{"op_not", Not, METH_VARARGS, "next condition will be added with NOT AND"},

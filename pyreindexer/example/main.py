@@ -102,7 +102,9 @@ def query_example(db, namespace):
         .where_query(db.new_query(namespace), CondType.CondSet, ['to','check'])
         .explain()
         .fetch_count(10))
-    query.expression("fld1", "array_remove(integer_array, [5,6,7,8]) || [1,2,3]").drop("fld2")
+    query.expression('fld1', 'array_remove(integer_array, [5,6,7,8]) || [1,2,3]').drop('fld2')
+
+    db.new_query(namespace).sort_stfield_distance('fldGeom1', 'fldGeom2', False)
 
 
 def rx_example():
