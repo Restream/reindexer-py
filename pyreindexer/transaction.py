@@ -4,8 +4,8 @@ class Transaction(object):
     # Attributes:
         api (module): An API module for Reindexer calls
         transaction_wrapper_ptr (int): A memory pointer to Reindexer transaction object
-        err_code (int): the API error code
-        err_msg (string): the API error message
+        err_code (int): The API error code
+        err_msg (string): The API error message
 
     """
 

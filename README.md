@@ -20,8 +20,8 @@ __Attributes:__
 
     api (module): An API module loaded dynamically for Reindexer calls
     rx (int): A memory pointer to Reindexer instance
-    err_code (int): the API error code
-    err_msg (string): the API error message
+    err_code (int): The API error code
+    err_msg (string): The API error message
 
 
 <h3 id="pyreindexer.rx_connector.RxConnector.close">close</h3>
@@ -374,8 +374,8 @@ When the results are fetched the iterator closes and frees a memory of results b
 __Attributes:__
 
     api (module): An API module for Reindexer calls
-    err_code (int): the API error code
-    err_msg (string): the API error message
+    err_code (int): The API error code
+    err_msg (string): The API error message
     qres_wrapper_ptr (int): A memory pointer to Reindexer iterator object
     qres_iter_count (int): A count of results for iterations
     pos (int): The current result position in iterator
@@ -423,8 +423,8 @@ __Attributes:__
 
     api (module): An API module for Reindexer calls
     transaction_wrapper_ptr (int): A memory pointer to Reindexer transaction object
-    err_code (int): the API error code
-    err_msg (string): the API error message
+    err_code (int): The API error code
+    err_msg (string): The API error message
 
 
 <h3 id="pyreindexer.transaction.Transaction.commit">commit</h3>

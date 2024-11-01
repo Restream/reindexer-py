@@ -86,6 +86,7 @@ static PyObject* SetObject(PyObject* self, PyObject* args);
 static PyObject* Set(PyObject* self, PyObject* args);
 static PyObject* Drop(PyObject* self, PyObject* args);
 static PyObject* SetExpression(PyObject* self, PyObject* args);
+static PyObject* Join(PyObject* self, PyObject* args);
 static PyObject* On(PyObject* self, PyObject* args);
 static PyObject* SelectQuery(PyObject* self, PyObject* args);
 static PyObject* FetchCount(PyObject* self, PyObject* args);
@@ -165,6 +166,7 @@ static PyMethodDef module_methods[] = {
 	{"set", Set, METH_VARARGS, "add field update"},
 	{"drop", Drop, METH_VARARGS, "drop values"},
 	{"expression", SetExpression, METH_VARARGS, "set expression"},
+	{"join", Join, METH_VARARGS, "join 2 query"},
 	{"on", On, METH_VARARGS, "on specifies join condition"},
 	{"select_query", SelectQuery, METH_VARARGS, "select add filter to fields of result's objects"},
 	{"fetch_count", FetchCount, METH_VARARGS, "limit number of items"},

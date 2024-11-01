@@ -113,6 +113,8 @@ public:
 
 	void SetExpression(std::string_view field, std::string_view value);
 
+	void Join(JoinType type, unsigned joinQueryIndex);
+
 	reindexer::Error On(std::string_view joinField, CondType condition, std::string_view joinIndex);
 
 	void Select(const std::vector<std::string>& fields);

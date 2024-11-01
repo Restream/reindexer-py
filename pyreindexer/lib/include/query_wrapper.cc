@@ -183,14 +183,17 @@ void QueryWrapper::SetExpression(std::string_view field, std::string_view value)
 	ser_.PutVString(value);	// ToDo q.putValue(value);
 }
 
-reindexer::Error QueryWrapper::On(std::string_view joinField, CondType condition, std::string_view joinIndex) {
-	// ToDo
-	/*if q.closed {
-		q.panicTrace("query.On call on already closed query. You should create new Query")
+void QueryWrapper::Join(JoinType type, unsigned joinQueryIndex) {
+	if ((type == JoinType::InnerJoin) && (nextOperation_ == OpType::OpOr)) {
+		nextOperation_ = OpType::OpAnd;
+		type = JoinType::OrInnerJoin;
 	}
-	if q.root == nil {
-		panic(fmt.Errorf("Can't join on root query"))
-	}*/
+	ser_.PutVarUint(QueryJoinCondition);
+	ser_.PutVarUint(type);
+	ser_.PutVarUint(joinQueryIndex);
+}
+
+reindexer::Error QueryWrapper::On(std::string_view joinField, CondType condition, std::string_view joinIndex) {
 	ser_.PutVarUint(QueryItemType::QueryJoinOn);
 	ser_.PutVarUint(nextOperation_);
 	ser_.PutVarUint(condition);

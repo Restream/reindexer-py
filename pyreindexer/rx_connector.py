@@ -14,8 +14,8 @@ class RxConnector(RaiserMixin):
     # Attributes:
         api (module): An API module loaded dynamically for Reindexer calls
         rx (int): A memory pointer to Reindexer instance
-        err_code (int): the API error code
-        err_msg (string): the API error message
+        err_code (int): The API error code
+        err_msg (string): The API error message
 
     """
 

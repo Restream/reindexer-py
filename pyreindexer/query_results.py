@@ -4,8 +4,8 @@ class QueryResults(object):
 
     # Attributes:
         api (module): An API module for Reindexer calls
-        err_code (int): the API error code
-        err_msg (string): the API error message
+        err_code (int): The API error code
+        err_msg (string): The API error message
         qres_wrapper_ptr (int): A memory pointer to Reindexer iterator object
         qres_iter_count (int): A count of results for iterations
         pos (int): The current result position in iterator

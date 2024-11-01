@@ -23,6 +23,12 @@ class StrictMode(Enum):
     Names = 2
     Indexes = 3
 
+class JoinType(Enum):
+    LeftJoin = 0
+    InnerJoin = 1
+    OrInnerJoin = 2
+    Merge = 3
+
 simple_types = Union[int, str, bool, float]
 
 class Query(object):
@@ -31,8 +37,11 @@ class Query(object):
     # Attributes:
         api (module): An API module for Reindexer calls
         query_wrapper_ptr (int): A memory pointer to Reindexer query object
-        err_code (int): the API error code
-        err_msg (string): the API error message
+        err_code (int): The API error code
+        err_msg (string): The API error message
+        root (:object:`Query`): The root of the Reindexer query
+        # ToDo
+        merged_queries (list[:object:`Query`]): The list of merged Reindexer query objects
 
     """
 
@@ -49,6 +58,12 @@ class Query(object):
         self.query_wrapper_ptr: int = query_wrapper_ptr
         self.err_code: int = 0
         self.err_msg: str = ''
+        # ToDo
+        self.root: Query = None
+        self.join_type: JoinType = JoinType.LeftJoin
+        self.join_fields: List[str] = []
+        self.join_queries: List[Query] = []
+        self.merged_queries: List[Query] = []
 
     def __del__(self):
         """Free query memory
@@ -74,7 +89,7 @@ class Query(object):
         """Convert an input parameter to a list
 
         # Arguments:
-            param (Union[None, int, bool, float, str, List[Union[int, bool, float, str]]]): The input parameter
+            param (Union[None, simple_types, list[simple_types]]): The input parameter
 
         # Returns:
             List[Union[int, bool, float, str]]: Always converted to a list
@@ -91,7 +106,7 @@ class Query(object):
         # Arguments:
             index (string): Field name used in condition clause
             condition (:enum:`CondType`): Type of condition
-            keys (Union[None, int, bool, float, str, list[Union[int, bool, float, str]]]):
+            keys (Union[None, simple_types, list[simple_types]]):
                 Value of index to be compared with. For composite indexes keys must be list, with value of each subindex
 
         # Returns:
@@ -114,7 +129,7 @@ class Query(object):
         # Arguments:
             sub_query (:obj:`Query`): Field name used in condition clause
             condition (:enum:`CondType`): Type of condition
-            keys (Union[None, int, bool, float, str, List[Union[int, bool, float, str]]]):
+            keys (Union[None, simple_types, list[simple_types]]):
                 Value of index to be compared with. For composite indexes keys must be list, with value of each subindex
 
         # Returns:
@@ -267,7 +282,7 @@ class Query(object):
         self.api.aggregate_distinct(self.query_wrapper_ptr, index)
         return self
 
-    def  aggregate_sum(self, index: str) -> Query:
+    def aggregate_sum(self, index: str) -> Query:
         """Performs a summation of values for a specified index
 
         # Arguments:
@@ -412,7 +427,7 @@ class Query(object):
         # Arguments:
             index (string): The index name
             desc (bool): Sort in descending order
-            keys (Union[None, int, bool, float, str, List[Union[int, bool, float, str]]]):
+            keys (Union[None, simple_types, List[simple_types]]):
                 Value of index to match. For composite indexes keys must be list, with value of each subindex
 
         # Returns:
@@ -623,8 +638,6 @@ class Query(object):
 #func (q *Query) ExecToJsonCtx(ctx context.Context, jsonRoots ...string) *JSONIterator {
 #func (q *Query) Delete() (int, error)
 #func (q *Query) DeleteCtx(ctx context.Context) (int, error) {
-#func (q *Query) SetObject(field string, values interface{}) *Query {
-#func (q *Query) Set(field string, values interface{}) *Query {
 ################################################################
 
     def set_object(self, field: str, values: List[simple_types]) -> Query:
@@ -632,7 +645,7 @@ class Query(object):
 
         # Arguments:
             field (string): Field name
-            values (list[Union[int, str, bool, float]]): List of values to add
+            values (list[simple_types]): List of values to add
 
         # Returns:
             (:obj:`Query`): Query object for further customizations
@@ -652,7 +665,7 @@ class Query(object):
 
         # Arguments:
             field (string): Field name
-            values (list[Union[int, str, bool, float]]): List of values to add
+            values (list[simple_types]): List of values to add
 
         # Returns:
             (:obj:`Query`): Query object for further customizations
@@ -705,15 +718,93 @@ class Query(object):
 #func (q *Query) GetCtx(ctx context.Context) (item interface{}, found bool) {
 #func (q *Query) GetJson() (json []byte, found bool) {
 #func (q *Query) GetJsonCtx(ctx context.Context) (json []byte, found bool) {
-#func (q *Query) InnerJoin(q2 *Query, field string) *Query {
-#func (q *Query) Join(q2 *Query, field string) *Query {
-#func (q *Query) LeftJoin(q2 *Query, field string) *Query {
-#func (q *Query) JoinHandler(field string, handler JoinHandler) *Query {
-#func (q *Query) Merge(q2 *Query) *Query {
 ################################################################
 
+    def __join(self, query: Query, field: str, join_type: JoinType) -> Query:
+        """Joins queries
+
+        # Arguments:
+            query (:obj:`Query`): Query object to join
+            field (string): Joined field name
+            type (:enum:`JoinType`): Join type
+
+        # Returns:
+            (:obj:`Query`): Query object for further customizations
+
+        """
+
+        if self.root is not None:
+            return self.root.__join(query, field, join_type)
+
+        if query.root is not None:
+            raise Exception("Query.Join call on already joined query. You should create new Query")
+
+        if join_type is not JoinType.LeftJoin:
+            # index of join query
+            self.api.join(self.query_wrapper_ptr, join_type.value, len(self.join_queries))
+
+        query.join_type = join_type
+        query.root = self
+        self.join_queries.append(query)
+        self.join_fields.append(field)
+        # ToDo self.join_handlers.append(None)
+        return query
+
+    def inner_join(self, query: Query, field: str) -> Query:
+        return self.__join(query, field, JoinType.InnerJoin)
+
+    def join(self, query: Query, field: str) -> Query:
+        """Join is an alias for LeftJoin
+
+        """
+
+        return self.__join(query, field, JoinType.LeftJoin)
+
+    def left_join(self, join_query: Query, field: str) -> Query:
+        """LeftJoin joins 2 queries.
+            Items from this query are expanded with the data from the join_query.
+            One of the conditions below must hold for `field` parameter in order for LeftJoin to work:
+                namespace of `join_query` contains `field` as one of its fields marked as `joined`
+            # ToDo `this query` has a join handler (registered via `q.JoinHandler(...)` call) with the same `field` value
+
+        # Arguments:
+            query (:obj:`Query`): Query object to left join
+            field (string): Joined field name. As unique identifier for the join between this query and `join_query`
+
+        # Returns:
+            (:obj:`Query`): Query object for further customizations
+
+        """
+
+        return self.__join(join_query, field, JoinType.LeftJoin)
+
+################################################################ ToDo
+#func (q *Query) JoinHandler(field string, handler JoinHandler) *Query {
+################################################################
+
+    def merge(self, query: Query) -> Query:
+        """Merge queries of the same type
+
+        # Arguments:
+            query (:obj:`Query`): Query object to merge
+
+        # Returns:
+            (:obj:`Query`): Query object for further customizations
+
+        """
+
+        if self.root is not None:
+            return self.root.merge(query)
+
+        if query.root is not None:
+            query = query.root
+
+        query.root = self
+        self.merged_queries.append(query)
+        return self
+
     def on(self, index: str, condition: CondType, join_index: str) -> Query:
-        """On specifies join condition.
+        """On specifies join condition
 
         # Arguments:
             index (string): Field name from `Query` namespace should be used during join
@@ -725,6 +816,14 @@ class Query(object):
 
         """
 
+        # ToDo
+        #if q.closed {
+        #    q.panicTrace("query.On call on already closed query. You should create new Query")
+        #}
+
+        if self.root is None:
+            raise Exception("Can't join on root query")
+
         self.api.on(self.query_wrapper_ptr, index, condition, join_index)
         return self
 
@@ -732,7 +831,7 @@ class Query(object):
         """Sets list of columns in this namespace to be finally selected.
             The columns should be specified in the same case as the jsonpaths corresponding to them.
             Non-existent fields and fields in the wrong case are ignored.
-            If there are no fields in this list that meet these conditions, then the filter works as "*".
+            If there are no fields in this list that meet these conditions, then the filter works as "*"
 
         # Arguments:
             fields (list[string]): List of columns to be selected
@@ -800,4 +899,4 @@ class Query(object):
         self.__raise_on_error()
         return self
 
-# ToDo 66/41
+# ToDo 66/45
