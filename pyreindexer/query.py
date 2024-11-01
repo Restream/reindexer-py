@@ -23,6 +23,8 @@ class StrictMode(Enum):
     Names = 2
     Indexes = 3
 
+simple_types = Union[int, str, bool, float]
+
 class Query(object):
     """An object representing the context of a Reindexer query
 
@@ -56,7 +58,7 @@ class Query(object):
         if self.query_wrapper_ptr > 0:
             self.api.delete_query(self.query_wrapper_ptr)
 
-    def _raise_on_error(self):
+    def __raise_on_error(self):
         """Checks if there is an error code and raises with an error message
 
         # Raises:
@@ -68,7 +70,7 @@ class Query(object):
             raise Exception(self.err_msg)
 
     @staticmethod
-    def _convert_to_list(param: Union[int, bool, float, str, List[Union[int, bool, float, str]]]) -> List[Union[int,bool,float,str]]:
+    def __convert_to_list(param: Union[simple_types, List[simple_types]]) -> List[simple_types]:
         """Convert an input parameter to a list
 
         # Arguments:
@@ -79,11 +81,11 @@ class Query(object):
 
         """
 
-        param_copy = param.copy() if param is not None else []
-        param_copy = param_copy if not isinstance(param_copy, list) else [param_copy]
-        return param_copy
+        param = [] if param is None else param
+        param = param if isinstance(param, list) else [param]
+        return param
 
-    def where(self, index: str, condition: CondType, keys: Union[int, bool, float, str, List[Union[int, bool, float, str]]] = None) -> Query:
+    def where(self, index: str, condition: CondType, keys: Union[simple_types, List[simple_types]]=None) -> Query:
         """Add where condition to DB query with int args
 
         # Arguments:
@@ -100,13 +102,13 @@ class Query(object):
 
         """
 
-        params: list = self._convert_to_list(keys)
+        params: list = self.__convert_to_list(keys)
 
         self.err_code, self.err_msg = self.api.where(self.query_wrapper_ptr, index, condition.value, params)
-        self._raise_on_error()
+        self.__raise_on_error()
         return self
 
-    def where_query(self, sub_query: Query, condition: CondType, keys: Union[int, bool, float, str, List[Union[int, bool, float, str]]] = None) -> Query:
+    def where_query(self, sub_query: Query, condition: CondType, keys: Union[simple_types, List[simple_types]]=None) -> Query:
         """Add sub query where condition to DB query with int args
 
         # Arguments:
@@ -123,10 +125,10 @@ class Query(object):
 
         """
 
-        params: list = self._convert_to_list(keys)
+        params: list = self.__convert_to_list(keys)
 
         self.err_code, self.err_msg = self.api.where_query(self.query_wrapper_ptr, sub_query.query_wrapper_ptr, condition.value, params)
-        self._raise_on_error()
+        self.__raise_on_error()
         return self
 
     def where_composite(self, index: str, condition: CondType, sub_query: Query) -> Query:
@@ -164,7 +166,7 @@ class Query(object):
         """
 
         self.err_code, self.err_msg = self.api.where_uuid(self.query_wrapper_ptr, index, condition.value, keys)
-        self._raise_on_error()
+        self.__raise_on_error()
         return self
 
     def where_between_fields(self, first_field: str, condition: CondType, second_field: str) -> Query:
@@ -195,7 +197,7 @@ class Query(object):
         """
 
         self.err_code, self.err_msg = self.api.open_bracket(self.query_wrapper_ptr)
-        self._raise_on_error()
+        self.__raise_on_error()
         return self
 
     def close_bracket(self) -> Query:
@@ -210,7 +212,7 @@ class Query(object):
         """
 
         self.err_code, self.err_msg = self.api.close_bracket(self.query_wrapper_ptr)
-        self._raise_on_error()
+        self.__raise_on_error()
         return self
 
     def match(self, index: str, keys: List[str]) -> Query:
@@ -229,7 +231,7 @@ class Query(object):
         """
 
         self.err_code, self.err_msg = self.api.where(self.query_wrapper_ptr, index, CondType.CondEq.value, keys)
-        self._raise_on_error()
+        self.__raise_on_error()
         return self
 
     def dwithin(self, index: str, point: Point, distance: float) -> Query:
@@ -397,10 +399,10 @@ class Query(object):
         """
 
         self.err_code, self.err_msg = self.api.aggregation(self.query_wrapper_ptr, fields)
-        self._raise_on_error()
+        self.__raise_on_error()
         return self._AggregateFacet(self)
 
-    def sort(self, index: str, desc: bool, keys: Union[int, bool, float, str, List[Union[int, bool, float, str]]] = None) -> Query:
+    def sort(self, index: str, desc: bool, keys: Union[simple_types, List[simple_types]]=None) -> Query:
         """Apply sort order to return from query items. If values argument specified, then items equal to values,
             if found will be placed in the top positions. Forced sort is support for the first sorting field only
 
@@ -418,10 +420,10 @@ class Query(object):
 
         """
 
-        params: list = self._convert_to_list(keys)
+        params: list = self.__convert_to_list(keys)
 
         self.err_code, self.err_msg = self.api.sort(self.query_wrapper_ptr, index, desc, params)
-        self._raise_on_error()
+        self.__raise_on_error()
         return self
 
     def sort_stpoint_distance(self, index: str, point: Point, desc: bool) -> Query:
@@ -438,7 +440,7 @@ class Query(object):
 
         """
 
-        request : str = "ST_Distance(" + index
+        request: str = "ST_Distance(" + index
         request += ",ST_GeomFromText('point("
         request += "{:.10f}".format(point.x) + " " + "{:.10f}".format(point.y)
         request += ")'))"
@@ -462,7 +464,7 @@ class Query(object):
 
         """
 
-        request : str = 'ST_Distance(' + first_field + ',' + second_field + ')'
+        request: str = 'ST_Distance(' + first_field + ',' + second_field + ')'
 
         return self.sort(request, desc)
 
@@ -700,7 +702,7 @@ class Query(object):
         """
 
         self.err_code, self.err_msg = self.api.select_query(self.query_wrapper_ptr, fields)
-        self._raise_on_error()
+        self.__raise_on_error()
         return self
 
     def fetch_count(self, n: int) -> Query:
@@ -732,7 +734,7 @@ class Query(object):
         """
 
         self.err_code, self.err_msg = self.api.functions(self.query_wrapper_ptr, functions)
-        self._raise_on_error()
+        self.__raise_on_error()
         return self
 
     def equal_position(self, equal_position: List[str]) -> Query:
@@ -749,7 +751,7 @@ class Query(object):
         """
 
         self.err_code, self.err_msg = self.api.equal_position(self.query_wrapper_ptr, equal_position)
-        self._raise_on_error()
+        self.__raise_on_error()
         return self
 
 # ToDo 66/39

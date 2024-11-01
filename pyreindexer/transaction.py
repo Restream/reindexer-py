@@ -31,7 +31,7 @@ class Transaction(object):
         if self.transaction_wrapper_ptr > 0:
             _, _ = self.api.rollback_transaction(self.transaction_wrapper_ptr)
 
-    def _raise_on_error(self):
+    def __raise_on_error(self):
         """Checks if there is an error code and raises with an error message
 
         # Raises:
@@ -42,7 +42,7 @@ class Transaction(object):
         if self.err_code:
             raise Exception(self.err_msg)
 
-    def _raise_on_is_over(self):
+    def __raise_on_is_over(self):
         """Checks if there is an error code and raises with an error message
 
         # Raises:
@@ -66,11 +66,11 @@ class Transaction(object):
 
         """
 
-        self._raise_on_is_over()
+        self.__raise_on_is_over()
         if precepts is None:
             precepts = []
         self.err_code, self.err_msg = self.api.item_insert_transaction(self.transaction_wrapper_ptr, item_def, precepts)
-        self._raise_on_error()
+        self.__raise_on_error()
 
     def update(self, item_def, precepts=None):
         """Update an item with its precepts to the transaction
@@ -85,11 +85,10 @@ class Transaction(object):
 
         """
 
-        self._raise_on_is_over()
-        if precepts is None:
-            precepts = []
+        self.__raise_on_is_over()
+        precepts = [] if precepts is None else precepts
         self.err_code, self.err_msg = self.api.item_update_transaction(self.transaction_wrapper_ptr, item_def, precepts)
-        self._raise_on_error()
+        self.__raise_on_error()
 
     def upsert(self, item_def, precepts=None):
         """Update an item with its precepts to the transaction. Creates the item if it not exists
@@ -104,11 +103,10 @@ class Transaction(object):
 
         """
 
-        self._raise_on_is_over()
-        if precepts is None:
-            precepts = []
+        self.__raise_on_is_over()
+        precepts = [] if precepts is None else precepts
         self.err_code, self.err_msg = self.api.item_upsert_transaction(self.transaction_wrapper_ptr, item_def, precepts)
-        self._raise_on_error()
+        self.__raise_on_error()
 
     def delete(self, item_def):
         """Delete an item from the transaction
@@ -122,9 +120,9 @@ class Transaction(object):
 
         """
 
-        self._raise_on_is_over()
+        self.__raise_on_is_over()
         self.err_code, self.err_msg = self.api.item_delete_transaction(self.transaction_wrapper_ptr, item_def)
-        self._raise_on_error()
+        self.__raise_on_error()
 
     def commit(self):
         """Apply changes
@@ -135,10 +133,10 @@ class Transaction(object):
 
         """
 
-        self._raise_on_is_over()
+        self.__raise_on_is_over()
         self.err_code, self.err_msg, _ = self.api.commit_transaction(self.transaction_wrapper_ptr)
         self.transaction_wrapper_ptr = 0
-        self._raise_on_error()
+        self.__raise_on_error()
 
     def commit_with_count(self) -> int:
         """Apply changes and return the number of count of changed items
@@ -149,10 +147,10 @@ class Transaction(object):
 
         """
 
-        self._raise_on_is_over()
+        self.__raise_on_is_over()
         self.err_code, self.err_msg, count = self.api.commit_transaction(self.transaction_wrapper_ptr)
         self.transaction_wrapper_ptr = 0
-        self._raise_on_error()
+        self.__raise_on_error()
         return count
 
     def rollback(self):
@@ -164,7 +162,7 @@ class Transaction(object):
 
         """
 
-        self._raise_on_is_over()
+        self.__raise_on_is_over()
         self.err_code, self.err_msg = self.api.rollback_transaction(self.transaction_wrapper_ptr)
         self.transaction_wrapper_ptr = 0
-        self._raise_on_error()
+        self.__raise_on_error()
