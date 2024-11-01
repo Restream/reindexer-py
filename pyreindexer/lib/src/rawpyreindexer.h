@@ -82,6 +82,8 @@ static PyObject* Debug(PyObject* self, PyObject* args);
 static PyObject* Strict(PyObject* self, PyObject* args);
 static PyObject* Explain(PyObject* self, PyObject* args);
 static PyObject* WithRank(PyObject* self, PyObject* args);
+static PyObject* SetObject(PyObject* self, PyObject* args);
+static PyObject* Set(PyObject* self, PyObject* args);
 static PyObject* Drop(PyObject* self, PyObject* args);
 static PyObject* SetExpression(PyObject* self, PyObject* args);
 static PyObject* On(PyObject* self, PyObject* args);
@@ -159,6 +161,8 @@ static PyMethodDef module_methods[] = {
 	{"strict", Strict, METH_VARARGS, "request cached total items calculation"},
 	{"explain", Explain, METH_VARARGS, "enable explain query"},
 	{"with_rank", WithRank, METH_VARARGS, "enable fulltext rank"},
+	{"set_object", SetObject, METH_VARARGS, "add update query"},
+	{"set", Set, METH_VARARGS, "add field update"},
 	{"drop", Drop, METH_VARARGS, "drop values"},
 	{"expression", SetExpression, METH_VARARGS, "set expression"},
 	{"on", On, METH_VARARGS, "on specifies join condition"},

@@ -96,7 +96,40 @@ void PyObjectToJson(PyObject** obj, reindexer::WrSerializer& wrSer) {
 	}
 }
 
-std::vector<std::string> ParseListToStrVec(PyObject** list) {
+std::vector<std::string> PyObjectToJson(PyObject** obj) {
+	std::vector<std::string> values;
+
+	reindexer::WrSerializer wrSer;
+	if (PyDict_Check(*obj)) {
+		Py_ssize_t sz = PyDict_Size(*obj);
+		if (sz) {
+			PyObject *key = nullptr, *value = nullptr;
+			Py_ssize_t pos = 0;
+			while (PyDict_Next(*obj, &pos, &key, &value)) {
+				const char* k = PyUnicode_AsUTF8(key);
+				wrSer.PrintJsonString(k);
+				wrSer << ':';
+				pyValueSerialize(&value, wrSer);
+				values.emplace_back(wrSer.Slice());
+				wrSer.Reset();
+			}
+		}
+	} else if (PyList_Check(*obj) ) {
+		Py_ssize_t sz = PyList_Size(*obj);
+		for (Py_ssize_t i = 0; i < sz; ++i) {
+			PyObject* value = PyList_GetItem(*obj, i);
+			pyValueSerialize(&value, wrSer);
+			values.emplace_back(wrSer.Slice());
+			wrSer.Reset();
+		}
+	} else {
+		pyValueSerialize(obj, wrSer);
+		values.emplace_back(wrSer.Slice());
+	}
+	return values;
+}
+
+std::vector<std::string> ParseStrListToStrVec(PyObject** list) {
 	std::vector<std::string> result;
 
 	Py_ssize_t sz = PyList_Size(*list);

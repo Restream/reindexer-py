@@ -315,7 +315,7 @@ PyObject* itemModify(PyObject* self, PyObject* args, ItemModifyMode mode) {
 		std::vector<std::string> itemPrecepts;
 
 		try {
-			itemPrecepts = ParseListToStrVec(&preceptsList);
+			itemPrecepts = ParseStrListToStrVec(&preceptsList);
 		} catch (const Error& err) {
 			Py_DECREF(preceptsList);
 
@@ -546,7 +546,7 @@ PyObject* itemModifyTransaction(PyObject* self, PyObject* args, ItemModifyMode m
 		std::vector<std::string> itemPrecepts;
 
 		try {
-			itemPrecepts = ParseListToStrVec(&preceptsList);
+			itemPrecepts = ParseStrListToStrVec(&preceptsList);
 		} catch (const Error& err) {
 			Py_DECREF(preceptsList);
 
@@ -731,7 +731,7 @@ static PyObject* WhereUUID(PyObject* self, PyObject* args) {
 	std::vector<std::string> keys;
 	if (keysList != nullptr) {
 		try {
-			keys = ParseListToStrVec(&keysList);
+			keys = ParseStrListToStrVec(&keysList);
 		} catch (const Error& err) {
 			Py_DECREF(keysList);
 
@@ -862,7 +862,7 @@ static PyObject* Aggregation(PyObject* self, PyObject* args) {
 	std::vector<std::string> fields;
 	if (fieldsList != nullptr) {
 		try {
-			fields = ParseListToStrVec(&fieldsList);
+			fields = ParseStrListToStrVec(&fieldsList);
 		} catch (const Error& err) {
 			Py_DECREF(fieldsList);
 
@@ -976,6 +976,43 @@ void modifier(PyObject* self, PyObject* args, QueryItemType type) {
 static PyObject* Explain(PyObject* self, PyObject* args) { modifier(self, args, QueryItemType::QueryExplain); Py_RETURN_NONE; }
 static PyObject* WithRank(PyObject* self, PyObject* args) { modifier(self, args, QueryItemType::QueryWithRank); Py_RETURN_NONE; }
 
+namespace {
+static PyObject* setObject(PyObject* self, PyObject* args, QueryItemType type) {
+	uintptr_t queryWrapperAddr = 0;
+	char* field = nullptr;
+	PyObject* valuesList = nullptr;  // borrowed ref after ParseTuple
+	if (!PyArg_ParseTuple(args, "ksO!", &queryWrapperAddr, &field, &PyList_Type, &valuesList)) {
+		return nullptr;
+	}
+
+	Py_INCREF(valuesList);
+
+	std::vector<std::string> values;
+	if (valuesList != nullptr) {
+		try {
+			values = PyObjectToJson(&valuesList);
+		} catch (const Error& err) {
+			Py_DECREF(valuesList);
+
+			return pyErr(err);
+		}
+	}
+
+	Py_DECREF(valuesList);
+
+	if ((type == QueryItemType::QueryUpdateField) && (values.size() > 1)) {
+		type = QueryItemType::QueryUpdateFieldV2;
+	}
+	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
+
+	query->SetObject(field, values, type);
+
+	return pyErr(errOK);
+}
+} // namespace
+static PyObject* SetObject(PyObject* self, PyObject* args) { return setObject(self, args, QueryItemType::QueryUpdateObject); }
+static PyObject* Set(PyObject* self, PyObject* args) { return setObject(self, args, QueryItemType::QueryUpdateField); }
+
 static PyObject* Drop(PyObject* self, PyObject* args) {
 	uintptr_t queryWrapperAddr = 0;
 	char* index = nullptr;
@@ -1032,7 +1069,7 @@ static PyObject* SelectQuery(PyObject* self, PyObject* args) {
 	std::vector<std::string> fields;
 	if (fieldsList != nullptr) {
 		try {
-			fields = ParseListToStrVec(&fieldsList);
+			fields = ParseStrListToStrVec(&fieldsList);
 		} catch (const Error& err) {
 			Py_DECREF(fieldsList);
 
@@ -1075,7 +1112,7 @@ static PyObject* AddFunctions(PyObject* self, PyObject* args) {
 	std::vector<std::string> functions;
 	if (functionsList != nullptr) {
 		try {
-			functions = ParseListToStrVec(&functionsList);
+			functions = ParseStrListToStrVec(&functionsList);
 		} catch (const Error& err) {
 			Py_DECREF(functionsList);
 
@@ -1104,7 +1141,7 @@ static PyObject* AddEqualPosition(PyObject* self, PyObject* args) {
 	std::vector<std::string> equalPoses;
 	if (equalPosesList != nullptr) {
 		try {
-			equalPoses = ParseListToStrVec(&equalPosesList);
+			equalPoses = ParseStrListToStrVec(&equalPosesList);
 		} catch (const Error& err) {
 			Py_DECREF(equalPosesList);
 

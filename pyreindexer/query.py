@@ -165,6 +165,7 @@ class Query(object):
 
         """
 
+        keys = [] if keys is None else keys
         self.err_code, self.err_msg = self.api.where_uuid(self.query_wrapper_ptr, index, condition.value, keys)
         self.__raise_on_error()
         return self
@@ -230,6 +231,7 @@ class Query(object):
 
         """
 
+        keys = [] if keys is None else keys
         self.err_code, self.err_msg = self.api.where(self.query_wrapper_ptr, index, CondType.CondEq.value, keys)
         self.__raise_on_error()
         return self
@@ -398,6 +400,7 @@ class Query(object):
 
         """
 
+        fields = [] if fields is None else fields
         self.err_code, self.err_msg = self.api.aggregation(self.query_wrapper_ptr, fields)
         self.__raise_on_error()
         return self._AggregateFacet(self)
@@ -624,6 +627,46 @@ class Query(object):
 #func (q *Query) Set(field string, values interface{}) *Query {
 ################################################################
 
+    def set_object(self, field: str, values: List[simple_types]) -> Query:
+        """Adds an update query to an object field for an update query
+
+        # Arguments:
+            field (string): Field name
+            values (list[Union[int, str, bool, float]]): List of values to add
+
+        # Returns:
+            (:obj:`Query`): Query object for further customizations
+
+        # Raises:
+            Exception: Raises with an error message of API return on non-zero error code
+
+        """
+
+        values = [] if values is None else values
+        self.err_code, self.err_msg = self.api.set_object(self.query_wrapper_ptr, field, values)
+        self.__raise_on_error()
+        return self
+
+    def set(self, field: str, values: List[simple_types]) -> Query:
+        """Adds a field update request to the update request
+
+        # Arguments:
+            field (string): Field name
+            values (list[Union[int, str, bool, float]]): List of values to add
+
+        # Returns:
+            (:obj:`Query`): Query object for further customizations
+
+        # Raises:
+            Exception: Raises with an error message of API return on non-zero error code
+
+        """
+
+        values = [] if values is None else values
+        self.err_code, self.err_msg = self.api.set(self.query_wrapper_ptr, field, values)
+        self.__raise_on_error()
+        return self
+
     def drop(self, index: str) -> Query:
         """Drops a value for a field
 
@@ -701,6 +744,7 @@ class Query(object):
             Exception: Raises with an error message of API return on non-zero error code
         """
 
+        fields = [] if fields is None else fields
         self.err_code, self.err_msg = self.api.select_query(self.query_wrapper_ptr, fields)
         self.__raise_on_error()
         return self
@@ -733,6 +777,7 @@ class Query(object):
             Exception: Raises with an error message of API return on non-zero error code
         """
 
+        functions = [] if functions is None else functions
         self.err_code, self.err_msg = self.api.functions(self.query_wrapper_ptr, functions)
         self.__raise_on_error()
         return self
@@ -750,8 +795,9 @@ class Query(object):
             Exception: Raises with an error message of API return on non-zero error code
         """
 
+        equal_position = [] if equal_position is None else equal_position
         self.err_code, self.err_msg = self.api.equal_position(self.query_wrapper_ptr, equal_position)
         self.__raise_on_error()
         return self
 
-# ToDo 66/39
+# ToDo 66/41

@@ -91,6 +91,24 @@ public:
 
 	void Modifier(QueryItemType type);
 
+	void SetObject(std::string_view field, const std::vector<std::string>& values, QueryItemType type) {
+		ser_.PutVarUint(type);
+		ser_.PutVString(field);
+		if (type == QueryItemType::QueryUpdateObject) {
+			ser_.PutVarUint(values.size()); // values count
+		}
+		if (type != QueryItemType::QueryUpdateField) {
+			ser_.PutVarUint(values.size() > 1? 1 : 0); // is array flag
+		}
+		if (type != QueryItemType::QueryUpdateObject) {
+			ser_.PutVarUint(values.size()); // values count
+		}
+		for (const auto& value : values) {
+			ser_.PutVarUint(0); // function/value flag
+			putValue(value);
+		}
+	}
+
 	void Drop(std::string_view field);
 
 	void SetExpression(std::string_view field, std::string_view value);
