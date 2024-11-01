@@ -91,6 +91,8 @@ public:
 
 	void Modifier(QueryItemType type);
 
+	reindexer::Error DeleteQuery(size_t& count);
+
 	void SetObject(std::string_view field, const std::vector<std::string>& values, QueryItemType type) {
 		ser_.PutVarUint(type);
 		ser_.PutVString(field);
@@ -129,7 +131,7 @@ private:
 	void putValue(T) {}
 
 private:
-	DBInterface* db_{nullptr}; // ToDo
+	DBInterface* db_{nullptr};
 	reindexer::WrSerializer ser_;
 
 	OpType nextOperation_{OpType::OpAnd};

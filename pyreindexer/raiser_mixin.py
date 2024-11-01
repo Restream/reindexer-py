@@ -21,7 +21,7 @@ class RaiserMixin(object):
         """Checks if there is an error code and raises with an error message
 
         # Raises:
-            Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
+            Exception: Raises with an error message when Reindexer instance is not initialized yet
 
         """
 

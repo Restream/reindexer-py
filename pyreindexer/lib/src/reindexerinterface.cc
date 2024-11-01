@@ -100,6 +100,14 @@ Error ReindexerInterface<DBT>::commitTransaction(typename DBT::TransactionT& tra
 	return err;
 }
 
+template <typename DBT>
+Error ReindexerInterface<DBT>::deleteQuery(const reindexer::Query& query, size_t& count) {
+	typename DBT::QueryResultsT qr;
+	auto err = db_.Delete(query, qr);
+	count = qr.Count();
+	return err;
+}
+
 template <>
 Error ReindexerInterface<reindexer::Reindexer>::execute(std::function<Error()> f) {
 	return f();

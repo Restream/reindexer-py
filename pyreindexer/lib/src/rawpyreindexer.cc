@@ -625,7 +625,7 @@ static PyObject* CreateQuery(PyObject* self, PyObject* args) {
 	return Py_BuildValue("isK", errOK, "", reinterpret_cast<uintptr_t>(query));
 }
 
-static PyObject* DeleteQuery(PyObject* self, PyObject* args) {
+static PyObject* DestroyQuery(PyObject* self, PyObject* args) {
 	uintptr_t queryWrapperAddr = 0;
 	if (!PyArg_ParseTuple(args, "k", &queryWrapperAddr)) {
 		return nullptr;
@@ -635,7 +635,6 @@ static PyObject* DeleteQuery(PyObject* self, PyObject* args) {
 
 	Py_RETURN_NONE;
 }
-
 
 static PyObject* Where(PyObject* self, PyObject* args) {
 	uintptr_t queryWrapperAddr = 0;
@@ -965,16 +964,33 @@ static PyObject* Strict(PyObject* self, PyObject* args) {
 }
 
 namespace {
-void modifier(PyObject* self, PyObject* args, QueryItemType type) {
+PyObject* modifier(PyObject* self, PyObject* args, QueryItemType type) {
 	uintptr_t queryWrapperAddr = 0;
-	if (PyArg_ParseTuple(args, "k", &queryWrapperAddr)) {
-		auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
-		query->Modifier(type);
+	if (!PyArg_ParseTuple(args, "k", &queryWrapperAddr)) {
+		return nullptr;
 	}
+
+	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
+	query->Modifier(type);
+
+	Py_RETURN_NONE;
 }
 } // namespace
-static PyObject* Explain(PyObject* self, PyObject* args) { modifier(self, args, QueryItemType::QueryExplain); Py_RETURN_NONE; }
-static PyObject* WithRank(PyObject* self, PyObject* args) { modifier(self, args, QueryItemType::QueryWithRank); Py_RETURN_NONE; }
+static PyObject* Explain(PyObject* self, PyObject* args) { return modifier(self, args, QueryItemType::QueryExplain); }
+static PyObject* WithRank(PyObject* self, PyObject* args) { return modifier(self, args, QueryItemType::QueryWithRank); }
+
+static PyObject* DeleteQuery(PyObject* self, PyObject* args) {
+	uintptr_t queryWrapperAddr = 0;
+	if (!PyArg_ParseTuple(args, "k", &queryWrapperAddr)) {
+		return nullptr;
+	}
+
+	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
+	size_t count = 0;
+	auto err = query->DeleteQuery(count);
+
+	return Py_BuildValue("isI", err.code(), err.what().c_str(), count);
+}
 
 namespace {
 static PyObject* setObject(PyObject* self, PyObject* args, QueryItemType type) {

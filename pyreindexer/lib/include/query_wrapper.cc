@@ -2,6 +2,7 @@
 
 #include <limits>
 
+#include "core/query/query.h"
 #include "core/keyvalue/uuid.h"
 
 namespace pyreindexer {
@@ -167,6 +168,11 @@ void QueryWrapper::Strict(StrictMode mode) {
 
 void QueryWrapper::Modifier(QueryItemType type) {
 	ser_.PutVarUint(type);
+}
+
+reindexer::Error QueryWrapper::DeleteQuery(size_t& count) {
+	reindexer::Query query; // ToDo 1234 FromJSON or FromSQL. Need implement GetJSON and GetSQL
+	return db_->DeleteQuery(query, count);
 }
 
 void QueryWrapper::Drop(std::string_view field) {

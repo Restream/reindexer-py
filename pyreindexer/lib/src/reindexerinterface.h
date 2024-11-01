@@ -2,6 +2,7 @@
 
 #include <condition_variable>
 #include <thread>
+#include "core/query/query.h"
 #include "core/indexdef.h"
 #include "core/namespacedef.h"
 #include "coroutine/channel.h"
@@ -128,6 +129,9 @@ public:
 	Error RollbackTransaction(typename DBT::TransactionT& tr) {
 		return execute([this, &tr] { return rollbackTransaction(tr); });
 	}
+	Error DeleteQuery(const reindexer::Query& query, size_t& count) {
+		return execute([this, &query, &count] { return deleteQuery(query, count); });
+	}
 
 private:
 	Error execute(std::function<Error()> f);
@@ -155,6 +159,7 @@ private:
 	Error modify(typename DBT::TransactionT& tr, typename DBT::ItemT&& item, ItemModifyMode mode);
 	Error commitTransaction(typename DBT::TransactionT& transaction, size_t& count);
 	Error rollbackTransaction(typename DBT::TransactionT& tr) { return db_.RollBackTransaction(tr); }
+	Error deleteQuery(const reindexer::Query& query, size_t& count);
 	Error stop();
 
 	DBT db_;

@@ -52,7 +52,7 @@ static PyObject* CommitTransaction(PyObject* self, PyObject* args);
 static PyObject* RollbackTransaction(PyObject* self, PyObject* args);
 // query
 static PyObject* CreateQuery(PyObject* self, PyObject* args);
-static PyObject* DeleteQuery(PyObject* self, PyObject* args);
+static PyObject* DestroyQuery(PyObject* self, PyObject* args);
 static PyObject* Where(PyObject* self, PyObject* args);
 static PyObject* WhereQuery(PyObject* self, PyObject* args);
 static PyObject* WhereComposite(PyObject* self, PyObject* args);
@@ -82,6 +82,7 @@ static PyObject* Debug(PyObject* self, PyObject* args);
 static PyObject* Strict(PyObject* self, PyObject* args);
 static PyObject* Explain(PyObject* self, PyObject* args);
 static PyObject* WithRank(PyObject* self, PyObject* args);
+static PyObject* DeleteQuery(PyObject* self, PyObject* args);
 static PyObject* SetObject(PyObject* self, PyObject* args);
 static PyObject* Set(PyObject* self, PyObject* args);
 static PyObject* Drop(PyObject* self, PyObject* args);
@@ -132,7 +133,7 @@ static PyMethodDef module_methods[] = {
 	{"rollback_transaction", RollbackTransaction, METH_VARARGS, "rollback changes. Free transaction object memory"},
 	// query
 	{"create_query", CreateQuery, METH_VARARGS, "create new query"},
-	{"delete_query", DeleteQuery, METH_VARARGS, "delete query. Free query object memory"},
+	{"destroy_query", DestroyQuery, METH_VARARGS, "delete query object. Free query object memory"},
 	{"where", Where, METH_VARARGS, "add where condition with args"},
 	{"where_query", WhereQuery, METH_VARARGS, "add sub-query where condition"},
 	{"where_composite", WhereComposite, METH_VARARGS, "add where condition for composite indexes"},
@@ -162,6 +163,7 @@ static PyMethodDef module_methods[] = {
 	{"strict", Strict, METH_VARARGS, "request cached total items calculation"},
 	{"explain", Explain, METH_VARARGS, "enable explain query"},
 	{"with_rank", WithRank, METH_VARARGS, "enable fulltext rank"},
+	{"delete_query", DeleteQuery, METH_VARARGS, "execute delete query"},
 	{"set_object", SetObject, METH_VARARGS, "add update query"},
 	{"set", Set, METH_VARARGS, "add field update"},
 	{"drop", Drop, METH_VARARGS, "drop values"},

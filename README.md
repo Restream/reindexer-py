@@ -49,7 +49,7 @@ __Arguments:__
 
 __Raises:__
 
-    Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
+    Exception: Raises with an error message when Reindexer instance is not initialized yet
     Exception: Raises with an error message of API return on non-zero error code
 
 
@@ -66,7 +66,7 @@ __Arguments:__
 
 __Raises:__
 
-    Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
+    Exception: Raises with an error message when Reindexer instance is not initialized yet
     Exception: Raises with an error message of API return on non-zero error code
 
 
@@ -83,7 +83,7 @@ __Arguments:__
 
 __Raises:__
 
-    Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
+    Exception: Raises with an error message when Reindexer instance is not initialized yet
     Exception: Raises with an error message of API return on non-zero error code
 
 
@@ -105,7 +105,7 @@ __Returns:__
 
 __Raises:__
 
-    Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
+    Exception: Raises with an error message when Reindexer instance is not initialized yet
     Exception: Raises with an error message of API return on non-zero error code
 
 
@@ -123,7 +123,7 @@ __Arguments:__
 
 __Raises:__
 
-    Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
+    Exception: Raises with an error message when Reindexer instance is not initialized yet
     Exception: Raises with an error message of API return on non-zero error code
 
 
@@ -141,7 +141,7 @@ __Arguments:__
 
 __Raises:__
 
-    Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
+    Exception: Raises with an error message when Reindexer instance is not initialized yet
     Exception: Raises with an error message of API return on non-zero error code
 
 
@@ -159,7 +159,7 @@ __Arguments:__
 
 __Raises:__
 
-    Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
+    Exception: Raises with an error message when Reindexer instance is not initialized yet
     Exception: Raises with an error message of API return on non-zero error code
 
 
@@ -178,7 +178,7 @@ __Arguments:__
 
 __Raises:__
 
-    Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
+    Exception: Raises with an error message when Reindexer instance is not initialized yet
     Exception: Raises with an error message of API return on non-zero error code
 
 
@@ -197,7 +197,7 @@ __Arguments:__
 
 __Raises:__
 
-    Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
+    Exception: Raises with an error message when Reindexer instance is not initialized yet
     Exception: Raises with an error message of API return on non-zero error code
 
 
@@ -216,7 +216,7 @@ __Arguments:__
 
 __Raises:__
 
-    Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
+    Exception: Raises with an error message when Reindexer instance is not initialized yet
     Exception: Raises with an error message of API return on non-zero error code
 
 
@@ -234,7 +234,7 @@ __Arguments:__
 
 __Raises:__
 
-    Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
+    Exception: Raises with an error message when Reindexer instance is not initialized yet
     Exception: Raises with an error message of API return on non-zero error code
 
 
@@ -253,7 +253,7 @@ __Arguments:__
 
 __Raises:__
 
-    Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
+    Exception: Raises with an error message when Reindexer instance is not initialized yet
     Exception: Raises with an error message of API return on non-zero error code
 
 
@@ -275,7 +275,7 @@ __Returns:__
 
 __Raises:__
 
-    Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
+    Exception: Raises with an error message when Reindexer instance is not initialized yet
     Exception: Raises with an error message of API return on non-zero error code
 
 
@@ -293,7 +293,7 @@ __Arguments:__
 
 __Raises:__
 
-    Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
+    Exception: Raises with an error message when Reindexer instance is not initialized yet
     Exception: Raises with an error message of API return on non-zero error code
 
 
@@ -314,7 +314,7 @@ __Returns:__
 
 __Raises:__
 
-    Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
+    Exception: Raises with an error message when Reindexer instance is not initialized yet
     Exception: Raises with an error message of API return on non-zero error code
 
 
@@ -335,7 +335,7 @@ __Returns:__
 
 __Raises:__
 
-    Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
+    Exception: Raises with an error message when Reindexer instance is not initialized yet
     Exception: Raises with an error message of API return on non-zero error code
 
 
@@ -356,7 +356,7 @@ __Returns:__
 
 __Raises:__
 
-    Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
+    Exception: Raises with an error message when Reindexer instance is not initialized yet
     Exception: Raises with an error message of API return on non-zero error code
 
 

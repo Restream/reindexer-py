@@ -39,9 +39,12 @@ class Query(object):
         query_wrapper_ptr (int): A memory pointer to Reindexer query object
         err_code (int): The API error code
         err_msg (string): The API error message
-        root (:object:`Query`): The root of the Reindexer query
-        # ToDo
+        root (:object:`Query`): The root query of the Reindexer query
+        join_type (:enum:`JoinType`): Join type
+        join_fields (list[string]): A list of fields (name as unique identification) to join
+        join_queries (list[:object:`Query`]): The list of join Reindexer query objects
         merged_queries (list[:object:`Query`]): The list of merged Reindexer query objects
+        closed (bool): Whether the query is closed
 
     """
 
@@ -58,12 +61,12 @@ class Query(object):
         self.query_wrapper_ptr: int = query_wrapper_ptr
         self.err_code: int = 0
         self.err_msg: str = ''
-        # ToDo
         self.root: Query = None
         self.join_type: JoinType = JoinType.LeftJoin
         self.join_fields: List[str] = []
         self.join_queries: List[Query] = []
         self.merged_queries: List[Query] = []
+        self.closed: bool = False
 
     def __del__(self):
         """Free query memory
@@ -71,7 +74,28 @@ class Query(object):
         """
 
         if self.query_wrapper_ptr > 0:
-            self.api.delete_query(self.query_wrapper_ptr)
+            self.api.destroy_query(self.query_wrapper_ptr)
+
+    def __close(self) -> None:
+        if self.root is not None:
+            self.root.__close()
+
+        if self.closed :
+            raise Exception("Close call on already closed query")
+
+        for i in range(len(self.join_queries)):
+            self.join_queries[i].__close()
+            self.join_queries[i] = None
+
+        for i in range(len(self.merged_queries)):
+            self.merged_queries[i].__close()
+            self.merged_queries[i] = None
+
+        # ToDo
+        #for i in self.join_handlers:
+        #    self.join_handlers[i] = None
+
+        self.closed = True
 
     def __raise_on_error(self):
         """Checks if there is an error code and raises with an error message
@@ -636,7 +660,30 @@ class Query(object):
 #func (q *Query) ExecCtx(ctx context.Context) *Iterator {
 #func (q *Query) ExecToJson(jsonRoots ...string) *JSONIterator {
 #func (q *Query) ExecToJsonCtx(ctx context.Context, jsonRoots ...string) *JSONIterator {
-#func (q *Query) Delete() (int, error)
+################################################################
+
+    def delete(self) -> int:
+        """Delete will execute query, and delete items, matches query
+
+        # Returns:
+            (int): Number of deleted elements
+
+        # Raises:
+            Exception: Raises with an error message of API return on non-zero error code
+
+        """
+
+        if (self.root is not None) or (len(self.join_queries) > 0) :
+            raise Exception("Delete does not support joined queries")
+
+        if self.closed :
+            raise Exception("Delete call on already closed query. You should create new Query")
+
+        self.err_code, self.err_msg, number = self.api.delete_query(self.query_wrapper_ptr)
+        self.__close()
+        return number
+
+################################################################ ToDo
 #func (q *Query) DeleteCtx(ctx context.Context) (int, error) {
 ################################################################
 
@@ -737,7 +784,7 @@ class Query(object):
             return self.root.__join(query, field, join_type)
 
         if query.root is not None:
-            raise Exception("Query.Join call on already joined query. You should create new Query")
+            raise Exception("Query.join call on already joined query. You should create new Query")
 
         if join_type is not JoinType.LeftJoin:
             # index of join query
@@ -816,10 +863,8 @@ class Query(object):
 
         """
 
-        # ToDo
-        #if q.closed {
-        #    q.panicTrace("query.On call on already closed query. You should create new Query")
-        #}
+        if self.closed :
+            raise Exception("Query.on call on already closed query. You should create new Query")
 
         if self.root is None:
             raise Exception("Can't join on root query")
