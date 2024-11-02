@@ -82,14 +82,16 @@ static PyObject* Debug(PyObject* self, PyObject* args);
 static PyObject* Strict(PyObject* self, PyObject* args);
 static PyObject* Explain(PyObject* self, PyObject* args);
 static PyObject* WithRank(PyObject* self, PyObject* args);
+static PyObject* SelectQuery(PyObject* self, PyObject* args);
 static PyObject* DeleteQuery(PyObject* self, PyObject* args);
+static PyObject* UpdateQuery(PyObject* self, PyObject* args);
 static PyObject* SetObject(PyObject* self, PyObject* args);
 static PyObject* Set(PyObject* self, PyObject* args);
 static PyObject* Drop(PyObject* self, PyObject* args);
 static PyObject* SetExpression(PyObject* self, PyObject* args);
 static PyObject* Join(PyObject* self, PyObject* args);
 static PyObject* On(PyObject* self, PyObject* args);
-static PyObject* SelectQuery(PyObject* self, PyObject* args);
+static PyObject* SelectFilter(PyObject* self, PyObject* args);
 static PyObject* FetchCount(PyObject* self, PyObject* args);
 static PyObject* AddFunctions(PyObject* self, PyObject* args);
 static PyObject* AddEqualPosition(PyObject* self, PyObject* args);
@@ -163,14 +165,16 @@ static PyMethodDef module_methods[] = {
 	{"strict", Strict, METH_VARARGS, "request cached total items calculation"},
 	{"explain", Explain, METH_VARARGS, "enable explain query"},
 	{"with_rank", WithRank, METH_VARARGS, "enable fulltext rank"},
+	{"select_query", SelectQuery, METH_VARARGS, "execute select query"},
 	{"delete_query", DeleteQuery, METH_VARARGS, "execute delete query"},
+	{"update_query", UpdateQuery, METH_VARARGS, "execute update query"},
 	{"set_object", SetObject, METH_VARARGS, "add update query"},
 	{"set", Set, METH_VARARGS, "add field update"},
 	{"drop", Drop, METH_VARARGS, "drop values"},
 	{"expression", SetExpression, METH_VARARGS, "set expression"},
 	{"join", Join, METH_VARARGS, "join 2 query"},
 	{"on", On, METH_VARARGS, "on specifies join condition"},
-	{"select_query", SelectQuery, METH_VARARGS, "select add filter to fields of result's objects"},
+	{"select_filter", SelectFilter, METH_VARARGS, "select add filter to fields of result's objects"},
 	{"fetch_count", FetchCount, METH_VARARGS, "limit number of items"},
 	{"functions", AddFunctions, METH_VARARGS, "add sql-functions to query"},
 	{"equal_position", AddEqualPosition, METH_VARARGS, "add equal position fields"},

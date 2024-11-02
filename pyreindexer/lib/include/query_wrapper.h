@@ -12,6 +12,7 @@
 #endif
 
 #include "reindexerinterface.h"
+#include "queryresults_wrapper.h"
 
 namespace pyreindexer {
 
@@ -91,7 +92,9 @@ public:
 
 	void Modifier(QueryItemType type);
 
+	reindexer::Error SelectQuery(QueryResultsWrapper& qr);
 	reindexer::Error DeleteQuery(size_t& count);
+	reindexer::Error UpdateQuery(QueryResultsWrapper& qr);
 
 	void SetObject(std::string_view field, const std::vector<std::string>& values, QueryItemType type) {
 		ser_.PutVarUint(type);
@@ -119,18 +122,19 @@ public:
 
 	reindexer::Error On(std::string_view joinField, CondType condition, std::string_view joinIndex);
 
-	void Select(const std::vector<std::string>& fields);
+	void SelectFilter(const std::vector<std::string>& fields);
 
 	void FetchCount(int count);
 
 	void AddFunctions(const std::vector<std::string>& functions);
 	void AddEqualPosition(const std::vector<std::string>& equalPositions);
 
+	DBInterface* GetDB() const { return db_; }
+
 private:
 	template <typename T>
 	void putValue(T) {}
 
-private:
 	DBInterface* db_{nullptr};
 	reindexer::WrSerializer ser_;
 
@@ -138,7 +142,7 @@ private:
 	unsigned queriesCount_{0};
 	std::deque<uint32_t> openedBrackets_;
 	std::string totalName_;
-	int fetchCount_{0};
+	int fetchCount_{1000};
 };
 
 }  // namespace pyreindexer

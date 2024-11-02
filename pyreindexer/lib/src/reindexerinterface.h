@@ -129,8 +129,14 @@ public:
 	Error RollbackTransaction(typename DBT::TransactionT& tr) {
 		return execute([this, &tr] { return rollbackTransaction(tr); });
 	}
+	Error SelectQuery(const reindexer::Query& query, QueryResultsWrapper& result) {
+		return execute([this, &query, &result] { return selectQuery(query, result); });
+	}
 	Error DeleteQuery(const reindexer::Query& query, size_t& count) {
 		return execute([this, &query, &count] { return deleteQuery(query, count); });
+	}
+	Error UpdateQuery(const reindexer::Query& query, QueryResultsWrapper& result) {
+		return execute([this, &query, &result] { return updateQuery(query, result); });
 	}
 
 private:
@@ -159,7 +165,9 @@ private:
 	Error modify(typename DBT::TransactionT& tr, typename DBT::ItemT&& item, ItemModifyMode mode);
 	Error commitTransaction(typename DBT::TransactionT& transaction, size_t& count);
 	Error rollbackTransaction(typename DBT::TransactionT& tr) { return db_.RollBackTransaction(tr); }
+	Error selectQuery(const reindexer::Query& query, QueryResultsWrapper& result);
 	Error deleteQuery(const reindexer::Query& query, size_t& count);
+	Error updateQuery(const reindexer::Query& query, QueryResultsWrapper& result);
 	Error stop();
 
 	DBT db_;

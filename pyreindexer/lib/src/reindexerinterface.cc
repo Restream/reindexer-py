@@ -101,10 +101,26 @@ Error ReindexerInterface<DBT>::commitTransaction(typename DBT::TransactionT& tra
 }
 
 template <typename DBT>
+Error ReindexerInterface<DBT>::selectQuery(const reindexer::Query& query, QueryResultsWrapper& result) {
+	typename DBT::QueryResultsT qres;
+	auto err = db_.Select(query, qres);
+	result.Wrap(std::move(qres));
+	return err;
+}
+
+template <typename DBT>
 Error ReindexerInterface<DBT>::deleteQuery(const reindexer::Query& query, size_t& count) {
-	typename DBT::QueryResultsT qr;
-	auto err = db_.Delete(query, qr);
-	count = qr.Count();
+	typename DBT::QueryResultsT qres;
+	auto err = db_.Delete(query, qres);
+	count = qres.Count();
+	return err;
+}
+
+template <typename DBT>
+Error ReindexerInterface<DBT>::updateQuery(const reindexer::Query& query, QueryResultsWrapper& result) {
+	typename DBT::QueryResultsT qres;
+	auto err = db_.Update(query, qres);
+	result.Wrap(std::move(qres));
 	return err;
 }
 

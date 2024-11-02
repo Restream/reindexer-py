@@ -323,7 +323,7 @@ class RxConnector(RaiserMixin):
         self.raise_on_error()
         return res
 
-    def select(self, query) -> QueryResults:
+    def select(self, query: str) -> QueryResults:
         """Executes an SQL query and returns query results
 
         # Arguments:
@@ -381,6 +381,62 @@ class RxConnector(RaiserMixin):
         self.err_code, self.err_msg, query_wrapper_ptr = self.api.create_query(self.rx, namespace)
         self.raise_on_error()
         return Query(self.api, query_wrapper_ptr)
+
+    def select_query(self, query: Query) -> QueryResults:
+        """Executes an query and returns query results
+
+        # Arguments:
+            query (:obj:`Query`): An query object
+
+        # Returns:
+            (:obj:`QueryResults`): A QueryResults iterator
+
+        # Raises:
+            Exception: Raises with an error message when Reindexer instance is not initialized yet
+            Exception: Raises with an error message of API return on non-zero error code
+
+        """
+
+        self.raise_on_not_init() # ToDo return query.select()
+        self.err_code, self.err_msg, qres_wrapper_ptr, qres_iter_count = self.api.select_query(query.query_wrapper_ptr)
+        self.raise_on_error()
+        return QueryResults(self.api, qres_wrapper_ptr, qres_iter_count)
+
+    def delete_query(self, query: Query) -> int:
+        """Delete will execute query, and delete items, matches query
+
+        # Arguments:
+            query (:obj:`Query`): An query object
+
+        # Returns:
+            (int): Number of deleted elements
+
+        # Raises:
+            Exception: Raises with an error message when Reindexer instance is not initialized yet
+            Exception: Raises with an error message of API return on non-zero error code
+
+        """
+
+        self.raise_on_not_init()
+        return query.delete()
+
+    def update_query(self, query: Query) -> QueryResults:
+        """Update will execute query, and update fields in items, which matches query
+
+        # Arguments:
+            query (:obj:`Query`): An query object
+
+        # Returns:
+            (:obj:`QueryResults`): A QueryResults iterator
+
+        # Raises:
+            Exception: Raises with an error message when Reindexer instance is not initialized yet
+            Exception: Raises with an error message of API return on non-zero error code
+
+        """
+
+        self.raise_on_not_init()
+        return query.update()
 
     def _api_import(self, dsn):
         """Imports an API dynamically depending on protocol specified in dsn

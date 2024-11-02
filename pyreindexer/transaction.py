@@ -43,7 +43,7 @@ class Transaction(object):
             raise Exception(self.err_msg)
 
     def __raise_on_is_over(self):
-        """Checks if there is an error code and raises with an error message
+        """Checks the state of a transaction and returns an error message when necessary
 
         # Raises:
             Exception: Raises with an error message of API return if Transaction is over

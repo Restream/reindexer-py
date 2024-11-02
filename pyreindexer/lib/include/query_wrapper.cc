@@ -170,9 +170,33 @@ void QueryWrapper::Modifier(QueryItemType type) {
 	ser_.PutVarUint(type);
 }
 
+reindexer::Error QueryWrapper::SelectQuery(QueryResultsWrapper& qr) {
+	reindexer::Serializer ser(ser_.Buf(), ser_.Len());
+	reindexer::Query query = reindexer::Query::Deserialize(ser);
+
+	while (!query.Eof()) { // ToDo
+		const auto joinType = JoinType(query.GetVarUint());
+		reindexer::JoinedQuery q1{joinType, reindexer::Query::Deserialize(query)};
+		if (q1.joinType == JoinType::Merge) {
+			q.Merge(std::move(q1));
+		} else {
+			q.AddJoinQuery(std::move(q1));
+		}
+	}
+
+	return db_->SelectQuery(query, qr);
+}
+
 reindexer::Error QueryWrapper::DeleteQuery(size_t& count) {
-	reindexer::Query query; // ToDo 1234 FromJSON or FromSQL. Need implement GetJSON and GetSQL
-	return db_->DeleteQuery(query, count);
+	reindexer::Serializer ser(ser_.Buf(), ser_.Len());
+	reindexer::Query query = reindexer::Query::Deserialize(ser);
+	return db_->DeleteQuery(deserializedQuery, count);
+}
+
+reindexer::Error QueryWrapper::UpdateQuery(QueryResultsWrapper& qr) {
+	reindexer::Serializer ser(ser_.Buf(), ser_.Len());
+	reindexer::Query query = reindexer::Query::Deserialize(ser);
+	return db_->UpdateQuery(query, qr);
 }
 
 void QueryWrapper::Drop(std::string_view field) {
@@ -211,7 +235,7 @@ reindexer::Error QueryWrapper::On(std::string_view joinField, CondType condition
 	return errOK;
 }
 
-void QueryWrapper::Select(const std::vector<std::string>& fields) {
+void QueryWrapper::SelectFilter(const std::vector<std::string>& fields) {
 	for (const auto& field : fields) {
 		ser_.PutVarUint(QueryItemType::QuerySelectFilter);
 		ser_.PutVString(field);

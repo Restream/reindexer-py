@@ -993,6 +993,41 @@ static PyObject* DeleteQuery(PyObject* self, PyObject* args) {
 }
 
 namespace {
+enum class ExecuteType { Select, Update };
+static PyObject* executeQuery(PyObject* self, PyObject* args, ExecuteType type) {
+	uintptr_t queryWrapperAddr = 0;
+	if (!PyArg_ParseTuple(args, "k", &queryWrapperAddr)) {
+		return nullptr;
+	}
+
+	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
+
+	auto qresWrapper = new QueryResultsWrapper(query->GetDB());
+	Error err = errOK;
+	switch (type) {
+		case ExecuteType::Select:
+			query->SelectQuery(*qresWrapper);
+			break;
+		case ExecuteType::Update:
+			query->UpdateQuery(*qresWrapper);
+			break;
+		default:
+			assert(false);
+	}
+
+	if (!err.ok()) {
+		delete qresWrapper;
+
+		return Py_BuildValue("iskI", err.code(), err.what().c_str(), 0, 0);
+	}
+
+	return Py_BuildValue("iskI", err.code(), err.what().c_str(), reinterpret_cast<uintptr_t>(qresWrapper), qresWrapper->Count());
+}
+} // namespace
+static PyObject* SelectQuery(PyObject* self, PyObject* args) { return executeQuery(self, args, ExecuteType::Select); }
+static PyObject* UpdateQuery(PyObject* self, PyObject* args) { return executeQuery(self, args, ExecuteType::Update); }
+
+namespace {
 static PyObject* setObject(PyObject* self, PyObject* args, QueryItemType type) {
 	uintptr_t queryWrapperAddr = 0;
 	char* field = nullptr;
@@ -1087,7 +1122,7 @@ static PyObject* On(PyObject* self, PyObject* args) {
 	return pyErr(err);
 }
 
-static PyObject* SelectQuery(PyObject* self, PyObject* args) {
+static PyObject* SelectFilter(PyObject* self, PyObject* args) {
 	uintptr_t queryWrapperAddr = 0;
 	PyObject* fieldsList = nullptr;  	// borrowed ref after ParseTuple if passed
 	if (!PyArg_ParseTuple(args, "kO!", &queryWrapperAddr, &PyList_Type, &fieldsList)) {
@@ -1111,7 +1146,7 @@ static PyObject* SelectQuery(PyObject* self, PyObject* args) {
 
 	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
 
-	query->Select(fields);
+	query->SelectFilter(fields);
 
 	return pyErr(errOK);
 }
