@@ -170,32 +170,53 @@ void QueryWrapper::Modifier(QueryItemType type) {
 	ser_.PutVarUint(type);
 }
 
-reindexer::Error QueryWrapper::SelectQuery(QueryResultsWrapper& qr) {
-	reindexer::Serializer ser(ser_.Buf(), ser_.Len());
-	reindexer::Query query = reindexer::Query::Deserialize(ser);
+reindexer::Serializer QueryWrapper::prepareQueryData(reindexer::WrSerializer& data) {
+	reindexer::WrSerializer buffer;
+	buffer.Write(data.Slice()); // do full copy of query data
+	buffer.PutVarUint(QueryItemType::QueryEnd); // close query data
+	return {buffer.Buf(), buffer.Len()};
+}
 
-	while (!query.Eof()) { // ToDo
-		const auto joinType = JoinType(query.GetVarUint());
-		reindexer::JoinedQuery q1{joinType, reindexer::Query::Deserialize(query)};
-		if (q1.joinType == JoinType::Merge) {
-			q.Merge(std::move(q1));
-		} else {
-			q.AddJoinQuery(std::move(q1));
-		}
+reindexer::JoinedQuery QueryWrapper::createJoinedQuery(JoinType joinType, reindexer::WrSerializer& data) {
+	reindexer::Serializer jser = prepareQueryData(data);
+	return {joinType, reindexer::Query::Deserialize(jser)};
+}
+
+void QueryWrapper::addJoinQueries(const std::vector<QueryWrapper*>& joinQueries, reindexer::Query& query) {
+	for (auto joinQuery : joinQueries) {
+		auto jq = createJoinedQuery(joinQuery->joinType_, joinQuery->ser_);
+		query.AddJoinQuery(std::move(jq));
+	}
+}
+
+reindexer::Query QueryWrapper::prepareQuery() {
+	reindexer::Serializer ser = prepareQueryData(ser_);
+	auto query = reindexer::Query::Deserialize(ser);
+
+	addJoinQueries(joinQueries_, query);
+
+	for (auto mergedQuery : mergedQueries_) {
+		auto mq = createJoinedQuery(JoinType::Merge, mergedQuery->ser_);
+		query.Merge(std::move(mq));
+
+		addJoinQueries(mergedQuery->joinQueries_, query);
 	}
 
+	return query;
+}
+
+reindexer::Error QueryWrapper::SelectQuery(QueryResultsWrapper& qr) {
+	auto query = prepareQuery();
 	return db_->SelectQuery(query, qr);
 }
 
 reindexer::Error QueryWrapper::DeleteQuery(size_t& count) {
-	reindexer::Serializer ser(ser_.Buf(), ser_.Len());
-	reindexer::Query query = reindexer::Query::Deserialize(ser);
-	return db_->DeleteQuery(deserializedQuery, count);
+	auto query = prepareQuery();
+	return db_->DeleteQuery(query, count);
 }
 
 reindexer::Error QueryWrapper::UpdateQuery(QueryResultsWrapper& qr) {
-	reindexer::Serializer ser(ser_.Buf(), ser_.Len());
-	reindexer::Query query = reindexer::Query::Deserialize(ser);
+	auto query = prepareQuery();
 	return db_->UpdateQuery(query, qr);
 }
 
@@ -213,14 +234,19 @@ void QueryWrapper::SetExpression(std::string_view field, std::string_view value)
 	ser_.PutVString(value);	// ToDo q.putValue(value);
 }
 
-void QueryWrapper::Join(JoinType type, unsigned joinQueryIndex) {
-	if ((type == JoinType::InnerJoin) && (nextOperation_ == OpType::OpOr)) {
+void QueryWrapper::Join(JoinType type, unsigned joinQueryIndex, QueryWrapper* joinQuery) {
+	assert(joinQuery);
+
+	joinType_ = type;
+	if ((joinType_ == JoinType::InnerJoin) && (nextOperation_ == OpType::OpOr)) {
 		nextOperation_ = OpType::OpAnd;
-		type = JoinType::OrInnerJoin;
+		joinType_ = JoinType::OrInnerJoin;
 	}
 	ser_.PutVarUint(QueryJoinCondition);
-	ser_.PutVarUint(type);
+	ser_.PutVarUint(joinType_);
 	ser_.PutVarUint(joinQueryIndex);
+
+	joinQueries_.push_back(joinQuery);
 }
 
 reindexer::Error QueryWrapper::On(std::string_view joinField, CondType condition, std::string_view joinIndex) {

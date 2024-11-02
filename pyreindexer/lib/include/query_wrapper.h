@@ -118,7 +118,7 @@ public:
 
 	void SetExpression(std::string_view field, std::string_view value);
 
-	void Join(JoinType type, unsigned joinQueryIndex);
+	void Join(JoinType type, unsigned joinQueryIndex, QueryWrapper* joinQuery);
 
 	reindexer::Error On(std::string_view joinField, CondType condition, std::string_view joinIndex);
 
@@ -135,6 +135,11 @@ private:
 	template <typename T>
 	void putValue(T) {}
 
+	reindexer::Serializer prepareQueryData(reindexer::WrSerializer& data);
+    reindexer::JoinedQuery createJoinedQuery(JoinType joinType, reindexer::WrSerializer& data);
+    void addJoinQueries(const std::vector<QueryWrapper*>& joinQueries, reindexer::Query& query);
+    reindexer::Query prepareQuery();
+
 	DBInterface* db_{nullptr};
 	reindexer::WrSerializer ser_;
 
@@ -143,6 +148,9 @@ private:
 	std::deque<uint32_t> openedBrackets_;
 	std::string totalName_;
 	int fetchCount_{1000};
+	JoinType joinType_{JoinType::LeftJoin};
+	std::vector<QueryWrapper*> joinQueries_;
+	std::vector<QueryWrapper*> mergedQueries_;
 };
 
 }  // namespace pyreindexer

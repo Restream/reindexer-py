@@ -1097,12 +1097,14 @@ static PyObject* Join(PyObject* self, PyObject* args) {
 	uintptr_t queryWrapperAddr = 0;
 	unsigned type = 0;
 	unsigned index = 0;
-	if (!PyArg_ParseTuple(args, "kII", &queryWrapperAddr, &type, &index)) {
+	uintptr_t queryWrapperAddrJoin = 0;
+	if (!PyArg_ParseTuple(args, "kIIk", &queryWrapperAddr, &type, &index, &queryWrapperAddrJoin)) {
 		return nullptr;
 	}
 
 	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
-	query->Join(JoinType(type), index);
+	auto joinQuery = getWrapper<QueryWrapper>(queryWrapperAddrJoin);
+	query->Join(JoinType(type), index, joinQuery);
 
 	Py_RETURN_NONE;
 }

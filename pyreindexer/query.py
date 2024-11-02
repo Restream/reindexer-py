@@ -67,7 +67,6 @@ class Query(object):
         # ToDo self.join_fields: List[str] = []
         self.join_queries: List[Query] = []
         self.merged_queries: List[Query] = []
-        self.closed: bool = False
 
     def __del__(self):
         """Free query memory
@@ -87,36 +86,6 @@ class Query(object):
 
         if self.err_code:
             raise Exception(self.err_msg)
-
-    def __raise_on_is_closed(self):
-        """Checks the state of a query and returns an error message when necessary
-
-        # Raises:
-            Exception: Raises with an error message of API return if Query is closed
-
-        """
-
-        if self.closed:
-            raise Exception("Query is closed. You should create new Query")
-
-    def __close(self) -> None:
-        if self.root is not None:
-            self.root.__close()
-
-        if self.closed :
-            raise Exception("Close call on already closed query")
-
-        for i in range(len(self.join_queries)):
-            self.join_queries[i].__close()
-        self.join_queries.clear()
-
-        for i in range(len(self.merged_queries)):
-            self.merged_queries[i].__close()
-        self.merged_queries.clear()
-
-        # ToDo self.join_handlers.clear()
-
-        self.closed = True
 
     @staticmethod
     def __convert_to_list(param: Union[simple_types, List[simple_types]]) -> List[simple_types]:
@@ -147,12 +116,10 @@ class Query(object):
             (:obj:`Query`): Query object for further customizations
 
         # Raises:
-            Exception: Raises with an error message of API return if Query is closed
             Exception: Raises with an error message of API return on non-zero error code
 
         """
 
-        self.__raise_on_is_closed()
         params: list = self.__convert_to_list(keys)
 
         self.err_code, self.err_msg = self.api.where(self.query_wrapper_ptr, index, condition.value, params)
@@ -172,12 +139,10 @@ class Query(object):
             (:obj:`Query`): Query object for further customizations
 
         # Raises:
-            Exception: Raises with an error message of API return if Query is closed
             Exception: Raises with an error message of API return on non-zero error code
 
         """
 
-        self.__raise_on_is_closed()
         params: list = self.__convert_to_list(keys)
 
         self.err_code, self.err_msg = self.api.where_query(self.query_wrapper_ptr, sub_query.query_wrapper_ptr, condition.value, params)
@@ -195,12 +160,8 @@ class Query(object):
         # Returns:
             (:obj:`Query`): Query object for further customizations
 
-        # Raises:
-            Exception: Raises with an error message of API return if Query is closed
-
         """
 
-        self.__raise_on_is_closed()
         self.api.where_composite(self.query_wrapper_ptr, index, condition.value, sub_query.query_wrapper_ptr)
         return self
 
@@ -218,12 +179,9 @@ class Query(object):
             (:obj:`Query`): Query object for further customizations
 
         # Raises:
-            Exception: Raises with an error message of API return if Query is closed
             Exception: Raises with an error message of API return on non-zero error code
 
         """
-
-        self.__raise_on_is_closed()
 
         keys = [] if keys is None else keys
 
@@ -242,12 +200,7 @@ class Query(object):
         # Returns:
             (:obj:`Query`): Query object for further customizations
 
-        # Raises:
-            Exception: Raises with an error message of API return if Query is closed
-
         """
-
-        self.__raise_on_is_closed()
 
         self.api.where_between_fields(self.query_wrapper_ptr, first_field, condition.value, second_field)
         return self
@@ -259,12 +212,9 @@ class Query(object):
             (:obj:`Query`): Query object for further customizations
 
         # Raises:
-            Exception: Raises with an error message of API return if Query is closed
             Exception: Raises with an error message of API return on non-zero error code
 
         """
-
-        self.__raise_on_is_closed()
 
         self.err_code, self.err_msg = self.api.open_bracket(self.query_wrapper_ptr)
         self.__raise_on_error()
@@ -278,11 +228,8 @@ class Query(object):
 
         # Raises:
             Exception: Raises with an error message of API return on non-zero error code
-            Exception: Raises with an error message of API return on non-zero error code
 
         """
-
-        self.__raise_on_is_closed()
 
         self.err_code, self.err_msg = self.api.close_bracket(self.query_wrapper_ptr)
         self.__raise_on_error()
@@ -299,12 +246,9 @@ class Query(object):
             (:obj:`Query`): Query object for further customizations
 
         # Raises:
-            Exception: Raises with an error message of API return if Query is closed
             Exception: Raises with an error message of API return on non-zero error code
 
         """
-
-        self.__raise_on_is_closed()
 
         keys = [] if keys is None else keys
 
@@ -323,12 +267,7 @@ class Query(object):
         # Returns:
             (:obj:`Query`): Query object for further customizations
 
-        # Raises:
-            Exception: Raises with an error message of API return if Query is closed
-
         """
-
-        self.__raise_on_is_closed()
 
         self.api.dwithin(self.query_wrapper_ptr, index, point.x, point.y, distance)
         return self
@@ -343,12 +282,7 @@ class Query(object):
         # Returns:
             (:obj:`Query`): Query object for further customizations
 
-        # Raises:
-            Exception: Raises with an error message of API return if Query is closed
-
         """
-
-        self.__raise_on_is_closed()
 
         self.api.aggregate_distinct(self.query_wrapper_ptr, index)
         return self
@@ -362,12 +296,7 @@ class Query(object):
         # Returns:
             (:obj:`Query`): Query object for further customizations
 
-        # Raises:
-            Exception: Raises with an error message of API return if Query is closed
-
         """
-
-        self.__raise_on_is_closed()
 
         self.api.aggregate_sum(self.query_wrapper_ptr, index)
         return self
@@ -381,12 +310,7 @@ class Query(object):
         # Returns:
             (:obj:`Query`): Query object for further customizations
 
-        # Raises:
-            Exception: Raises with an error message of API return if Query is closed
-
         """
-
-        self.__raise_on_is_closed()
 
         self.api.aggregate_avg(self.query_wrapper_ptr, index)
         return self
@@ -400,12 +324,7 @@ class Query(object):
         # Returns:
             (:obj:`Query`): Query object for further customizations
 
-        # Raises:
-            Exception: Raises with an error message of API return if Query is closed
-
         """
-
-        self.__raise_on_is_closed()
 
         self.api.aggregate_min(self.query_wrapper_ptr, index)
         return self
@@ -419,12 +338,7 @@ class Query(object):
         # Returns:
             (:obj:`Query`): Query object for further customizations
 
-        # Raises:
-            Exception: Raises with an error message of API return if Query is closed
-
         """
-
-        self.__raise_on_is_closed()
 
         self.api.aggregate_max(self.query_wrapper_ptr, index)
         return self
@@ -504,12 +418,7 @@ class Query(object):
         # Returns:
             (:obj:`_AggregateFacet`): Request object for further customizations
 
-        # Raises:
-            Exception: Raises with an error message of API return if Query is closed
-
         """
-
-        self.__raise_on_is_closed()
 
         fields = [] if fields is None else fields
 
@@ -531,12 +440,9 @@ class Query(object):
             (:obj:`Query`): Query object for further customizations
 
         # Raises:
-            Exception: Raises with an error message of API return if Query is closed
             Exception: Raises with an error message of API return on non-zero error code
 
         """
-
-        self.__raise_on_is_closed()
 
         params: list = self.__convert_to_list(keys)
 
@@ -556,12 +462,7 @@ class Query(object):
         # Returns:
             (:obj:`Query`): Query object for further customizations
 
-        # Raises:
-            Exception: Raises with an error message of API return if Query is closed
-
         """
-
-        self.__raise_on_is_closed()
 
         request: str = "ST_Distance(" + index
         request += ",ST_GeomFromText('point("
@@ -583,12 +484,9 @@ class Query(object):
             (:obj:`Query`): Query object for further customizations
 
         # Raises:
-            Exception: Raises with an error message of API return if Query is closed
             Exception: Raises with an error message of API return on non-zero error code
 
         """
-
-        self.__raise_on_is_closed()
 
         request: str = 'ST_Distance(' + first_field + ',' + second_field + ')'
 
@@ -602,12 +500,7 @@ class Query(object):
         # Returns:
             (:obj:`Query`): Query object for further customizations
 
-        # Raises:
-            Exception: Raises with an error message of API return if Query is closed
-
         """
-
-        self.__raise_on_is_closed()
 
         self.api.op_and(self.query_wrapper_ptr)
         return self
@@ -620,12 +513,7 @@ class Query(object):
         # Returns:
             (:obj:`Query`): Query object for further customizations
 
-        # Raises:
-            Exception: Raises with an error message of API return if Query is closed
-
         """
-
-        self.__raise_on_is_closed()
 
         self.api.op_or(self.query_wrapper_ptr)
         return self
@@ -637,12 +525,7 @@ class Query(object):
         # Returns:
             (:obj:`Query`): Query object for further customizations
 
-        # Raises:
-            Exception: Raises with an error message of API return if Query is closed
-
         """
-
-        self.__raise_on_is_closed()
 
         self.api.op_not(self.query_wrapper_ptr)
         return self
@@ -656,12 +539,7 @@ class Query(object):
         # Returns:
             (:obj:`Query`): Query object for further customizations
 
-        # Raises:
-            Exception: Raises with an error message of API return if Query is closed
-
         """
-
-        self.__raise_on_is_closed()
 
         self.api.request_total(self.query_wrapper_ptr, total_name)
         return self
@@ -675,12 +553,7 @@ class Query(object):
         # Returns:
             (:obj:`Query`): Query object for further customizations
 
-        # Raises:
-            Exception: Raises with an error message of API return if Query is closed
-
         """
-
-        self.__raise_on_is_closed()
 
         self.api.cached_total(self.query_wrapper_ptr, total_name)
         return self
@@ -695,12 +568,7 @@ class Query(object):
         # Returns:
             (:obj:`Query`): Query object for further customizations
 
-        # Raises:
-            Exception: Raises with an error message of API return if Query is closed
-
         """
-
-        self.__raise_on_is_closed()
 
         self.api.limit(self.query_wrapper_ptr, limit_items)
         return self
@@ -714,12 +582,7 @@ class Query(object):
         # Returns:
             (:obj:`Query`): Query object for further customizations
 
-        # Raises:
-            Exception: Raises with an error message of API return if Query is closed
-
         """
-
-        self.__raise_on_is_closed()
 
         self.api.offset(self.query_wrapper_ptr, start_offset)
         return self
@@ -733,12 +596,7 @@ class Query(object):
         # Returns:
             (:obj:`Query`): Query object for further customizations
 
-        # Raises:
-            Exception: Raises with an error message of API return if Query is closed
-
         """
-
-        self.__raise_on_is_closed()
 
         self.api.debug(self.query_wrapper_ptr, level)
         return self
@@ -752,12 +610,7 @@ class Query(object):
         # Returns:
             (:obj:`Query`): Query object for further customizations
 
-        # Raises:
-            Exception: Raises with an error message of API return if Query is closed
-
         """
-
-        self.__raise_on_is_closed()
 
         self.api.strict(self.query_wrapper_ptr, mode.value)
         return self
@@ -768,12 +621,7 @@ class Query(object):
         # Returns:
             (:obj:`Query`): Query object for further customizations
 
-        # Raises:
-            Exception: Raises with an error message of API return if Query is closed
-
         """
-
-        self.__raise_on_is_closed()
 
         self.api.explain(self.query_wrapper_ptr)
         return self
@@ -784,12 +632,7 @@ class Query(object):
         # Returns:
             (:obj:`Query`): Query object for further customizations
 
-        # Raises:
-            Exception: Raises with an error message of API return if Query is closed
-
         """
-
-        self.__raise_on_is_closed()
 
         self.api.with_rank(self.query_wrapper_ptr)
         return self
@@ -809,18 +652,16 @@ class Query(object):
             (int): Number of deleted elements
 
         # Raises:
-            Exception: Raises with an error message of API return if Query is closed
+            Exception: Raises with an error message when query is in an invalid state
             Exception: Raises with an error message of API return on non-zero error code
 
         """
 
         if (self.root is not None) or (len(self.join_queries) > 0) :
             raise Exception("Delete does not support joined queries")
-        self.__raise_on_is_closed()
 
         self.err_code, self.err_msg, number = self.api.delete_query(self.query_wrapper_ptr)
         self.__raise_on_error()
-        self.__close()
         return number
 
 ################################################################ ToDo
@@ -838,12 +679,9 @@ class Query(object):
             (:obj:`Query`): Query object for further customizations
 
         # Raises:
-            Exception: Raises with an error message of API return if Query is closed
             Exception: Raises with an error message of API return on non-zero error code
 
         """
-
-        self.__raise_on_is_closed()
 
         values = [] if values is None else values
 
@@ -862,12 +700,9 @@ class Query(object):
             (:obj:`Query`): Query object for further customizations
 
         # Raises:
-            Exception: Raises with an error message of API return if Query is closed
             Exception: Raises with an error message of API return on non-zero error code
 
         """
-
-        self.__raise_on_is_closed()
 
         values = [] if values is None else values
 
@@ -884,12 +719,7 @@ class Query(object):
         # Returns:
             (:obj:`Query`): Query object for further customizations
 
-        # Raises:
-            Exception: Raises with an error message of API return if Query is closed
-
         """
-
-        self.__raise_on_is_closed()
 
         self.api.drop(self.query_wrapper_ptr, index)
         return self
@@ -904,12 +734,7 @@ class Query(object):
         # Returns:
             (:obj:`Query`): Query object for further customizations
 
-        # Raises:
-            Exception: Raises with an error message of API return if Query is closed
-
         """
-
-        self.__raise_on_is_closed()
 
         self.api.expression(self.query_wrapper_ptr, field, value)
         return self
@@ -921,12 +746,10 @@ class Query(object):
             (:obj:`QueryResults`): A QueryResults iterator
 
         # Raises:
-            Exception: Raises with an error message of API return if Query is closed
+            Exception: Raises with an error message when query is in an invalid state
             Exception: Raises with an error message of API return on non-zero error code
 
         """
-
-        self.__raise_on_is_closed()
 
         if (self.root is not None) or (len(self.join_queries) > 0) :
             raise Exception("Update does not support joined queries")
@@ -960,7 +783,7 @@ class Query(object):
             (:obj:`Query`): Query object for further customizations
 
         # Raises:
-            Exception: Raises with an error message of API return if Query is closed
+            Exception: Raises with an error message when query is in an invalid state
 
         """
 
@@ -972,7 +795,7 @@ class Query(object):
 
         if join_type is not JoinType.LeftJoin:
             # index of join query
-            self.api.join(self.query_wrapper_ptr, join_type.value, len(self.join_queries))
+            self.api.join(self.query_wrapper_ptr, join_type.value, len(self.join_queries), query.query_wrapper_ptr)
 
         query.join_type = join_type
         query.root = self
@@ -1022,12 +845,7 @@ class Query(object):
         # Returns:
             (:obj:`Query`): Query object for further customizations
 
-        # Raises:
-            Exception: Raises with an error message of API return if Query is closed
-
         """
-
-        self.__raise_on_is_closed()
 
         if self.root is not None:
             return self.root.merge(query)
@@ -1036,7 +854,7 @@ class Query(object):
             query = query.root
 
         query.root = self
-        self.merged_queries.append(query)
+        self.merged_queries.append(query) # ToDo
         return self
 
     def on(self, index: str, condition: CondType, join_index: str) -> Query:
@@ -1050,12 +868,7 @@ class Query(object):
         # Returns:
             (:obj:`Query`): Query object for further customizations
 
-        # Raises:
-            Exception: Raises with an error message of API return if Query is closed
-
         """
-
-        self.__raise_on_is_closed()
 
         if self.root is None:
             raise Exception("Can't join on root query")
@@ -1076,12 +889,9 @@ class Query(object):
             (:obj:`Query`): Query object for further customizations
 
         # Raises:
-            Exception: Raises with an error message of API return if Query is closed
             Exception: Raises with an error message of API return on non-zero error code
 
         """
-
-        self.__raise_on_is_closed()
 
         fields = [] if fields is None else fields
 
@@ -1099,12 +909,7 @@ class Query(object):
         # Returns:
             (:obj:`Query`): Query object for further customizations
 
-        # Raises:
-            Exception: Raises with an error message of API return if Query is closed
-
         """
-
-        self.__raise_on_is_closed()
 
         self.api.fetch_count(self.query_wrapper_ptr, n)
         return self
@@ -1119,11 +924,8 @@ class Query(object):
             (:obj:`Query`): Query object for further customizations
 
         # Raises:
-            Exception: Raises with an error message of API return if Query is closed
             Exception: Raises with an error message of API return on non-zero error code
         """
-
-        self.__raise_on_is_closed()
 
         functions = [] if functions is None else functions
 
@@ -1141,12 +943,9 @@ class Query(object):
             (:obj:`Query`): Query object for further customizations
 
         # Raises:
-            Exception: Raises with an error message of API return if Query is closed
             Exception: Raises with an error message of API return on non-zero error code
 
         """
-
-        self.__raise_on_is_closed()
 
         equal_position = [] if equal_position is None else equal_position
 
