@@ -67,6 +67,7 @@ jobs:
           # user: __token__ ## used as default
           password: pypi-${{ secrets.TESTPYPI_TOKEN }}
           repository-url: https://test.pypi.org/legacy/
+          attestations: false
 
   test:
     strategy:

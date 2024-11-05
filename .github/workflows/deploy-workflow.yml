@@ -67,6 +67,7 @@ jobs:
           verbose: true
           # user: __token__ ## used as default
           password: pypi-${{ secrets.PYPI_TOKEN }}
+          attestations: false
 
   test:
     strategy:
