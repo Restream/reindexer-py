@@ -1,15 +1,16 @@
 from hamcrest import *
 
-from tests.helpers.namespace import *
+from ..helpers.namespace import *
 
 
 class TestCrudNamespace:
+
     def test_create_ns(self, database):
         # Given("Create namespace in empty database")
         namespace_name = 'test_ns'
         create_namespace(database, namespace_name)
         # When ("Get namespaces list in created database")
-        namespace_list = get_namespace_list(database)
+        namespace_list = get_namespaces_list(database)
         # Then ("Check that database contains created namespace")
         assert_that(namespace_list, has_item(has_entry("name", equal_to(namespace_name))),
                     "Namespace wasn't created")
@@ -22,7 +23,7 @@ class TestCrudNamespace:
         # When ("Delete namespace")
         drop_namespace(database, namespace_name)
         # Then ("Check that namespace was deleted")
-        namespace_list = get_namespace_list(database)
+        namespace_list = get_namespaces_list(database)
         assert_that(namespace_list, not_(has_item(has_entry("name", equal_to(namespace_name)))),
                     "Namespace wasn't deleted")
 

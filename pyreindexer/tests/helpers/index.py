@@ -1,4 +1,4 @@
-from tests.helpers.log_helper import log_operation
+from .log_helper import log_operation
 
 
 def create_index(namespace, index_def):

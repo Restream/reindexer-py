@@ -11,7 +11,7 @@ class OneLineExceptionFormatter(logging.Formatter):
 
     def formatException(self, exc_info):
         result = super(OneLineExceptionFormatter, self).formatException(exc_info)
-        return repr(result)  # or format into one line however you want to
+        return repr(result)
 
     def format(self, record):
         result = super(OneLineExceptionFormatter, self).format(record)

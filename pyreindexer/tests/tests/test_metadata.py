@@ -1,6 +1,6 @@
 from hamcrest import *
 
-from tests.helpers.metadata import *
+from ..helpers.metadata import *
 
 
 class TestCrudMetadata:
@@ -9,8 +9,7 @@ class TestCrudMetadata:
         # When ("Get list of metadata keys")
         meta_list = get_metadata_keys(namespace)
         # Then ("Check that list of metadata is empty")
-        assert_that(meta_list, has_length(0), "Metadata is not empty")
-        assert_that(meta_list, equal_to([]), "Metadata is not empty")
+        assert_that(meta_list, empty(), "Metadata is not empty")
 
     def test_create_metadata(self, namespace):
         # Given("Create namespace")
@@ -59,5 +58,4 @@ class TestCrudMetadata:
         # When ("Get list of metadata keys")
         meta_list = get_metadata_keys(namespace)
         # Then ("Check that list of metadata is empty")
-        assert_that(meta_list, has_length(0), "Metadata is not empty")
-        assert_that(meta_list, equal_to([]), "Metadata is not empty")
+        assert_that(meta_list, empty(), "Metadata is not empty")

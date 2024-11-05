@@ -1,4 +1,4 @@
-from tests.helpers.log_helper import log_operation
+from .log_helper import log_operation
 
 
 def insert_item(namespace, item_def):
@@ -25,7 +25,7 @@ def update_item(namespace, item_def):
     """
     db, namespace_name = namespace
     log_operation.info(f"Update item: {item_def} to namespace {namespace_name}")
-    db.item_upsert(namespace_name, item_def)
+    db.item_update(namespace_name, item_def)
 
 
 def delete_item(namespace, item_def):

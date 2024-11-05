@@ -1,6 +1,6 @@
 import logging
 
-from tests.helpers.log_helper import log_operation
+from .log_helper import log_operation
 
 
 def create_namespace(database, namespace_name):
@@ -24,14 +24,14 @@ def drop_namespace(database, namespace_name):
     db.namespace_drop(namespace_name)
 
 
-def get_namespace_list(database):
+def get_namespaces_list(database):
     """
     Get list of namespaces in database
     """
     log_operation.info("Get list of namespaces in database")
     db, db_name = database
-    namespace_list = db.namespaces_enum()
-    return namespace_list
+    namespaces_list = db.namespaces_enum()
+    return namespaces_list
 
 
 def get_ns_description(database, namespace):
@@ -39,7 +39,7 @@ def get_ns_description(database, namespace):
     Get information about namespace in database
     """
     db, namespace_name = namespace
-    namespace_list = get_namespace_list(database)
+    namespace_list = get_namespaces_list(database)
     log_operation.info(f"Get information about namespace {namespace_name} in database")
-    ns_entry = list(filter(lambda ns: ns['name'] == namespace_name, namespace_list))
+    ns_entry = [ns for ns in namespace_list if ns["name"] == namespace_name]
     return ns_entry
