@@ -231,7 +231,7 @@ void QueryWrapper::SetExpression(std::string_view field, std::string_view value)
 
 	ser_.PutVarUint(1); // size
 	ser_.PutVarUint(1); // is expression
-	ser_.PutVString(value);	// ToDo q.putValue(value);
+	ser_.PutVString(value);
 }
 
 void QueryWrapper::Join(JoinType type, unsigned joinQueryIndex, QueryWrapper* joinQuery) {

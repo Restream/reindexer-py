@@ -42,7 +42,6 @@ class Query(object):
         err_msg (string): The API error message
         root (:object:`Query`): The root query of the Reindexer query
         join_type (:enum:`JoinType`): Join type
-        # ToDo join_fields (list[string]): A list of fields (name as unique identification) to join
         join_queries (list[:object:`Query`]): The list of join Reindexer query objects
         merged_queries (list[:object:`Query`]): The list of merged Reindexer query objects
         closed (bool): Whether the query is closed
@@ -64,7 +63,6 @@ class Query(object):
         self.err_msg: str = ''
         self.root: Query = None
         self.join_type: JoinType = JoinType.LeftJoin
-        # ToDo self.join_fields: List[str] = []
         self.join_queries: List[Query] = []
         self.merged_queries: List[Query] = []
 
@@ -637,10 +635,6 @@ class Query(object):
         self.api.with_rank(self.query_wrapper_ptr)
         return self
 
-################################################################ ToDo
-#func (q *Query) SetContext(ctx interface{}) *Query {
-################################################################
-
     def execute(self) -> QueryResults:
         """Exec will execute query, and return slice of items
 
@@ -660,13 +654,6 @@ class Query(object):
         self.__raise_on_error()
         return QueryResults(self.api, qres_wrapper_ptr, qres_iter_count)
 
-################################################################ ToDo
-#func (q *Query) ExecCtx(ctx context.Context) *Iterator {
-################################################################ ToDo - not actual
-#func (q *Query) ExecToJson(jsonRoots ...string) *JSONIterator {
-#func (q *Query) ExecToJsonCtx(ctx context.Context, jsonRoots ...string) *JSONIterator {
-################################################################
-
     def delete(self) -> int:
         """Delete will execute query, and delete items, matches query
 
@@ -685,10 +672,6 @@ class Query(object):
         self.err_code, self.err_msg, number = self.api.delete_query(self.query_wrapper_ptr)
         self.__raise_on_error()
         return number
-
-################################################################ ToDo
-#func (q *Query) DeleteCtx(ctx context.Context) (int, error) {
-################################################################
 
     def set_object(self, field: str, values: List[simple_types]) -> Query:
         """Adds an update query to an object field for an update query
@@ -780,10 +763,6 @@ class Query(object):
         self.__raise_on_error()
         return QueryResults(self.api, qres_wrapper_ptr, qres_iter_count)
 
-################################################################ // ToDo
-#func (q *Query) UpdateCtx(ctx context.Context) *Iterator {
-################################################################
-
     def must_execute(self) -> QueryResults:
         """Exec will execute query, and return slice of items, with status check
 
@@ -799,10 +778,6 @@ class Query(object):
         result = self.execute()
         result.status()
         return result
-
-################################################################ // ToDo
-#func (q *Query) MustExecCtx(ctx context.Context) *Iterator {
-################################################################
 
     def get(self) -> (str, bool):
         """Get will execute query, and return 1 string item
@@ -824,13 +799,6 @@ class Query(object):
             return item, True
 
         return '', False
-
-################################################################ // ToDo
-#func (q *Query) GetCtx(ctx context.Context) (item interface{}, found bool) {
-################################################################ // ToDo - not actual
-#func (q *Query) GetJson() (json []byte, found bool) {
-#func (q *Query) GetJsonCtx(ctx context.Context) (json []byte, found bool) {
-################################################################
 
     def __join(self, query: Query, field: str, join_type: JoinType) -> Query:
         """Joins queries
@@ -861,15 +829,34 @@ class Query(object):
         query.join_type = join_type
         query.root = self
         self.join_queries.append(query)
-        # ToDo self.join_fields.append(field)
-        # ToDo self.join_handlers.append(None)
         return query
 
     def inner_join(self, query: Query, field: str) -> Query:
+        """InnerJoin joins 2 queries.
+            Items from the 1-st query are filtered by and expanded with the data from the 2-nd query
+
+        # Arguments:
+            query (:obj:`Query`): Query object to left join
+            field (string): Joined field name. As unique identifier for the join between this query and `join_query`.
+                Parameter in order for InnerJoin to work: namespace of `query` contains `field` as one of its fields marked as `joined`
+
+        # Returns:
+            (:obj:`Query`): Query object for further customizations
+
+        """
+
         return self.__join(query, field, JoinType.InnerJoin)
 
     def join(self, query: Query, field: str) -> Query:
-        """Join is an alias for LeftJoin
+        """Join is an alias for LeftJoin. LeftJoin joins 2 queries.
+            Items from this query are expanded with the data from the `query`
+
+        # Arguments:
+            query (:obj:`Query`): Query object to left join
+            field (string): Joined field name. As unique identifier for the join between this query and `join_query`
+
+        # Returns:
+            (:obj:`Query`): Query object for further customizations
 
         """
 
@@ -880,7 +867,6 @@ class Query(object):
             Items from this query are expanded with the data from the join_query.
             One of the conditions below must hold for `field` parameter in order for LeftJoin to work:
                 namespace of `join_query` contains `field` as one of its fields marked as `joined`
-            # ToDo `this query` has a join handler (registered via `q.JoinHandler(...)` call) with the same `field` value
 
         # Arguments:
             query (:obj:`Query`): Query object to left join
@@ -892,10 +878,6 @@ class Query(object):
         """
 
         return self.__join(join_query, field, JoinType.LeftJoin)
-
-################################################################ ToDo
-#func (q *Query) JoinHandler(field string, handler JoinHandler) *Query {
-################################################################
 
     def merge(self, query: Query) -> Query:
         """Merge queries of the same type
