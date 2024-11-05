@@ -639,8 +639,30 @@ class Query(object):
 
 ################################################################ ToDo
 #func (q *Query) SetContext(ctx interface{}) *Query {
-#func (q *Query) Exec() *Iterator {
+################################################################
+
+    def execute(self) -> QueryResults:
+        """Exec will execute query, and return slice of items
+
+        # Returns:
+            (:obj:`QueryResults`): A QueryResults iterator
+
+        # Raises:
+            Exception: Raises with an error message when query is in an invalid state
+            Exception: Raises with an error message of API return on non-zero error code
+
+        """
+
+        if self.root is not None :
+            return self.root.execute()
+
+        self.err_code, self.err_msg, qres_wrapper_ptr, qres_iter_count = self.api.select_query(self.query_wrapper_ptr)
+        self.__raise_on_error()
+        return QueryResults(self.api, qres_wrapper_ptr, qres_iter_count)
+
+################################################################ ToDo
 #func (q *Query) ExecCtx(ctx context.Context) *Iterator {
+################################################################ ToDo - not actual
 #func (q *Query) ExecToJson(jsonRoots ...string) *JSONIterator {
 #func (q *Query) ExecToJsonCtx(ctx context.Context, jsonRoots ...string) *JSONIterator {
 ################################################################
@@ -762,12 +784,31 @@ class Query(object):
 #func (q *Query) UpdateCtx(ctx context.Context) *Iterator {
 ################################################################
 
+    def must_execute(self) -> QueryResults:
+        """Exec will execute query, and return slice of items, with status check
+
+        # Returns:
+            (:obj:`QueryResults`): A QueryResults iterator
+
+        # Raises:
+            Exception: Raises with an error message when query is in an invalid state
+            Exception: Raises with an error message of API return on non-zero error code
+
+        """
+
+        result = self.execute()
+        result.status()
+        return result
+
 ################################################################ // ToDo
-#func (q *Query) MustExec() *Iterator {
 #func (q *Query) MustExecCtx(ctx context.Context) *Iterator {
+################################################################
 #func (q *Query) Get() (item interface{}, found bool) {
+################################################################ // ToDo
 #func (q *Query) GetCtx(ctx context.Context) (item interface{}, found bool) {
+################################################################
 #func (q *Query) GetJson() (json []byte, found bool) {
+################################################################ // ToDo
 #func (q *Query) GetJsonCtx(ctx context.Context) (json []byte, found bool) {
 ################################################################
 
@@ -854,7 +895,8 @@ class Query(object):
             query = query.root
 
         query.root = self
-        self.merged_queries.append(query) # ToDo
+        self.merged_queries.append(query)
+        self.api.merge(query)
         return self
 
     def on(self, index: str, condition: CondType, join_index: str) -> Query:
@@ -952,5 +994,3 @@ class Query(object):
         self.err_code, self.err_msg = self.api.equal_position(self.query_wrapper_ptr, equal_position)
         self.__raise_on_error()
         return self
-
-# ToDo 66(58+8ctx)/48

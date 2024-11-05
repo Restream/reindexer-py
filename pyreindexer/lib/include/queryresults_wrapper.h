@@ -35,6 +35,11 @@ public:
 		return db_->Select(query, *this);
 	}
 
+	Error Status() {
+		assert(wrap_);
+		return it_.Status();
+	}
+
 	size_t Count() const {
 		assert(wrap_);
 		return qres_.Count();

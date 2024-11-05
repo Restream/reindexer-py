@@ -249,6 +249,11 @@ void QueryWrapper::Join(JoinType type, unsigned joinQueryIndex, QueryWrapper* jo
 	joinQueries_.push_back(joinQuery);
 }
 
+void QueryWrapper::Merge(QueryWrapper* mergeQuery) {
+	assert(mergeQuery);
+	mergedQueries_.push_back(mergeQuery);
+}
+
 reindexer::Error QueryWrapper::On(std::string_view joinField, CondType condition, std::string_view joinIndex) {
 	ser_.PutVarUint(QueryItemType::QueryJoinOn);
 	ser_.PutVarUint(nextOperation_);

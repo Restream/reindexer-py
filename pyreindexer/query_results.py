@@ -62,6 +62,18 @@ class QueryResults(object):
 
         self._close_iterator()
 
+    def status(self):
+        """Check status
+
+        # Raises:
+            Exception: Raises with an error message of API return on non-zero error code
+
+        """
+
+        self.err_code, self.err_msg = self.api.query_results_status(self.qres_wrapper_ptr)
+        if self.err_code:
+            raise Exception(self.err_msg)
+
     def count(self):
         """Returns a count of results
 

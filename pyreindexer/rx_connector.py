@@ -397,10 +397,8 @@ class RxConnector(RaiserMixin):
 
         """
 
-        self.raise_on_not_init() # ToDo return query.select()
-        self.err_code, self.err_msg, qres_wrapper_ptr, qres_iter_count = self.api.select_query(query.query_wrapper_ptr)
-        self.raise_on_error()
-        return QueryResults(self.api, qres_wrapper_ptr, qres_iter_count)
+        self.raise_on_not_init()
+        return query.execute()
 
     def delete_query(self, query: Query) -> int:
         """Delete will execute query, and delete items, matches query

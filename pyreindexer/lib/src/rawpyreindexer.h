@@ -39,6 +39,7 @@ static PyObject* GetMeta(PyObject* self, PyObject* args);
 static PyObject* DeleteMeta(PyObject* self, PyObject* args);
 static PyObject* EnumMeta(PyObject* self, PyObject* args);
 // query results
+static PyObject* QueryResultsWrapperStatus(PyObject* self, PyObject* args);
 static PyObject* QueryResultsWrapperIterate(PyObject* self, PyObject* args);
 static PyObject* QueryResultsWrapperDelete(PyObject* self, PyObject* args);
 static PyObject* GetAggregationResults(PyObject* self, PyObject* args);
@@ -90,6 +91,7 @@ static PyObject* Set(PyObject* self, PyObject* args);
 static PyObject* Drop(PyObject* self, PyObject* args);
 static PyObject* SetExpression(PyObject* self, PyObject* args);
 static PyObject* Join(PyObject* self, PyObject* args);
+static PyObject* Merge(PyObject* self, PyObject* args);
 static PyObject* On(PyObject* self, PyObject* args);
 static PyObject* SelectFilter(PyObject* self, PyObject* args);
 static PyObject* FetchCount(PyObject* self, PyObject* args);
@@ -122,6 +124,7 @@ static PyMethodDef module_methods[] = {
 	{"meta_delete", DeleteMeta, METH_VARARGS, "delete meta"},
 	{"meta_enum", EnumMeta, METH_VARARGS, "enum meta"},
 	// query results
+	{"query_results_status", QueryResultsWrapperStatus, METH_VARARGS, "get query result status"},
 	{"query_results_iterate", QueryResultsWrapperIterate, METH_VARARGS, "get query result"},
 	{"query_results_delete", QueryResultsWrapperDelete, METH_VARARGS, "free query results buffer"},
 	{"get_agg_results", GetAggregationResults, METH_VARARGS, "get aggregation results"},
@@ -173,6 +176,7 @@ static PyMethodDef module_methods[] = {
 	{"drop", Drop, METH_VARARGS, "drop values"},
 	{"expression", SetExpression, METH_VARARGS, "set expression"},
 	{"join", Join, METH_VARARGS, "join 2 query"},
+	{"merge", Merge, METH_VARARGS, "merge 2 query"},
 	{"on", On, METH_VARARGS, "on specifies join condition"},
 	{"select_filter", SelectFilter, METH_VARARGS, "select add filter to fields of result's objects"},
 	{"fetch_count", FetchCount, METH_VARARGS, "limit number of items"},

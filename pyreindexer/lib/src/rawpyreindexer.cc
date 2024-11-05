@@ -422,6 +422,17 @@ static PyObject* EnumMeta(PyObject* self, PyObject* args) {
 
 // query results -------------------------------------------------------------------------------------------------------
 
+static PyObject* QueryResultsWrapperStatus(PyObject* self, PyObject* args) {
+	uintptr_t qresWrapperAddr = 0;
+	if (!PyArg_ParseTuple(args, "k", &qresWrapperAddr)) {
+		return nullptr;
+	}
+
+	QueryResultsWrapper* qresWrapper = getWrapper<QueryResultsWrapper>(qresWrapperAddr);
+	auto err = qresWrapper->Status();
+	return pyErr(err);
+}
+
 static PyObject* QueryResultsWrapperIterate(PyObject* self, PyObject* args) {
 	uintptr_t qresWrapperAddr = 0;
 	if (!PyArg_ParseTuple(args, "k", &qresWrapperAddr)) {
@@ -1103,8 +1114,22 @@ static PyObject* Join(PyObject* self, PyObject* args) {
 	}
 
 	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
-	auto joinQuery = getWrapper<QueryWrapper>(queryWrapperAddrJoin);
-	query->Join(JoinType(type), index, joinQuery);
+	auto queryJoin = getWrapper<QueryWrapper>(queryWrapperAddrJoin);
+	query->Join(JoinType(type), index, queryJoin);
+
+	Py_RETURN_NONE;
+}
+
+static PyObject* Merge(PyObject* self, PyObject* args) {
+	uintptr_t queryWrapperAddr = 0;
+	uintptr_t queryWrapperAddrMerge = 0;
+	if (!PyArg_ParseTuple(args, "kIIk", &queryWrapperAddr, &queryWrapperAddrMerge)) {
+		return nullptr;
+	}
+
+	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
+	auto queryMerge = getWrapper<QueryWrapper>(queryWrapperAddrMerge);
+	query->Merge(queryMerge);
 
 	Py_RETURN_NONE;
 }

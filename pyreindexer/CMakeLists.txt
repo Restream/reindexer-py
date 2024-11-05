@@ -11,10 +11,12 @@ endif()
 enable_testing()
 
 set(PY_MIN_VERSION 3.6)
-set(RX_MIN_VERSION 3.24.0)
+set(RX_MIN_VERSION 3.24.0) # ToDo
 find_package(PythonInterp ${PY_MIN_VERSION})
 find_package(PythonLibs ${PY_MIN_VERSION})
 find_package(reindexer CONFIG ${RX_MIN_VERSION})
+
+option(WITH_GCOV "Enable instrumented code coverage build" OFF)
 
 set(LIB_BUILTIN_NAME "rawpyreindexerb")
 set(LIB_CPROTO_NAME "rawpyreindexerc")
@@ -23,8 +25,8 @@ set(LIBS_EXT ".so")
 set(LIBSRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/src)
 set(RESOURCES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/include)
 
-set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror")
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -Wall -Wextra -Werror -Wno-unused-parameter -fexceptions")
+set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror -Wswitch-enum")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -Wall -Wextra -Werror -Wswitch-enum -Wno-unused-parameter -Wold-style-cast -fexceptions")
 string (REPLACE "-O2" "-O3" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
 
 file(GLOB_RECURSE SRCS ${RESOURCES_DIR}/*.cc ${LIBSRC_DIR}/*.cc)
@@ -54,6 +56,6 @@ set_target_properties(${LIB_BUILTIN_NAME} PROPERTIES PREFIX "")
 set_target_properties(${LIB_CPROTO_NAME} PROPERTIES PREFIX "")
 
 if (WITH_GCOV)
-    target_link_libraries(${LIB_BUILTIN_NAME} -fprofile-arcs)
-    target_link_libraries(${LIB_CPROTO_NAME} -fprofile-arcs)
+    target_link_libraries(${LIB_BUILTIN_NAME} -fprofile-arcs -ftest-coverage)
+    target_link_libraries(${LIB_CPROTO_NAME} -fprofile-arcs -ftest-coverage)
 endif (WITH_GCOV)
