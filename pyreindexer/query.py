@@ -803,12 +803,32 @@ class Query(object):
 ################################################################ // ToDo
 #func (q *Query) MustExecCtx(ctx context.Context) *Iterator {
 ################################################################
-#func (q *Query) Get() (item interface{}, found bool) {
+
+    def get(self) -> (str, bool):
+        """Get will execute query, and return 1 string item
+
+        # Returns:
+            (:tuple:string,bool): 1 string item and found flag
+
+        # Raises:
+            Exception: Raises with an error message when query is in an invalid state
+            Exception: Raises with an error message of API return on non-zero error code
+
+        """
+
+        if self.root is not None:
+            return self.get()
+
+        selected_items = self.limit(1).must_execute()
+        for item in selected_items:
+            return item, True
+
+        return '', False
+
 ################################################################ // ToDo
 #func (q *Query) GetCtx(ctx context.Context) (item interface{}, found bool) {
-################################################################
+################################################################ // ToDo - not actual
 #func (q *Query) GetJson() (json []byte, found bool) {
-################################################################ // ToDo
 #func (q *Query) GetJsonCtx(ctx context.Context) (json []byte, found bool) {
 ################################################################
 

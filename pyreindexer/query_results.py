@@ -46,8 +46,7 @@ class QueryResults(object):
 
         if self.pos < self.qres_iter_count:
             self.pos += 1
-            self.err_code, self.err_msg, res = self.api.query_results_iterate(
-                self.qres_wrapper_ptr)
+            self.err_code, self.err_msg, res = self.api.query_results_iterate(self.qres_wrapper_ptr)
             if self.err_code:
                 raise Exception(self.err_msg)
             return res
