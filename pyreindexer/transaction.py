@@ -24,7 +24,7 @@ class Transaction(object):
         self.err_msg = ""
 
     def __del__(self):
-        """Roll back a transaction if it was not previously stopped
+        """Rollbacks a transaction if it was not previously stopped
 
         """
 
@@ -73,7 +73,7 @@ class Transaction(object):
         self.__raise_on_error()
 
     def update(self, item_def, precepts=None):
-        """Update an item with its precepts to the transaction
+        """Updates an item with its precepts to the transaction
 
         # Arguments:
             item_def (dict): A dictionary of item definition
@@ -91,7 +91,7 @@ class Transaction(object):
         self.__raise_on_error()
 
     def upsert(self, item_def, precepts=None):
-        """Update an item with its precepts to the transaction. Creates the item if it not exists
+        """Updates an item with its precepts to the transaction. Creates the item if it not exists
 
         # Arguments:
             item_def (dict): A dictionary of item definition
@@ -109,7 +109,7 @@ class Transaction(object):
         self.__raise_on_error()
 
     def delete(self, item_def):
-        """Delete an item from the transaction
+        """Deletes an item from the transaction
 
         # Arguments:
             item_def (dict): A dictionary of item definition
@@ -125,7 +125,7 @@ class Transaction(object):
         self.__raise_on_error()
 
     def commit(self):
-        """Apply changes
+        """Applies changes
 
         # Raises:
             Exception: Raises with an error message of API return if Transaction is over
@@ -139,7 +139,7 @@ class Transaction(object):
         self.__raise_on_error()
 
     def commit_with_count(self) -> int:
-        """Apply changes and return the number of count of changed items
+        """Applies changes and return the number of count of changed items
 
         # Raises:
             Exception: Raises with an error message of API return if Transaction is over
@@ -154,7 +154,7 @@ class Transaction(object):
         return count
 
     def rollback(self):
-        """Rollback changes
+        """Rollbacks changes
 
         # Raises:
             Exception: Raises with an error message of API return if Transaction is over

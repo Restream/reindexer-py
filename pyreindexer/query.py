@@ -44,7 +44,6 @@ class Query(object):
         join_type (:enum:`JoinType`): Join type
         join_queries (list[:object:`Query`]): The list of join Reindexer query objects
         merged_queries (list[:object:`Query`]): The list of merged Reindexer query objects
-        closed (bool): Whether the query is closed
 
     """
 
@@ -67,7 +66,7 @@ class Query(object):
         self.merged_queries: List[Query] = []
 
     def __del__(self):
-        """Free query memory
+        """Frees query memory
 
         """
 
@@ -87,7 +86,7 @@ class Query(object):
 
     @staticmethod
     def __convert_to_list(param: Union[simple_types, List[simple_types]]) -> List[simple_types]:
-        """Convert an input parameter to a list
+        """Converts an input parameter to a list
 
         # Arguments:
             param (Union[None, simple_types, list[simple_types]]): The input parameter
@@ -102,7 +101,7 @@ class Query(object):
         return param
 
     def where(self, index: str, condition: CondType, keys: Union[simple_types, List[simple_types]]=None) -> Query:
-        """Add where condition to DB query with int args
+        """Adds where condition to DB query with args
 
         # Arguments:
             index (string): Field name used in condition clause
@@ -125,13 +124,13 @@ class Query(object):
         return self
 
     def where_query(self, sub_query: Query, condition: CondType, keys: Union[simple_types, List[simple_types]]=None) -> Query:
-        """Add sub query where condition to DB query with int args
+        """Adds sub-query where condition to DB query with args
 
         # Arguments:
             sub_query (:obj:`Query`): Field name used in condition clause
             condition (:enum:`CondType`): Type of condition
             keys (Union[None, simple_types, list[simple_types]]):
-                Value of index to be compared with. For composite indexes keys must be list, with value of each subindex
+                Value of index to be compared with. For composite indexes keys must be list, with value of each sub-index
 
         # Returns:
             (:obj:`Query`): Query object for further customizations
@@ -148,7 +147,7 @@ class Query(object):
         return self
 
     def where_composite(self, index: str, condition: CondType, sub_query: Query) -> Query:
-        """Add where condition to DB query with interface args for composite indexes
+        """Adds where condition to DB query with interface args for composite indexes
 
         # Arguments:
             index (string): Field name used in condition clause
@@ -164,9 +163,9 @@ class Query(object):
         return self
 
     def where_uuid(self, index: str, condition: CondType, keys: List[str]) -> Query:
-        """Add where condition to DB query with UUID as string args.
+        """Adds where condition to DB query with UUID as string args.
             This function applies binary encoding to the UUID value.
-            'index' MUST be declared as uuid index in this case
+            `index` MUST be declared as uuid index in this case
 
         # Arguments:
             index (string): Field name used in condition clause
@@ -181,14 +180,14 @@ class Query(object):
 
         """
 
-        keys = [] if keys is None else keys
+        params: list = self.__convert_to_list(keys)
 
-        self.err_code, self.err_msg = self.api.where_uuid(self.query_wrapper_ptr, index, condition.value, keys)
+        self.err_code, self.err_msg = self.api.where_uuid(self.query_wrapper_ptr, index, condition.value, params)
         self.__raise_on_error()
         return self
 
     def where_between_fields(self, first_field: str, condition: CondType, second_field: str) -> Query:
-        """Add comparing two fields where condition to DB query
+        """Adds comparing two fields where condition to DB query
 
         # Arguments:
             first_field (string): First field name used in condition clause
@@ -204,7 +203,7 @@ class Query(object):
         return self
 
     def open_bracket(self) -> Query:
-        """Open bracket for where condition to DB query
+        """Opens bracket for where condition to DB query
 
         # Returns:
             (:obj:`Query`): Query object for further customizations
@@ -219,7 +218,7 @@ class Query(object):
         return self
 
     def close_bracket(self) -> Query:
-        """CloseBracket - Close bracket for where condition to DB query
+        """Closes bracket for where condition to DB query
 
         # Returns:
             (:obj:`Query`): Query object for further customizations
@@ -234,7 +233,7 @@ class Query(object):
         return self
 
     def match(self, index: str, keys: List[str]) -> Query:
-        """Add string EQ-condition to DB query with string args
+        """Adds string EQ-condition to DB query with string args
 
         # Arguments:
             index (string): Field name used in condition clause
@@ -248,14 +247,14 @@ class Query(object):
 
         """
 
-        keys = [] if keys is None else keys
+        params: list = self.__convert_to_list(keys)
 
-        self.err_code, self.err_msg = self.api.where(self.query_wrapper_ptr, index, CondType.CondEq.value, keys)
+        self.err_code, self.err_msg = self.api.where(self.query_wrapper_ptr, index, CondType.CondEq.value, params)
         self.__raise_on_error()
         return self
 
     def dwithin(self, index: str, point: Point, distance: float) -> Query:
-        """Add DWithin condition to DB query
+        """Adds DWithin condition to DB query
 
         # Arguments:
             index (string): Field name used in condition clause
@@ -271,8 +270,7 @@ class Query(object):
         return self
 
     def distinct(self, index: str) -> Query:
-        """Performs distinct for a certain index.
-            Return only items with uniq value of field
+        """Performs distinct for a certain index. Return only items with uniq value of field
 
         # Arguments:
             index (string): Field name for distinct operation
@@ -354,8 +352,7 @@ class Query(object):
             """Constructs a new Reindexer AggregateFacetRequest object
 
             # Arguments:
-                api (module): An API module for Reindexer calls
-                query_wrapper_ptr (int): A memory pointer to Reindexer query object
+                (:obj:`Query`): Query object for further customizations
 
             """
 
@@ -363,7 +360,7 @@ class Query(object):
             self.query_wrapper_ptr = query.query_wrapper_ptr
 
         def limit(self, limit: int) -> Query._AggregateFacet:
-            """Limit facet aggregation results
+            """Limits facet aggregation results
 
             # Arguments:
                 limit (int): Limit of aggregation of facet
@@ -377,7 +374,7 @@ class Query(object):
             return self
 
         def offset(self, offset: int) -> Query._AggregateFacet:
-            """Set offset of the facet aggregation results
+            """Sets offset of the facet aggregation results
 
             # Arguments:
                 limit (int): Offset in facet aggregation results
@@ -391,11 +388,11 @@ class Query(object):
             return self
 
         def sort(self, field: str, desc: bool) -> Query._AggregateFacet:
-            """Sort facets by field value
+            """Sorts facets by field value
 
             # Arguments:
-                field (str): Item field. Use field 'count' to sort by facet's count value
-                desc (bool): Sort in descending order
+                field (str): Item field. Use field `count` to sort by facet's count value
+                desc (bool): Sort in descending order flag
 
             # Returns:
                 (:obj:`_AggregateFacet`): Facet object for further customizations
@@ -406,12 +403,12 @@ class Query(object):
             return self
 
     def aggregate_facet(self, fields: List[str]) -> Query._AggregateFacet:
-        """Get fields facet value. Applicable to multiple data fields and the result of that could be sorted by any data
-            column or 'count' and cut off by offset and limit. In order to support this functionality this method
+        """Gets fields facet value. Applicable to multiple data fields and the result of that could be sorted by any data
+            column or `count` and cut off by offset and limit. In order to support this functionality this method
             returns AggregationFacetRequest which has methods sort, limit and offset
 
         # Arguments:
-            fields (list[string]): Fields any data column name or 'count', fields should not be empty
+            fields (list[string]): Fields any data column name or `count`, fields should not be empty
 
         # Returns:
             (:obj:`_AggregateFacet`): Request object for further customizations
@@ -425,14 +422,14 @@ class Query(object):
         return self._AggregateFacet(self)
 
     def sort(self, index: str, desc: bool, keys: Union[simple_types, List[simple_types]]=None) -> Query:
-        """Apply sort order to return from query items. If values argument specified, then items equal to values,
+        """Applies sort order to return from query items. If values argument specified, then items equal to values,
             if found will be placed in the top positions. Forced sort is support for the first sorting field only
 
         # Arguments:
             index (string): The index name
             desc (bool): Sort in descending order
             keys (Union[None, simple_types, List[simple_types]]):
-                Value of index to match. For composite indexes keys must be list, with value of each subindex
+                Value of index to match. For composite indexes keys must be list, with value of each sub-index
 
         # Returns:
             (:obj:`Query`): Query object for further customizations
@@ -449,7 +446,7 @@ class Query(object):
         return self
 
     def sort_stpoint_distance(self, index: str, point: Point, desc: bool) -> Query:
-        """Apply geometry sort order to return from query items. Wrapper for geometry sorting by shortest distance
+        """Applies geometry sort order to return from query items. Wrapper for geometry sorting by shortest distance
             between geometry field and point (ST_Distance)
 
         # Arguments:
@@ -470,7 +467,7 @@ class Query(object):
         return self.sort(request, desc)
 
     def sort_stfield_distance(self, first_field: str, second_field: str, desc: bool) -> Query:
-        """Apply geometry sort order to return from query items. Wrapper for geometry sorting by shortest distance
+        """Applies geometry sort order to return from query items. Wrapper for geometry sorting by shortest distance
             between 2 geometry fields (ST_Distance)
 
         # Arguments:
@@ -529,7 +526,7 @@ class Query(object):
         return self
 
     def request_total(self, total_name: str= '') -> Query:
-        """Request total items calculation
+        """Requests total items calculation
 
         # Arguments:
             total_name (string, optional): Name to be requested
@@ -543,7 +540,7 @@ class Query(object):
         return self
 
     def cached_total(self, total_name: str= '') -> Query:
-        """Request cached total items calculation
+        """Requests cached total items calculation
 
         # Arguments:
             total_name (string, optional): Name to be requested
@@ -557,8 +554,7 @@ class Query(object):
         return self
 
     def limit(self, limit_items: int) -> Query:
-        """Set a limit (count) of returned items.
-            Analog to sql LIMIT rowsNumber
+        """Sets a limit (count) of returned items. Analog to sql LIMIT rowsNumber
 
         # Arguments:
             limit_items (int): Number of rows to get from result set
@@ -614,7 +610,7 @@ class Query(object):
         return self
 
     def explain(self) -> Query:
-        """Enable explain query
+        """Enables explain query
 
         # Returns:
             (:obj:`Query`): Query object for further customizations
@@ -625,7 +621,7 @@ class Query(object):
         return self
 
     def with_rank(self) -> Query:
-        """Output fulltext rank. Allowed only with fulltext query
+        """Outputs fulltext rank. Allowed only with fulltext query
 
         # Returns:
             (:obj:`Query`): Query object for further customizations
@@ -636,7 +632,7 @@ class Query(object):
         return self
 
     def execute(self) -> QueryResults:
-        """Exec will execute query, and return slice of items
+        """Executes a select query
 
         # Returns:
             (:obj:`QueryResults`): A QueryResults iterator
@@ -655,7 +651,7 @@ class Query(object):
         return QueryResults(self.api, qres_wrapper_ptr, qres_iter_count)
 
     def delete(self) -> int:
-        """Delete will execute query, and delete items, matches query
+        """Executes a query, and delete items, matches query
 
         # Returns:
             (int): Number of deleted elements
@@ -745,7 +741,7 @@ class Query(object):
         return self
 
     def update(self) -> QueryResults:
-        """Update will execute query, and update fields in items, which matches query
+        """Executes update query, and update fields in items, which matches query
 
         # Returns:
             (:obj:`QueryResults`): A QueryResults iterator
@@ -764,7 +760,7 @@ class Query(object):
         return QueryResults(self.api, qres_wrapper_ptr, qres_iter_count)
 
     def must_execute(self) -> QueryResults:
-        """Exec will execute query, and return slice of items, with status check
+        """Executes a query, and update fields in items, which matches query, with status check
 
         # Returns:
             (:obj:`QueryResults`): A QueryResults iterator
@@ -780,10 +776,10 @@ class Query(object):
         return result
 
     def get(self) -> (str, bool):
-        """Get will execute query, and return 1 string item
+        """Executes a query, and return 1 JSON item
 
         # Returns:
-            (:tuple:string,bool): 1 string item and found flag
+            (:tuple:string,bool): 1st string item and found flag
 
         # Raises:
             Exception: Raises with an error message when query is in an invalid state
@@ -832,13 +828,14 @@ class Query(object):
         return query
 
     def inner_join(self, query: Query, field: str) -> Query:
-        """InnerJoin joins 2 queries.
+        """Joins 2 queries.
             Items from the 1-st query are filtered by and expanded with the data from the 2-nd query
 
         # Arguments:
             query (:obj:`Query`): Query object to left join
             field (string): Joined field name. As unique identifier for the join between this query and `join_query`.
-                Parameter in order for InnerJoin to work: namespace of `query` contains `field` as one of its fields marked as `joined`
+                Parameter in order for InnerJoin to work: namespace of `query` contains `field` as one of its fields
+                marked as `joined`
 
         # Returns:
             (:obj:`Query`): Query object for further customizations
@@ -848,7 +845,7 @@ class Query(object):
         return self.__join(query, field, JoinType.InnerJoin)
 
     def join(self, query: Query, field: str) -> Query:
-        """Join is an alias for LeftJoin. LeftJoin joins 2 queries.
+        """Join is an alias for LeftJoin. Joins 2 queries.
             Items from this query are expanded with the data from the `query`
 
         # Arguments:
@@ -863,7 +860,7 @@ class Query(object):
         return self.__join(query, field, JoinType.LeftJoin)
 
     def left_join(self, join_query: Query, field: str) -> Query:
-        """LeftJoin joins 2 queries.
+        """Joins 2 queries.
             Items from this query are expanded with the data from the join_query.
             One of the conditions below must hold for `field` parameter in order for LeftJoin to work:
                 namespace of `join_query` contains `field` as one of its fields marked as `joined`
@@ -880,7 +877,7 @@ class Query(object):
         return self.__join(join_query, field, JoinType.LeftJoin)
 
     def merge(self, query: Query) -> Query:
-        """Merge queries of the same type
+        """Merges queries of the same type
 
         # Arguments:
             query (:obj:`Query`): Query object to merge

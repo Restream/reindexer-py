@@ -344,7 +344,7 @@ class RxConnector(RaiserMixin):
         return QueryResults(self.api, qres_wrapper_ptr, qres_iter_count)
 
     def new_transaction(self, namespace) -> Transaction:
-        """Start a new transaction and return the transaction object to processing
+        """Starts a new transaction and return the transaction object to processing
 
         # Arguments:
             namespace (string): A name of a namespace
@@ -364,7 +364,7 @@ class RxConnector(RaiserMixin):
         return Transaction(self.api, transaction_wrapper_ptr)
 
     def new_query(self, namespace: str) -> Query:
-        """Create a new query and return the query object to processing
+        """Creates a new query and return the query object to processing
 
         # Arguments:
             namespace (string): A name of a namespace
@@ -383,7 +383,7 @@ class RxConnector(RaiserMixin):
         return Query(self.api, query_wrapper_ptr)
 
     def select_query(self, query: Query) -> QueryResults:
-        """Executes an query and returns query results
+        """Executes a select query
 
         # Arguments:
             query (:obj:`Query`): An query object
@@ -401,7 +401,7 @@ class RxConnector(RaiserMixin):
         return query.execute()
 
     def delete_query(self, query: Query) -> int:
-        """Delete will execute query, and delete items, matches query
+        """Executes a query, and delete items, matches query
 
         # Arguments:
             query (:obj:`Query`): An query object
@@ -419,7 +419,7 @@ class RxConnector(RaiserMixin):
         return query.delete()
 
     def update_query(self, query: Query) -> QueryResults:
-        """Update will execute query, and update fields in items, which matches query
+        """Executes update query, and update fields in items, which matches query
 
         # Arguments:
             query (:obj:`Query`): An query object

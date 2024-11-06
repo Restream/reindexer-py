@@ -227,7 +227,7 @@ PyObject* pyValueFromJsonValue(const gason::JsonValue& value) {
 			}
 			break;
 		case gason::JSON_EMPTY:
-			throw gason::Exception("Unexpected 'JSON_EMPTY' tag");
+			throw gason::Exception("Unexpected `JSON_EMPTY` tag");
 			break;
 	}
 

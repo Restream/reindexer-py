@@ -344,7 +344,7 @@ __Raises:__
 ```python
 RxConnector.new_transaction(self, namespace)
 ```
-Start a new transaction and return the transaction object to processing
+Starts a new transaction and return the transaction object to processing
 
 __Arguments:__
 
@@ -432,7 +432,7 @@ __Attributes:__
 ```python
 Transaction.commit(self)
 ```
-Commit a transaction
+Commits a transaction
 
 __Raises:__
 
@@ -445,7 +445,7 @@ __Raises:__
 ```python
 Transaction.delete(self, item_def)
 ```
-Delete an item from the transaction.
+Deletes an item from the transaction.
 
 __Arguments:__
 
@@ -480,7 +480,7 @@ __Raises:__
 ```python
 Transaction.rollback(self)
 ```
-Roll back a transaction
+Rollbacks a transaction
 
 __Raises:__
 
@@ -493,7 +493,7 @@ __Raises:__
 ```python
 Transaction.update(self, item_def, precepts=None)
 ```
-Update an item with its precepts to the transaction
+Updates an item with its precepts to the transaction
 
 __Arguments:__
 
@@ -511,7 +511,7 @@ __Raises:__
 ```python
 Transaction.upsert(self, item_def, precepts=None)
 ```
-Update an item with its precepts to the transaction. Creates the item if it not exists
+Updates an item with its precepts to the transaction. Creates the item if it not exists
 
 __Arguments:__
 
