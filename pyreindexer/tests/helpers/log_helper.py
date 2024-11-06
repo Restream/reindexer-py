@@ -21,11 +21,11 @@ class OneLineExceptionFormatter(logging.Formatter):
 
 
 # Create logger
-log_operation = logging.getLogger('OPERATION')
+log_api = logging.getLogger('API')
 log_fixture = logging.getLogger('FIXTURE')
 log_error = logging.getLogger('ERROR')
 
-log_operation.setLevel(logging.INFO)
+log_api.setLevel(logging.INFO)
 log_fixture.setLevel(logging.INFO)
 log_error.setLevel(logging.ERROR)
 
@@ -41,5 +41,5 @@ log_filename = os.path.join(os.path.dirname(log_folder), 'test_run_%s.txt' % (da
 file_handler = logging.FileHandler(log_filename)
 file_handler.setLevel(logging.INFO)
 file_handler.setFormatter(formatter)
-log_operation.addHandler(file_handler)
+log_api.addHandler(file_handler)
 log_fixture.addHandler(file_handler)

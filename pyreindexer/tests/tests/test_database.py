@@ -1,15 +1,12 @@
 from hamcrest import *
 
-import pyreindexer
 from ..test_data.constants import special_namespaces, special_namespaces_cluster
 
 
 class TestCrudDb:
-    def test_create_db(self):
-        # Given ("Create empty database")
-        db = pyreindexer.RxConnector('builtin:///tmp/test_db')
+    def test_create_db(self, db):
         # When ("Get namespaces list in created database")
-        namespaces_list = db.namespaces_enum()
+        namespaces_list = db.namespace.enumerate()
         # Then ("Check that database contains only special namespaces")
         if len(namespaces_list) == len(special_namespaces_cluster):
             expected_namespaces = special_namespaces_cluster  # v4
