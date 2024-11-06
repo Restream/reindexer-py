@@ -1,7 +1,7 @@
 from hamcrest import *
 
-from pyreindexer.tests.helpers.base_helper import get_ns_description
-from pyreindexer.tests.test_data.constants import index_definition, updated_index_definition
+from tests.helpers.base_helper import get_ns_description
+from tests.test_data.constants import index_definition, updated_index_definition
 
 
 class TestCrudIndexes:

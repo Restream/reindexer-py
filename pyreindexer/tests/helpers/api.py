@@ -1,5 +1,5 @@
 from pyreindexer import RxConnector
-from pyreindexer.tests.helpers.log_helper import log_api
+from tests.helpers.log_helper import log_api
 
 
 def make_request_and_response_log(method_description, request_msg, res=None) -> str:

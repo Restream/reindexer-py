@@ -2,9 +2,9 @@ import shutil
 
 import pytest
 
-from pyreindexer.tests.helpers.api import ConnectorApi
-from pyreindexer.tests.helpers.log_helper import log_fixture
-from pyreindexer.tests.test_data.constants import index_definition, item_definition
+from tests.helpers.api import ConnectorApi
+from tests.helpers.log_helper import log_fixture
+from tests.test_data.constants import index_definition, item_definition
 
 
 def pytest_addoption(parser):

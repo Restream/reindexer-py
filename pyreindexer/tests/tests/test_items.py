@@ -1,7 +1,7 @@
 from hamcrest import *
 
-from pyreindexer.tests.helpers.base_helper import get_ns_items
-from pyreindexer.tests.test_data.constants import item_definition
+from tests.helpers.base_helper import get_ns_items
+from tests.test_data.constants import item_definition
 
 
 class TestCrudItems:
