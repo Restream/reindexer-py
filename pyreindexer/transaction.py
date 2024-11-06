@@ -1,4 +1,4 @@
-class Transaction(object):
+class Transaction:
     """An object representing the context of a Reindexer transaction
 
     # Attributes:

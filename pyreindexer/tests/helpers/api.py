@@ -30,10 +30,11 @@ class ConnectorApi(RxConnector):
     def __init__(self, dsn):
         super().__init__(dsn)
         self.namespace = NamespaceApiMethods(self)
-        self.index = IndexesApiMethods(self)
+        self.index = IndexApiMethods(self)
         self.item = ItemApiMethods(self)
         self.query = QueryApiMethods(self)
         self.meta = MetaApiMethods(self)
+        self.tx = TransactionApiMethods(self)
 
 
 class NamespaceApiMethods:
@@ -61,7 +62,7 @@ class NamespaceApiMethods:
         return self.api.namespaces_enum(enum_not_opened)
 
 
-class IndexesApiMethods:
+class IndexApiMethods:
     def __init__(self, api):
         self.api = api
 
@@ -139,3 +140,50 @@ class MetaApiMethods:
     def delete(self, ns_name, key):
         """ Delete meta by key """
         return self.api.meta_delete(ns_name, key)
+
+
+class TransactionApiMethods:
+    def __init__(self, api):
+        self.api = api
+        self.tx = None
+
+    @api_method
+    def begin(self, ns_name):
+        """ Begin new transaction """
+        self.tx = self.api.new_transaction(ns_name)
+        return self.tx
+
+    @api_method
+    def commit(self):
+        """ Commit the transaction """
+        return self.tx.commit()
+
+    @api_method
+    def commit_with_count(self):
+        """ Commit the transaction and return the number of changed items """
+        return self.tx.commit_with_count()
+
+    @api_method
+    def rollback(self):
+        """ Rollback the transaction """
+        return self.tx.rollback()
+
+    @api_method
+    def item_insert(self, item, precepts=None):
+        """ Insert item into transaction """
+        return self.tx.insert(item, precepts)
+
+    @api_method
+    def item_upsert(self, item, precepts=None):
+        """ Upsert item into transaction """
+        return self.tx.upsert(item, precepts)
+
+    @api_method
+    def item_update(self, item, precepts=None):
+        """ Update item into transaction """
+        return self.tx.update(item, precepts)
+
+    @api_method
+    def item_delete(self, item):
+        """ Delete item from transaction """
+        return self.tx.delete(item)
