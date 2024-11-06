@@ -1,8 +1,9 @@
-from typing import List, Dict
-from pyreindexer.raiser_mixin import RaiserMixin
-from pyreindexer.query_results import QueryResults
-from pyreindexer.transaction import Transaction
+from typing import Dict, List
+
 from pyreindexer.query import Query
+from pyreindexer.query_results import QueryResults
+from pyreindexer.raiser_mixin import RaiserMixin
+from pyreindexer.transaction import Transaction
 
 
 class RxConnector(RaiserMixin):
@@ -265,7 +266,7 @@ class RxConnector(RaiserMixin):
         self.err_code, self.err_msg = self.api.meta_put(self.rx, namespace, key, value)
         self.raise_on_error()
 
-    def meta_get(self, namespace, key) -> str :
+    def meta_get(self, namespace, key) -> str:
         """Gets metadata from a storage of Reindexer by key specified
 
         # Arguments:
@@ -303,7 +304,7 @@ class RxConnector(RaiserMixin):
         self.err_code, self.err_msg = self.api.meta_delete(self.rx, namespace, key)
         self.raise_on_error()
 
-    def meta_enum(self, namespace) -> List[str] :
+    def meta_enum(self, namespace) -> List[str]:
         """Gets a list of metadata keys from a storage of Reindexer
 
         # Arguments:

@@ -1,4 +1,4 @@
-class RaiserMixin(object):
+class RaiserMixin:
     """RaiserMixin contains methods for checking some typical API bad events and raise if there is a necessity
 
     """

@@ -1,8 +1,11 @@
 from __future__ import annotations
-from typing import List, Union
+
 from enum import Enum
-from pyreindexer.query_results import QueryResults
+from typing import List, Union
+
 from pyreindexer.point import Point
+from pyreindexer.query_results import QueryResults
+
 
 class CondType(Enum):
     CondAny = 0
@@ -18,11 +21,13 @@ class CondType(Enum):
     CondLike = 10
     CondDWithin = 11
 
+
 class StrictMode(Enum):
     NotSet = 0
     Empty = 1
     Names = 2
     Indexes = 3
+
 
 class JoinType(Enum):
     LeftJoin = 0
@@ -30,9 +35,11 @@ class JoinType(Enum):
     OrInnerJoin = 2
     Merge = 3
 
+
 simple_types = Union[int, str, bool, float]
 
-class Query(object):
+
+class Query:
     """An object representing the context of a Reindexer query
 
     # Attributes:
@@ -100,7 +107,7 @@ class Query(object):
         param = param if isinstance(param, list) else [param]
         return param
 
-    def where(self, index: str, condition: CondType, keys: Union[simple_types, List[simple_types]]=None) -> Query:
+    def where(self, index: str, condition: CondType, keys: Union[simple_types, List[simple_types]] = None) -> Query:
         """Adds where condition to DB query with args
 
         # Arguments:
@@ -123,7 +130,8 @@ class Query(object):
         self.__raise_on_error()
         return self
 
-    def where_query(self, sub_query: Query, condition: CondType, keys: Union[simple_types, List[simple_types]]=None) -> Query:
+    def where_query(self, sub_query: Query, condition: CondType,
+                    keys: Union[simple_types, List[simple_types]] = None) -> Query:
         """Adds sub-query where condition to DB query with args
 
         # Arguments:
@@ -142,7 +150,8 @@ class Query(object):
 
         params: list = self.__convert_to_list(keys)
 
-        self.err_code, self.err_msg = self.api.where_query(self.query_wrapper_ptr, sub_query.query_wrapper_ptr, condition.value, params)
+        self.err_code, self.err_msg = self.api.where_query(self.query_wrapper_ptr, sub_query.query_wrapper_ptr,
+                                                           condition.value, params)
         self.__raise_on_error()
         return self
 
@@ -339,7 +348,7 @@ class Query(object):
         self.api.aggregate_max(self.query_wrapper_ptr, index)
         return self
 
-    class _AggregateFacet(object) :
+    class _AggregateFacet:
         """An object representing the context of a Reindexer aggregate facet
 
         # Attributes:
@@ -421,7 +430,7 @@ class Query(object):
         self.__raise_on_error()
         return self._AggregateFacet(self)
 
-    def sort(self, index: str, desc: bool, keys: Union[simple_types, List[simple_types]]=None) -> Query:
+    def sort(self, index: str, desc: bool, keys: Union[simple_types, List[simple_types]] = None) -> Query:
         """Applies sort order to return from query items. If values argument specified, then items equal to values,
             if found will be placed in the top positions. Forced sort is support for the first sorting field only
 
@@ -459,11 +468,7 @@ class Query(object):
 
         """
 
-        request: str = "ST_Distance(" + index
-        request += ",ST_GeomFromText('point("
-        request += "{:.10f}".format(point.x) + " " + "{:.10f}".format(point.y)
-        request += ")'))"
-
+        request: str = f"ST_Distance({index},ST_GeomFromText('point({point.x:.10f} {point.y:.10f})'))"
         return self.sort(request, desc)
 
     def sort_stfield_distance(self, first_field: str, second_field: str, desc: bool) -> Query:
@@ -483,8 +488,7 @@ class Query(object):
 
         """
 
-        request: str = 'ST_Distance(' + first_field + ',' + second_field + ')'
-
+        request: str = f"ST_Distance({first_field},{second_field})"
         return self.sort(request, desc)
 
     def op_and(self) -> Query:
@@ -525,7 +529,7 @@ class Query(object):
         self.api.op_not(self.query_wrapper_ptr)
         return self
 
-    def request_total(self, total_name: str= '') -> Query:
+    def request_total(self, total_name: str = '') -> Query:
         """Requests total items calculation
 
         # Arguments:
@@ -539,7 +543,7 @@ class Query(object):
         self.api.request_total(self.query_wrapper_ptr, total_name)
         return self
 
-    def cached_total(self, total_name: str= '') -> Query:
+    def cached_total(self, total_name: str = '') -> Query:
         """Requests cached total items calculation
 
         # Arguments:
@@ -643,7 +647,7 @@ class Query(object):
 
         """
 
-        if self.root is not None :
+        if self.root is not None:
             return self.root.execute()
 
         self.err_code, self.err_msg, qres_wrapper_ptr, qres_iter_count = self.api.select_query(self.query_wrapper_ptr)
@@ -662,7 +666,7 @@ class Query(object):
 
         """
 
-        if (self.root is not None) or (len(self.join_queries) > 0) :
+        if (self.root is not None) or (len(self.join_queries) > 0):
             raise Exception("Delete does not support joined queries")
 
         self.err_code, self.err_msg, number = self.api.delete_query(self.query_wrapper_ptr)
@@ -752,7 +756,7 @@ class Query(object):
 
         """
 
-        if (self.root is not None) or (len(self.join_queries) > 0) :
+        if (self.root is not None) or (len(self.join_queries) > 0):
             raise Exception("Update does not support joined queries")
 
         self.err_code, self.err_msg, qres_wrapper_ptr, qres_iter_count = self.api.update_query(self.query_wrapper_ptr)

@@ -1,4 +1,4 @@
-class Point(object):
+class Point:
     """An object representing the context of a Reindexer 2D point
 
     # Attributes:
