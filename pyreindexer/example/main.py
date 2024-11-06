@@ -1,5 +1,5 @@
 from pyreindexer import RxConnector
-from pyreindexer.query import CondType, StrictMode
+from pyreindexer.query import CondType
 
 
 def create_index_example(db, namespace):
@@ -68,7 +68,7 @@ def transaction_example(db, namespace, items_in_base):
 
     # update last one item, overwrite field 'value'
     item = items_in_base[items_count - 1]
-    item['value'] = 'the transaction was here'
+    item['value'] = 'transaction was here'
     transaction.update(item)
 
     # stop transaction and commit changes to namespace
@@ -86,27 +86,18 @@ def transaction_example(db, namespace, items_in_base):
 
 
 def query_example(db, namespace):
-    (db.new_query(namespace)
-        .open_bracket()
-        .where_between_fields('fld1', CondType.CondEq, 'fld2')
-        .close_bracket()
-        .where('fld2', CondType.CondLe, [42])
-        .limit(10)
-        .debug(1)
-        .request_total())
+    selected_items = (db.new_query(namespace)
+                      .where('value', CondType.CondEq, 'check')
+                      .sort('id')
+                      .limit(4)
+                      .execute())
 
-    query = db.new_query(namespace).offset(1).cached_total()
-    (query.where('fld1', CondType.CondSet, ['s','t','o','p'])
-        .op_not()
-        .where('fld2', CondType.CondSet, [3.14])
-        .where_query(db.new_query(namespace), CondType.CondSet, ['to','check'])
-        .explain()
-        .fetch_count(10))
-    query.expression('fld1', 'array_remove(integer_array, [5,6,7,8]) || [1,2,3]').drop('fld2').strict(StrictMode.Names)
+    res_count = selected_items.count()
+    print('Query results count (limited): ', res_count)
 
-    db.new_query(namespace).sort_stfield_distance('fldGeom1', 'fldGeom2', False)
-
-    db.new_query(namespace).aggregate_facet(['fld1', 'fld2']).limit(100)
+    # disposable QueryResults iterator
+    for item in selected_items:
+        print('Item: ', item)
 
 
 def rx_example():
