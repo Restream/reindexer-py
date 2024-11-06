@@ -25,6 +25,36 @@ QueryWrapper::QueryWrapper(DBInterface* db, std::string_view ns) : db_{db} {
 	ser_.PutVString(ns);
 }
 
+void QueryWrapper::Where(std::string_view index, CondType condition, const std::vector<reindexer::Variant>& keys) {
+	ser_.PutVarUint(QueryItemType::QueryCondition);
+	ser_.PutVString(index);
+	ser_.PutVarUint(nextOperation_);
+	ser_.PutVarUint(condition);
+
+	ser_.PutVarUint(keys.size());
+	for (const auto& key : keys) {
+		ser_.PutVariant(key);
+	}
+
+	nextOperation_ = OpType::OpAnd;
+	++queriesCount_;
+}
+
+void QueryWrapper::WhereQuery(QueryWrapper& query, CondType condition, const std::vector<reindexer::Variant>& keys) {
+	ser_.PutVarUint(QueryItemType::QuerySubQueryCondition);
+	ser_.PutVarUint(nextOperation_);
+	ser_.PutVString(query.ser_.Slice());
+	ser_.PutVarUint(condition);
+
+	ser_.PutVarUint(keys.size());
+	for (const auto& key : keys) {
+		ser_.PutVariant(key);
+	}
+
+	nextOperation_ = OpType::OpAnd;
+	++queriesCount_;
+}
+
 void QueryWrapper::WhereComposite(std::string_view index, CondType condition, QueryWrapper& query) {
 	ser_.PutVarUint(QueryItemType::QueryFieldSubQueryCondition);
 	ser_.PutVarUint(nextOperation_);
@@ -184,7 +214,6 @@ reindexer::JoinedQuery QueryWrapper::createJoinedQuery(JoinType joinType, reinde
 void QueryWrapper::addJoinQueries(const std::vector<QueryWrapper*>& joinQueries, reindexer::Query& query) {
 	for (auto joinQuery : joinQueries) {
 		auto jq = createJoinedQuery(joinQuery->joinType_, joinQuery->ser_);
-		jq.Limit(joinQuery->fetchCount_);
 		query.AddJoinQuery(std::move(jq));
 	}
 }
@@ -192,14 +221,12 @@ void QueryWrapper::addJoinQueries(const std::vector<QueryWrapper*>& joinQueries,
 reindexer::Query QueryWrapper::prepareQuery() {
 	reindexer::Serializer ser = prepareQueryData(ser_);
 	auto query = reindexer::Query::Deserialize(ser);
-	query.Limit(fetchCount_);
 
 	addJoinQueries(joinQueries_, query);
 
 	for (auto mergedQuery : mergedQueries_) {
 		auto mq = createJoinedQuery(JoinType::Merge, mergedQuery->ser_);
 		query.Merge(std::move(mq));
-		mq.Limit(mergedQuery->fetchCount_);
 
 		addJoinQueries(mergedQuery->joinQueries_, mq);
 	}
