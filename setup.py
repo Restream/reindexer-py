@@ -52,7 +52,7 @@ class BuildExt(build_ext_orig):
 
 
 setup(name=PACKAGE_NAME,
-      version='0.2.39',
+      version='0.2.40',
       description='A connector that allows to interact with Reindexer',
       author='Igor Tulmentyev',
       author_email='igtulm@gmail.com',
