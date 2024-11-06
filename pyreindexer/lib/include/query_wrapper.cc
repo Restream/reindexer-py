@@ -58,7 +58,6 @@ void QueryWrapper::WhereUUID(std::string_view index, CondType condition, const s
 	++queriesCount_;
 }
 
-
 void QueryWrapper::WhereBetweenFields(std::string_view firstField, CondType condition, std::string_view secondField) {
 	ser_.PutVarUint(QueryItemType::QueryBetweenFieldsCondition);
 	ser_.PutVarUint(nextOperation_);
@@ -185,6 +184,7 @@ reindexer::JoinedQuery QueryWrapper::createJoinedQuery(JoinType joinType, reinde
 void QueryWrapper::addJoinQueries(const std::vector<QueryWrapper*>& joinQueries, reindexer::Query& query) {
 	for (auto joinQuery : joinQueries) {
 		auto jq = createJoinedQuery(joinQuery->joinType_, joinQuery->ser_);
+		jq.Limit(joinQuery->fetchCount_);
 		query.AddJoinQuery(std::move(jq));
 	}
 }
@@ -192,14 +192,16 @@ void QueryWrapper::addJoinQueries(const std::vector<QueryWrapper*>& joinQueries,
 reindexer::Query QueryWrapper::prepareQuery() {
 	reindexer::Serializer ser = prepareQueryData(ser_);
 	auto query = reindexer::Query::Deserialize(ser);
+	query.Limit(fetchCount_);
 
 	addJoinQueries(joinQueries_, query);
 
 	for (auto mergedQuery : mergedQueries_) {
 		auto mq = createJoinedQuery(JoinType::Merge, mergedQuery->ser_);
 		query.Merge(std::move(mq));
+		mq.Limit(mergedQuery->fetchCount_);
 
-		addJoinQueries(mergedQuery->joinQueries_, query);
+		addJoinQueries(mergedQuery->joinQueries_, mq);
 	}
 
 	return query;
