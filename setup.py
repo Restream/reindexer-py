@@ -52,7 +52,7 @@ class BuildExt(build_ext_orig):
 
 
 setup(name=PACKAGE_NAME,
-      version='0.2.40',
+      version='0.2.41',
       description='A connector that allows to interact with Reindexer',
       author='Igor Tulmentyev',
       author_email='igtulm@gmail.com',
@@ -91,11 +91,8 @@ setup(name=PACKAGE_NAME,
           'tests/tests/test_namespace.py',
           'tests/tests/test_metadata.py',
           'tests/tests/__init__.py',
-          'tests/helpers/namespace.py',
-          'tests/helpers/sql.py',
-          'tests/helpers/items.py',
-          'tests/helpers/index.py',
-          'tests/helpers/metadata.py',
+          'tests/helpers/api.py',
+          'tests/helpers/base_helper.py',
           'tests/helpers/log_helper.py',
           'tests/helpers/__init__.py',
           'tests/__init__.py'
