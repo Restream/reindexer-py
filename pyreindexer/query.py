@@ -32,7 +32,7 @@ class JoinType(Enum):
 
 simple_types = Union[int, str, bool, float]
 
-class Query(object):
+class Query:
     """An object representing the context of a Reindexer query
 
     # Attributes:
@@ -339,7 +339,7 @@ class Query(object):
         self.api.aggregate_max(self.query_wrapper_ptr, index)
         return self
 
-    class _AggregateFacet(object) :
+    class _AggregateFacet:
         """An object representing the context of a Reindexer aggregate facet
 
         # Attributes:
@@ -387,7 +387,7 @@ class Query(object):
             self.api.aggregation_offset(self.query_wrapper_ptr, offset)
             return self
 
-        def sort(self, field: str, desc: bool) -> Query._AggregateFacet:
+        def sort(self, field: str, desc: bool=False) -> Query._AggregateFacet:
             """Sorts facets by field value
 
             # Arguments:
@@ -421,7 +421,7 @@ class Query(object):
         self.__raise_on_error()
         return self._AggregateFacet(self)
 
-    def sort(self, index: str, desc: bool, keys: Union[simple_types, List[simple_types]]=None) -> Query:
+    def sort(self, index: str, desc: bool=False, keys: Union[simple_types, List[simple_types]]=None) -> Query:
         """Applies sort order to return from query items. If values argument specified, then items equal to values,
             if found will be placed in the top positions. Forced sort is support for the first sorting field only
 

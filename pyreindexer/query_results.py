@@ -1,4 +1,4 @@
-class QueryResults(object):
+class QueryResults:
     """QueryResults is a disposable iterator of Reindexer results for such queries as SELECT etc.
         When the results are fetched the iterator closes and frees a memory of results buffer of Reindexer
 
