@@ -97,8 +97,6 @@ public:
 
 	void SelectFilter(const std::vector<std::string>& fields);
 
-	void FetchCount(int count);
-
 	void AddFunctions(const std::vector<std::string>& functions);
 	void AddEqualPosition(const std::vector<std::string>& equalPositions);
 
@@ -120,7 +118,6 @@ private:
 	unsigned queriesCount_{0};
 	std::deque<uint32_t> openedBrackets_;
 	std::string totalName_; // ToDo now not used
-	int fetchCount_{100}; // ToDo now not used
 	JoinType joinType_{JoinType::LeftJoin};
 	std::vector<QueryWrapper*> joinQueries_;
 	std::vector<QueryWrapper*> mergedQueries_;

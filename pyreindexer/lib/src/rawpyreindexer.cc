@@ -1178,20 +1178,6 @@ static PyObject* SelectFilter(PyObject* self, PyObject* args) {
 	return pyErr(errOK);
 }
 
-static PyObject* FetchCount(PyObject* self, PyObject* args) {
-	uintptr_t queryWrapperAddr = 0;
-	int count = 0;
-	if (!PyArg_ParseTuple(args, "ki", &queryWrapperAddr, &count)) {
-		return nullptr;
-	}
-
-	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
-
-	query->FetchCount(count);
-
-	Py_RETURN_NONE;
-}
-
 static PyObject* AddFunctions(PyObject* self, PyObject* args) {
 	uintptr_t queryWrapperAddr = 0;
 	PyObject* functionsList = nullptr;  	// borrowed ref after ParseTuple if passed

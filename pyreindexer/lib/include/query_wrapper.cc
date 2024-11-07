@@ -302,10 +302,6 @@ void QueryWrapper::SelectFilter(const std::vector<std::string>& fields) {
 	}
 }
 
-void QueryWrapper::FetchCount(int count) {
-	fetchCount_ = count;
-}
-
 void QueryWrapper::AddFunctions(const std::vector<std::string>& functions) {
 	for (const auto& function : functions) {
 		ser_.PutVarUint(QueryItemType::QuerySelectFunction);

@@ -942,21 +942,6 @@ class Query:
         self.__raise_on_error()
         return self
 
-    def fetch_count(self, n: int) -> Query:
-        """Sets the number of items that will be fetched by one operation.
-            When n <= 0 query will fetch all results in one operation
-
-        # Arguments:
-            n (int): Number of items
-
-        # Returns:
-            (:obj:`Query`): Query object for further customizations
-
-        """
-
-        self.api.fetch_count(self.query_wrapper_ptr, n)
-        return self
-
     def functions(self, functions: List[str]) -> Query:
         """Adds sql-functions to query
 
