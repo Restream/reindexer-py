@@ -1,8 +1,9 @@
 import os
 import sys
 
-from setuptools import setup, Extension
+from setuptools import Extension, setup
 from setuptools.command.build_ext import build_ext as build_ext_orig
+
 
 if sys.version_info < (3, 6):
     raise RuntimeError('Require Python 3.6 or greater')
@@ -74,10 +75,8 @@ setup(name=PACKAGE_NAME,
       keywords=["reindexer", "in-memory-database", "database", "python", "connector"],
       package_data={'pyreindexer': [
           'CMakeLists.txt',
-          'lib/include/*.h',
-          'lib/include/*.cc',
-          'lib/src/*.h',
-          'lib/src/*.cc',
+          'lib/**/*.h',
+          'lib/**/*.cc',
           'example/main.py',
           'tests/**/*.py'
       ]},

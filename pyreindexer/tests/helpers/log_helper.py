@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
+import sys
 from datetime import *
 
 
@@ -43,3 +44,10 @@ file_handler.setLevel(logging.INFO)
 file_handler.setFormatter(formatter)
 log_api.addHandler(file_handler)
 log_fixture.addHandler(file_handler)
+
+# Log to console
+console_handler = logging.StreamHandler(sys.stdout)
+console_handler.setLevel(logging.INFO)
+console_handler.setFormatter(formatter)
+log_api.addHandler(console_handler)
+log_fixture.addHandler(console_handler)

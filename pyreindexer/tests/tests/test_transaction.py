@@ -33,7 +33,7 @@ class TestCrudTransaction:
         # Then ("Rollback transaction")
         transaction.rollback()
         # Then ("Insert transaction")
-        assert_that(calling(transaction.item_insert).with_args(item_definition),
+        assert_that(calling(transaction.insert_item).with_args(item_definition),
                     raises(Exception, matching=has_string("Transaction is over")))
 
     def test_negative_update_after_rollback(self, db, namespace, index):
@@ -43,7 +43,7 @@ class TestCrudTransaction:
         # Then ("Rollback transaction")
         transaction.rollback()
         # Then ("Update transaction")
-        assert_that(calling(transaction.item_update).with_args(item_definition),
+        assert_that(calling(transaction.update_item).with_args(item_definition),
                     raises(Exception, matching=has_string("Transaction is over")))
 
     def test_negative_upsert_after_rollback(self, db, namespace, index):
@@ -53,7 +53,7 @@ class TestCrudTransaction:
         # Then ("Rollback transaction")
         transaction.rollback()
         # Then ("Upsert transaction")
-        assert_that(calling(transaction.item_upsert).with_args(item_definition),
+        assert_that(calling(transaction.upsert_item).with_args(item_definition),
                     raises(Exception, matching=has_string("Transaction is over")))
 
     def test_negative_delete_after_rollback(self, db, namespace, index):
@@ -63,7 +63,7 @@ class TestCrudTransaction:
         # Then ("Rollback transaction")
         transaction.rollback()
         # Then ("Delete transaction")
-        assert_that(calling(transaction.item_delete).with_args(item_definition),
+        assert_that(calling(transaction.delete_item).with_args(item_definition),
                     raises(Exception, matching=has_string("Transaction is over")))
 
     def test_negative_insert_after_commit(self, db, namespace, index):
@@ -73,7 +73,7 @@ class TestCrudTransaction:
         # Then ("Commit transaction")
         transaction.commit()
         # Then ("Insert transaction")
-        assert_that(calling(transaction.item_insert).with_args(item_definition),
+        assert_that(calling(transaction.insert_item).with_args(item_definition),
                     raises(Exception, matching=has_string("Transaction is over")))
 
     def test_negative_update_after_commit(self, db, namespace, index):
@@ -83,7 +83,7 @@ class TestCrudTransaction:
         # Then ("Commit transaction")
         transaction.commit()
         # Then ("Update transaction")
-        assert_that(calling(transaction.item_update).with_args(item_definition),
+        assert_that(calling(transaction.update_item).with_args(item_definition),
                     raises(Exception, matching=has_string("Transaction is over")))
 
     def test_negative_upsert_after_commit(self, db, namespace, index):
@@ -93,7 +93,7 @@ class TestCrudTransaction:
         # Then ("Commit transaction")
         transaction.commit()
         # Then ("Upsert transaction")
-        assert_that(calling(transaction.item_upsert).with_args(item_definition),
+        assert_that(calling(transaction.upsert_item).with_args(item_definition),
                     raises(Exception, matching=has_string("Transaction is over")))
 
     def test_negative_delete_after_commit(self, db, namespace, index):
@@ -103,7 +103,7 @@ class TestCrudTransaction:
         # Then ("Commit transaction")
         transaction.commit()
         # Then ("Delete transaction")
-        assert_that(calling(transaction.item_delete).with_args(item_definition),
+        assert_that(calling(transaction.delete_item).with_args(item_definition),
                     raises(Exception, matching=has_string("Transaction is over")))
 
     def test_create_item_insert(self, db, namespace, index):
@@ -121,7 +121,7 @@ class TestCrudTransaction:
         transaction = db.tx.begin(namespace)
         number_items = 5
         for i in range(number_items):
-            transaction.insert({'id': 100, 'field': 'value' + str(100 + i)}, ['id=serial()'])
+            transaction.insert_item({'id': 100, 'field': f'value{100 + i}'}, ['id=serial()'])
         count = transaction.commit_with_count()
         assert_that(count, equal_to(number_items), "Transaction: items wasn't created")
         # Then ("Check that item is added")
@@ -129,7 +129,7 @@ class TestCrudTransaction:
         assert_that(select_result, has_length(number_items), "Transaction: items wasn't created")
         for i in range(number_items):
             assert_that(select_result[i],
-                        equal_to({'id': i + 1, 'field': 'value' + str(100 + i)}),
+                        equal_to({'id': i + 1, 'field': f'value{100 + i}'}),
                         "Transaction: items wasn't created")
 
     def test_create_item_upsert(self, db, namespace, index):
@@ -175,7 +175,7 @@ class TestCrudTransaction:
         transaction = db.tx.begin(namespace)
         number_items = 5
         for _ in range(number_items):
-            transaction.insert({"id": 100, "field": "value"})
+            transaction.insert_item({"id": 100, "field": "value"})
         # Then ("Rollback transaction")
         transaction.rollback()
         # When ("Get namespace information")
