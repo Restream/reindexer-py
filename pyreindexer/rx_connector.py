@@ -47,6 +47,9 @@ class RxConnector(RaiserMixin):
     def close(self) -> None:
         """Closes an API instance with Reindexer resources freeing
 
+        # Raises:
+            Exception: Raises with an error message when Reindexer instance is not initialized yet
+
         """
 
         self._api_close()
@@ -185,8 +188,7 @@ class RxConnector(RaiserMixin):
 
         """
 
-        if precepts is None:
-            precepts = []
+        precepts = [] if precepts is None else precepts
         self.raise_on_not_init()
         self.err_code, self.err_msg = self.api.item_insert(self.rx, namespace, item_def, precepts)
         self.raise_on_error()
@@ -205,8 +207,7 @@ class RxConnector(RaiserMixin):
 
         """
 
-        if precepts is None:
-            precepts = []
+        precepts = [] if precepts is None else precepts
         self.raise_on_not_init()
         self.err_code, self.err_msg = self.api.item_update(self.rx, namespace, item_def, precepts)
         self.raise_on_error()
@@ -225,8 +226,7 @@ class RxConnector(RaiserMixin):
 
         """
 
-        if precepts is None:
-            precepts = []
+        precepts = [] if precepts is None else precepts
         self.raise_on_not_init()
         self.err_code, self.err_msg = self.api.item_upsert(self.rx, namespace, item_def, precepts)
         self.raise_on_error()

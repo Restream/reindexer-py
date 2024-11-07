@@ -67,8 +67,7 @@ class Transaction:
         """
 
         self.__raise_on_is_over()
-        if precepts is None:
-            precepts = []
+        precepts = [] if precepts is None else precepts
         self.err_code, self.err_msg = self.api.item_insert_transaction(self.transaction_wrapper_ptr, item_def, precepts)
         self.__raise_on_error()
 
