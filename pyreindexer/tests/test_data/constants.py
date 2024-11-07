@@ -9,12 +9,7 @@ index_definition = {
     "collate_mode": "none",
     "sort_order_letters": "",
     "expire_after": 0,
-    "config": {
-
-    },
-    "json_paths": [
-        "id"
-    ]
+    "json_paths": ["id"]
 }
 
 updated_index_definition = {
@@ -28,12 +23,18 @@ updated_index_definition = {
     "collate_mode": "none",
     "sort_order_letters": "",
     "expire_after": 0,
-    "config": {
+    "json_paths": ["id_new"]
+}
 
-    },
-    "json_paths": [
-        "id_new"
-    ]
+composite_index_definition = {
+    "name": "comp_idx",
+    "field_type": "composite",
+    "index_type": "hash",
+    "is_pk": False,
+    "is_array": False,
+    "is_dense": False,
+    "is_sparse": False,
+    "json_paths": ["id", "val"]
 }
 
 special_namespaces = [{"name": "#namespaces"},
@@ -54,3 +55,8 @@ special_namespaces_cluster = [{"name": "#namespaces"},
                               {"name": "#replicationstats"}]
 
 item_definition = {'id': 100, 'val': "testval"}
+
+AGGREGATE_FUNCTIONS_MATH = [(lambda x: max(x), "aggregate_max"),
+                            (lambda x: min(x), "aggregate_min"),
+                            (lambda x: sum(x), "aggregate_sum"),
+                            (lambda x: sum(x) / len(x), "aggregate_avg")]

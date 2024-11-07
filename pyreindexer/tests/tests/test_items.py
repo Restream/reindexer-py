@@ -26,7 +26,7 @@ class TestCrudItems:
         # When ("Insert items into namespace")
         number_items = 5
         for _ in range(number_items):
-            db.item_insert(namespace, {"id": 100, "field": "value"}, ["id=serial()"])
+            db.item.insert(namespace, {"id": 100, "field": "value"}, ["id=serial()"])
         # Then ("Check that item is added")
         select_result = get_ns_items(db, namespace)
         assert_that(select_result, has_length(number_items), "Items wasn't created")

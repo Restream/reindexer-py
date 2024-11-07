@@ -33,6 +33,13 @@ log_error.setLevel(logging.ERROR)
 # Log format
 formatter = OneLineExceptionFormatter('%(levelname)-5s [%(asctime)s] [%(name)s]: %(message)s')
 
+# Log to console
+console_handler = logging.StreamHandler(sys.stdout)
+console_handler.setLevel(logging.INFO)
+console_handler.setFormatter(formatter)
+log_api.addHandler(console_handler)
+log_fixture.addHandler(console_handler)
+
 # Save log to file
 log_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../logs/')
 if not os.path.exists(log_folder):
@@ -44,10 +51,3 @@ file_handler.setLevel(logging.INFO)
 file_handler.setFormatter(formatter)
 log_api.addHandler(file_handler)
 log_fixture.addHandler(file_handler)
-
-# Log to console
-console_handler = logging.StreamHandler(sys.stdout)
-console_handler.setLevel(logging.INFO)
-console_handler.setFormatter(formatter)
-log_api.addHandler(console_handler)
-log_fixture.addHandler(console_handler)

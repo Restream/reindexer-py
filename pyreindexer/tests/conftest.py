@@ -4,7 +4,7 @@ import pytest
 
 from tests.helpers.api import ConnectorApi
 from tests.helpers.log_helper import log_fixture
-from tests.test_data.constants import index_definition, item_definition
+from tests.test_data.constants import composite_index_definition, index_definition, item_definition
 
 
 def pytest_addoption(parser):
@@ -48,7 +48,30 @@ def index(db, namespace):
     """
     db.index.create(namespace, index_definition)
     yield
-    db.index.drop(namespace, "id")
+
+
+@pytest.fixture(scope="function")
+def composite_index(db, namespace):
+    """
+    Create indexes and composite index from them
+    """
+    db.index.create(namespace, index_definition)
+    db.index.create(namespace, {"name": "val", "json_paths": ["val"], "field_type": "string", "index_type": "hash"})
+    db.index.create(namespace, composite_index_definition)
+    yield
+
+
+@pytest.fixture(scope="function")
+def rtree_index_and_items(db, namespace):
+    """
+    Create rtree index and items
+    """
+    db.index.create(namespace, {"name": "rtree", "json_paths": ["rtree"], "field_type": "point",
+                                "index_type": "rtree", "rtree_type": "rstar"})
+    items = [{"id": i, "rtree": [i, i]} for i in range(10)]
+    for item in items:
+        db.item.insert(namespace, item)
+    yield items
 
 
 @pytest.fixture(scope="function")
@@ -58,7 +81,6 @@ def item(db, namespace):
     """
     db.item.insert(namespace, item_definition)
     yield item_definition
-    db.item.delete(namespace, item_definition)
 
 
 @pytest.fixture(scope="function")
@@ -70,8 +92,6 @@ def items(db, namespace):
     for item in items:
         db.item.insert(namespace, item)
     yield items
-    for item in items:
-        db.item.delete(namespace, item)
 
 
 @pytest.fixture(scope="function")
