@@ -383,60 +383,6 @@ class RxConnector(RaiserMixin):
         self.raise_on_error()
         return Query(self.api, query_wrapper_ptr)
 
-    def select_query(self, query: Query) -> QueryResults:
-        """Executes a select query
-
-        # Arguments:
-            query (:obj:`Query`): An query object
-
-        # Returns:
-            (:obj:`QueryResults`): A QueryResults iterator
-
-        # Raises:
-            Exception: Raises with an error message when Reindexer instance is not initialized yet
-            Exception: Raises with an error message of API return on non-zero error code
-
-        """
-
-        self.raise_on_not_init()
-        return query.execute()
-
-    def delete_query(self, query: Query) -> int:
-        """Executes a query, and delete items, matches query
-
-        # Arguments:
-            query (:obj:`Query`): An query object
-
-        # Returns:
-            (int): Number of deleted elements
-
-        # Raises:
-            Exception: Raises with an error message when Reindexer instance is not initialized yet
-            Exception: Raises with an error message of API return on non-zero error code
-
-        """
-
-        self.raise_on_not_init()
-        return query.delete()
-
-    def update_query(self, query: Query) -> QueryResults:
-        """Executes update query, and update fields in items, which matches query
-
-        # Arguments:
-            query (:obj:`Query`): An query object
-
-        # Returns:
-            (:obj:`QueryResults`): A QueryResults iterator
-
-        # Raises:
-            Exception: Raises with an error message when Reindexer instance is not initialized yet
-            Exception: Raises with an error message of API return on non-zero error code
-
-        """
-
-        self.raise_on_not_init()
-        return query.update()
-
     def _api_import(self, dsn):
         """Imports an API dynamically depending on protocol specified in dsn
 

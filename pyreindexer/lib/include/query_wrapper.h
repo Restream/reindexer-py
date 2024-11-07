@@ -26,36 +26,8 @@ class QueryWrapper {
 public:
 	QueryWrapper(DBInterface* db, std::string_view ns);
 
-	template <typename T>
-	void Where(std::string_view index, CondType condition, const std::vector<T>& keys) {
-		ser_.PutVarUint(QueryItemType::QueryCondition);
-		ser_.PutVString(index);
-		ser_.PutVarUint(nextOperation_);
-		ser_.PutVarUint(condition);
-
-		ser_.PutVarUint(keys.size());
-		for (const auto& key : keys) {
-			putValue(key);
-		}
-
-		nextOperation_ = OpType::OpAnd;
-		++queriesCount_;
-	}
-	template <typename T>
-	void WhereQuery(QueryWrapper& query, CondType condition, const std::vector<T>& keys) {
-		ser_.PutVarUint(QueryItemType::QuerySubQueryCondition);
-		ser_.PutVarUint(nextOperation_);
-		ser_.PutVString(query.ser_.Slice());
-		ser_.PutVarUint(condition);
-
-		ser_.PutVarUint(keys.size());
-		for (const auto& key : keys) {
-			putValue(key);
-		}
-
-		nextOperation_ = OpType::OpAnd;
-		++queriesCount_;
-	}
+	void Where(std::string_view index, CondType condition, const std::vector<reindexer::Variant>& keys);
+	void WhereQuery(QueryWrapper& query, CondType condition, const std::vector<reindexer::Variant>& keys);
 	void WhereComposite(std::string_view index, CondType condition, QueryWrapper& query);
 	void WhereUUID(std::string_view index, CondType condition, const std::vector<std::string>& keys);
 
@@ -147,8 +119,8 @@ private:
 	OpType nextOperation_{OpType::OpAnd};
 	unsigned queriesCount_{0};
 	std::deque<uint32_t> openedBrackets_;
-	std::string totalName_;
-	int fetchCount_{1000};
+	std::string totalName_; // ToDo now not used
+	int fetchCount_{100}; // ToDo now not used
 	JoinType joinType_{JoinType::LeftJoin};
 	std::vector<QueryWrapper*> joinQueries_;
 	std::vector<QueryWrapper*> mergedQueries_;

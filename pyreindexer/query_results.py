@@ -1,7 +1,4 @@
-from pyreindexer.raiser_mixin import RaiserMixin
-
-
-class QueryResults(RaiserMixin):
+class QueryResults:
     """QueryResults is a disposable iterator of Reindexer results for such queries as SELECT etc.
         When the results are fetched the iterator closes and frees a memory of results buffer of Reindexer
 
@@ -50,7 +47,8 @@ class QueryResults(RaiserMixin):
         if self.pos < self.qres_iter_count:
             self.pos += 1
             self.err_code, self.err_msg, res = self.api.query_results_iterate(self.qres_wrapper_ptr)
-            self.raise_on_error()
+            if self.err_code:
+                raise Exception(self.err_msg)
             return res
         else:
             del self
@@ -72,7 +70,8 @@ class QueryResults(RaiserMixin):
         """
 
         self.err_code, self.err_msg = self.api.query_results_status(self.qres_wrapper_ptr)
-        self.raise_on_error()
+        if self.err_code:
+            raise Exception(self.err_msg)
 
     def count(self):
         """Returns a count of results
@@ -104,5 +103,6 @@ class QueryResults(RaiserMixin):
         """
 
         self.err_code, self.err_msg, res = self.api.get_agg_results(self.qres_wrapper_ptr)
-        self.raise_on_error()
+        if self.err_code:
+            raise Exception(self.err_msg)
         return res

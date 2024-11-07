@@ -26,7 +26,7 @@ set(LIBSRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/src)
 set(RESOURCES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/include)
 
 set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror -Wswitch-enum")
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -Wall -Wextra -Werror -Wswitch-enum -Wno-unused-parameter -Wold-style-cast -fexceptions")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -Wall -Wextra -Werror -Wswitch-enum -Wno-unused-parameter -fexceptions")
 string (REPLACE "-O2" "-O3" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
 
 file(GLOB_RECURSE SRCS ${RESOURCES_DIR}/*.cc ${LIBSRC_DIR}/*.cc)

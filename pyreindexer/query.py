@@ -107,7 +107,7 @@ class Query:
         param = param if isinstance(param, list) else [param]
         return param
 
-    def where(self, index: str, condition: CondType, keys: Union[simple_types, List[simple_types]] = None) -> Query:
+    def where(self, index: str, condition: CondType, keys: Union[simple_types, List[simple_types]]=None) -> Query:
         """Adds where condition to DB query with args
 
         # Arguments:
@@ -130,8 +130,7 @@ class Query:
         self.__raise_on_error()
         return self
 
-    def where_query(self, sub_query: Query, condition: CondType,
-                    keys: Union[simple_types, List[simple_types]] = None) -> Query:
+    def where_query(self, sub_query: Query, condition: CondType, keys: Union[simple_types, List[simple_types]]=None) -> Query:
         """Adds sub-query where condition to DB query with args
 
         # Arguments:
@@ -150,8 +149,7 @@ class Query:
 
         params: list = self.__convert_to_list(keys)
 
-        self.err_code, self.err_msg = self.api.where_query(self.query_wrapper_ptr, sub_query.query_wrapper_ptr,
-                                                           condition.value, params)
+        self.err_code, self.err_msg = self.api.where_query(self.query_wrapper_ptr, sub_query.query_wrapper_ptr, condition.value, params)
         self.__raise_on_error()
         return self
 
@@ -396,7 +394,7 @@ class Query:
             self.api.aggregation_offset(self.query_wrapper_ptr, offset)
             return self
 
-        def sort(self, field: str, desc: bool) -> Query._AggregateFacet:
+        def sort(self, field: str, desc: bool=False) -> Query._AggregateFacet:
             """Sorts facets by field value
 
             # Arguments:
@@ -430,7 +428,7 @@ class Query:
         self.__raise_on_error()
         return self._AggregateFacet(self)
 
-    def sort(self, index: str, desc: bool, keys: Union[simple_types, List[simple_types]] = None) -> Query:
+    def sort(self, index: str, desc: bool=False, keys: Union[simple_types, List[simple_types]]=None) -> Query:
         """Applies sort order to return from query items. If values argument specified, then items equal to values,
             if found will be placed in the top positions. Forced sort is support for the first sorting field only
 
@@ -529,7 +527,7 @@ class Query:
         self.api.op_not(self.query_wrapper_ptr)
         return self
 
-    def request_total(self, total_name: str = '') -> Query:
+    def request_total(self, total_name: str= '') -> Query:
         """Requests total items calculation
 
         # Arguments:
@@ -543,7 +541,7 @@ class Query:
         self.api.request_total(self.query_wrapper_ptr, total_name)
         return self
 
-    def cached_total(self, total_name: str = '') -> Query:
+    def cached_total(self, total_name: str= '') -> Query:
         """Requests cached total items calculation
 
         # Arguments:
@@ -647,7 +645,7 @@ class Query:
 
         """
 
-        if self.root is not None:
+        if self.root is not None :
             return self.root.execute()
 
         self.err_code, self.err_msg, qres_wrapper_ptr, qres_iter_count = self.api.select_query(self.query_wrapper_ptr)
@@ -666,7 +664,7 @@ class Query:
 
         """
 
-        if (self.root is not None) or (len(self.join_queries) > 0):
+        if (self.root is not None) or (len(self.join_queries) > 0) :
             raise Exception("Delete does not support joined queries")
 
         self.err_code, self.err_msg, number = self.api.delete_query(self.query_wrapper_ptr)
@@ -756,7 +754,7 @@ class Query:
 
         """
 
-        if (self.root is not None) or (len(self.join_queries) > 0):
+        if (self.root is not None) or (len(self.join_queries) > 0) :
             raise Exception("Update does not support joined queries")
 
         self.err_code, self.err_msg, qres_wrapper_ptr, qres_iter_count = self.api.update_query(self.query_wrapper_ptr)
