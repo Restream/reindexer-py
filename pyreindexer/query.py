@@ -36,6 +36,14 @@ class JoinType(Enum):
     Merge = 3
 
 
+class LogLevel(Enum):
+    Off = 0
+    Error = 1
+    Warning = 2
+    Info = 3
+    Trace = 4
+
+
 simple_types = Union[int, str, bool, float]
 
 
@@ -585,18 +593,18 @@ class Query:
         self.api.offset(self.query_wrapper_ptr, start_offset)
         return self
 
-    def debug(self, level: int) -> Query:
-        """Changes debug level
+    def debug(self, level: LogLevel) -> Query:
+        """Changes debug log level on server
 
         #### Arguments:
-            level (int): Debug level
+            level (:enum:`LogLevel`): Debug log level on server
 
         #### Returns:
             (:obj:`Query`): Query object for further customizations
 
         """
 
-        self.api.debug(self.query_wrapper_ptr, level)
+        self.api.debug(self.query_wrapper_ptr, level.value)
         return self
 
     def strict(self, mode: StrictMode) -> Query:

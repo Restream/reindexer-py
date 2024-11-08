@@ -1069,13 +1069,13 @@ Sets the number of the first selected row from result query
 ### debug
 
 ```python
-def debug(level: int) -> Query
+def debug(level: LogLevel) -> Query
 ```
 
-Changes debug level
+Changes debug log level on server
 
 #### Arguments:
-    level (int): Debug level
+    level (:enum:`LogLevel`): Debug log level on server
 
 #### Returns:
     (:obj:`Query`): Query object for further customizations
