@@ -8,6 +8,7 @@ index_definition = {
     "is_sparse": False,
     "collate_mode": "none",
     "sort_order_letters": "",
+    "config": {},
     "expire_after": 0,
     "json_paths": ["id"]
 }
@@ -22,6 +23,7 @@ updated_index_definition = {
     "is_sparse": False,
     "collate_mode": "none",
     "sort_order_letters": "",
+    "config": {},
     "expire_after": 0,
     "json_paths": ["id_new"]
 }
