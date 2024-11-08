@@ -6,7 +6,7 @@ class Point:
         y (float): y coordinate of the point
     """
 
-    def __init__(self, x, y):
+    def __init__(self, x: float, y: float):
         """Constructs a new Reindexer query object
 
         # Arguments:
@@ -15,5 +15,5 @@ class Point:
 
         """
 
-        self.x = x
-        self.y = y
+        self.x: float = x
+        self.y: float = y

@@ -795,7 +795,7 @@ static PyObject* DWithin(PyObject* self, PyObject* args) {
 	uintptr_t queryWrapperAddr = 0;
 	char* index = nullptr;
 	double x = 0, y = 0, distance = 0;
-	if (!PyArg_ParseTuple(args, "ksddd", &queryWrapperAddr, &x, &y, &distance)) {
+	if (!PyArg_ParseTuple(args, "ksddd", &queryWrapperAddr, &index, &x, &y, &distance)) {
 		return nullptr;
 	}
 
