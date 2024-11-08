@@ -42,7 +42,7 @@ simple_types = Union[int, str, bool, float]
 class Query:
     """An object representing the context of a Reindexer query
 
-    # Attributes:
+    #### Attributes:
         api (module): An API module for Reindexer calls
         query_wrapper_ptr (int): A memory pointer to Reindexer query object
         err_code (int): The API error code
@@ -57,7 +57,7 @@ class Query:
     def __init__(self, api, query_wrapper_ptr: int):
         """Constructs a new Reindexer query object
 
-        # Arguments:
+        #### Arguments:
             api (module): An API module for Reindexer calls
             query_wrapper_ptr (int): A memory pointer to Reindexer query object
 
@@ -83,7 +83,7 @@ class Query:
     def __raise_on_error(self):
         """Checks if there is an error code and raises with an error message
 
-        # Raises:
+        #### Raises:
             Exception: Raises with an error message of API return on non-zero error code
 
         """
@@ -95,10 +95,10 @@ class Query:
     def __convert_to_list(param: Union[simple_types, List[simple_types]]) -> List[simple_types]:
         """Converts an input parameter to a list
 
-        # Arguments:
+        #### Arguments:
             param (Union[None, simple_types, list[simple_types]]): The input parameter
 
-        # Returns:
+        #### Returns:
             List[Union[int, bool, float, str]]: Always converted to a list
 
         """
@@ -110,16 +110,16 @@ class Query:
     def where(self, index: str, condition: CondType, keys: Union[simple_types, List[simple_types]] = None) -> Query:
         """Adds where condition to DB query with args
 
-        # Arguments:
+        #### Arguments:
             index (string): Field name used in condition clause
             condition (:enum:`CondType`): Type of condition
             keys (Union[None, simple_types, list[simple_types]]):
                 Value of index to be compared with. For composite indexes keys must be list, with value of each subindex
 
-        # Returns:
+        #### Returns:
             (:obj:`Query`): Query object for further customizations
 
-        # Raises:
+        #### Raises:
             Exception: Raises with an error message of API return on non-zero error code
 
         """
@@ -134,16 +134,16 @@ class Query:
                     keys: Union[simple_types, List[simple_types]] = None) -> Query:
         """Adds sub-query where condition to DB query with args
 
-        # Arguments:
+        #### Arguments:
             sub_query (:obj:`Query`): Field name used in condition clause
             condition (:enum:`CondType`): Type of condition
             keys (Union[None, simple_types, list[simple_types]]):
                 Value of index to be compared with. For composite indexes keys must be list, with value of each sub-index
 
-        # Returns:
+        #### Returns:
             (:obj:`Query`): Query object for further customizations
 
-        # Raises:
+        #### Raises:
             Exception: Raises with an error message of API return on non-zero error code
 
         """
@@ -158,12 +158,12 @@ class Query:
     def where_composite(self, index: str, condition: CondType, sub_query: Query) -> Query:
         """Adds where condition to DB query with interface args for composite indexes
 
-        # Arguments:
+        #### Arguments:
             index (string): Field name used in condition clause
             condition (:enum:`CondType`): Type of condition
             sub_query (:obj:`Query`): Field name used in condition clause
 
-        # Returns:
+        #### Returns:
             (:obj:`Query`): Query object for further customizations
 
         """
@@ -176,15 +176,15 @@ class Query:
             This function applies binary encoding to the UUID value.
             `index` MUST be declared as uuid index in this case
 
-        # Arguments:
+        #### Arguments:
             index (string): Field name used in condition clause
             condition (:enum:`CondType`): Type of condition
             keys (list[string]): Value of index to be compared with. For composite indexes keys must be list, with value of each subindex
 
-        # Returns:
+        #### Returns:
             (:obj:`Query`): Query object for further customizations
 
-        # Raises:
+        #### Raises:
             Exception: Raises with an error message of API return on non-zero error code
 
         """
@@ -198,12 +198,12 @@ class Query:
     def where_between_fields(self, first_field: str, condition: CondType, second_field: str) -> Query:
         """Adds comparing two fields where condition to DB query
 
-        # Arguments:
+        #### Arguments:
             first_field (string): First field name used in condition clause
             condition (:enum:`CondType`): Type of condition
             second_field (string): Second field name used in condition clause
 
-        # Returns:
+        #### Returns:
             (:obj:`Query`): Query object for further customizations
 
         """
@@ -214,10 +214,10 @@ class Query:
     def open_bracket(self) -> Query:
         """Opens bracket for where condition to DB query
 
-        # Returns:
+        #### Returns:
             (:obj:`Query`): Query object for further customizations
 
-        # Raises:
+        #### Raises:
             Exception: Raises with an error message of API return on non-zero error code
 
         """
@@ -229,10 +229,10 @@ class Query:
     def close_bracket(self) -> Query:
         """Closes bracket for where condition to DB query
 
-        # Returns:
+        #### Returns:
             (:obj:`Query`): Query object for further customizations
 
-        # Raises:
+        #### Raises:
             Exception: Raises with an error message of API return on non-zero error code
 
         """
@@ -244,14 +244,14 @@ class Query:
     def match(self, index: str, keys: List[str]) -> Query:
         """Adds string EQ-condition to DB query with string args
 
-        # Arguments:
+        #### Arguments:
             index (string): Field name used in condition clause
             keys (list[string]): Value of index to be compared with. For composite indexes keys must be list, with value of each subindex
 
-        # Returns:
+        #### Returns:
             (:obj:`Query`): Query object for further customizations
 
-        # Raises:
+        #### Raises:
             Exception: Raises with an error message of API return on non-zero error code
 
         """
@@ -265,12 +265,12 @@ class Query:
     def dwithin(self, index: str, point: Point, distance: float) -> Query:
         """Adds DWithin condition to DB query
 
-        # Arguments:
+        #### Arguments:
             index (string): Field name used in condition clause
             point (:obj:`Point`): Point object used in condition clause
             distance (float): Distance in meters between point
 
-        # Returns:
+        #### Returns:
             (:obj:`Query`): Query object for further customizations
 
         """
@@ -281,10 +281,10 @@ class Query:
     def distinct(self, index: str) -> Query:
         """Performs distinct for a certain index. Return only items with uniq value of field
 
-        # Arguments:
+        #### Arguments:
             index (string): Field name for distinct operation
 
-        # Returns:
+        #### Returns:
             (:obj:`Query`): Query object for further customizations
 
         """
@@ -295,10 +295,10 @@ class Query:
     def aggregate_sum(self, index: str) -> Query:
         """Performs a summation of values for a specified index
 
-        # Arguments:
+        #### Arguments:
             index (string): Field name for sum operation
 
-        # Returns:
+        #### Returns:
             (:obj:`Query`): Query object for further customizations
 
         """
@@ -309,10 +309,10 @@ class Query:
     def aggregate_avg(self, index: str) -> Query:
         """Finds for the average at the specified index
 
-        # Arguments:
+        #### Arguments:
             index (string): Field name for sum operation
 
-        # Returns:
+        #### Returns:
             (:obj:`Query`): Query object for further customizations
 
         """
@@ -323,10 +323,10 @@ class Query:
     def aggregate_min(self, index: str) -> Query:
         """Finds for the minimum at the specified index
 
-        # Arguments:
+        #### Arguments:
             index (string): Field name for sum operation
 
-        # Returns:
+        #### Returns:
             (:obj:`Query`): Query object for further customizations
 
         """
@@ -337,10 +337,10 @@ class Query:
     def aggregate_max(self, index: str) -> Query:
         """Finds for the maximum at the specified index
 
-        # Arguments:
+        #### Arguments:
             index (string): Field name for sum operation
 
-        # Returns:
+        #### Returns:
             (:obj:`Query`): Query object for further customizations
 
         """
@@ -351,7 +351,7 @@ class Query:
     class _AggregateFacet:
         """An object representing the context of a Reindexer aggregate facet
 
-        # Attributes:
+        #### Attributes:
             api (module): An API module for Reindexer calls
             query_wrapper_ptr (int): A memory pointer to Reindexer query object
 
@@ -360,7 +360,7 @@ class Query:
         def __init__(self, query: Query):
             """Constructs a new Reindexer AggregateFacetRequest object
 
-            # Arguments:
+            #### Arguments:
                 (:obj:`Query`): Query object for further customizations
 
             """
@@ -371,10 +371,10 @@ class Query:
         def limit(self, limit: int) -> Query._AggregateFacet:
             """Limits facet aggregation results
 
-            # Arguments:
+            #### Arguments:
                 limit (int): Limit of aggregation of facet
 
-            # Returns:
+            #### Returns:
                 (:obj:`_AggregateFacet`): Facet object for further customizations
 
             """
@@ -385,10 +385,10 @@ class Query:
         def offset(self, offset: int) -> Query._AggregateFacet:
             """Sets offset of the facet aggregation results
 
-            # Arguments:
+            #### Arguments:
                 limit (int): Offset in facet aggregation results
 
-            # Returns:
+            #### Returns:
                 (:obj:`_AggregateFacet`): Facet object for further customizations
 
             """
@@ -399,11 +399,11 @@ class Query:
         def sort(self, field: str, desc: bool = False) -> Query._AggregateFacet:
             """Sorts facets by field value
 
-            # Arguments:
+            #### Arguments:
                 field (str): Item field. Use field `count` to sort by facet's count value
                 desc (bool): Sort in descending order flag
 
-            # Returns:
+            #### Returns:
                 (:obj:`_AggregateFacet`): Facet object for further customizations
 
             """
@@ -416,10 +416,10 @@ class Query:
             column or `count` and cut off by offset and limit. In order to support this functionality this method
             returns AggregationFacetRequest which has methods sort, limit and offset
 
-        # Arguments:
+        #### Arguments:
             fields (list[string]): Fields any data column name or `count`, fields should not be empty
 
-        # Returns:
+        #### Returns:
             (:obj:`_AggregateFacet`): Request object for further customizations
 
         """
@@ -434,16 +434,16 @@ class Query:
         """Applies sort order to return from query items. If values argument specified, then items equal to values,
             if found will be placed in the top positions. Forced sort is support for the first sorting field only
 
-        # Arguments:
+        #### Arguments:
             index (string): The index name
             desc (bool): Sort in descending order
             keys (Union[None, simple_types, List[simple_types]]):
                 Value of index to match. For composite indexes keys must be list, with value of each sub-index
 
-        # Returns:
+        #### Returns:
             (:obj:`Query`): Query object for further customizations
 
-        # Raises:
+        #### Raises:
             Exception: Raises with an error message of API return on non-zero error code
 
         """
@@ -458,12 +458,12 @@ class Query:
         """Applies geometry sort order to return from query items. Wrapper for geometry sorting by shortest distance
             between geometry field and point (ST_Distance)
 
-        # Arguments:
+        #### Arguments:
             index (string): The index name
             point (:obj:`Point`): Point object used in sorting operation
             desc (bool): Sort in descending order
 
-        # Returns:
+        #### Returns:
             (:obj:`Query`): Query object for further customizations
 
         """
@@ -475,15 +475,15 @@ class Query:
         """Applies geometry sort order to return from query items. Wrapper for geometry sorting by shortest distance
             between 2 geometry fields (ST_Distance)
 
-        # Arguments:
+        #### Arguments:
             first_field (string): First field name used in condition
             second_field (string): Second field name used in condition
             desc (bool): Sort in descending order
 
-        # Returns:
+        #### Returns:
             (:obj:`Query`): Query object for further customizations
 
-        # Raises:
+        #### Raises:
             Exception: Raises with an error message of API return on non-zero error code
 
         """
@@ -496,7 +496,7 @@ class Query:
             This is the default operation for WHERE statement. Do not have to be called explicitly in user's code.
             Used in DSL conversion
 
-        # Returns:
+        #### Returns:
             (:obj:`Query`): Query object for further customizations
 
         """
@@ -509,7 +509,7 @@ class Query:
             Implements short-circuiting:
             if the previous condition is successful the next will not be evaluated, but except Join conditions
 
-        # Returns:
+        #### Returns:
             (:obj:`Query`): Query object for further customizations
 
         """
@@ -521,7 +521,7 @@ class Query:
         """Next condition will be added with NOT AND.
             Implements short-circuiting: if the previous condition is failed the next will not be evaluated
 
-        # Returns:
+        #### Returns:
             (:obj:`Query`): Query object for further customizations
 
         """
@@ -532,10 +532,10 @@ class Query:
     def request_total(self, total_name: str = '') -> Query:
         """Requests total items calculation
 
-        # Arguments:
+        #### Arguments:
             total_name (string, optional): Name to be requested
 
-        # Returns:
+        #### Returns:
             (:obj:`Query`): Query object for further customizations
 
         """
@@ -546,10 +546,10 @@ class Query:
     def cached_total(self, total_name: str = '') -> Query:
         """Requests cached total items calculation
 
-        # Arguments:
+        #### Arguments:
             total_name (string, optional): Name to be requested
 
-        # Returns:
+        #### Returns:
             (:obj:`Query`): Query object for further customizations
 
         """
@@ -560,10 +560,10 @@ class Query:
     def limit(self, limit_items: int) -> Query:
         """Sets a limit (count) of returned items. Analog to sql LIMIT rowsNumber
 
-        # Arguments:
+        #### Arguments:
             limit_items (int): Number of rows to get from result set
 
-        # Returns:
+        #### Returns:
             (:obj:`Query`): Query object for further customizations
 
         """
@@ -574,10 +574,10 @@ class Query:
     def offset(self, start_offset: int) -> Query:
         """Sets the number of the first selected row from result query
 
-        # Arguments:
+        #### Arguments:
             limit_items (int): Index of the first row to get from result set
 
-        # Returns:
+        #### Returns:
             (:obj:`Query`): Query object for further customizations
 
         """
@@ -588,10 +588,10 @@ class Query:
     def debug(self, level: int) -> Query:
         """Changes debug level
 
-        # Arguments:
+        #### Arguments:
             level (int): Debug level
 
-        # Returns:
+        #### Returns:
             (:obj:`Query`): Query object for further customizations
 
         """
@@ -602,10 +602,10 @@ class Query:
     def strict(self, mode: StrictMode) -> Query:
         """Changes strict mode
 
-        # Arguments:
+        #### Arguments:
             mode (:enum:`StrictMode`): Strict mode
 
-        # Returns:
+        #### Returns:
             (:obj:`Query`): Query object for further customizations
 
         """
@@ -616,7 +616,7 @@ class Query:
     def explain(self) -> Query:
         """Enables explain query
 
-        # Returns:
+        #### Returns:
             (:obj:`Query`): Query object for further customizations
 
         """
@@ -627,7 +627,7 @@ class Query:
     def with_rank(self) -> Query:
         """Outputs fulltext rank. Allowed only with fulltext query
 
-        # Returns:
+        #### Returns:
             (:obj:`Query`): Query object for further customizations
 
         """
@@ -638,10 +638,10 @@ class Query:
     def execute(self) -> QueryResults:
         """Executes a select query
 
-        # Returns:
+        #### Returns:
             (:obj:`QueryResults`): A QueryResults iterator
 
-        # Raises:
+        #### Raises:
             Exception: Raises with an error message when query is in an invalid state
             Exception: Raises with an error message of API return on non-zero error code
 
@@ -657,10 +657,10 @@ class Query:
     def delete(self) -> int:
         """Executes a query, and delete items, matches query
 
-        # Returns:
+        #### Returns:
             (int): Number of deleted elements
 
-        # Raises:
+        #### Raises:
             Exception: Raises with an error message when query is in an invalid state
             Exception: Raises with an error message of API return on non-zero error code
 
@@ -676,14 +676,14 @@ class Query:
     def set_object(self, field: str, values: List[simple_types]) -> Query:
         """Adds an update query to an object field for an update query
 
-        # Arguments:
+        #### Arguments:
             field (string): Field name
             values (list[simple_types]): List of values to add
 
-        # Returns:
+        #### Returns:
             (:obj:`Query`): Query object for further customizations
 
-        # Raises:
+        #### Raises:
             Exception: Raises with an error message of API return on non-zero error code
 
         """
@@ -697,14 +697,14 @@ class Query:
     def set(self, field: str, values: List[simple_types]) -> Query:
         """Adds a field update request to the update request
 
-        # Arguments:
+        #### Arguments:
             field (string): Field name
             values (list[simple_types]): List of values to add
 
-        # Returns:
+        #### Returns:
             (:obj:`Query`): Query object for further customizations
 
-        # Raises:
+        #### Raises:
             Exception: Raises with an error message of API return on non-zero error code
 
         """
@@ -718,10 +718,10 @@ class Query:
     def drop(self, index: str) -> Query:
         """Drops a value for a field
 
-        # Arguments:
+        #### Arguments:
             index (string): Field name for drop operation
 
-        # Returns:
+        #### Returns:
             (:obj:`Query`): Query object for further customizations
 
         """
@@ -732,11 +732,11 @@ class Query:
     def expression(self, field: str, value: str) -> Query:
         """Updates indexed field by arithmetical expression
 
-        # Arguments:
+        #### Arguments:
             field (string): Field name
             value (string): New value expression for field
 
-        # Returns:
+        #### Returns:
             (:obj:`Query`): Query object for further customizations
 
         """
@@ -747,10 +747,10 @@ class Query:
     def update(self) -> QueryResults:
         """Executes update query, and update fields in items, which matches query
 
-        # Returns:
+        #### Returns:
             (:obj:`QueryResults`): A QueryResults iterator
 
-        # Raises:
+        #### Raises:
             Exception: Raises with an error message when query is in an invalid state
             Exception: Raises with an error message of API return on non-zero error code
 
@@ -766,10 +766,10 @@ class Query:
     def must_execute(self) -> QueryResults:
         """Executes a query, and update fields in items, which matches query, with status check
 
-        # Returns:
+        #### Returns:
             (:obj:`QueryResults`): A QueryResults iterator
 
-        # Raises:
+        #### Raises:
             Exception: Raises with an error message when query is in an invalid state
             Exception: Raises with an error message of API return on non-zero error code
 
@@ -782,10 +782,10 @@ class Query:
     def get(self) -> (str, bool):
         """Executes a query, and return 1 JSON item
 
-        # Returns:
+        #### Returns:
             (:tuple:string,bool): 1st string item and found flag
 
-        # Raises:
+        #### Raises:
             Exception: Raises with an error message when query is in an invalid state
             Exception: Raises with an error message of API return on non-zero error code
 
@@ -803,15 +803,15 @@ class Query:
     def __join(self, query: Query, field: str, join_type: JoinType) -> Query:
         """Joins queries
 
-        # Arguments:
+        #### Arguments:
             query (:obj:`Query`): Query object to join
             field (string): Joined field name
             type (:enum:`JoinType`): Join type
 
-        # Returns:
+        #### Returns:
             (:obj:`Query`): Query object for further customizations
 
-        # Raises:
+        #### Raises:
             Exception: Raises with an error message when query is in an invalid state
 
         """
@@ -835,13 +835,13 @@ class Query:
         """Joins 2 queries.
             Items from the 1-st query are filtered by and expanded with the data from the 2-nd query
 
-        # Arguments:
+        #### Arguments:
             query (:obj:`Query`): Query object to left join
             field (string): Joined field name. As unique identifier for the join between this query and `join_query`.
                 Parameter in order for InnerJoin to work: namespace of `query` contains `field` as one of its fields
                 marked as `joined`
 
-        # Returns:
+        #### Returns:
             (:obj:`Query`): Query object for further customizations
 
         """
@@ -852,11 +852,11 @@ class Query:
         """Join is an alias for LeftJoin. Joins 2 queries.
             Items from this query are expanded with the data from the `query`
 
-        # Arguments:
+        #### Arguments:
             query (:obj:`Query`): Query object to left join
             field (string): Joined field name. As unique identifier for the join between this query and `join_query`
 
-        # Returns:
+        #### Returns:
             (:obj:`Query`): Query object for further customizations
 
         """
@@ -869,11 +869,11 @@ class Query:
             One of the conditions below must hold for `field` parameter in order for LeftJoin to work:
                 namespace of `join_query` contains `field` as one of its fields marked as `joined`
 
-        # Arguments:
+        #### Arguments:
             query (:obj:`Query`): Query object to left join
             field (string): Joined field name. As unique identifier for the join between this query and `join_query`
 
-        # Returns:
+        #### Returns:
             (:obj:`Query`): Query object for further customizations
 
         """
@@ -883,10 +883,10 @@ class Query:
     def merge(self, query: Query) -> Query:
         """Merges queries of the same type
 
-        # Arguments:
+        #### Arguments:
             query (:obj:`Query`): Query object to merge
 
-        # Returns:
+        #### Returns:
             (:obj:`Query`): Query object for further customizations
 
         """
@@ -905,12 +905,12 @@ class Query:
     def on(self, index: str, condition: CondType, join_index: str) -> Query:
         """On specifies join condition
 
-        # Arguments:
+        #### Arguments:
             index (string): Field name from `Query` namespace should be used during join
             condition (:enum:`CondType`): Type of condition, specifies how `Query` will be joined with the latest join query issued on `Query` (e.g. `EQ`/`GT`/`SET`/...)
             join_index (string): Index-field name from namespace for the latest join query issued on `Query` should be used during join
 
-        # Returns:
+        #### Returns:
             (:obj:`Query`): Query object for further customizations
 
         """
@@ -927,13 +927,13 @@ class Query:
             Non-existent fields and fields in the wrong case are ignored.
             If there are no fields in this list that meet these conditions, then the filter works as "*"
 
-        # Arguments:
+        #### Arguments:
             fields (list[string]): List of columns to be selected
 
-        # Returns:
+        #### Returns:
             (:obj:`Query`): Query object for further customizations
 
-        # Raises:
+        #### Raises:
             Exception: Raises with an error message of API return on non-zero error code
 
         """
@@ -947,14 +947,15 @@ class Query:
     def functions(self, functions: List[str]) -> Query:
         """Adds sql-functions to query
 
-        # Arguments:
+        #### Arguments:
             functions (list[string]): Functions declaration
 
-        # Returns:
+        #### Returns:
             (:obj:`Query`): Query object for further customizations
 
-        # Raises:
+        #### Raises:
             Exception: Raises with an error message of API return on non-zero error code
+
         """
 
         functions = [] if functions is None else functions
@@ -966,13 +967,13 @@ class Query:
     def equal_position(self, equal_position: List[str]) -> Query:
         """Adds equal position fields to arrays queries
 
-        # Arguments:
+        #### Arguments:
             equal_poses (list[string]): Equal position fields to arrays queries
 
-        # Returns:
+        #### Returns:
             (:obj:`Query`): Query object for further customizations
 
-        # Raises:
+        #### Raises:
             Exception: Raises with an error message of API return on non-zero error code
 
         """

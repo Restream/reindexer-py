@@ -1,7 +1,7 @@
 class Point:
     """An object representing the context of a Reindexer 2D point
 
-    # Attributes:
+    #### Attributes:
         x (float): x coordinate of the point
         y (float): y coordinate of the point
     """
@@ -9,7 +9,7 @@ class Point:
     def __init__(self, x: float, y: float):
         """Constructs a new Reindexer query object
 
-        # Arguments:
+        #### Arguments:
             x (float): x coordinate of the point
             y (float): y coordinate of the point
 

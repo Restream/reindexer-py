@@ -1,0 +1,21 @@
+loaders:
+  - type: python
+    packages:
+      - pyreindexer.rx_connector
+      - pyreindexer.query_results
+      - pyreindexer.transaction
+      - pyreindexer.point
+      - pyreindexer.query
+      - pyreindexer.index_definition
+processors:
+  - type: filter
+    expression: not name.startswith('_') and default()
+renderer:
+  type: markdown
+  filename: README.md
+  header_level_by_type:
+     Class: 2
+     Function: 3
+     Method: 3
+     Module: 1
+     Data: 3

@@ -1,7 +1,7 @@
 class Transaction:
     """An object representing the context of a Reindexer transaction
 
-    # Attributes:
+    #### Attributes:
         api (module): An API module for Reindexer calls
         transaction_wrapper_ptr (int): A memory pointer to Reindexer transaction object
         err_code (int): The API error code
@@ -12,7 +12,7 @@ class Transaction:
     def __init__(self, api, transaction_wrapper_ptr: int):
         """Constructs a new Reindexer transaction object
 
-        # Arguments:
+        #### Arguments:
             api (module): An API module for Reindexer calls
             transaction_wrapper_ptr (int): A memory pointer to Reindexer transaction object
 
@@ -34,7 +34,7 @@ class Transaction:
     def __raise_on_error(self):
         """Checks if there is an error code and raises with an error message
 
-        # Raises:
+        #### Raises:
             Exception: Raises with an error message of API return on non-zero error code
 
         """
@@ -45,7 +45,7 @@ class Transaction:
     def __raise_on_is_over(self):
         """Checks the state of a transaction and returns an error message when necessary
 
-        # Raises:
+        #### Raises:
             Exception: Raises with an error message of API return if Transaction is over
 
         """
@@ -56,11 +56,11 @@ class Transaction:
     def insert(self, item_def, precepts=None):
         """Inserts an item with its precepts to the transaction
 
-        # Arguments:
+        #### Arguments:
             item_def (dict): A dictionary of item definition
             precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
 
-        # Raises:
+        #### Raises:
             Exception: Raises with an error message of API return if Transaction is over
             Exception: Raises with an error message of API return on non-zero error code
 
@@ -74,11 +74,11 @@ class Transaction:
     def update(self, item_def, precepts=None):
         """Updates an item with its precepts to the transaction
 
-        # Arguments:
+        #### Arguments:
             item_def (dict): A dictionary of item definition
             precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
 
-        # Raises:
+        #### Raises:
             Exception: Raises with an error message of API return if Transaction is over
             Exception: Raises with an error message of API return on non-zero error code
 
@@ -92,11 +92,11 @@ class Transaction:
     def upsert(self, item_def, precepts=None):
         """Updates an item with its precepts to the transaction. Creates the item if it not exists
 
-        # Arguments:
+        #### Arguments:
             item_def (dict): A dictionary of item definition
             precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
 
-        # Raises:
+        #### Raises:
             Exception: Raises with an error message of API return if Transaction is over
             Exception: Raises with an error message of API return on non-zero error code
 
@@ -110,10 +110,10 @@ class Transaction:
     def delete(self, item_def):
         """Deletes an item from the transaction
 
-        # Arguments:
+        #### Arguments:
             item_def (dict): A dictionary of item definition
 
-        # Raises:
+        #### Raises:
             Exception: Raises with an error message of API return if Transaction is over
             Exception: Raises with an error message of API return on non-zero error code
 
@@ -126,7 +126,7 @@ class Transaction:
     def commit(self):
         """Applies changes
 
-        # Raises:
+        #### Raises:
             Exception: Raises with an error message of API return if Transaction is over
             Exception: Raises with an error message of API return on non-zero error code
 
@@ -140,7 +140,7 @@ class Transaction:
     def commit_with_count(self) -> int:
         """Applies changes and return the number of count of changed items
 
-        # Raises:
+        #### Raises:
             Exception: Raises with an error message of API return if Transaction is over
             Exception: Raises with an error message of API return on non-zero error code
 
@@ -155,7 +155,7 @@ class Transaction:
     def rollback(self):
         """Rollbacks changes
 
-        # Raises:
+        #### Raises:
             Exception: Raises with an error message of API return if Transaction is over
             Exception: Raises with an error message of API return on non-zero error code
 

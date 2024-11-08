@@ -2,7 +2,7 @@ class QueryResults:
     """QueryResults is a disposable iterator of Reindexer results for such queries as SELECT etc.
         When the results are fetched the iterator closes and frees a memory of results buffer of Reindexer
 
-    # Attributes:
+    #### Attributes:
         api (module): An API module for Reindexer calls
         err_code (int): The API error code
         err_msg (string): The API error message
@@ -15,7 +15,7 @@ class QueryResults:
     def __init__(self, api, qres_wrapper_ptr, qres_iter_count):
         """Constructs a new Reindexer query results iterator object
 
-        # Arguments:
+        #### Arguments:
             api (module): An API module for Reindexer calls
             qres_wrapper_ptr (int): A memory pointer to Reindexer iterator object
             qres_iter_count (int): A count of results for iterations
@@ -39,7 +39,7 @@ class QueryResults:
     def __next__(self):
         """Returns the next iteration result
 
-        # Raises:
+        #### Raises:
             StopIteration: Frees results on end of iterator and raises with iteration stop
 
         """
@@ -64,7 +64,7 @@ class QueryResults:
     def status(self):
         """Check status
 
-        # Raises:
+        #### Raises:
             Exception: Raises with an error message of API return on non-zero error code
 
         """
@@ -97,7 +97,7 @@ class QueryResults:
         # Returns
             (:obj:`dict`): Dictionary with all results for the current query
 
-        # Raises:
+        #### Raises:
             Exception: Raises with an error message of API return on non-zero error code
 
         """
