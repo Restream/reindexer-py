@@ -3,8 +3,8 @@ from query import Query
 from tests.helpers.log_helper import log_api
 
 
-def make_request_and_response_log(method_description, request_msg, res=None) -> str:
-    return f"{method_description}\n\t[Request] => {request_msg}\n\t[Response] <= {res}"
+def make_request_and_response_log(method_description, call_msg, res=None) -> str:
+    return f"{method_description}\n\t[Call] => {call_msg}\n\t[Return] <= {res}"
 
 
 def api_method(func):
@@ -16,10 +16,10 @@ def api_method(func):
 
         args_str = ", ".join(repr(a) for a in args)
         kwargs_str = ", ".join(f"{k}={v}" for k, v in kwargs.items())
-        request_msg = f"Called {func.__name__} with args ({args_str}) and kwargs ({kwargs_str})"
+        call_msg = f"args ({args_str}), kwargs ({kwargs_str})"
 
         r = func(self, *args, **kwargs)
-        log = make_request_and_response_log(method_description, request_msg, r)
+        log = make_request_and_response_log(method_description, call_msg, r)
         log_api.info(log)
         return r
 

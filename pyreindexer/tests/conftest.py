@@ -1,3 +1,4 @@
+import random
 import shutil
 
 import pytest
@@ -30,7 +31,7 @@ def db(request):
     shutil.rmtree('tmp/', ignore_errors=True)
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def namespace(db):
     """
     Create a namespace
@@ -41,7 +42,7 @@ def namespace(db):
     db.namespace.drop(ns_name)
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def index(db, namespace):
     """
     Create an index to namespace
@@ -50,7 +51,39 @@ def index(db, namespace):
     yield
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
+def item(db, namespace):
+    """
+    Create an item to namespace
+    """
+    db.item.insert(namespace, item_definition)
+    yield item_definition
+
+
+@pytest.fixture
+def items(db, namespace):
+    """
+    Create items to namespace
+    """
+    items = [{"id": i, "val": f"testval{i}"} for i in range(10)]
+    for item in items:
+        db.item.insert(namespace, item)
+    yield items
+
+
+@pytest.fixture
+def items_shuffled(db, namespace):
+    """
+    Create items in random order
+    """
+    items = [{"id": i, "val": f"testval{i}"} for i in range(5)]
+    random.shuffle(items)
+    for item in items:
+        db.item.insert(namespace, item)
+    yield items
+
+
+@pytest.fixture
 def composite_index(db, namespace):
     """
     Create indexes and composite index from them
@@ -61,7 +94,7 @@ def composite_index(db, namespace):
     yield
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def rtree_index_and_items(db, namespace):
     """
     Create rtree index and items
@@ -74,27 +107,47 @@ def rtree_index_and_items(db, namespace):
     yield items
 
 
-@pytest.fixture(scope="function")
-def item(db, namespace):
+@pytest.fixture
+def ft_index_and_items(db, namespace):
     """
-    Create an item to namespace
+    Create rtree index and items
     """
-    db.item.insert(namespace, item_definition)
-    yield item_definition
-
-
-@pytest.fixture(scope="function")
-def items(db, namespace):
-    """
-    Create items to namespace
-    """
-    items = [{"id": i, "val": f"testval{i}"} for i in range(10)]
+    db.index.create(namespace, {"name": "ft", "json_paths": ["ft"], "field_type": "string", "index_type": "text"})
+    content = ["one word", "sword two", "three work 333"]
+    items = [{"id": i, "ft": c} for i, c in enumerate(content)]
     for item in items:
         db.item.insert(namespace, item)
     yield items
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
+def index_and_duplicate_items(db, namespace):
+    """
+    Create index and items with duplicate value
+    """
+    db.index.create(namespace, {"name": "idx", "json_paths": ["idx"], "field_type": "int", "index_type": "hash"})
+    items = [{"id": 0, "idx": 0}, {"id": 1, "idx": 1}, {"id": 2, "idx": 1}, {"id": 3, "idx": 3}]
+    for item in items:
+        db.item.insert(namespace, item)
+    yield items
+
+
+@pytest.fixture
+def array_indexes_and_items(db, namespace):
+    """
+    Create array indexes and items
+    """
+    db.index.create(namespace, {"name": "arr1", "json_paths": ["arr1"], "field_type": "int",
+                                "index_type": "tree", "is_array": True})
+    db.index.create(namespace, {"name": "arr2", "json_paths": ["arr2"], "field_type": "int",
+                                "index_type": "tree", "is_array": True})
+    items = [{"id": i, "arr1": [i, i % 2], "arr2": [i % 2, i]} for i in range(5)]
+    for item in items:
+        db.item.insert(namespace, item)
+    yield items
+
+
+@pytest.fixture
 def metadata(db, namespace):
     """
     Put metadata  to namespace
@@ -104,8 +157,8 @@ def metadata(db, namespace):
     yield key, value
 
 
-@pytest.fixture(scope="function")
-def second_namespace_for_join(db):
+@pytest.fixture
+def second_namespace(db):
     second_namespace_name = 'test_ns_for_join'
     db.namespace.open(second_namespace_name)
     db.index.create(second_namespace_name, index_definition)
