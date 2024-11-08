@@ -86,17 +86,33 @@ def transaction_example(db, namespace, items_in_base):
 
 
 def query_example(db, namespace):
+    any_items = (db.new_query(namespace)
+                 .where('value', CondType.CondAny)
+                 .sort('id')
+                 .execute())
+    print(f'Query results count (Any): {any_items.count()}')
+    for item in any_items:
+        print('Item: ', item)
+
     selected_items = (db.new_query(namespace)
                       .where('value', CondType.CondEq, 'check')
                       .sort('id')
                       .limit(4)
                       .execute())
-
-    res_count = selected_items.count()
-    print('Query results count (limited): ', res_count)
-
-    # disposable QueryResults iterator
+    print(f'Query results count (limited): {selected_items.count()}')
     for item in selected_items:
+        print('Item: ', item)
+
+    del_count = (db.new_query(namespace)
+                 .where('name', CondType.CondEq, 'item_1')
+                 .delete())
+    print(f'Deleted count: {del_count}')
+
+    any_items = (db.new_query(namespace)
+                 .where('value', CondType.CondAny)
+                 .must_execute())
+    print(f'Query results count (Any after delete): {any_items.count()}')
+    for item in any_items:
         print('Item: ', item)
 
 

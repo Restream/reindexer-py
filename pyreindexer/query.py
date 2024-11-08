@@ -134,6 +134,9 @@ class Query:
 
         params: list = self.__convert_to_list(keys)
 
+        if condition == CondType.CondDWithin :
+            raise Exception("In this case, use a special method 'dwithin'")
+
         self.err_code, self.err_msg = self.api.where(self.query_wrapper_ptr, index, condition.value, params)
         self.__raise_on_error()
         return self
