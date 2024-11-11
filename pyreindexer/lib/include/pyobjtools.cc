@@ -157,6 +157,9 @@ PyObject* pyValueFromJsonValue(const gason::JsonValue& value) {
 				Py_XDECREF(dictFromJson);
 			}
 			break;
+		case gason::JSON_EMPTY:
+			throw gason::Exception("Unexpected `JSON_EMPTY` tag");
+			break;
 	}
 
 	return pyValue;
