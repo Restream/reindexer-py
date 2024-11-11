@@ -76,7 +76,7 @@ class QueryResults:
     def count(self):
         """Returns a count of results
 
-        # Returns
+        #### Returns
             int: A count of results
 
         """
@@ -94,7 +94,7 @@ class QueryResults:
     def get_agg_results(self):
         """Returns aggregation results for the current query
 
-        # Returns
+        #### Returns
             (:obj:`dict`): Dictionary with all results for the current query
 
         #### Raises:
@@ -110,7 +110,7 @@ class QueryResults:
     def get_explain_results(self):
         """Returns explain results for the current query
 
-        # Returns
+        #### Returns
             (string): Formatted string with explain of results for the current query
 
         #### Raises:
