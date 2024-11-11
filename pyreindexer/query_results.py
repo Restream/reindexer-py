@@ -106,3 +106,19 @@ class QueryResults:
         if self.err_code:
             raise Exception(self.err_msg)
         return res
+
+    def get_explain_results(self):
+        """Returns explain results for the current query
+
+        # Returns
+            (string): Formatted string with explain of results for the current query
+
+        #### Raises:
+            Exception: Raises with an error message of API return on non-zero error code
+
+        """
+
+        self.err_code, self.err_msg, res = self.api.get_explain_results(self.qres_wrapper_ptr)
+        if self.err_code:
+            raise Exception(self.err_msg)
+        return res

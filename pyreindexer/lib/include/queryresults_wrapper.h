@@ -63,7 +63,11 @@ public:
 		}
 	}
 
-	const std::vector<reindexer::AggregationResult>& GetAggregationResults() & { return qres_.GetAggregationResults(); }
+	const std::string& GetExplainResults() const& noexcept { return qres_.GetExplainResults(); }
+	const std::string& GetExplainResults() const&& = delete;
+
+	const std::vector<reindexer::AggregationResult>& GetAggregationResults() &
+	{ return qres_.GetAggregationResults(); }
 	const std::vector<reindexer::AggregationResult>& GetAggregationResults() && = delete;
 
 private:

@@ -488,6 +488,19 @@ static PyObject* GetAggregationResults(PyObject* self, PyObject* args) {
 	return res;
 }
 
+static PyObject* GetExplainResults(PyObject* self, PyObject* args) {
+	uintptr_t qresWrapperAddr = 0;
+	if (!PyArg_ParseTuple(args, "k", &qresWrapperAddr)) {
+		return nullptr;
+	}
+
+	QueryResultsWrapper* qresWrapper = getWrapper<QueryResultsWrapper>(qresWrapperAddr);
+
+	const auto& explainResults = qresWrapper->GetExplainResults();
+
+	return Py_BuildValue("iss", errOK, "", explainResults.c_str());
+}
+
 // transaction ---------------------------------------------------------------------------------------------------------
 
 static PyObject* NewTransaction(PyObject* self, PyObject* args) {
