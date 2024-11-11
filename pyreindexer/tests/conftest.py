@@ -52,6 +52,17 @@ def index(db, namespace):
 
 
 @pytest.fixture
+def indexes(db, namespace):
+    """
+    Create two indexes to namespace
+    """
+    db.index.create(namespace, index_definition)
+    db.index.create(namespace, {"name": "val", "json_paths": ["val"], "field_type": "string", "index_type": "hash",
+                                "is_sparse": True})
+    yield
+
+
+@pytest.fixture
 def item(db, namespace):
     """
     Create an item to namespace
