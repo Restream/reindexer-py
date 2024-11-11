@@ -42,17 +42,7 @@ public:
 	void Aggregation(const std::vector<std::string>& fields);
 	void AggregationSort(std::string_view field, bool desc);
 
-	template <typename T>
-	void Sort(std::string_view index, bool desc, const std::vector<T>& keys) {
-		ser_.PutVarUint(QueryItemType::QuerySortIndex);
-		ser_.PutVString(index);
-		ser_.PutVarUint(desc? 1 : 0);
-
-		ser_.PutVarUint(keys.size());
-		for (const auto& key : keys) {
-			putValue(key);
-		}
-	}
+	void Sort(std::string_view index, bool desc, const std::vector<reindexer::Variant>& keys);
 
 	void LogOp(OpType op);
 
@@ -68,23 +58,7 @@ public:
 	reindexer::Error DeleteQuery(size_t& count);
 	reindexer::Error UpdateQuery(QueryResultsWrapper& qr);
 
-	void SetObject(std::string_view field, const std::vector<std::string>& values, QueryItemType type) {
-		ser_.PutVarUint(type);
-		ser_.PutVString(field);
-		if (type == QueryItemType::QueryUpdateObject) {
-			ser_.PutVarUint(values.size()); // values count
-		}
-		if (type != QueryItemType::QueryUpdateField) {
-			ser_.PutVarUint(values.size() > 1? 1 : 0); // is array flag
-		}
-		if (type != QueryItemType::QueryUpdateObject) {
-			ser_.PutVarUint(values.size()); // values count
-		}
-		for (const auto& value : values) {
-			ser_.PutVarUint(0); // function/value flag
-			putValue(value);
-		}
-	}
+	void SetObject(std::string_view field, const std::vector<std::string>& values, QueryItemType type);
 
 	void Drop(std::string_view field);
 
@@ -103,9 +77,6 @@ public:
 	DBInterface* GetDB() const { return db_; }
 
 private:
-	template <typename T>
-	void putValue(T) {}
-
 	reindexer::Serializer prepareQueryData(reindexer::WrSerializer& data);
 	reindexer::JoinedQuery createJoinedQuery(JoinType joinType, reindexer::WrSerializer& data);
 	void addJoinQueries(const std::vector<QueryWrapper*>& joinQueries, reindexer::Query& query);

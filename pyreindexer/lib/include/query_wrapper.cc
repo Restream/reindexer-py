@@ -165,6 +165,18 @@ void QueryWrapper::Aggregation(const std::vector<std::string>& fields) {
 	}
 }
 
+void QueryWrapper::Sort(std::string_view index, bool desc, const std::vector<reindexer::Variant>& keys) {
+	ser_.PutVarUint(QueryItemType::QuerySortIndex);
+	ser_.PutVString(index);
+	ser_.PutVarUint(desc? 1 : 0);
+
+	ser_.PutVarUint(keys.size());
+	for (const auto& key : keys) {
+		ser_.PutVariant(key);
+	}
+}
+
+
 void QueryWrapper::LogOp(OpType op) {
 	switch (op) {
 		case OpType::OpAnd:
@@ -249,6 +261,24 @@ reindexer::Error QueryWrapper::UpdateQuery(QueryResultsWrapper& qr) {
 	return db_->UpdateQuery(query, qr);
 }
 
+void QueryWrapper::SetObject(std::string_view field, const std::vector<std::string>& values, QueryItemType type) {
+	ser_.PutVarUint(type);
+	ser_.PutVString(field);
+	if (type == QueryItemType::QueryUpdateObject) {
+		ser_.PutVarUint(values.size()); // values count
+	}
+	if (type != QueryItemType::QueryUpdateField) {
+		ser_.PutVarUint(values.size() > 1? 1 : 0); // is array flag
+	}
+	if (type != QueryItemType::QueryUpdateObject) {
+		ser_.PutVarUint(values.size()); // values count
+	}
+	for (const auto& value : values) {
+		ser_.PutVarUint(0); // function/value flag
+		ser_.PutVString(value);
+	}
+}
+
 void QueryWrapper::Drop(std::string_view field) {
 	ser_.PutVarUint(QueryItemType::QueryDropField);
 	ser_.PutVString(field);
@@ -260,7 +290,7 @@ void QueryWrapper::SetExpression(std::string_view field, std::string_view value)
 
 	ser_.PutVarUint(1); // size
 	ser_.PutVarUint(1); // is expression
-	ser_.PutVString(value);
+	ser_.PutVariant(reindexer::Variant{value});
 }
 
 void QueryWrapper::Join(JoinType type, unsigned joinQueryIndex, QueryWrapper* joinQuery) {
@@ -316,77 +346,6 @@ void QueryWrapper::AddEqualPosition(const std::vector<std::string>& equalPositio
 	for (const auto& position : equalPositions) {
 		ser_.PutVString(position);
 	}
-}
-
-
-template <>
-void QueryWrapper::putValue(int8_t value) {
-	ser_.PutVarUint(VALUE_INT);
-	ser_.PutVarint(value);
-}
-template <>
-void QueryWrapper::putValue(uint8_t value) {
-	ser_.PutVarUint(VALUE_INT);
-	ser_.PutVarint(int64_t(value));
-}
-template <>
-void QueryWrapper::putValue(int16_t value) {
-	ser_.PutVarUint(VALUE_INT);
-	ser_.PutVarint(value);
-}
-template <>
-void QueryWrapper::putValue(uint16_t value) {
-	ser_.PutVarUint(VALUE_INT);
-	ser_.PutVarint(int64_t(value));
-}
-template <>
-void QueryWrapper::putValue(int32_t value) {
-	ser_.PutVarUint(VALUE_INT);
-	ser_.PutVarint(value);
-}
-template <>
-void QueryWrapper::putValue(uint32_t value) {
-	ser_.PutVarUint(VALUE_INT);
-	ser_.PutVarint(int64_t(value));
-}
-template <>
-void QueryWrapper::putValue(int64_t value) {
-	ser_.PutVarUint(VALUE_INT_64);
-	ser_.PutVarint(value);
-}
-template <>
-void QueryWrapper::putValue(uint64_t value) {
-	ser_.PutVarUint(VALUE_INT_64);
-	ser_.PutVarint(value);
-}
-template <>
-void QueryWrapper::putValue(std::string_view value) {
-	ser_.PutVarUint(VALUE_STRING);
-	ser_.PutVString(value);
-}
-template <>
-void QueryWrapper::putValue(const std::string& value) {
-	ser_.PutVarUint(VALUE_STRING);
-	ser_.PutVString(value);
-}
-template <>
-void QueryWrapper::putValue(bool value) {
-	ser_.PutVarUint(VALUE_BOOL);
-	ser_.PutBool(value);
-}
-template <>
-void QueryWrapper::putValue(float value) {
-	ser_.PutVarUint(VALUE_DOUBLE);
-	ser_.PutDouble(value);
-}
-template <>
-void QueryWrapper::putValue(double value) {
-	ser_.PutVarUint(VALUE_DOUBLE);
-	ser_.PutDouble(value);
-}
-template <>
-void QueryWrapper::putValue(const reindexer::Variant& value) {
-	ser_.PutVariant(value);
 }
 
 }  // namespace pyreindexer

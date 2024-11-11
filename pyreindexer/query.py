@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import List, Union
+from typing import List, Union, Optional
 
 from pyreindexer.point import Point
 from pyreindexer.query_results import QueryResults
@@ -55,7 +55,7 @@ class Query:
         query_wrapper_ptr (int): A memory pointer to Reindexer query object
         err_code (int): The API error code
         err_msg (string): The API error message
-        root (:object:`Query`): The root query of the Reindexer query
+        root (:object: Optional[`Query`]): The root query of the Reindexer query
         join_type (:enum:`JoinType`): Join type
         join_queries (list[:object:`Query`]): The list of join Reindexer query objects
         merged_queries (list[:object:`Query`]): The list of merged Reindexer query objects
@@ -75,7 +75,7 @@ class Query:
         self.query_wrapper_ptr: int = query_wrapper_ptr
         self.err_code: int = 0
         self.err_msg: str = ''
-        self.root: Query = None
+        self.root: Optional[Query] = None
         self.join_type: JoinType = JoinType.LeftJoin
         self.join_queries: List[Query] = []
         self.merged_queries: List[Query] = []
@@ -122,7 +122,8 @@ class Query:
             index (string): Field name used in condition clause
             condition (:enum:`CondType`): Type of condition
             keys (Union[None, simple_types, list[simple_types]]):
-                Value of index to be compared with. For composite indexes keys must be list, with value of each subindex
+                Value of index to be compared with. For composite indexes keys must be list,
+                with value of each sub-index
 
         #### Returns:
             (:obj:`Query`): Query object for further customizations
@@ -149,7 +150,8 @@ class Query:
             sub_query (:obj:`Query`): Field name used in condition clause
             condition (:enum:`CondType`): Type of condition
             keys (Union[None, simple_types, list[simple_types]]):
-                Value of index to be compared with. For composite indexes keys must be list, with value of each sub-index
+                Value of index to be compared with. For composite indexes keys must be list,
+                with value of each sub-index
 
         #### Returns:
             (:obj:`Query`): Query object for further customizations
@@ -166,7 +168,8 @@ class Query:
         self.__raise_on_error()
         return self
 
-    def where_composite(self, index: str, condition: CondType, sub_query: Query) -> Query:
+    def where_composite(self, index: str, condition: CondType,
+                        keys: Union[simple_types, List[simple_types]] = None) -> Query:
         """Adds where condition to DB query with interface args for composite indexes
 
         #### Arguments:
@@ -179,8 +182,7 @@ class Query:
 
         """
 
-        self.api.where_composite(self.query_wrapper_ptr, index, condition.value, sub_query.query_wrapper_ptr)
-        return self
+        return self.api.where(self.query_wrapper_ptr, index, condition.value, keys)
 
     def where_uuid(self, index: str, condition: CondType, keys: List[str]) -> Query:
         """Adds where condition to DB query with UUID as string args.
@@ -190,7 +192,8 @@ class Query:
         #### Arguments:
             index (string): Field name used in condition clause
             condition (:enum:`CondType`): Type of condition
-            keys (list[string]): Value of index to be compared with. For composite indexes keys must be list, with value of each subindex
+            keys (list[string]): Value of index to be compared with. For composite indexes keys must be list,
+            with value of each sub-index
 
         #### Returns:
             (:obj:`Query`): Query object for further customizations
@@ -257,7 +260,8 @@ class Query:
 
         #### Arguments:
             index (string): Field name used in condition clause
-            keys (list[string]): Value of index to be compared with. For composite indexes keys must be list, with value of each subindex
+            keys (list[string]): Value of index to be compared with. For composite indexes keys must be list,
+            with value of each sub-index
 
         #### Returns:
             (:obj:`Query`): Query object for further customizations
@@ -423,9 +427,9 @@ class Query:
             return self
 
     def aggregate_facet(self, fields: List[str]) -> Query._AggregateFacet:
-        """Gets fields facet value. Applicable to multiple data fields and the result of that could be sorted by any data
-            column or `count` and cut off by offset and limit. In order to support this functionality this method
-            returns AggregationFacetRequest which has methods sort, limit and offset
+        """Gets fields facet value. Applicable to multiple data fields and the result of that could be sorted
+            by any data column or `count` and cut off by offset and limit. In order to support this functionality
+            this method returns AggregationFacetRequest which has methods sort, limit and offset
 
         #### Arguments:
             fields (list[string]): Fields any data column name or `count`, fields should not be empty

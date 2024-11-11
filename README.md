@@ -735,7 +735,8 @@ Adds where condition to DB query with args
     index (string): Field name used in condition clause
     condition (:enum:`CondType`): Type of condition
     keys (Union[None, simple_types, list[simple_types]]):
-        Value of index to be compared with. For composite indexes keys must be list, with value of each subindex
+        Value of index to be compared with. For composite indexes keys must be list,
+        with value of each sub-index
 
 #### Returns:
     (:obj:`Query`): Query object for further customizations
@@ -759,7 +760,8 @@ Adds sub-query where condition to DB query with args
     sub_query (:obj:`Query`): Field name used in condition clause
     condition (:enum:`CondType`): Type of condition
     keys (Union[None, simple_types, list[simple_types]]):
-        Value of index to be compared with. For composite indexes keys must be list, with value of each sub-index
+        Value of index to be compared with. For composite indexes keys must be list,
+        with value of each sub-index
 
 #### Returns:
     (:obj:`Query`): Query object for further customizations
@@ -772,8 +774,10 @@ Adds sub-query where condition to DB query with args
 ### Query.where\_composite
 
 ```python
-def where_composite(index: str, condition: CondType,
-                    sub_query: Query) -> Query
+def where_composite(
+        index: str,
+        condition: CondType,
+        keys: Union[simple_types, List[simple_types]] = None) -> Query
 ```
 
 Adds where condition to DB query with interface args for composite indexes
@@ -801,7 +805,8 @@ Adds where condition to DB query with UUID as string args.
 #### Arguments:
     index (string): Field name used in condition clause
     condition (:enum:`CondType`): Type of condition
-    keys (list[string]): Value of index to be compared with. For composite indexes keys must be list, with value of each subindex
+    keys (list[string]): Value of index to be compared with. For composite indexes keys must be list,
+    with value of each sub-index
 
 #### Returns:
     (:obj:`Query`): Query object for further customizations
@@ -872,7 +877,8 @@ Adds string EQ-condition to DB query with string args
 
 #### Arguments:
     index (string): Field name used in condition clause
-    keys (list[string]): Value of index to be compared with. For composite indexes keys must be list, with value of each subindex
+    keys (list[string]): Value of index to be compared with. For composite indexes keys must be list,
+    with value of each sub-index
 
 #### Returns:
     (:obj:`Query`): Query object for further customizations
@@ -986,9 +992,9 @@ Finds for the maximum at the specified index
 def aggregate_facet(fields: List[str]) -> Query._AggregateFacet
 ```
 
-Gets fields facet value. Applicable to multiple data fields and the result of that could be sorted by any data
-    column or `count` and cut off by offset and limit. In order to support this functionality this method
-    returns AggregationFacetRequest which has methods sort, limit and offset
+Gets fields facet value. Applicable to multiple data fields and the result of that could be sorted
+    by any data column or `count` and cut off by offset and limit. In order to support this functionality
+    this method returns AggregationFacetRequest which has methods sort, limit and offset
 
 #### Arguments:
     fields (list[string]): Fields any data column name or `count`, fields should not be empty
