@@ -57,8 +57,7 @@ def indexes(db, namespace):
     Create two indexes to namespace
     """
     db.index.create(namespace, index_definition)
-    db.index.create(namespace, {"name": "val", "json_paths": ["val"], "field_type": "string", "index_type": "hash",
-                                "is_sparse": True})
+    db.index.create(namespace, {"name": "val", "json_paths": ["val"], "field_type": "string", "index_type": "hash"})
     yield
 
 

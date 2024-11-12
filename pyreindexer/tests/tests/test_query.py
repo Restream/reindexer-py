@@ -1,4 +1,3 @@
-import copy
 import json
 import random
 
@@ -59,13 +58,13 @@ class TestQuerySelect:
         assert_that(query_result, equal_to(["", False]), "Wrong query results")
 
     # TODO does not work, ignore subquery results
-    #    def test_query_select_where_query(self, db, namespace, index, items):
+    #     def test_query_select_where_query(self, db, namespace, index, items):
     #        # Given("Create namespace with index and items")
     #        # Given ("Create new query")
     #        # query = db.query.new(namespace).where("id", CondType.CondLt, 5)
     #        # sub_query = db.query.new(namespace).where("id", CondType.CondGt, 0)
     #        query = db.query.new(namespace).where("id", CondType.CondGt, 0)
-    #        sub_query = db.query.new(namespace).select(["id"]).where("id", CondType.CondLt, 5)
+    #        sub_query = db.query.new(namespace).select("id").where("id", CondType.CondLt, 5)
     #        # When ("Make select query with where_query subquery")
     #        query_result = list(query.where_query(sub_query, CondType.CondGe, 2).must_execute())
     #        # Then ("Check that selected item is in result")
@@ -257,43 +256,39 @@ class TestQuerySelect:
         # Then ("Check that selected item is in result")
         assert_that(query_result, equal_to([items[1]]), "Wrong query results")
 
-    @pytest.mark.parametrize("strict_mode", [StrictMode.NotSet, StrictMode.Empty])
-    def test_query_select_strict_mode_none_and_empty(self, db, namespace, index, items, strict_mode):
+    def test_query_select_strict_mode_empty(self, db, namespace, index, items):
         # Given("Create namespace with index and items")
         # Given ("Create new query")
         query = db.query.new(namespace)
         # When ("Make select query with strict mode")
-        query_result = list(query.strict(strict_mode).where("rand", CondType.CondEq, 1).must_execute())
+        query_result = list(query.strict(StrictMode.Empty).where("rand", CondType.CondEq, 1).must_execute())
         # Then ("Check that selected item is in result")
         assert_that(query_result, empty(), "Wrong query results")
 
+    @pytest.mark.parametrize("strict_mode", [StrictMode.NotSet, StrictMode.Names])
+    def test_query_select_strict_mode_names_default(self, db, namespace, index, items, strict_mode):
+        # Given("Create namespace with index and items")
+        # Given ("Create new query")
+        query = db.query.new(namespace)
+        # When ("Make select query with strict mode")
+        query.strict(strict_mode).where("rand", CondType.CondEq, 1)
+        err_msg = "Current query strict mode allows filtering by existing fields only. " \
+                  f"There are no fields with name 'rand' in namespace '{namespace}'"
+        assert_that(calling(query.execute).with_args(),
+                    raises(Exception, pattern=err_msg))
 
-# TODO must be err (see err_msg)
-#    def test_query_select_strict_mode_names(self, db, namespace, index, items):
-#        # Given("Create namespace with index and items")
-#        # Given ("Create new query")
-#        query = db.query.new(namespace)
-#        # When ("Make select query with strict mode")
-#        query.strict(StrictMode.Names).where("rand", CondType.CondEq, 1)
-#        err_msg = f"Current query strict mode allows aggregate existing fields only. " \
-#                  f"There are no fields with name 'rand' in namespace '{namespace}'"
-#        assert_that(calling(query.must_execute).with_args(),
-#                    raises(Exception, pattern=err_msg),
-#                    "Error wasn't raised while strict mode violated")
+    def test_query_select_strict_mode_indexes(self, db, namespace, index, items):
+        # Given("Create namespace with index and items")
+        # Given ("Create new query")
+        query = db.query.new(namespace)
+        # When ("Make select query with strict mode")
+        query.strict(StrictMode.Indexes).where("rand", CondType.CondEq, 1)
+        err_msg = "Current query strict mode allows filtering by indexes only. " \
+                  f"There are no indexes with name 'rand' in namespace '{namespace}'"
+        assert_that(calling(query.execute).with_args(),
+                    raises(Exception, pattern=err_msg),
+                    "Error wasn't raised while strict mode violated")
 
-
-# TODO must be err (see err_msg)
-#    def test_query_select_strict_mode_indexes(self, db, namespace, index, items):
-#        # Given("Create namespace with index and items")
-#        # Given ("Create new query")
-#        query = db.query.new(namespace)
-#        # When ("Make select query with strict mode")
-#        query.strict(StrictMode.Indexes).where("rand", CondType.CondEq, 1)
-#        err_msg = f"Current query strict mode allows aggregate index fields only. " \
-#                  f"There are no indexes with name 'rand' in namespace '{namespace}'"
-#        assert_that(calling(query.must_execute).with_args(),
-#                    raises(Exception, pattern=err_msg),
-#                    "Error wasn't raised while strict mode violated")
 
 class TestQuerySelectAggregations:
     @pytest.mark.parametrize("calculate, aggregate_func", AGGREGATE_FUNCTIONS_MATH)
@@ -528,8 +523,11 @@ class TestQueryUpdate:
         items_after_drop = get_ns_items(db, namespace)
         assert_that(items_after_drop, equal_to(items), "Wrong items after drop")
 
-    def test_query_drop_all(self, db, namespace, indexes, items):
-        # Given("Create namespace with two indexes and items")
+    def test_query_drop_all(self, db, namespace, index, items):
+        # Given("Create namespace with index")
+        # Given("Create sparse index")
+        db.index.create(namespace, {"name": "val", "json_paths": ["val"], "field_type": "string", "index_type": "hash",
+                                    "is_sparse": True})
         # Given ("Create new query")
         query = db.query.new(namespace)
         # When ("Make update drop query")
@@ -541,6 +539,16 @@ class TestQueryUpdate:
         # Then ("Check that field was dropped")
         items_after_drop = get_ns_items(db, namespace)
         assert_that(items_after_drop, equal_to(items), "Wrong items after drop")
+
+    def test_cannot_query_drop_not_sparse(self, db, namespace, indexes, items):
+        # Given("Create namespace with indexs and items")
+        # Given ("Create new query")
+        query = db.query.new(namespace)
+        # When ("Try to make update drop query with not sparse index")
+        item = random.choice(items)
+        assert_that(calling(query.drop("val").update).with_args(),
+                    raises(Exception,
+                           pattern="It's only possible to drop sparse or non-index fields via UPDATE statement!"))
 
 
 class TestQueryDelete:
@@ -556,3 +564,15 @@ class TestQueryDelete:
         items_after_delete = get_ns_items(db, namespace)
         assert_that(items_after_delete, has_length(len(items) - 1), "Wrong items count after delete")
         assert_that(items_after_delete, not_(has_item(item)), "Deleted item is in namespace")
+
+    def test_query_delete_all(self, db, namespace, index, items):
+        # Given("Create namespace with index and items")
+        # Given ("Create new query")
+        query = db.query.new(namespace)
+        # When ("Make delete query")
+        item = random.choice(items)
+        query_result = query.delete()
+        # Then ("Check that chosen item was deleted")
+        assert_that(query_result, equal_to(10), "Wrong delete items count")
+        items_after_delete = get_ns_items(db, namespace)
+        assert_that(items_after_delete, empty(), "Wrong items count after delete")
