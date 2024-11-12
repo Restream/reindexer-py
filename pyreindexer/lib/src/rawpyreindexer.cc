@@ -1136,7 +1136,7 @@ static PyObject* Join(PyObject* self, PyObject* args) {
 static PyObject* Merge(PyObject* self, PyObject* args) {
 	uintptr_t queryWrapperAddr = 0;
 	uintptr_t queryWrapperAddrMerge = 0;
-	if (!PyArg_ParseTuple(args, "kIIk", &queryWrapperAddr, &queryWrapperAddrMerge)) {
+	if (!PyArg_ParseTuple(args, "kk", &queryWrapperAddr, &queryWrapperAddrMerge)) {
 		return nullptr;
 	}
 

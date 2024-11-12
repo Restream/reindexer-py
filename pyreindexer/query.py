@@ -115,6 +115,22 @@ class Query:
         param = param if isinstance(param, list) else [param]
         return param
 
+    @staticmethod
+    def __convert_strs_to_list(param: tuple[str, ...]) -> List[str]:
+        """Converts an input parameter to a list
+
+        #### Arguments:
+            param (list[*string]): The input parameter
+
+        #### Returns:
+            List[string]: Always converted to a list
+
+        """
+
+        param = [] if param is None else param
+        param = [item for item in param]
+        return param
+
     def where(self, index: str, condition: CondType, keys: Union[simple_types, List[simple_types]] = None) -> Query:
         """Adds where condition to DB query with args
 
@@ -141,6 +157,7 @@ class Query:
         self.err_code, self.err_msg = self.api.where(self.query_wrapper_ptr, index, condition.value, params)
         self.__raise_on_error()
         return self
+
 
     def where_query(self, sub_query: Query, condition: CondType,
                     keys: Union[simple_types, List[simple_types]] = None) -> Query:
@@ -182,9 +199,9 @@ class Query:
 
         """
 
-        return self.api.where(self.query_wrapper_ptr, index, condition.value, keys)
+        return self.where(index, condition, keys)
 
-    def where_uuid(self, index: str, condition: CondType, keys: List[str]) -> Query:
+    def where_uuid(self, index: str, condition: CondType, *keys: str) -> Query:
         """Adds where condition to DB query with UUID as string args.
             This function applies binary encoding to the UUID value.
             `index` MUST be declared as uuid index in this case
@@ -192,7 +209,7 @@ class Query:
         #### Arguments:
             index (string): Field name used in condition clause
             condition (:enum:`CondType`): Type of condition
-            keys (list[string]): Value of index to be compared with. For composite indexes keys must be list,
+            keys (list[*string]): Value of index to be compared with. For composite indexes keys must be list,
             with value of each sub-index
 
         #### Returns:
@@ -203,7 +220,7 @@ class Query:
 
         """
 
-        params: list = self.__convert_to_list(keys)
+        params: list = self.__convert_strs_to_list(keys)
 
         self.err_code, self.err_msg = self.api.where_uuid(self.query_wrapper_ptr, index, condition.value, params)
         self.__raise_on_error()
@@ -255,12 +272,12 @@ class Query:
         self.__raise_on_error()
         return self
 
-    def match(self, index: str, keys: List[str]) -> Query:
+    def match(self, index: str, *keys: str) -> Query:
         """Adds string EQ-condition to DB query with string args
 
         #### Arguments:
             index (string): Field name used in condition clause
-            keys (list[string]): Value of index to be compared with. For composite indexes keys must be list,
+            keys (list[*string]): Value of index to be compared with. For composite indexes keys must be list,
             with value of each sub-index
 
         #### Returns:
@@ -271,7 +288,7 @@ class Query:
 
         """
 
-        params: list = self.__convert_to_list(keys)
+        params: list = self.__convert_strs_to_list(keys)
 
         self.err_code, self.err_msg = self.api.where(self.query_wrapper_ptr, index, CondType.CondEq.value, params)
         self.__raise_on_error()
@@ -426,22 +443,22 @@ class Query:
             self.api.aggregation_sort(self.query_wrapper_ptr, field, desc)
             return self
 
-    def aggregate_facet(self, fields: List[str]) -> Query._AggregateFacet:
+    def aggregate_facet(self, *fields: str) -> Query._AggregateFacet:
         """Gets fields facet value. Applicable to multiple data fields and the result of that could be sorted
             by any data column or `count` and cut off by offset and limit. In order to support this functionality
             this method returns AggregationFacetRequest which has methods sort, limit and offset
 
         #### Arguments:
-            fields (list[string]): Fields any data column name or `count`, fields should not be empty
+            fields (list[*string]): Fields any data column name or `count`, fields should not be empty
 
         #### Returns:
             (:obj:`_AggregateFacet`): Request object for further customizations
 
         """
 
-        fields = [] if fields is None else fields
+        params: list = self.__convert_strs_to_list(fields)
 
-        self.err_code, self.err_msg = self.api.aggregation(self.query_wrapper_ptr, fields)
+        self.err_code, self.err_msg = self.api.aggregation(self.query_wrapper_ptr, params)
         self.__raise_on_error()
         return self._AggregateFacet(self)
 
@@ -914,7 +931,7 @@ class Query:
 
         query.root = self
         self.merged_queries.append(query)
-        self.api.merge(query)
+        self.api.merge(self.query_wrapper_ptr, query.query_wrapper_ptr)
         return self
 
     def on(self, index: str, condition: CondType, join_index: str) -> Query:
@@ -933,17 +950,17 @@ class Query:
         if self.root is None:
             raise Exception("Can't join on root query")
 
-        self.api.on(self.query_wrapper_ptr, index, condition, join_index)
+        self.api.on(self.query_wrapper_ptr, index, condition.value, join_index)
         return self
 
-    def select(self, fields: List[str]) -> Query:
+    def select(self, *fields: str) -> Query:
         """Sets list of columns in this namespace to be finally selected.
             The columns should be specified in the same case as the jsonpaths corresponding to them.
             Non-existent fields and fields in the wrong case are ignored.
             If there are no fields in this list that meet these conditions, then the filter works as "*"
 
         #### Arguments:
-            fields (list[string]): List of columns to be selected
+            fields (list[*string]): List of columns to be selected
 
         #### Returns:
             (:obj:`Query`): Query object for further customizations
@@ -953,17 +970,17 @@ class Query:
 
         """
 
-        fields = [] if fields is None else fields
+        keys: list = self.__convert_strs_to_list(fields)
 
-        self.err_code, self.err_msg = self.api.select_filter(self.query_wrapper_ptr, fields)
+        self.err_code, self.err_msg = self.api.select_filter(self.query_wrapper_ptr, keys)
         self.__raise_on_error()
         return self
 
-    def functions(self, functions: List[str]) -> Query:
+    def functions(self, *functions: str) -> Query:
         """Adds sql-functions to query
 
         #### Arguments:
-            functions (list[string]): Functions declaration
+            functions (list[*string]): Functions declaration
 
         #### Returns:
             (:obj:`Query`): Query object for further customizations
@@ -973,17 +990,17 @@ class Query:
 
         """
 
-        functions = [] if functions is None else functions
+        funcs: list = self.__convert_strs_to_list(functions)
 
-        self.err_code, self.err_msg = self.api.functions(self.query_wrapper_ptr, functions)
+        self.err_code, self.err_msg = self.api.functions(self.query_wrapper_ptr, funcs)
         self.__raise_on_error()
         return self
 
-    def equal_position(self, equal_position: List[str]) -> Query:
+    def equal_position(self, *equal_position: str) -> Query:
         """Adds equal position fields to arrays queries
 
         #### Arguments:
-            equal_poses (list[string]): Equal position fields to arrays queries
+            equal_poses (list[*string]): Equal position fields to arrays queries
 
         #### Returns:
             (:obj:`Query`): Query object for further customizations
@@ -993,8 +1010,8 @@ class Query:
 
         """
 
-        equal_position = [] if equal_position is None else equal_position
+        equal_pos: list = self.__convert_strs_to_list(equal_position)
 
-        self.err_code, self.err_msg = self.api.equal_position(self.query_wrapper_ptr, equal_position)
+        self.err_code, self.err_msg = self.api.equal_position(self.query_wrapper_ptr, equal_pos)
         self.__raise_on_error()
         return self
