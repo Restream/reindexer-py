@@ -1030,10 +1030,10 @@ static PyObject* executeQuery(PyObject* self, PyObject* args, ExecuteType type) 
 	Error err = errOK;
 	switch (type) {
 		case ExecuteType::Select:
-			query->SelectQuery(*qresWrapper);
+			err = query->SelectQuery(*qresWrapper);
 			break;
 		case ExecuteType::Update:
-			query->UpdateQuery(*qresWrapper);
+			err = query->UpdateQuery(*qresWrapper);
 			break;
 		default:
 			assert(false);

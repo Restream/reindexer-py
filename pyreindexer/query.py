@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import List, Union, Optional
+from typing import List, Optional, Union
 
 from pyreindexer.point import Point
 from pyreindexer.query_results import QueryResults
@@ -151,13 +151,12 @@ class Query:
 
         params: list = self.__convert_to_list(keys)
 
-        if condition == CondType.CondDWithin :
+        if condition == CondType.CondDWithin:
             raise Exception("In this case, use a special method 'dwithin'")
 
         self.err_code, self.err_msg = self.api.where(self.query_wrapper_ptr, index, condition.value, params)
         self.__raise_on_error()
         return self
-
 
     def where_query(self, sub_query: Query, condition: CondType,
                     keys: Union[simple_types, List[simple_types]] = None) -> Query:
@@ -185,21 +184,20 @@ class Query:
         self.__raise_on_error()
         return self
 
-    def where_composite(self, index: str, condition: CondType,
-                        keys: Union[simple_types, List[simple_types]] = None) -> Query:
+    def where_composite(self, index: str, condition: CondType, *keys: simple_types) -> Query:
         """Adds where condition to DB query with interface args for composite indexes
 
         #### Arguments:
             index (string): Field name used in condition clause
             condition (:enum:`CondType`): Type of condition
-            sub_query (:obj:`Query`): Field name used in condition clause
+            keys (*simple_types): Values of composite index to be compared with (value of each sub-index)
 
         #### Returns:
             (:obj:`Query`): Query object for further customizations
 
         """
 
-        return self.where(index, condition, keys)
+        return self.where(index, condition, *keys)
 
     def where_uuid(self, index: str, condition: CondType, *keys: str) -> Query:
         """Adds where condition to DB query with UUID as string args.

@@ -27,3 +27,13 @@ class RaiserMixin:
 
         if self.rx <= 0:
             raise Exception("Connection is not initialized")
+
+
+def raise_if_error(func):
+    def wrapper(self, *args, **kwargs):
+        self.raise_on_not_init()
+        res = func(self, *args, **kwargs)
+        self.raise_on_error()
+        return res
+
+    return wrapper
