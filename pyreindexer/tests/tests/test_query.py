@@ -364,6 +364,24 @@ class TestQuerySelectAggregations:
         expected_agg_result = [{"value": calculate(ids_list), "type": aggregate_func.split("_")[-1], "fields": ["id"]}]
         assert_that(query_result.get_agg_results(), equal_to(expected_agg_result), "Wrong aggregation results")
 
+    @pytest.mark.parametrize("calculate, aggregate_func", AGGREGATE_FUNCTIONS_MATH)
+    def test_query_select_aggregations_math_negative(self, db, namespace, index, calculate, aggregate_func):
+        # Given("Create namespace with index")
+        # Given("Create new items")
+        items = [{"id": -i} for i in range(5)]
+        for item in items:
+            db.item.insert(namespace, item)
+        # Given ("Create new query")
+        query = db.query.new(namespace)
+        # When ("Make select query with aggregations")
+        query_result = getattr(query, aggregate_func)("id").must_execute()
+        # Then ("Check that result is empty")
+        assert_that(list(query_result), empty(), "Wrong query results")
+        # Then ("Check aggregation results")
+        ids_list = [i["id"] for i in items]
+        expected_agg_result = [{"value": calculate(ids_list), "type": aggregate_func.split("_")[-1], "fields": ["id"]}]
+        assert_that(query_result.get_agg_results(), equal_to(expected_agg_result), "Wrong aggregation results")
+
     def test_query_select_distinct(self, db, namespace, index, index_and_duplicate_items):
         # Given("Create namespace with index and duplicate items")
         items = index_and_duplicate_items
