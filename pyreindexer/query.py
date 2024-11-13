@@ -197,7 +197,8 @@ class Query:
 
         """
 
-        return self.where(index, condition, *keys)
+        param = [key for key in keys]
+        return self.where(index, condition, param)
 
     def where_uuid(self, index: str, condition: CondType, *keys: str) -> Query:
         """Adds where condition to DB query with UUID as string args.
@@ -498,7 +499,7 @@ class Query:
 
         """
 
-        request: str = f"ST_Distance({index},ST_GeomFromText('point({point.x:.10f} {point.y:.10f})'))"
+        request: str = f"ST_Distance({index},ST_GeomFromText('point({point.x:.12f} {point.y:.12f})'))"
         return self.sort(request, desc)
 
     def sort_stfield_distance(self, first_field: str, second_field: str, desc: bool) -> Query:

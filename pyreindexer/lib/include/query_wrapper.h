@@ -58,7 +58,8 @@ public:
 	reindexer::Error DeleteQuery(size_t& count);
 	reindexer::Error UpdateQuery(QueryResultsWrapper& qr);
 
-	void SetObject(std::string_view field, const std::vector<std::string>& values, QueryItemType type);
+	void SetObject(std::string_view field, const std::vector<std::string>& values);
+	void Set(std::string_view field, const std::vector<reindexer::Variant>& values);
 
 	void Drop(std::string_view field);
 

@@ -261,21 +261,27 @@ reindexer::Error QueryWrapper::UpdateQuery(QueryResultsWrapper& qr) {
 	return db_->UpdateQuery(query, qr);
 }
 
-void QueryWrapper::SetObject(std::string_view field, const std::vector<std::string>& values, QueryItemType type) {
-	ser_.PutVarUint(type);
+void QueryWrapper::SetObject(std::string_view field, const std::vector<std::string>& values) {
+	ser_.PutVarUint(QueryItemType::QueryUpdateObject);
 	ser_.PutVString(field);
-	if (type == QueryItemType::QueryUpdateObject) {
-		ser_.PutVarUint(values.size()); // values count
-	}
-	if (type != QueryItemType::QueryUpdateField) {
-		ser_.PutVarUint(values.size() > 1? 1 : 0); // is array flag
-	}
-	if (type != QueryItemType::QueryUpdateObject) {
-		ser_.PutVarUint(values.size()); // values count
-	}
+	ser_.PutVarUint(values.size()); // values count
+	ser_.PutVarUint(values.size() > 1? 1 : 0); // is array flag
 	for (const auto& value : values) {
 		ser_.PutVarUint(0); // function/value flag
+		ser_.PutVarUint(TagType::TAG_STRING); // type ID
 		ser_.PutVString(value);
+		break;
+	}
+}
+
+void QueryWrapper::Set(std::string_view field, const std::vector<reindexer::Variant>& values) {
+	ser_.PutVarUint(QueryItemType::QueryUpdateFieldV2);
+	ser_.PutVString(field);
+	ser_.PutVarUint(values.size() > 1? 1 : 0); // is array flag
+	ser_.PutVarUint(values.size()); // values count
+	for (const auto& value : values) {
+		ser_.PutVarUint(0); // is expression
+		ser_.PutVariant(value);
 	}
 }
 
@@ -287,8 +293,7 @@ void QueryWrapper::Drop(std::string_view field) {
 void QueryWrapper::SetExpression(std::string_view field, std::string_view value) {
 	ser_.PutVarUint(QueryItemType::QueryUpdateField);
 	ser_.PutVString(field);
-
-	ser_.PutVarUint(1); // size
+	ser_.PutVarUint(1); // values count
 	ser_.PutVarUint(1); // is expression
 	ser_.PutVariant(reindexer::Variant{value});
 }

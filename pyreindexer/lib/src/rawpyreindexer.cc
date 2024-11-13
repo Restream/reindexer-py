@@ -1051,8 +1051,7 @@ static PyObject* executeQuery(PyObject* self, PyObject* args, ExecuteType type) 
 static PyObject* SelectQuery(PyObject* self, PyObject* args) { return executeQuery(self, args, ExecuteType::Select); }
 static PyObject* UpdateQuery(PyObject* self, PyObject* args) { return executeQuery(self, args, ExecuteType::Update); }
 
-namespace {
-static PyObject* setObject(PyObject* self, PyObject* args, QueryItemType type) {
+static PyObject* SetObject(PyObject* self, PyObject* args) {
 	uintptr_t queryWrapperAddr = 0;
 	char* field = nullptr;
 	PyObject* valuesList = nullptr;  // borrowed ref after ParseTuple
@@ -1075,18 +1074,42 @@ static PyObject* setObject(PyObject* self, PyObject* args, QueryItemType type) {
 
 	Py_DECREF(valuesList);
 
-	if ((type == QueryItemType::QueryUpdateField) && (values.size() > 1)) {
-		type = QueryItemType::QueryUpdateFieldV2;
-	}
 	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
 
-	query->SetObject(field, values, type);
+	query->SetObject(field, values);
 
 	return pyErr(errOK);
 }
-} // namespace
-static PyObject* SetObject(PyObject* self, PyObject* args) { return setObject(self, args, QueryItemType::QueryUpdateObject); }
-static PyObject* Set(PyObject* self, PyObject* args) { return setObject(self, args, QueryItemType::QueryUpdateField); }
+
+static PyObject* Set(PyObject* self, PyObject* args) {
+	uintptr_t queryWrapperAddr = 0;
+	char* field = nullptr;
+	PyObject* valuesList = nullptr;  // borrowed ref after ParseTuple
+	if (!PyArg_ParseTuple(args, "ksO!", &queryWrapperAddr, &field, &PyList_Type, &valuesList)) {
+		return nullptr;
+	}
+
+	Py_INCREF(valuesList);
+
+	std::vector<reindexer::Variant> values;
+	if (valuesList != nullptr) {
+		try {
+			values = ParseListToVec(&valuesList);
+		} catch (const Error& err) {
+			Py_DECREF(valuesList);
+
+			return pyErr(err);
+		}
+	}
+
+	Py_DECREF(valuesList);
+
+	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
+
+	query->Set(field, values);
+
+	return pyErr(errOK);
+}
 
 static PyObject* Drop(PyObject* self, PyObject* args) {
 	uintptr_t queryWrapperAddr = 0;

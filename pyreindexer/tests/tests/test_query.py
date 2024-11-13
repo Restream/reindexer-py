@@ -1,3 +1,4 @@
+import copy
 import json
 import random
 
@@ -419,7 +420,7 @@ class TestQuerySelectSort:
         assert_that(query_result, equal_to(expected_items))
 
 
-# ToDo
+# ToDo implement List<Actor> joinedActors = QueryResult.getJoinedActors();
 # class TestQuerySelectJoin:
 #    def test_query_select_left_join(self, db, namespace, index, items, second_namespace):
 #        # Given("Create two namespaces")
@@ -446,49 +447,48 @@ class TestQuerySelectSort:
 #        item_with_joined = {'id': 1, f'joined_{second_namespace}': [item2]}
 #        assert_that(query_result, equal_to([item_with_joined]), "Wrong selected items with JOIN")
 
-class TestQueryUpdate:
-    # TODO exit code 134 (interrupted by signal 6:SIGABRT)
-    #    def test_query_update_set(self, db, namespace, indexes, items):
-    #        # Given("Create namespace with indexes and items")
-    #        # Given ("Create new query")
-    #        query = db.query.new(namespace)
-    #        # When ("Make update set query")
-    #        item = random.choice(items)
-    #        modified_item = copy.deepcopy(item)
-    #        modified_item["val"] = "modified"
-    #        query_result = query.where("id", CondType.CondEq, item["id"]).set("val", ["modified"]).update()
-    #        # Then ("Check that item is updated")
-    #        assert_that(list(query_result), equal_to([modified_item]), "Wrong update query results after set")
-    #        # Then ("Check that items contain modified and do not contain original item")
-    #        items_after_update = get_ns_items(db, namespace)
-    #        assert_that(items_after_update, has_length(len(items)), "Wrong items count")
-    #        assert_that(items_after_update, has_item(modified_item), "New updated item not is in namespace")
-    #        assert_that(items_after_update, not_(has_item(item)), "Old updated item is in namespace")
 
-    # TODO exit code 134 (interrupted by signal 6:SIGABRT)
-    #    def test_query_update_set_object(self, db, namespace, indexes):
-    #        # Given("Create namespace with index and items")
-    #        # Given ("Create nested index")
-    #        db.index.create(namespace, {"name": "idx", "json_paths": ["nested.field"],
-    #                                    "field_type": "int", "index_type": "hash"})
-    #        # Given ("Create items")
-    #        items = [{"id": i, "nested": {"field": i}} for i in range(3)]
-    #        for item in items:
-    #            db.item.insert(namespace, item)
-    #        # Given ("Create new query")
-    #        query = db.query.new(namespace)
-    #        # When ("Make update set_object query")
-    #        item = random.choice(items)
-    #        modified_item = copy.deepcopy(item)
-    #        modified_item["nested"]["field"] = 10
-    #        query_result = query.where("id", CondType.CondEq, item["id"]).set_object("nested", [{"field": 10}]).update()
-    #        # Then ("Check that item is updated")
-    #        assert_that(list(query_result), equal_to([modified_item]), "Wrong update query results after set object")
-    #        # Then ("Check that items contain modified and do not contain original item")
-    #        items_after_update = get_ns_items(db, namespace)
-    #        assert_that(items_after_update, has_length(len(items)), "Wrong items count")
-    #        assert_that(items_after_update, has_item(modified_item), "New updated item not is in namespace")
-    #        assert_that(items_after_update, not_(has_item(item)), "Old updated item is in namespace")
+class TestQueryUpdate:
+    def test_query_update_set(self, db, namespace, indexes, items):
+        # Given("Create namespace with indexes and items")
+        # Given ("Create new query")
+        query = db.query.new(namespace)
+        # When ("Make update set query")
+        item = random.choice(items)
+        modified_item = copy.deepcopy(item)
+        modified_item["val"] = "modified"
+        query_result = query.where("id", CondType.CondEq, item["id"]).set("val", ["modified"]).update()
+        # Then ("Check that item is updated")
+        assert_that(list(query_result), equal_to([modified_item]), "Wrong update query results after set")
+        # Then ("Check that items contain modified and do not contain original item")
+        items_after_update = get_ns_items(db, namespace)
+        assert_that(items_after_update, has_length(len(items)), "Wrong items count")
+        assert_that(items_after_update, has_item(modified_item), "New updated item not is in namespace")
+        assert_that(items_after_update, not_(has_item(item)), "Old updated item is in namespace")
+
+    def test_query_update_set_object(self, db, namespace, indexes):
+        # Given("Create namespace with index and items")
+        # Given ("Create nested index")
+        db.index.create(namespace, {"name": "idx", "json_paths": ["nested.field"],
+                                    "field_type": "int", "index_type": "hash"})
+        # Given ("Create items")
+        items = [{"id": i, "nested": {"field": i}} for i in range(3)]
+        for item in items:
+            db.item.insert(namespace, item)
+        # Given ("Create new query")
+        query = db.query.new(namespace)
+        # When ("Make update set_object query")
+        item = random.choice(items)
+        modified_item = copy.deepcopy(item)
+        modified_item["nested"]["field"] = 10
+        query_result = query.where("id", CondType.CondEq, item["id"]).set_object("nested", [{"field": 10}]).update()
+        # Then ("Check that item is updated")
+        assert_that(list(query_result), equal_to([modified_item]), "Wrong update query results after set object")
+        # Then ("Check that items contain modified and do not contain original item")
+        items_after_update = get_ns_items(db, namespace)
+        assert_that(items_after_update, has_length(len(items)), "Wrong items count")
+        assert_that(items_after_update, has_item(modified_item), "New updated item not is in namespace")
+        assert_that(items_after_update, not_(has_item(item)), "Old updated item is in namespace")
 
     # TODO exit code 134 (interrupted by signal 6:SIGABRT)
     #    def test_query_update_expression(self, db, namespace, indexes, items):
