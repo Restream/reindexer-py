@@ -186,7 +186,7 @@ PyObject* pyValueFromJsonValue(const gason::JsonValue& value) {
 
 	switch (value.getTag()) {
 		case gason::JSON_NUMBER:
-			pyValue = PyLong_FromSize_t(value.toNumber()); // new ref
+			pyValue = PyLong_FromLongLong(value.toNumber()); // new ref
 			break;
 		case gason::JSON_DOUBLE:
 			pyValue = PyFloat_FromDouble(value.toDouble()); // new ref

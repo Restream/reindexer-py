@@ -77,7 +77,6 @@ class TestQuerySelect:
         # Then ("Check that all items is in result")
         assert_that(query_result, equal_to(items), "Wrong query results")
 
-    # TODO Expected: <[{'id': -1}]> but: was <[{'id': 18446744073709551615}]> ??
     def test_query_select_where_cond_empty(self, db, namespace, index, sparse_index, items):
         # Given("Create namespace with index and items")
         # Given ("Create item without sparse field")

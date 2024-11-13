@@ -21,6 +21,16 @@ class TestCrudItems:
         assert_that(select_result, has_length(1), "Item wasn't created")
         assert_that(select_result, has_item(item_definition), "Item wasn't created")
 
+    def test_create_item_insert_empty(self, db, namespace, index):
+        # Given("Create namespace with index")
+        # When ("Insert item into namespace")
+        item_empty = {"id": -1}
+        db.item.insert(namespace, item_empty)
+        # Then ("Check that item is added")
+        select_result = get_ns_items(db, namespace)
+        assert_that(select_result, has_length(1), "Item wasn't created")
+        assert_that(select_result, has_item(item_empty), "Item wasn't created")
+
     def test_create_item_insert_with_precepts(self, db, namespace, index):
         # Given("Create namespace with index")
         # When ("Insert items into namespace")
