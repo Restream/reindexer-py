@@ -368,24 +368,23 @@ class TestQuerySelectSort:
         expected_items = sorted(items_shuffled, key=lambda x: x["id"], reverse=is_reversed)
         assert_that(query_result, equal_to(expected_items))
 
-    # TODO exit code 255
-    #    @pytest.mark.parametrize("forced_values, expected_ids", [
-    #        (4, [4, 0, 1, 2, 3]),
-    #        ([1, 3], [1, 3, 0, 2, 4])
-    #    ])
-    #    @pytest.mark.parametrize("is_reversed", [False, True])
-    #    def test_query_select_forced_sort(self, db, namespace, index, items_shuffled, forced_values, expected_ids,
-    #                                      is_reversed):
-    #        # Given("Create namespace with index and items")
-    #        # Given ("Create new query")
-    #        query = db.query.new(namespace)
-    #        # When ("Make select query with sort")
-    #        query_result = list(query.sort("id", is_reversed, forced_values).must_execute())
-    #        # Then ("Check that selected items are sorted")
-    #        expected_items = [items_shuffled[i] for i in expected_ids]
-    #        if is_reversed:
-    #            expected_items.reverse()
-    #        assert_that(query_result, equal_to(expected_items))
+    @pytest.mark.parametrize("forced_values, expected_ids", [
+        (4, [4, 0, 1, 2, 3]),
+        ([1, 3], [1, 3, 0, 2, 4])
+    ])
+    @pytest.mark.parametrize("is_reversed", [False, True])
+    def test_query_select_forced_sort(self, db, namespace, index, items_shuffled, forced_values, expected_ids,
+                                      is_reversed):
+        # Given("Create namespace with index and items")
+        # Given ("Create new query")
+        query = db.query.new(namespace)
+        # When ("Make select query with sort")
+        query_result = list(query.sort("id", is_reversed, forced_values).must_execute())
+        # Then ("Check that selected items are sorted")
+        expected_items = [item for i in expected_ids for item in items_shuffled if item["id"] == i]
+        if is_reversed:
+            expected_items.reverse()
+        assert_that(query_result, equal_to(expected_items))
 
     @pytest.mark.parametrize("is_reversed", [False, True])
     def test_query_select_sort_stpoint(self, db, namespace, index, rtree_index_and_items, is_reversed):
