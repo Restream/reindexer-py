@@ -128,8 +128,7 @@ class Query:
         """
 
         param = [] if param is None else param
-        param = [item for item in param]
-        return param
+        return list(param)
 
     def where(self, index: str, condition: CondType, keys: Union[simple_types, List[simple_types]] = None) -> Query:
         """Adds where condition to DB query with args

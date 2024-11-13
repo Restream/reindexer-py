@@ -54,16 +54,15 @@ public:
 
 	void Modifier(QueryItemType type);
 
-	reindexer::Error SelectQuery(QueryResultsWrapper& qr);
+	enum class ExecuteType { Select, Update };
+	reindexer::Error ExecuteQuery(ExecuteType type, QueryResultsWrapper& qr);
 	reindexer::Error DeleteQuery(size_t& count);
-	reindexer::Error UpdateQuery(QueryResultsWrapper& qr);
 
+	enum class IsExpression { Yes, No };
+	void Set(std::string_view field, const std::vector<reindexer::Variant>& values, IsExpression isExpression);
 	void SetObject(std::string_view field, const std::vector<std::string>& values);
-	void Set(std::string_view field, const std::vector<reindexer::Variant>& values);
 
 	void Drop(std::string_view field);
-
-	void SetExpression(std::string_view field, std::string_view value);
 
 	void Join(JoinType type, unsigned joinQueryIndex, QueryWrapper* joinQuery);
 	void Merge(QueryWrapper* mergeQuery);

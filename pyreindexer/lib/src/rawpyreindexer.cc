@@ -15,8 +15,8 @@ using reindexer::WrSerializer;
 
 namespace {
 uintptr_t initReindexer() {
-	DBInterface* db = new DBInterface();
-	return reinterpret_cast<uintptr_t>(db);
+	auto db = std::make_unique<DBInterface>();
+	return reinterpret_cast<uintptr_t>(db.release());
 }
 
 DBInterface* getDB(uintptr_t rx) { return reinterpret_cast<DBInterface*>(rx); }
@@ -34,7 +34,7 @@ T* getWrapper(uintptr_t wrapperAddr) {
 }
 
 template <typename T>
-void wrapperDelete(uintptr_t wrapperAddr) {
+void deleteWrapper(uintptr_t wrapperAddr) {
 	T* queryWrapperPtr = getWrapper<T>(wrapperAddr);
 	delete queryWrapperPtr;
 }
@@ -105,16 +105,16 @@ static PyObject* Select(PyObject* self, PyObject* args) {
 	}
 
 	auto db = getDB(rx);
-	auto qresWrapper = new QueryResultsWrapper(db);
+	auto qresWrapper = std::make_unique<QueryResultsWrapper>(db);
 	auto err = qresWrapper->Select(query);
 
 	if (!err.ok()) {
-		delete qresWrapper;
-
 		return Py_BuildValue("iskI", err.code(), err.what().c_str(), 0, 0);
 	}
 
-	return Py_BuildValue("iskI", err.code(), err.what().c_str(), reinterpret_cast<uintptr_t>(qresWrapper), qresWrapper->Count());
+	auto count = qresWrapper->Count();
+	return Py_BuildValue("iskI", err.code(), err.what().c_str(),
+						 reinterpret_cast<uintptr_t>(qresWrapper.release()), count);
 }
 
 // namespace ----------------------------------------------------------------------------------------------------------
@@ -448,7 +448,7 @@ static PyObject* QueryResultsWrapperDelete(PyObject* self, PyObject* args) {
 		return nullptr;
 	}
 
-	wrapperDelete<QueryResultsWrapper>(qresWrapperAddr);
+	deleteWrapper<QueryResultsWrapper>(qresWrapperAddr);
 
 	Py_RETURN_NONE;
 }
@@ -511,15 +511,13 @@ static PyObject* NewTransaction(PyObject* self, PyObject* args) {
 	}
 
 	auto db = getDB(rx);
-	auto transaction = new TransactionWrapper(db);
+	auto transaction = std::make_unique<TransactionWrapper>(db);
 	auto err = transaction->Start(ns);
 	if (!err.ok()) {
-		delete transaction;
-
 		return Py_BuildValue("isk", err.code(), err.what().c_str(), 0);
 	}
 
-	return Py_BuildValue("isk", err.code(), err.what().c_str(), reinterpret_cast<uintptr_t>(transaction));
+	return Py_BuildValue("isk", err.code(), err.what().c_str(), reinterpret_cast<uintptr_t>(transaction.release()));
 }
 
 namespace {
@@ -614,7 +612,7 @@ static PyObject* CommitTransaction(PyObject* self, PyObject* args) {
 	size_t count = 0;
 	auto err = transaction->Commit(count);
 
-	wrapperDelete<TransactionWrapper>(transactionWrapperAddr);
+	deleteWrapper<TransactionWrapper>(transactionWrapperAddr);
 
 	return Py_BuildValue("isI", err.code(), err.what().c_str(), count);
 }
@@ -630,7 +628,7 @@ static PyObject* RollbackTransaction(PyObject* self, PyObject* args) {
 	assert((StopTransactionMode::Commit == stopMode) || (StopTransactionMode::Rollback == stopMode));
 	auto err = transaction->Rollback();
 
-	wrapperDelete<TransactionWrapper>(transactionWrapperAddr);
+	deleteWrapper<TransactionWrapper>(transactionWrapperAddr);
 
 	return pyErr(err);
 }
@@ -645,8 +643,8 @@ static PyObject* CreateQuery(PyObject* self, PyObject* args) {
 	}
 
 	auto db = getDB(rx);
-	auto query = new QueryWrapper(db, ns);
-	return Py_BuildValue("isK", errOK, "", reinterpret_cast<uintptr_t>(query));
+	auto query = std::make_unique<QueryWrapper>(db, ns);
+	return Py_BuildValue("isK", errOK, "", reinterpret_cast<uintptr_t>(query.release()));
 }
 
 static PyObject* DestroyQuery(PyObject* self, PyObject* args) {
@@ -655,7 +653,7 @@ static PyObject* DestroyQuery(PyObject* self, PyObject* args) {
 		return nullptr;
 	}
 
-	wrapperDelete<QueryWrapper>(queryWrapperAddr);
+	deleteWrapper<QueryWrapper>(queryWrapperAddr);
 
 	Py_RETURN_NONE;
 }
@@ -1017,8 +1015,7 @@ static PyObject* DeleteQuery(PyObject* self, PyObject* args) {
 }
 
 namespace {
-enum class ExecuteType { Select, Update };
-static PyObject* executeQuery(PyObject* self, PyObject* args, ExecuteType type) {
+static PyObject* executeQuery(PyObject* self, PyObject* args, QueryWrapper::ExecuteType type) {
 	uintptr_t queryWrapperAddr = 0;
 	if (!PyArg_ParseTuple(args, "k", &queryWrapperAddr)) {
 		return nullptr;
@@ -1026,30 +1023,23 @@ static PyObject* executeQuery(PyObject* self, PyObject* args, ExecuteType type) 
 
 	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
 
-	auto qresWrapper = new QueryResultsWrapper(query->GetDB());
-	Error err = errOK;
-	switch (type) {
-		case ExecuteType::Select:
-			err = query->SelectQuery(*qresWrapper);
-			break;
-		case ExecuteType::Update:
-			err = query->UpdateQuery(*qresWrapper);
-			break;
-		default:
-			assert(false);
-	}
-
+	auto qresWrapper = std::make_unique<QueryResultsWrapper>(query->GetDB());
+	auto err = query->ExecuteQuery(type, *qresWrapper);
 	if (!err.ok()) {
-		delete qresWrapper;
-
 		return Py_BuildValue("iskI", err.code(), err.what().c_str(), 0, 0);
 	}
 
-	return Py_BuildValue("iskI", err.code(), err.what().c_str(), reinterpret_cast<uintptr_t>(qresWrapper), qresWrapper->Count());
+	auto count =  qresWrapper->Count();
+	return Py_BuildValue("iskI", err.code(), err.what().c_str(),
+						 reinterpret_cast<uintptr_t>(qresWrapper.release()), count);
 }
 } // namespace
-static PyObject* SelectQuery(PyObject* self, PyObject* args) { return executeQuery(self, args, ExecuteType::Select); }
-static PyObject* UpdateQuery(PyObject* self, PyObject* args) { return executeQuery(self, args, ExecuteType::Update); }
+static PyObject* SelectQuery(PyObject* self, PyObject* args) {
+	return executeQuery(self, args,	QueryWrapper::ExecuteType::Select);
+}
+static PyObject* UpdateQuery(PyObject* self, PyObject* args) {
+	return executeQuery(self, args, QueryWrapper::ExecuteType::Update);
+}
 
 static PyObject* SetObject(PyObject* self, PyObject* args) {
 	uintptr_t queryWrapperAddr = 0;
@@ -1106,7 +1096,7 @@ static PyObject* Set(PyObject* self, PyObject* args) {
 
 	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
 
-	query->Set(field, values);
+	query->Set(field, values, QueryWrapper::IsExpression::No);
 
 	return pyErr(errOK);
 }
@@ -1135,7 +1125,7 @@ static PyObject* SetExpression(PyObject* self, PyObject* args) {
 
 	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
 
-	query->SetExpression(field, value);
+	query->Set(field, {reindexer::Variant{value}}, QueryWrapper::IsExpression::Yes);
 
 	Py_RETURN_NONE;
 }

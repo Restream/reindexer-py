@@ -246,9 +246,21 @@ reindexer::Query QueryWrapper::prepareQuery() {
 	return query;
 }
 
-reindexer::Error QueryWrapper::SelectQuery(QueryResultsWrapper& qr) {
+reindexer::Error QueryWrapper::ExecuteQuery(ExecuteType type, QueryResultsWrapper& qr) {
 	auto query = prepareQuery();
-	return db_->SelectQuery(query, qr);
+
+	Error err = errOK;
+	switch (type) {
+		case ExecuteType::Select:
+			err = db_->SelectQuery(query, qr);
+			break;
+		case ExecuteType::Update:
+			err = db_->UpdateQuery(query, qr);
+			break;
+		default:
+			assert(false);
+	}
+	return err;
 }
 
 reindexer::Error QueryWrapper::DeleteQuery(size_t& count) {
@@ -256,9 +268,16 @@ reindexer::Error QueryWrapper::DeleteQuery(size_t& count) {
 	return db_->DeleteQuery(query, count);
 }
 
-reindexer::Error QueryWrapper::UpdateQuery(QueryResultsWrapper& qr) {
-	auto query = prepareQuery();
-	return db_->UpdateQuery(query, qr);
+void QueryWrapper::Set(std::string_view field, const std::vector<reindexer::Variant>& values,
+					   IsExpression isExpression) {
+	ser_.PutVarUint(QueryItemType::QueryUpdateFieldV2);
+	ser_.PutVString(field);
+	ser_.PutVarUint(values.size() > 1? 1 : 0); // is array flag
+	ser_.PutVarUint(values.size()); // values count
+	for (const auto& value : values) {
+		ser_.PutVarUint(isExpression == IsExpression::Yes? 1 : 0); // is expression
+		ser_.PutVariant(value);
+	}
 }
 
 void QueryWrapper::SetObject(std::string_view field, const std::vector<std::string>& values) {
@@ -274,28 +293,9 @@ void QueryWrapper::SetObject(std::string_view field, const std::vector<std::stri
 	}
 }
 
-void QueryWrapper::Set(std::string_view field, const std::vector<reindexer::Variant>& values) {
-	ser_.PutVarUint(QueryItemType::QueryUpdateFieldV2);
-	ser_.PutVString(field);
-	ser_.PutVarUint(values.size() > 1? 1 : 0); // is array flag
-	ser_.PutVarUint(values.size()); // values count
-	for (const auto& value : values) {
-		ser_.PutVarUint(0); // is expression
-		ser_.PutVariant(value);
-	}
-}
-
 void QueryWrapper::Drop(std::string_view field) {
 	ser_.PutVarUint(QueryItemType::QueryDropField);
 	ser_.PutVString(field);
-}
-
-void QueryWrapper::SetExpression(std::string_view field, std::string_view value) {
-	ser_.PutVarUint(QueryItemType::QueryUpdateField);
-	ser_.PutVString(field);
-	ser_.PutVarUint(1); // values count
-	ser_.PutVarUint(1); // is expression
-	ser_.PutVariant(reindexer::Variant{value});
 }
 
 void QueryWrapper::Join(JoinType type, unsigned joinQueryIndex, QueryWrapper* joinQuery) {
