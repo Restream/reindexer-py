@@ -174,8 +174,8 @@ class TestCrudTransaction:
         # When ("Insert items into namespace")
         transaction = db.tx.begin(namespace)
         number_items = 5
-        for _ in range(number_items):
-            transaction.insert_item({"id": 100, "field": "value"})
+        for i in range(number_items):
+            transaction.insert_item({"id": i, "field": "value"})
         # Then ("Rollback transaction")
         transaction.rollback()
         # When ("Get namespace information")

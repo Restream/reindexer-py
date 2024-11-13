@@ -21,6 +21,16 @@ class TestQuerySelect:
         # Then ("Check that selected item is in result")
         assert_that(query_result, equal_to([items[3]]), "Wrong query results")
 
+    def test_query_select_where_array(self, db, namespace, index, array_index_and_items):
+        # Given("Create namespace with array index and items")
+        items = array_index_and_items
+        # Given ("Create new query")
+        query = db.query.new(namespace)
+        # When ("Make select query")
+        query_result = list(query.where("arr", CondType.CondEq, [3]).must_execute())
+        # Then ("Check that selected item is in result")
+        assert_that(query_result, equal_to([items[2], items[3]]), "Wrong query results")
+
     def test_query_select_all(self, db, namespace, index, items):
         # Given("Create namespace with index and items")
         # Given ("Create new query")
@@ -57,6 +67,37 @@ class TestQuerySelect:
         query_result = list(query.where("id", CondType.CondEq, 99).get())
         # Then ("Check that selected item is in result")
         assert_that(query_result, equal_to(["", False]), "Wrong query results")
+
+    def test_query_select_where_cond_any(self, db, namespace, index, sparse_index, items):
+        # Given("Create namespace with index and items")
+        # Given ("Create new query")
+        query = db.query.new(namespace)
+        # When ("Make select query with cond any")
+        query_result = list(query.where("val", CondType.CondAny, None).must_execute())
+        # Then ("Check that all items is in result")
+        assert_that(query_result, equal_to(items), "Wrong query results")
+
+    # TODO Expected: <[{'id': -1}]> but: was <[{'id': 18446744073709551615}]> ??
+    def test_query_select_where_cond_empty(self, db, namespace, index, sparse_index, items):
+        # Given("Create namespace with index and items")
+        # Given ("Create item without sparse field")
+        item_empty = {"id": -1}
+        db.item.insert(namespace, item_empty)
+        # Given ("Create new query")
+        query = db.query.new(namespace)
+        # When ("Make select query with cond empty")
+        query_result = list(query.where("val", CondType.CondEmpty, None).must_execute())
+        # Then ("Check that selected item is in result")
+        assert_that(query_result, equal_to([item_empty]), "Wrong query results")
+
+    def test_query_select_where_cond_like(self, db, namespace, indexes, items):
+        # Given("Create namespace with indexes and items")
+        # Given ("Create new query")
+        query = db.query.new(namespace)
+        # When ("Make select query with cond like")
+        query_result = list(query.where("val", CondType.CondLike, "test%").must_execute())
+        # Then ("Check that selected item is in result")
+        assert_that(query_result, equal_to(items), "Wrong query results")
 
     # TODO does not work, ignore subquery results
     #     def test_query_select_where_query(self, db, namespace, index, items):
@@ -141,9 +182,9 @@ class TestQuerySelect:
         # Given ("Create new query")
         query = db.query.new(namespace)
         # When ("Make select query with match")
-        query_result = list(query.match("val", "testval1").must_execute())
+        query_result = list(query.match("val", "testval1", "testval2").must_execute())
         # Then ("Check that selected item is in result")
-        assert_that(query_result, equal_to([items[1]]), "Wrong query results")
+        assert_that(query_result, equal_to([items[1], items[2]]), "Wrong query results")
 
         # Given ("Create new query")
         query = db.query.new(namespace)
@@ -215,8 +256,8 @@ class TestQuerySelect:
         query = db.query.new(namespace)
         # When ("Make select query")
         query.where("ft", CondType.CondEq, "word~")
-        query_result = list(query.functions("ft=highlight(<,>)").must_execute())
-        # Then ("Check that selected item is in result and highlighted")
+        query_result = list(query.functions("ft=highlight(<,>)", "ft=highlight(!!,!)").must_execute())
+        # Then ("Check that selected item is in result and highlighted (the first function is applied)")
         query_results_ft = [i["ft"] for i in query_result]
         expected_ft_content = ["one <word>", "<sword> two", "three <work> 333"]
         assert_that(query_results_ft, contains_inanyorder(*expected_ft_content), "Wrong query results")
@@ -287,8 +328,26 @@ class TestQuerySelect:
         err_msg = "Current query strict mode allows filtering by indexes only. " \
                   f"There are no indexes with name 'rand' in namespace '{namespace}'"
         assert_that(calling(query.execute).with_args(),
-                    raises(Exception, pattern=err_msg),
-                    "Error wasn't raised while strict mode violated")
+                    raises(Exception, pattern=err_msg))
+
+    # TODO "Exception: Query results contain WAL items. Query results from WAL must either be requested in JSON format or with client, supporting RAW items"
+    # (ExecToJson in GO)
+    def test_query_select_wal_gt(self, db, namespace, index, items):
+        # Given("Create namespace with index and items")
+        # Given ("Create new query")
+        query = db.query.new(namespace)
+        # When ("Make select query with lsn gt")
+        query_result = query.where("#lsn", CondType.CondGt, 1).must_execute()  # .execute_to_json() ??
+        # TODO add lsn validation
+
+    # TODO
+    def test_query_select_wal_any(self, db, namespace, index, items):
+        # Given("Create namespace with index and items")
+        # Given ("Create new query")
+        query = db.query.new(namespace)
+        # When ("Make select query with lsn any")
+        query_result = query.where("#lsn", CondType.CondAny, None).must_execute()  # .execute_to_json() ??
+        # TODO add lsn validation
 
 
 class TestQuerySelectAggregations:
@@ -369,6 +428,16 @@ class TestQuerySelectSort:
         expected_items = sorted(items_shuffled, key=lambda x: x["id"], reverse=is_reversed)
         assert_that(query_result, equal_to(expected_items))
 
+    def test_query_select_sort_expression(self, db, namespace, index, items_shuffled):
+        # Given("Create namespace with index and items")
+        # Given ("Create new query")
+        query = db.query.new(namespace)
+        # When ("Make select query with expression sort")
+        query_result = list(query.sort("abs(-2 * id) + 1.5").must_execute())
+        # Then ("Check that items are sorted")
+        expected_items = sorted(items_shuffled, key=lambda x: x["id"])
+        assert_that(query_result, equal_to(expected_items))
+
     @pytest.mark.parametrize("forced_values, expected_ids", [
         (4, [4, 0, 1, 2, 3]),
         ([1, 3], [1, 3, 0, 2, 4])
@@ -379,7 +448,7 @@ class TestQuerySelectSort:
         # Given("Create namespace with index and items")
         # Given ("Create new query")
         query = db.query.new(namespace)
-        # When ("Make select query with sort")
+        # When ("Make select query with forced sort")
         query_result = list(query.sort("id", is_reversed, forced_values).must_execute())
         # Then ("Check that selected items are sorted")
         expected_items = [item for i in expected_ids for item in items_shuffled if item["id"] == i]
@@ -418,6 +487,17 @@ class TestQuerySelectSort:
         # Then ("Check that selected items are sorted")
         expected_items = sorted(items, key=lambda i: calculate_distance(i["rtree1"], i["rtree2"]), reverse=is_reversed)
         assert_that(query_result, equal_to(expected_items))
+
+    def test_query_select_sort_strict_mode_indexes(self, db, namespace, index, items):
+        # Given("Create namespace with index and items")
+        # Given ("Create new query")
+        query = db.query.new(namespace)
+        # When ("Try to select query with strict and sort non-existent index")
+        query.strict(StrictMode.Indexes).sort("rand")
+        err_msg = "Current query strict mode allows sort by index fields only. " \
+                  f"There are no indexes with name 'rand' in namespace '{namespace}'"
+        assert_that(calling(query.execute).with_args(),
+                    raises(Exception, pattern=err_msg))
 
 
 # ToDo implement List<Actor> joinedActors = QueryResult.getJoinedActors();
@@ -490,23 +570,22 @@ class TestQueryUpdate:
         assert_that(items_after_update, has_item(modified_item), "New updated item not is in namespace")
         assert_that(items_after_update, not_(has_item(item)), "Old updated item is in namespace")
 
-    # TODO exit code 134 (interrupted by signal 6:SIGABRT)
-    #    def test_query_update_expression(self, db, namespace, indexes, items):
-    #        # Given("Create namespace with indexes and items")
-    #        # Given ("Create new query")
-    #        query = db.query.new(namespace)
-    #        # When ("Make update expression query")
-    #        item = random.choice(items)
-    #        modified_item = copy.deepcopy(item)
-    #        modified_item["val"] = abs(item["id"] - 20)
-    #        query_result = query.where("id", CondType.CondEq, item["id"]).expression("id", "abs(id-20)").update()
-    #        # Then ("Check that item is updated")
-    #        assert_that(list(query_result), equal_to([modified_item]), "Wrong update query results after set")
-    #        # Then ("Check that items contain modified and do not contain original item")
-    #        items_after_update = get_ns_items(db, namespace)
-    #        assert_that(items_after_update, has_length(len(items)), "Wrong items count")
-    #        assert_that(items_after_update, has_item(modified_item), "New updated item not is in namespace")
-    #        assert_that(items_after_update, not_(has_item(item)), "Old updated item is in namespace")
+    def test_query_update_expression(self, db, namespace, index, items):
+        # Given("Create namespace with indexes and items")
+        # Given ("Create new query")
+        query = db.query.new(namespace)
+        # When ("Make update expression query")
+        item = random.choice(items)
+        modified_item = copy.deepcopy(item)
+        modified_item["field"] = item["id"] + 0.5
+        query_result = query.where("id", CondType.CondEq, item["id"]).expression("field", "id + 0.5*serial()").update()
+        # Then ("Check that item is updated")
+        assert_that(list(query_result), equal_to([modified_item]), "Wrong update query results after set")
+        # Then ("Check that items contain modified and do not contain original item")
+        items_after_update = get_ns_items(db, namespace)
+        assert_that(items_after_update, has_length(len(items)), "Wrong items count")
+        assert_that(items_after_update, has_item(modified_item), "New updated item not is in namespace")
+        assert_that(items_after_update, not_(has_item(item)), "Old updated item is in namespace")
 
     def test_query_drop(self, db, namespace, index, items):
         # Given("Create namespace with index and items")
@@ -522,11 +601,8 @@ class TestQueryUpdate:
         items_after_drop = get_ns_items(db, namespace)
         assert_that(items_after_drop, equal_to(items), "Wrong items after drop")
 
-    def test_query_drop_all(self, db, namespace, index, items):
+    def test_query_drop_all(self, db, namespace, index, sparse_index, items):
         # Given("Create namespace with index")
-        # Given("Create sparse index")
-        db.index.create(namespace, {"name": "val", "json_paths": ["val"], "field_type": "string", "index_type": "hash",
-                                    "is_sparse": True})
         # Given ("Create new query")
         query = db.query.new(namespace)
         # When ("Make update drop query")

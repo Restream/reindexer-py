@@ -52,6 +52,16 @@ def index(db, namespace):
 
 
 @pytest.fixture
+def sparse_index(db, namespace):
+    """
+    Create sparse index to namespace
+    """
+    db.index.create(namespace, {"name": "val", "json_paths": ["val"], "field_type": "string", "index_type": "hash",
+                                "is_sparse": True})
+    yield
+
+
+@pytest.fixture
 def indexes(db, namespace):
     """
     Create two indexes to namespace
@@ -125,6 +135,19 @@ def ft_index_and_items(db, namespace):
     db.index.create(namespace, {"name": "ft", "json_paths": ["ft"], "field_type": "string", "index_type": "text"})
     content = ["one word", "sword two", "three work 333"]
     items = [{"id": i, "ft": c} for i, c in enumerate(content)]
+    for item in items:
+        db.item.insert(namespace, item)
+    yield items
+
+
+@pytest.fixture
+def array_index_and_items(db, namespace):
+    """
+    Create rtree index and items
+    """
+    db.index.create(namespace, {"name": "arr", "json_paths": ["arr"], "field_type": "int", "index_type": "tree",
+                                "is_array": True})
+    items = [{"id": i, "arr": [i, i + 1]} for i in range(5)]
     for item in items:
         db.item.insert(namespace, item)
     yield items
