@@ -26,7 +26,7 @@ class TestCrudItems:
     def test_create_item_insert_negative(self, db, namespace, index, value):
         # Given("Create namespace with index")
         # When ("Insert item into namespace")
-        item_empty = {"id": -1, "field": value}
+        item_empty = {"id": -1, "field": value, "empty_field": None}
         db.item.insert(namespace, item_empty)
         # Then ("Check that item is added")
         select_result = get_ns_items(db, namespace)
