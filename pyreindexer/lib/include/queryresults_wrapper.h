@@ -40,9 +40,14 @@ public:
 		return it_.Status();
 	}
 
-	size_t Count() const {
+	size_t Count() const noexcept {
 		assert(wrap_);
 		return qres_.Count();
+	}
+
+	size_t TotalCount() const noexcept {
+		assert(wrap_);
+		return qres_.TotalCount();
 	}
 
 	void GetItemJSON(reindexer::WrSerializer& wrser, bool withHdrLen) {

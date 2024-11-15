@@ -176,7 +176,6 @@ void QueryWrapper::Sort(std::string_view index, bool desc, const std::vector<rei
 	}
 }
 
-
 void QueryWrapper::LogOp(OpType op) {
 	switch (op) {
 		case OpType::OpAnd:
@@ -189,12 +188,9 @@ void QueryWrapper::LogOp(OpType op) {
 	nextOperation_ = op;
 }
 
-void QueryWrapper::Total(std::string_view totalName, CalcTotalMode mode) {
+void QueryWrapper::Total(CalcTotalMode mode) {
 	ser_.PutVarUint(QueryItemType::QueryReqTotal);
 	ser_.PutVarUint(mode);
-	if (!totalName.empty()) {
-		totalName_ = totalName;
-	}
 }
 
 void QueryWrapper::AddValue(QueryItemType type, unsigned value) {
@@ -211,19 +207,21 @@ void QueryWrapper::Modifier(QueryItemType type) {
 	ser_.PutVarUint(type);
 }
 
-reindexer::Serializer QueryWrapper::prepareQueryData(reindexer::WrSerializer& data) {
+namespace {
+reindexer::Serializer prepareQueryData(reindexer::WrSerializer& data) {
 	reindexer::WrSerializer buffer;
 	buffer.Write(data.Slice()); // do full copy of query data
 	buffer.PutVarUint(QueryItemType::QueryEnd); // close query data
 	return {buffer.Buf(), buffer.Len()};
 }
 
-reindexer::JoinedQuery QueryWrapper::createJoinedQuery(JoinType joinType, reindexer::WrSerializer& data) {
+reindexer::JoinedQuery createJoinedQuery(JoinType joinType, reindexer::WrSerializer& data) {
 	reindexer::Serializer jser = prepareQueryData(data);
 	return {joinType, reindexer::Query::Deserialize(jser)};
 }
+}  // namespace
 
-void QueryWrapper::addJoinQueries(const std::vector<QueryWrapper*>& joinQueries, reindexer::Query& query) {
+void QueryWrapper::addJoinQueries(const std::vector<QueryWrapper*>& joinQueries, reindexer::Query& query) const {
 	for (auto joinQuery : joinQueries) {
 		auto jq = createJoinedQuery(joinQuery->joinType_, joinQuery->ser_);
 		query.AddJoinQuery(std::move(jq));

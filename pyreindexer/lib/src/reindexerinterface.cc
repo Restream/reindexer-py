@@ -94,9 +94,9 @@ Error ReindexerInterface<reindexer::client::CoroReindexer>::modify(reindexer::cl
 
 template <typename DBT>
 Error ReindexerInterface<DBT>::commitTransaction(typename DBT::TransactionT& transaction, size_t& count) {
-	typename DBT::QueryResultsT qr;
-	auto err = db_.CommitTransaction(transaction, qr);
-	count = qr.Count();
+	typename DBT::QueryResultsT qres;
+	auto err = db_.CommitTransaction(transaction, qres);
+	count = qres.Count();
 	return err;
 }
 

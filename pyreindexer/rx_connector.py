@@ -325,8 +325,8 @@ class RxConnector(RaiserMixin):
 
         """
 
-        self.err_code, self.err_msg, qres_wrapper_ptr, qres_iter_count = self.api.select(self.rx, query)
-        return QueryResults(self.api, qres_wrapper_ptr, qres_iter_count)
+        self.err_code, self.err_msg, wrapper_ptr, iter_count, total_count = self.api.select(self.rx, query)
+        return QueryResults(self.api, wrapper_ptr, iter_count, total_count)
 
     @raise_if_error
     def new_transaction(self, namespace) -> Transaction:

@@ -43,7 +43,8 @@ PyObject* queryResultsWrapperIterate(uintptr_t qresWrapperAddr) {
 	QueryResultsWrapper* qresWrapperPtr = getWrapper<QueryResultsWrapper>(qresWrapperAddr);
 
 	WrSerializer wrSer;
-	qresWrapperPtr->GetItemJSON(wrSer, false);
+	static const bool withHeaderLen = false;
+	qresWrapperPtr->GetItemJSON(wrSer, withHeaderLen);
 	qresWrapperPtr->Next();
 
 	PyObject* dictFromJson = nullptr;
@@ -109,12 +110,13 @@ static PyObject* Select(PyObject* self, PyObject* args) {
 	auto err = qresWrapper->Select(query);
 
 	if (!err.ok()) {
-		return Py_BuildValue("iskI", err.code(), err.what().c_str(), 0, 0);
+		return Py_BuildValue("iskII", err.code(), err.what().c_str(), 0, 0);
 	}
 
 	auto count = qresWrapper->Count();
-	return Py_BuildValue("iskI", err.code(), err.what().c_str(),
-						 reinterpret_cast<uintptr_t>(qresWrapper.release()), count);
+	auto totalCount = qresWrapper->TotalCount();
+	return Py_BuildValue("iskII", err.code(), err.what().c_str(),
+						 reinterpret_cast<uintptr_t>(qresWrapper.release()), count, totalCount);
 }
 
 // namespace ----------------------------------------------------------------------------------------------------------
@@ -952,14 +954,13 @@ static PyObject* Not(PyObject* self, PyObject* args) { return logOp(self, args, 
 namespace {
 static PyObject* total(PyObject* self, PyObject* args, CalcTotalMode mode) {
 	uintptr_t queryWrapperAddr = 0;
-	char* totalName = nullptr;
-	if (!PyArg_ParseTuple(args, "ks", &queryWrapperAddr, &totalName)) {
+	if (!PyArg_ParseTuple(args, "k", &queryWrapperAddr)) {
 		return nullptr;
 	}
 
 	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
 
-	query->Total(totalName, mode);
+	query->Total(mode);
 
 	Py_RETURN_NONE;
 }
@@ -1026,12 +1027,13 @@ static PyObject* executeQuery(PyObject* self, PyObject* args, QueryWrapper::Exec
 	auto qresWrapper = std::make_unique<QueryResultsWrapper>(query->GetDB());
 	auto err = query->ExecuteQuery(type, *qresWrapper);
 	if (!err.ok()) {
-		return Py_BuildValue("iskI", err.code(), err.what().c_str(), 0, 0);
+		return Py_BuildValue("iskII", err.code(), err.what().c_str(), 0, 0, 0);
 	}
 
-	auto count =  qresWrapper->Count();
-	return Py_BuildValue("iskI", err.code(), err.what().c_str(),
-						 reinterpret_cast<uintptr_t>(qresWrapper.release()), count);
+	auto count = qresWrapper->Count();
+	auto totalCount = qresWrapper->TotalCount();
+	return Py_BuildValue("iskII", err.code(), err.what().c_str(),
+						 reinterpret_cast<uintptr_t>(qresWrapper.release()), count, totalCount);
 }
 } // namespace
 static PyObject* SelectQuery(PyObject* self, PyObject* args) {

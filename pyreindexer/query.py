@@ -559,7 +559,7 @@ class Query:
         self.api.op_not(self.query_wrapper_ptr)
         return self
 
-    def request_total(self, total_name: str = '') -> Query:
+    def request_total(self) -> Query:
         """Requests total items calculation
 
         #### Arguments:
@@ -570,10 +570,10 @@ class Query:
 
         """
 
-        self.api.request_total(self.query_wrapper_ptr, total_name)
+        self.api.request_total(self.query_wrapper_ptr)
         return self
 
-    def cached_total(self, total_name: str = '') -> Query:
+    def cached_total(self) -> Query:
         """Requests cached total items calculation
 
         #### Arguments:
@@ -584,7 +584,7 @@ class Query:
 
         """
 
-        self.api.cached_total(self.query_wrapper_ptr, total_name)
+        self.api.cached_total(self.query_wrapper_ptr)
         return self
 
     def limit(self, limit_items: int) -> Query:
@@ -680,9 +680,10 @@ class Query:
         if self.root is not None:
             return self.root.execute()
 
-        self.err_code, self.err_msg, qres_wrapper_ptr, qres_iter_count = self.api.select_query(self.query_wrapper_ptr)
+        (self.err_code, self.err_msg,
+         wrapper_ptr, iter_count, total_count) = self.api.select_query(self.query_wrapper_ptr)
         self.__raise_on_error()
-        return QueryResults(self.api, qres_wrapper_ptr, qres_iter_count)
+        return QueryResults(self.api, wrapper_ptr, iter_count, total_count)
 
     def delete(self) -> int:
         """Executes a query, and delete items, matches query
@@ -789,9 +790,11 @@ class Query:
         if (self.root is not None) or (len(self.join_queries) > 0):
             raise Exception("Update does not support joined queries")
 
-        self.err_code, self.err_msg, qres_wrapper_ptr, qres_iter_count = self.api.update_query(self.query_wrapper_ptr)
+        (self.err_code, self.err_msg,
+         wrapper_ptr, iter_count, total_count) = self.api.update_query(self.query_wrapper_ptr)
         self.__raise_on_error()
-        return QueryResults(self.api, qres_wrapper_ptr, qres_iter_count)
+        return QueryResults(self.api, wrapper_ptr, iter_count, total_count)
+
 
     def must_execute(self) -> QueryResults:
         """Executes a query, and update fields in items, which matches query, with status check

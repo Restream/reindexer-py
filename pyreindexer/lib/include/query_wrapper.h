@@ -46,7 +46,7 @@ public:
 
 	void LogOp(OpType op);
 
-	void Total(std::string_view totalName, CalcTotalMode mode);
+	void Total(CalcTotalMode mode);
 
 	void AddValue(QueryItemType type, unsigned value);
 
@@ -77,9 +77,7 @@ public:
 	DBInterface* GetDB() const { return db_; }
 
 private:
-	reindexer::Serializer prepareQueryData(reindexer::WrSerializer& data);
-	reindexer::JoinedQuery createJoinedQuery(JoinType joinType, reindexer::WrSerializer& data);
-	void addJoinQueries(const std::vector<QueryWrapper*>& joinQueries, reindexer::Query& query);
+	void addJoinQueries(const std::vector<QueryWrapper*>& joinQueries, reindexer::Query& query) const;
 	reindexer::Query prepareQuery();
 
 	DBInterface* db_{nullptr};
@@ -88,7 +86,6 @@ private:
 	OpType nextOperation_{OpType::OpAnd};
 	unsigned queriesCount_{0};
 	std::deque<uint32_t> openedBrackets_;
-	std::string totalName_; // ToDo now not used
 	JoinType joinType_{JoinType::LeftJoin};
 	std::vector<QueryWrapper*> joinQueries_;
 	std::vector<QueryWrapper*> mergedQueries_;

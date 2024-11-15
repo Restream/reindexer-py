@@ -12,19 +12,21 @@ class QueryResults:
 
     """
 
-    def __init__(self, api, qres_wrapper_ptr, qres_iter_count):
+    def __init__(self, api, qres_wrapper_ptr, qres_iter_count, qres_total_count):
         """Constructs a new Reindexer query results iterator object
 
         #### Arguments:
             api (module): An API module for Reindexer calls
             qres_wrapper_ptr (int): A memory pointer to Reindexer iterator object
             qres_iter_count (int): A count of results for iterations
+            qres_total_count (int): A total\cached count of results
 
         """
 
         self.api = api
         self.qres_wrapper_ptr = qres_wrapper_ptr
         self.qres_iter_count = qres_iter_count
+        self.qres_total_count = qres_total_count
         self.pos = 0
         self.err_code = 0
         self.err_msg = ""
@@ -61,7 +63,7 @@ class QueryResults:
 
         self._close_iterator()
 
-    def status(self):
+    def status(self) -> None:
         """Check status
 
         #### Raises:
@@ -73,8 +75,8 @@ class QueryResults:
         if self.err_code:
             raise Exception(self.err_msg)
 
-    def count(self):
-        """Returns a count of results
+    def count(self) -> int:
+        """Returns a count of results for iterations
 
         #### Returns
             int: A count of results
@@ -83,7 +85,17 @@ class QueryResults:
 
         return self.qres_iter_count
 
-    def _close_iterator(self):
+    def total_count(self) -> int:
+        """Returns a total\cached count of results
+
+        #### Returns
+            int: A total\cached count of results
+
+        """
+
+        return self.qres_total_count
+
+    def _close_iterator(self) -> None:
         """Frees query results for the current iterator
 
         """
@@ -91,7 +103,7 @@ class QueryResults:
         self.qres_iter_count = 0
         self.api.query_results_delete(self.qres_wrapper_ptr)
 
-    def get_agg_results(self):
+    def get_agg_results(self) -> dict:
         """Returns aggregation results for the current query
 
         #### Returns
@@ -107,7 +119,7 @@ class QueryResults:
             raise Exception(self.err_msg)
         return res
 
-    def get_explain_results(self):
+    def get_explain_results(self) -> str:
         """Returns explain results for the current query
 
         #### Returns
