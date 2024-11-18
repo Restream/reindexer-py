@@ -112,11 +112,11 @@ Error QueryWrapper::OpenBracket() {
 
 reindexer::Error QueryWrapper::CloseBracket() {
 	if (nextOperation_ != OpType::OpAnd) {
-		return reindexer::Error(errLogic, "Operation before close bracket");
+		return reindexer::Error(ErrorCode::errLogic, "Operation before close bracket");
 	}
 
 	if (openedBrackets_.empty()) {
-		return reindexer::Error(errLogic, "Close bracket before open it");
+		return reindexer::Error(ErrorCode::errLogic, "Close bracket before open it");
 	}
 
 	ser_.PutVarUint(QueryItemType::QueryCloseBracket);
@@ -246,6 +246,9 @@ reindexer::Query QueryWrapper::prepareQuery() {
 
 reindexer::Error QueryWrapper::ExecuteQuery(ExecuteType type, QueryResultsWrapper& qr) {
 	auto query = prepareQuery();
+	if (query.IsWALQuery()) {
+		return reindexer::Error(ErrorCode::errQueryExec, "WAL queries are not supported");
+	}
 
 	Error err = errOK;
 	switch (type) {

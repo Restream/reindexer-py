@@ -9,7 +9,7 @@ void pyValueSerialize(PyObject** value, reindexer::WrSerializer& wrSer);
 
 void pyListSerialize(PyObject** list, reindexer::WrSerializer& wrSer) {
 	if (!PyList_Check(*list)) {
-		throw reindexer::Error(errParseJson, std::string("List expected, got ") + Py_TYPE(*list)->tp_name);
+		throw reindexer::Error(ErrorCode::errParseJson, std::string("List expected, got ") + Py_TYPE(*list)->tp_name);
 	}
 
 	wrSer << '[';
@@ -30,7 +30,8 @@ void pyListSerialize(PyObject** list, reindexer::WrSerializer& wrSer) {
 
 void pyDictSerialize(PyObject** dict, reindexer::WrSerializer& wrSer) {
 	if (!PyDict_Check(*dict)) {
-		throw reindexer::Error(errParseJson, std::string("Dictionary expected, got ") + Py_TYPE(*dict)->tp_name);
+		throw reindexer::Error(ErrorCode::errParseJson,
+								std::string("Dictionary expected, got ") + Py_TYPE(*dict)->tp_name);
 	}
 
 	wrSer << '{';
@@ -81,7 +82,8 @@ void pyValueSerialize(PyObject** value, reindexer::WrSerializer& wrSer) {
 	} else if (PyDict_Check(*value)) {
 		pyDictSerialize(value, wrSer);
 	} else {
-		throw reindexer::Error(errParseJson, std::string("Unable to parse value of type ") + Py_TYPE(*value)->tp_name);
+		throw reindexer::Error(ErrorCode::errParseJson,
+								std::string("Unable to parse value of type ") + Py_TYPE(*value)->tp_name);
 	}
 }
 
@@ -91,8 +93,9 @@ void PyObjectToJson(PyObject** obj, reindexer::WrSerializer& wrSer) {
 	} else if (PyList_Check(*obj) ) {
 		pyListSerialize(obj, wrSer);
 	} else {
-		throw reindexer::Error(errParseJson,
-							   std::string("PyObject must be a dictionary or a list for JSON serializing, got ") + Py_TYPE(*obj)->tp_name);
+		throw reindexer::Error(ErrorCode::errParseJson,
+								std::string("PyObject must be a dictionary or a list for JSON serializing, got ")
+								+ Py_TYPE(*obj)->tp_name);
 	}
 }
 
@@ -138,7 +141,8 @@ std::vector<std::string> ParseStrListToStrVec(PyObject** list) {
 		PyObject* item = PyList_GetItem(*list, i);
 
 		if (!PyUnicode_Check(item)) {
-			throw reindexer::Error(errParseJson, std::string("String expected, got ") + Py_TYPE(item)->tp_name);
+			throw reindexer::Error(ErrorCode::errParseJson,
+									std::string("String expected, got ") + Py_TYPE(item)->tp_name);
 		}
 
 		result.push_back(PyUnicode_AsUTF8(item));
@@ -163,7 +167,8 @@ reindexer::Variant convert(PyObject** value) {
 	} else if (PyUnicode_Check(*value)) {
 		return reindexer::Variant(std::string_view(PyUnicode_AsUTF8(*value)));
 	} else {
-		throw reindexer::Error(errParseJson, std::string("Unexpected type, got ") + Py_TYPE(*value)->tp_name);
+		throw reindexer::Error(ErrorCode::errParseJson,
+								std::string("Unexpected type, got ") + Py_TYPE(*value)->tp_name);
 	}
 	return {};
 }
@@ -240,7 +245,7 @@ PyObject* PyObjectFromJson(reindexer::span<char> json) {
 		auto root = parser.Parse(json);
 		return pyValueFromJsonValue(root.value); // stolen ref
 	} catch (const gason::Exception& ex) {
-		throw reindexer::Error(errParseJson, std::string("PyObjectFromJson: ") + ex.what());
+		throw reindexer::Error(ErrorCode::errParseJson, std::string("PyObjectFromJson: ") + ex.what());
 	}
 }
 }  // namespace pyreindexer

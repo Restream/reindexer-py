@@ -224,19 +224,17 @@ class TestQuerySelect:
         expected_items = [items[i] for i in [1, 2, 3]]
         assert_that(query_result, equal_to(expected_items), "Wrong query results")
 
-    # ToDo
-    #    @pytest.mark.skip(reason="need get_total in query_results")
-    #    @pytest.mark.parametrize("func_total", ["request_total", "cached_total"])
-    #    def test_query_select_request_total(self, db, namespace, index, items, func_total):
-    #        # Given("Create namespace with index and items")
-    #        # Given ("Create new query")
-    #        query = db.query.new(namespace)
-    #        # When ("Make select query with limit and offset")
-    #        query_result = getattr(query, func_total)("id").must_execute()
-    #        # Then ("Check that selected items are in result")
-    #        assert_that(list(query_result), equal_to(items), "Wrong query results")
-    #        # Then ("Check that total is in result")
-    #        assert_that(query_result.get_total_results(), equal_to(""), "There is no total in query results")
+    @pytest.mark.parametrize("func_total", ["request_total", "cached_total"])
+    def test_query_select_request_total(self, db, namespace, index, items, func_total):
+        # Given("Create namespace with index and items")
+        # Given ("Create new query")
+        query = db.query.new(namespace)
+        # When ("Make select query with limit and offset")
+        query_result = getattr(query, func_total)().limit(1).must_execute()
+        # Then ("Check that total is in result")
+        assert_that(query_result.total_count(), equal_to(len(items)), "Unexpected total in query results")
+        assert_that(query_result.total_count(), not_(equal_to(query_result.count())),
+                    "Unexpected total in query results")
 
     def test_query_select_with_rank(self, db, namespace, index, ft_index_and_items):
         # Given("Create namespace with ft index and items")
@@ -329,24 +327,14 @@ class TestQuerySelect:
         assert_that(calling(query.execute).with_args(),
                     raises(Exception, pattern=err_msg))
 
-    # TODO "Exception: Query results contain WAL items. Query results from WAL must either be requested in JSON format or with client, supporting RAW items"
-    # (ExecToJson in GO)
-    def test_query_select_wal_gt(self, db, namespace, index, items):
-        # Given("Create namespace with index and items")
-        # Given ("Create new query")
-        query = db.query.new(namespace)
-        # When ("Make select query with lsn gt")
-        query_result = query.where("#lsn", CondType.CondGt, 1).must_execute()  # .execute_to_json() ??
-        # TODO add lsn validation
-
-    # TODO
     def test_query_select_wal_any(self, db, namespace, index, items):
         # Given("Create namespace with index and items")
         # Given ("Create new query")
         query = db.query.new(namespace)
         # When ("Make select query with lsn any")
-        query_result = query.where("#lsn", CondType.CondAny, None).must_execute()  # .execute_to_json() ??
-        # TODO add lsn validation
+        err_msg = "WAL queries are not supported"
+        query.where("#lsn", CondType.CondAny, None)
+        assert_that(calling(query.execute).with_args(), raises(Exception, pattern=err_msg))
 
 
 class TestQuerySelectAggregations:
