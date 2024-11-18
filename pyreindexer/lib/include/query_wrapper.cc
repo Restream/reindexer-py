@@ -228,29 +228,38 @@ void QueryWrapper::addJoinQueries(const std::vector<QueryWrapper*>& joinQueries,
 	}
 }
 
-reindexer::Query QueryWrapper::prepareQuery() {
-	reindexer::Serializer ser = prepareQueryData(ser_);
-	auto query = reindexer::Query::Deserialize(ser);
+reindexer::Error QueryWrapper::prepareQuery(reindexer::Query& query) {
+	reindexer::Error error = errOK;
+	try {
+		reindexer::Serializer ser = prepareQueryData(ser_);
+		query = reindexer::Query::Deserialize(ser);
 
-	addJoinQueries(joinQueries_, query);
+		addJoinQueries(joinQueries_, query);
 
-	for (auto mergedQuery : mergedQueries_) {
-		auto mq = createJoinedQuery(JoinType::Merge, mergedQuery->ser_);
-		query.Merge(std::move(mq));
+		for (auto mergedQuery : mergedQueries_) {
+			auto mq = createJoinedQuery(JoinType::Merge, mergedQuery->ser_);
+			query.Merge(std::move(mq));
 
-		addJoinQueries(mergedQuery->joinQueries_, mq);
+			addJoinQueries(mergedQuery->joinQueries_, mq);
+		}
+	} catch (const reindexer::Error& err) {
+		error = err;
 	}
 
-	return query;
+	return error;
 }
 
 reindexer::Error QueryWrapper::ExecuteQuery(ExecuteType type, QueryResultsWrapper& qr) {
-	auto query = prepareQuery();
+	reindexer::Query query;
+	auto err = prepareQuery(query);
+	if (!err.ok()) {
+		return err;
+	}
+
 	if (query.IsWALQuery()) {
 		return reindexer::Error(ErrorCode::errQueryExec, "WAL queries are not supported");
 	}
 
-	Error err = errOK;
 	switch (type) {
 		case ExecuteType::Select:
 			err = db_->SelectQuery(query, qr);
@@ -265,7 +274,11 @@ reindexer::Error QueryWrapper::ExecuteQuery(ExecuteType type, QueryResultsWrappe
 }
 
 reindexer::Error QueryWrapper::DeleteQuery(size_t& count) {
-	auto query = prepareQuery();
+	reindexer::Query query;
+	auto err = prepareQuery(query);
+	if (!err.ok()) {
+		return err;
+	}
 	return db_->DeleteQuery(query, count);
 }
 

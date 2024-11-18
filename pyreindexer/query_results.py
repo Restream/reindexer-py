@@ -86,10 +86,10 @@ class QueryResults:
         return self.qres_iter_count
 
     def total_count(self) -> int:
-        """Returns a total\cached count of results
+        """Returns a total or cached count of results
 
         #### Returns
-            int: A total\cached count of results
+            int: A total or cached count of results
 
         """
 

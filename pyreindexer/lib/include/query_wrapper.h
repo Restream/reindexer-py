@@ -78,7 +78,7 @@ public:
 
 private:
 	void addJoinQueries(const std::vector<QueryWrapper*>& joinQueries, reindexer::Query& query) const;
-	reindexer::Query prepareQuery();
+	reindexer::Error prepareQuery(reindexer::Query& query);
 
 	DBInterface* db_{nullptr};
 	reindexer::WrSerializer ser_;
