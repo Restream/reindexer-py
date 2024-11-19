@@ -43,7 +43,7 @@ public:
 
 private:
 	CallableT command_;
-	Error err_;
+	Error err_{errOK};
 	std::atomic_bool executed_{false};
 };
 
