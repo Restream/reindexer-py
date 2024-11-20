@@ -40,7 +40,7 @@ void QueryWrapper::Where(std::string_view index, CondType condition, const std::
 	++queriesCount_;
 }
 
-void QueryWrapper::WhereQuery(QueryWrapper& query, CondType condition, const std::vector<reindexer::Variant>& keys) {
+void QueryWrapper::WhereSubQuery(QueryWrapper& query, CondType condition, const std::vector<reindexer::Variant>& keys) {
 	ser_.PutVarUint(QueryItemType::QuerySubQueryCondition);
 	ser_.PutVarUint(nextOperation_);
 	ser_.PutVString(query.ser_.Slice());
@@ -55,7 +55,7 @@ void QueryWrapper::WhereQuery(QueryWrapper& query, CondType condition, const std
 	++queriesCount_;
 }
 
-void QueryWrapper::WhereComposite(std::string_view index, CondType condition, QueryWrapper& query) {
+void QueryWrapper::WhereFieldSubQuery(std::string_view index, CondType condition, QueryWrapper& query) {
 	ser_.PutVarUint(QueryItemType::QueryFieldSubQueryCondition);
 	ser_.PutVarUint(nextOperation_);
 	ser_.PutVString(index);

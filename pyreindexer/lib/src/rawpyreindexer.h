@@ -56,8 +56,8 @@ static PyObject* RollbackTransaction(PyObject* self, PyObject* args);
 static PyObject* CreateQuery(PyObject* self, PyObject* args);
 static PyObject* DestroyQuery(PyObject* self, PyObject* args);
 static PyObject* Where(PyObject* self, PyObject* args);
-static PyObject* WhereQuery(PyObject* self, PyObject* args);
-static PyObject* WhereComposite(PyObject* self, PyObject* args);
+static PyObject* WhereSubQuery(PyObject* self, PyObject* args);
+static PyObject* WhereFieldSubQuery(PyObject* self, PyObject* args);
 static PyObject* WhereUUID(PyObject* self, PyObject* args);
 static PyObject* WhereBetweenFields(PyObject* self, PyObject* args);
 static PyObject* OpenBracket(PyObject* self, PyObject* args);
@@ -141,8 +141,8 @@ static PyMethodDef module_methods[] = {
 	{"create_query", CreateQuery, METH_VARARGS, "create new query"},
 	{"destroy_query", DestroyQuery, METH_VARARGS, "delete query object. Free query object memory"},
 	{"where", Where, METH_VARARGS, "add where condition with args"},
-	{"where_query", WhereQuery, METH_VARARGS, "add sub-query where condition"},
-	{"where_composite", WhereComposite, METH_VARARGS, "add where condition for composite indexes"},
+	{"where_subquery", WhereSubQuery, METH_VARARGS, "add sub-query where condition"},
+	{"where_field_subquery", WhereFieldSubQuery, METH_VARARGS, "add where condition for sub-query"},
 	{"where_uuid", WhereUUID, METH_VARARGS, "add where condition with UUIDs"},
 	{"where_between_fields", WhereBetweenFields, METH_VARARGS, "add comparing two fields where condition"},
 	{"open_bracket", OpenBracket, METH_VARARGS, "open bracket for where condition"},

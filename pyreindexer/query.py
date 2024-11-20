@@ -178,9 +178,25 @@ class Query:
 
         params: list = self.__convert_to_list(keys)
 
-        self.err_code, self.err_msg = self.api.where_query(self.query_wrapper_ptr, sub_query.query_wrapper_ptr,
-                                                           condition.value, params)
+        self.err_code, self.err_msg = self.api.where_subquery(self.query_wrapper_ptr, sub_query.query_wrapper_ptr,
+                                                              condition.value, params)
         self.__raise_on_error()
+        return self
+
+    def where_subquery(self, index: str, condition: CondType, sub_query: Query) -> Query:
+        """Adds sub-query where condition to DB query
+
+        #### Arguments:
+            index (string): Field name used in condition clause
+            condition (:enum:`CondType`): Type of condition
+            sub_query (:obj:`Query`): Field name used in condition clause
+
+        #### Returns:
+            (:obj:`Query`): Query object for further customizations
+
+        """
+
+        self.api.where_field_subquery(self.query_wrapper_ptr, index, condition.value, sub_query.query_wrapper_ptr)
         return self
 
     def where_composite(self, index: str, condition: CondType, *keys: simple_types) -> Query:

@@ -27,8 +27,8 @@ public:
 	QueryWrapper(DBInterface* db, std::string_view ns);
 
 	void Where(std::string_view index, CondType condition, const std::vector<reindexer::Variant>& keys);
-	void WhereQuery(QueryWrapper& query, CondType condition, const std::vector<reindexer::Variant>& keys);
-	void WhereComposite(std::string_view index, CondType condition, QueryWrapper& query);
+	void WhereSubQuery(QueryWrapper& query, CondType condition, const std::vector<reindexer::Variant>& keys);
+	void WhereFieldSubQuery(std::string_view index, CondType condition, QueryWrapper& query);
 	void WhereUUID(std::string_view index, CondType condition, const std::vector<std::string>& keys);
 
 	void WhereBetweenFields(std::string_view firstField, CondType condition, std::string_view secondField);

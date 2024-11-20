@@ -16,6 +16,8 @@ renderer:
   type: markdown
   filename: README.md
   add_method_class_prefix: true
+  classdef_with_decorators: false
+  signature_with_decorators: false
   render_toc: true
   render_toc_title: The PyReindexer module provides a connector and its auxiliary tools for interaction with Reindexer
   header_level_by_type:

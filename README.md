@@ -25,6 +25,7 @@
   * [QueryResults](#pyreindexer.query_results.QueryResults)
     * [status](#pyreindexer.query_results.QueryResults.status)
     * [count](#pyreindexer.query_results.QueryResults.count)
+    * [total\_count](#pyreindexer.query_results.QueryResults.total_count)
     * [get\_agg\_results](#pyreindexer.query_results.QueryResults.get_agg_results)
     * [get\_explain\_results](#pyreindexer.query_results.QueryResults.get_explain_results)
 * [pyreindexer.transaction](#pyreindexer.transaction)
@@ -42,6 +43,7 @@
   * [Query](#pyreindexer.query.Query)
     * [where](#pyreindexer.query.Query.where)
     * [where\_query](#pyreindexer.query.Query.where_query)
+    * [where\_subquery](#pyreindexer.query.Query.where_subquery)
     * [where\_composite](#pyreindexer.query.Query.where_composite)
     * [where\_uuid](#pyreindexer.query.Query.where_uuid)
     * [where\_between\_fields](#pyreindexer.query.Query.where_between_fields)
@@ -491,7 +493,7 @@ QueryResults is a disposable iterator of Reindexer results for such queries as S
 ### QueryResults.status
 
 ```python
-def status()
+def status() -> None
 ```
 
 Check status
@@ -504,20 +506,33 @@ Check status
 ### QueryResults.count
 
 ```python
-def count()
+def count() -> int
 ```
 
-Returns a count of results
+Returns a count of results for iterations
 
 #### Returns
     int: A count of results
+
+<a id="pyreindexer.query_results.QueryResults.total_count"></a>
+
+### QueryResults.total\_count
+
+```python
+def total_count() -> int
+```
+
+Returns a total or cached count of results
+
+#### Returns
+    int: A total or cached count of results
 
 <a id="pyreindexer.query_results.QueryResults.get_agg_results"></a>
 
 ### QueryResults.get\_agg\_results
 
 ```python
-def get_agg_results()
+def get_agg_results() -> dict
 ```
 
 Returns aggregation results for the current query
@@ -533,7 +548,7 @@ Returns aggregation results for the current query
 ### QueryResults.get\_explain\_results
 
 ```python
-def get_explain_results()
+def get_explain_results() -> str
 ```
 
 Returns explain results for the current query
@@ -769,18 +784,15 @@ Adds sub-query where condition to DB query with args
 #### Raises:
     Exception: Raises with an error message of API return on non-zero error code
 
-<a id="pyreindexer.query.Query.where_composite"></a>
+<a id="pyreindexer.query.Query.where_subquery"></a>
 
-### Query.where\_composite
+### Query.where\_subquery
 
 ```python
-def where_composite(
-        index: str,
-        condition: CondType,
-        keys: Union[simple_types, List[simple_types]] = None) -> Query
+def where_subquery(index: str, condition: CondType, sub_query: Query) -> Query
 ```
 
-Adds where condition to DB query with interface args for composite indexes
+Adds sub-query where condition to DB query
 
 #### Arguments:
     index (string): Field name used in condition clause
@@ -790,12 +802,31 @@ Adds where condition to DB query with interface args for composite indexes
 #### Returns:
     (:obj:`Query`): Query object for further customizations
 
+<a id="pyreindexer.query.Query.where_composite"></a>
+
+### Query.where\_composite
+
+```python
+def where_composite(index: str, condition: CondType, *keys:
+                    simple_types) -> Query
+```
+
+Adds where condition to DB query with interface args for composite indexes
+
+#### Arguments:
+    index (string): Field name used in condition clause
+    condition (:enum:`CondType`): Type of condition
+    keys (*simple_types): Values of composite index to be compared with (value of each sub-index)
+
+#### Returns:
+    (:obj:`Query`): Query object for further customizations
+
 <a id="pyreindexer.query.Query.where_uuid"></a>
 
 ### Query.where\_uuid
 
 ```python
-def where_uuid(index: str, condition: CondType, keys: List[str]) -> Query
+def where_uuid(index: str, condition: CondType, *keys: str) -> Query
 ```
 
 Adds where condition to DB query with UUID as string args.
@@ -805,7 +836,7 @@ Adds where condition to DB query with UUID as string args.
 #### Arguments:
     index (string): Field name used in condition clause
     condition (:enum:`CondType`): Type of condition
-    keys (list[string]): Value of index to be compared with. For composite indexes keys must be list,
+    keys (list[*string]): Value of index to be compared with. For composite indexes keys must be list,
     with value of each sub-index
 
 #### Returns:
@@ -870,14 +901,14 @@ Closes bracket for where condition to DB query
 ### Query.match
 
 ```python
-def match(index: str, keys: List[str]) -> Query
+def match(index: str, *keys: str) -> Query
 ```
 
 Adds string EQ-condition to DB query with string args
 
 #### Arguments:
     index (string): Field name used in condition clause
-    keys (list[string]): Value of index to be compared with. For composite indexes keys must be list,
+    keys (list[*string]): Value of index to be compared with. For composite indexes keys must be list,
     with value of each sub-index
 
 #### Returns:
@@ -989,7 +1020,7 @@ Finds for the maximum at the specified index
 ### Query.aggregate\_facet
 
 ```python
-def aggregate_facet(fields: List[str]) -> Query._AggregateFacet
+def aggregate_facet(*fields: str) -> Query._AggregateFacet
 ```
 
 Gets fields facet value. Applicable to multiple data fields and the result of that could be sorted
@@ -997,7 +1028,7 @@ Gets fields facet value. Applicable to multiple data fields and the result of th
     this method returns AggregationFacetRequest which has methods sort, limit and offset
 
 #### Arguments:
-    fields (list[string]): Fields any data column name or `count`, fields should not be empty
+    fields (list[*string]): Fields any data column name or `count`, fields should not be empty
 
 #### Returns:
     (:obj:`_AggregateFacet`): Request object for further customizations
@@ -1118,7 +1149,7 @@ Next condition will be added with NOT AND.
 ### Query.request\_total
 
 ```python
-def request_total(total_name: str = '') -> Query
+def request_total() -> Query
 ```
 
 Requests total items calculation
@@ -1134,7 +1165,7 @@ Requests total items calculation
 ### Query.cached\_total
 
 ```python
-def cached_total(total_name: str = '') -> Query
+def cached_total() -> Query
 ```
 
 Requests cached total items calculation
@@ -1490,7 +1521,7 @@ On specifies join condition
 ### Query.select
 
 ```python
-def select(fields: List[str]) -> Query
+def select(*fields: str) -> Query
 ```
 
 Sets list of columns in this namespace to be finally selected.
@@ -1499,7 +1530,7 @@ Sets list of columns in this namespace to be finally selected.
     If there are no fields in this list that meet these conditions, then the filter works as "*"
 
 #### Arguments:
-    fields (list[string]): List of columns to be selected
+    fields (list[*string]): List of columns to be selected
 
 #### Returns:
     (:obj:`Query`): Query object for further customizations
@@ -1512,13 +1543,13 @@ Sets list of columns in this namespace to be finally selected.
 ### Query.functions
 
 ```python
-def functions(functions: List[str]) -> Query
+def functions(*functions: str) -> Query
 ```
 
 Adds sql-functions to query
 
 #### Arguments:
-    functions (list[string]): Functions declaration
+    functions (list[*string]): Functions declaration
 
 #### Returns:
     (:obj:`Query`): Query object for further customizations
@@ -1531,13 +1562,13 @@ Adds sql-functions to query
 ### Query.equal\_position
 
 ```python
-def equal_position(equal_position: List[str]) -> Query
+def equal_position(*equal_position: str) -> Query
 ```
 
 Adds equal position fields to arrays queries
 
 #### Arguments:
-    equal_poses (list[string]): Equal position fields to arrays queries
+    equal_poses (list[*string]): Equal position fields to arrays queries
 
 #### Returns:
     (:obj:`Query`): Query object for further customizations

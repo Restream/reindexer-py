@@ -98,19 +98,36 @@ class TestQuerySelect:
         # Then ("Check that selected item is in result")
         assert_that(query_result, equal_to(items), "Wrong query results")
 
-    # TODO does not work, ignore subquery results
-    #     def test_query_select_where_query(self, db, namespace, index, items):
-    #        # Given("Create namespace with index and items")
-    #        # Given ("Create new query")
-    #        # query = db.query.new(namespace).where("id", CondType.CondLt, 5)
-    #        # sub_query = db.query.new(namespace).where("id", CondType.CondGt, 0)
-    #        query = db.query.new(namespace).where("id", CondType.CondGt, 0)
-    #        sub_query = db.query.new(namespace).select("id").where("id", CondType.CondLt, 5)
-    #        # When ("Make select query with where_query subquery")
-    #        query_result = list(query.where_query(sub_query, CondType.CondGe, 2).must_execute())
-    #        # Then ("Check that selected item is in result")
-    #        expected_items = [items[i] for i in [2, 3, 4]]
-    #        assert_that(query_result, equal_to(expected_items), "Wrong query results")
+    def test_query_select_where_query_field(self, db, namespace, index, items):
+        # Given("Create namespace with index and items")
+        # Given ("Create new query")
+        sub_query = (db.query.new(namespace)
+                        .select("id")
+                        .where("id", CondType.CondLt, 5)
+                        .where("id", CondType.CondGe, 2))
+        # When ("Make select query with where_subquery")
+        query_result = list(db.query.new(namespace).where_subquery('id', CondType.CondSet, sub_query).execute())
+        # Then ("Check that selected item is in result")
+        expected_items = [items[i] for i in [2, 3, 4]]
+        assert_that(query_result, equal_to(expected_items), "Wrong query results")
+
+    def test_query_select_where_query_all(self, db, namespace, index, items):
+        # Given("Create namespace with index and items")
+        # Given ("Create new query")
+        sub_query = db.query.new(namespace).select("id").where("id", CondType.CondLt, 5)
+        # When ("Make select query with where_query and subquery")
+        query_result = list(db.query.new(namespace).where_query(sub_query, CondType.CondGe, 2).execute())
+        # Then ("Check that all items selected in result")
+        assert_that(query_result, equal_to(items), "Wrong query results")
+
+    def test_query_select_where_query_empty(self, db, namespace, index, items):
+        # Given("Create namespace with index and items")
+        # Given ("Create new query")
+        sub_query = db.query.new(namespace).select("id").where("id", CondType.CondEq, 5)
+        # When ("Make select query with where_query and subquery")
+        query_result = list(db.query.new(namespace).where_query(sub_query, CondType.CondLe, 2).execute())
+        # Then ("Check that result is empty")
+        assert_that(query_result, empty(), "Wrong query results")
 
     # ToDo
     #     def test_query_select_where_composite(self, db, namespace, composite_index, items):

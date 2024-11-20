@@ -691,7 +691,7 @@ static PyObject* Where(PyObject* self, PyObject* args) {
 	return pyErr(errOK);
 }
 
-static PyObject* WhereQuery(PyObject* self, PyObject* args) {
+static PyObject* WhereSubQuery(PyObject* self, PyObject* args) {
 	uintptr_t queryWrapperAddr = 0;
 	uintptr_t subQueryWrapperAddr = 0;
 	unsigned condition = 0;
@@ -718,12 +718,12 @@ static PyObject* WhereQuery(PyObject* self, PyObject* args) {
 	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
 	auto subQuery = getWrapper<QueryWrapper>(subQueryWrapperAddr);
 
-	query->WhereQuery(*subQuery, CondType(condition), keys);
+	query->WhereSubQuery(*subQuery, CondType(condition), keys);
 
 	return pyErr(errOK);
 }
 
-static PyObject* WhereComposite(PyObject* self, PyObject* args) {
+static PyObject* WhereFieldSubQuery(PyObject* self, PyObject* args) {
 	uintptr_t queryWrapperAddr = 0;
 	char* index = nullptr;
 	unsigned condition = 0;
@@ -735,7 +735,7 @@ static PyObject* WhereComposite(PyObject* self, PyObject* args) {
 	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
 	auto subQuery = getWrapper<QueryWrapper>(subQueryWrapperAddr);
 
-	query->WhereComposite(index, CondType(condition), *subQuery);
+	query->WhereFieldSubQuery(index, CondType(condition), *subQuery);
 
 	Py_RETURN_NONE;
 }
