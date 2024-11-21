@@ -90,7 +90,7 @@ void pyValueSerialize(PyObject** value, reindexer::WrSerializer& wrSer) {
 void PyObjectToJson(PyObject** obj, reindexer::WrSerializer& wrSer) {
 	if (PyDict_Check(*obj)) {
 		pyDictSerialize(obj, wrSer);
-	} else if (PyList_Check(*obj) ) {
+	} else if (PyList_Check(*obj)) {
 		pyListSerialize(obj, wrSer);
 	} else {
 		throw reindexer::Error(ErrorCode::errParseJson,
@@ -117,7 +117,7 @@ std::vector<std::string> PyObjectToJson(PyObject** obj) {
 				wrSer.Reset();
 			}
 		}
-	} else if (PyList_Check(*obj) ) {
+	} else if (PyList_Check(*obj)) {
 		Py_ssize_t sz = PyList_Size(*obj);
 		for (Py_ssize_t i = 0; i < sz; ++i) {
 			PyObject* value = PyList_GetItem(*obj, i);
@@ -166,6 +166,24 @@ reindexer::Variant convert(PyObject** value) {
 		return reindexer::Variant(int64_t(PyLong_AsLong(*value)));
 	} else if (PyUnicode_Check(*value)) {
 		return reindexer::Variant(std::string_view(PyUnicode_AsUTF8(*value)));
+	} else if (PyList_Check(*value)) {
+		auto size = PyList_Size(*value);
+		reindexer::VariantArray array;
+		array.reserve(size);
+		for (Py_ssize_t i = 0; i < size; ++i) {
+			auto item = PyList_GetItem(*value, i);
+			array.push_back(convert(&item));
+		}
+		return reindexer::Variant{array};
+	} else if (PyTuple_Check(*value)){
+		auto size = PyTuple_Size(*value);
+		reindexer::VariantArray array;
+		array.reserve(size);
+		for (Py_ssize_t i = 0; i < size; ++i) {
+			auto item = PyTuple_GetItem(*value, i);
+			array.push_back(convert(&item));
+		}
+		return reindexer::Variant{array};
 	} else {
 		throw reindexer::Error(ErrorCode::errParseJson,
 								std::string("Unexpected type, got ") + Py_TYPE(*value)->tp_name);

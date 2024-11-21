@@ -6,18 +6,17 @@
 #include "core/keyvalue/uuid.h"
 
 namespace pyreindexer {
-
 namespace {
-	const int VALUE_INT_64    = 0;
-	const int VALUE_DOUBLE    = 1;
-	const int VALUE_STRING    = 2;
-	const int VALUE_BOOL      = 3;
-	const int VALUE_NULL      = 4;
-	const int VALUE_INT       = 8;
-	const int VALUE_UNDEFINED = 9;
-	const int VALUE_COMPOSITE = 10;
-	const int VALUE_TUPLE     = 11;
-	const int VALUE_UUID      = 12;
+const int VALUE_INT_64    = 0;
+const int VALUE_DOUBLE    = 1;
+const int VALUE_STRING    = 2;
+const int VALUE_BOOL      = 3;
+const int VALUE_NULL      = 4;
+const int VALUE_INT       = 8;
+const int VALUE_UNDEFINED = 9;
+const int VALUE_COMPOSITE = 10;
+const int VALUE_TUPLE     = 11;
+const int VALUE_UUID      = 12;
 } // namespace
 
 QueryWrapper::QueryWrapper(DBInterface* db, std::string_view ns) : db_{db} {
@@ -36,6 +35,8 @@ void QueryWrapper::Where(std::string_view index, CondType condition, const std::
 		ser_.PutVariant(key);
 	}
 
+	putKeys(keys);
+
 	nextOperation_ = OpType::OpAnd;
 	++queriesCount_;
 }
@@ -45,11 +46,7 @@ void QueryWrapper::WhereSubQuery(QueryWrapper& query, CondType condition, const 
 	ser_.PutVarUint(nextOperation_);
 	ser_.PutVString(query.ser_.Slice());
 	ser_.PutVarUint(condition);
-
-	ser_.PutVarUint(keys.size());
-	for (const auto& key : keys) {
-		ser_.PutVariant(key);
-	}
+	putKeys(keys);
 
 	nextOperation_ = OpType::OpAnd;
 	++queriesCount_;
@@ -169,11 +166,7 @@ void QueryWrapper::Sort(std::string_view index, bool desc, const std::vector<rei
 	ser_.PutVarUint(QueryItemType::QuerySortIndex);
 	ser_.PutVString(index);
 	ser_.PutVarUint(desc? 1 : 0);
-
-	ser_.PutVarUint(keys.size());
-	for (const auto& key : keys) {
-		ser_.PutVariant(key);
-	}
+	putKeys(keys);
 }
 
 void QueryWrapper::LogOp(OpType op) {
@@ -301,7 +294,7 @@ void QueryWrapper::SetObject(std::string_view field, const std::vector<std::stri
 	ser_.PutVarUint(values.size() > 1? 1 : 0); // is array flag
 	for (const auto& value : values) {
 		ser_.PutVarUint(0); // function/value flag
-		ser_.PutVarUint(TagType::TAG_STRING); // type ID
+		ser_.PutVarUint(VALUE_STRING); // type ID
 		ser_.PutVString(value);
 		break;
 	}
@@ -367,4 +360,10 @@ void QueryWrapper::AddEqualPosition(const std::vector<std::string>& equalPositio
 	}
 }
 
+void QueryWrapper::putKeys(const std::vector<reindexer::Variant>& keys) {
+	ser_.PutVarUint(keys.size());
+	for (const auto& key : keys) {
+		ser_.PutVariant(key);
+	}
+}
 }  // namespace pyreindexer
