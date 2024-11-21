@@ -129,15 +129,14 @@ class TestQuerySelect:
         # Then ("Check that result is empty")
         assert_that(query_result, empty(), "Wrong query results")
 
-    # ToDo
-    #     def test_query_select_where_composite(self, db, namespace, composite_index, items):
-    #         # Given("Create namespace with composite index")
-    #         # Given ("Create new query")
-    #         query = db.query.new(namespace)
-    #         # When ("Make select query with where_composite")
-    #         query_result = list(query.where_composite("comp_idx", CondType.CondEq, 1, "testval1").must_execute())
-    #         # Then ("Check that selected item is in result")
-    #         assert_that(query_result, equal_to([items[1]]), "Wrong query results")
+    def test_query_select_where_composite(self, db, namespace, composite_index, items):
+        # Given("Create namespace with composite index")
+        # Given ("Create new query")
+        query = db.query.new(namespace)
+        # When ("Make select query with where_composite")
+        query_result = list(query.where_composite("comp_idx", CondType.CondEq, (1, "testval1")).must_execute())
+        # Then ("Check that selected item is in result")
+        assert_that(query_result, equal_to([items[1]]), "Wrong query results")
 
     def test_query_select_where_uuid(self, db, namespace, index):
         # Given("Create namespace with index")

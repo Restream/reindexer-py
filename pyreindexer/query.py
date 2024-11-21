@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from enum import Enum
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 from pyreindexer.point import Point
 from pyreindexer.query_results import QueryResults
@@ -77,8 +78,8 @@ class Query:
         self.err_msg: str = ''
         self.root: Optional[Query] = None
         self.join_type: JoinType = JoinType.LeftJoin
-        self.join_queries: List[Query] = []
-        self.merged_queries: List[Query] = []
+        self.join_queries: list[Query] = []
+        self.merged_queries: list[Query] = []
 
     def __del__(self):
         """Frees query memory
@@ -100,27 +101,42 @@ class Query:
             raise Exception(self.err_msg)
 
     @staticmethod
-    def __convert_to_list(param: tuple[list[simple_types], ...]) -> list[list[simple_types]]:
+    def __convert_to_list(param: Union[simple_types, tuple[list[simple_types], ...]]) -> list:
         """Converts an input parameter to a list of lists
 
         #### Arguments:
-            param (list[simple_types], ...): The input parameter
+            param (union[simple_types, (list[simple_types], ...)]): The input parameter
 
         #### Returns:
-            list[list[union[int, bool, float, str]]]: Always converted to a list of lists
+            list[union[union[int, bool, float, str], list[union[int, bool, float, str]]]:
+                Always converted to a list of lists
 
         """
 
-        result = list(list()) if param is None else param
-        result = result if isinstance(result, list) else list(result)
-        return result
+        if param is None:
+            return list()
+
+        if isinstance(param, str) or not isinstance(param, Iterable):
+            result: list = [param]
+            return result
+
+        if isinstance(param, list):
+            return param
+
+        res = param
+        if not isinstance(res, list):
+            res = list(res)
+        if len(res) == 0 or (len(res) > 0 and not isinstance(res[0], list)):
+            wrap : list = [res]
+            res = wrap
+        return res
 
     @staticmethod
     def __convert_strs_to_list(param: tuple[str, ...]) -> list[str]:
         """Converts an input parameter to a list
 
         #### Arguments:
-            param (list[*string]): The input parameter
+            param (tuple[string, ...]): The input parameter
 
         #### Returns:
             list[string]: Always converted to a list
@@ -130,7 +146,36 @@ class Query:
         result = list() if param is None else list(param)
         return result
 
-    def __where(self, index: str, condition: CondType, keys: tuple[list[simple_types], ...]) -> Query:
+    def __where(self, index: str, condition: CondType,
+                keys: Union[simple_types, tuple[list[simple_types], ...]]) -> Query:
+        """Adds where condition to DB query with args
+
+        #### Arguments:
+            index (string): Field name used in condition clause
+            condition (:enum:`CondType`): Type of condition
+            keys (union[simple_types, (list[simple_types], ...)]):
+                Value of index to be compared with. For composite indexes keys must be list,
+                with value of each sub-index
+
+        #### Returns:
+            (:obj:`Query`): Query object for further customizations
+
+        #### Raises:
+            Exception: Raises with an error message of API return on non-zero error code
+
+        """
+
+        if condition == CondType.CondDWithin:
+            raise Exception("In this case, use a special method 'dwithin'")
+
+        params = self.__convert_to_list(keys)
+
+        self.err_code, self.err_msg = self.api.where(self.query_wrapper_ptr, index, condition.value, params)
+        self.__raise_on_error()
+        return self
+
+    def where(self, index: str, condition: CondType,
+              keys: Union[simple_types, tuple[list[simple_types],...]]) -> Query:
         """Adds where condition to DB query with args
 
         #### Arguments:
@@ -148,44 +193,16 @@ class Query:
 
         """
 
-        if condition == CondType.CondDWithin:
-            raise Exception("In this case, use a special method 'dwithin'")
-
-        params = self.__convert_to_list(keys)
-        print('===================== keys: ' + str(keys)) # ToDo
-        print('===================== params: ' + str(params)) # ToDo
-
-        self.err_code, self.err_msg = self.api.where(self.query_wrapper_ptr, index, condition.value, params)
-        self.__raise_on_error()
-        return self
-
-    def where(self, index: str, condition: CondType, keys: tuple[list[simple_types], ...]) -> Query:
-        """Adds where condition to DB query with args
-
-        #### Arguments:
-            index (string): Field name used in condition clause
-            condition (:enum:`CondType`): Type of condition
-            keys (*list[simple_types]):
-                Value of index to be compared with. For composite indexes keys must be list,
-                with value of each sub-index
-
-        #### Returns:
-            (:obj:`Query`): Query object for further customizations
-
-        #### Raises:
-            Exception: Raises with an error message of API return on non-zero error code
-
-        """
-
         return self.__where(index, condition, keys)
 
-    def where_query(self, sub_query: Query, condition: CondType, keys: tuple[list[simple_types], ...]) -> Query:
+    def where_query(self, sub_query: Query, condition: CondType,
+                    keys: Union[simple_types, tuple[list[simple_types],...]]) -> Query:
         """Adds sub-query where condition to DB query with args
 
         #### Arguments:
             sub_query (:obj:`Query`): Field name used in condition clause
             condition (:enum:`CondType`): Type of condition
-            keys (*list[simple_types]):
+            keys (union[simple_types, (list[simple_types], ...)]):
                 Value of index to be compared with. For composite indexes keys must be list,
                 with value of each sub-index
 
@@ -226,7 +243,13 @@ class Query:
         #### Arguments:
             index (string): Field name used in condition clause
             condition (:enum:`CondType`): Type of condition
-            keys (*simple_types): Values of composite index to be compared with (value of each sub-index)
+            keys (list[simple_types], ...): Values of composite index to be compared with (value of each sub-index).
+                Supported variants:
+                    ([1, "test1"], [2, "test2"])
+                    [[1, "test1"], [2, "test2"]])
+                    ([1, "testval1"], )
+                    [[1, "testval1"]]
+                    (1, "testval1")
 
         #### Returns:
             (:obj:`Query`): Query object for further customizations
@@ -246,8 +269,8 @@ class Query:
         #### Arguments:
             index (string): Field name used in condition clause
             condition (:enum:`CondType`): Type of condition
-            keys (list[*string]): Value of index to be compared with. For composite indexes keys must be list,
-            with value of each sub-index
+            keys (*string): Value of index to be compared with. For composite indexes keys must be list,
+                with value of each sub-index
 
         #### Returns:
             (:obj:`Query`): Query object for further customizations
@@ -314,8 +337,8 @@ class Query:
 
         #### Arguments:
             index (string): Field name used in condition clause
-            keys (list[*string]): Value of index to be compared with. For composite indexes keys must be list,
-            with value of each sub-index
+            keys (*string): Value of index to be compared with. For composite indexes keys must be list,
+                with value of each sub-index
 
         #### Returns:
             (:obj:`Query`): Query object for further customizations
@@ -486,7 +509,7 @@ class Query:
             this method returns AggregationFacetRequest which has methods sort, limit and offset
 
         #### Arguments:
-            fields (list[*string]): Fields any data column name or `count`, fields should not be empty
+            fields (*string): Fields any data column name or `count`, fields should not be empty
 
         #### Returns:
             (:obj:`_AggregateFacet`): Request object for further customizations
@@ -499,14 +522,15 @@ class Query:
         self.__raise_on_error()
         return self._AggregateFacet(self)
 
-    def sort(self, index: str, desc: bool = False, keys: tuple[list[simple_types], ...] = None) -> Query:
+    def sort(self, index: str, desc: bool = False,
+             keys: Union[simple_types, tuple[list[simple_types],...]] = None) -> Query:
         """Applies sort order to return from query items. If values argument specified, then items equal to values,
             if found will be placed in the top positions. Forced sort is support for the first sorting field only
 
         #### Arguments:
             index (string): The index name
             desc (bool): Sort in descending order
-            keys (Union[None, simple_types, List[simple_types]]):
+            keys (union[simple_types, (list[simple_types], ...)]):
                 Value of index to match. For composite indexes keys must be list, with value of each sub-index
 
         #### Returns:
@@ -743,7 +767,7 @@ class Query:
         self.__raise_on_error()
         return number
 
-    def set_object(self, field: str, values: List[simple_types]) -> Query:
+    def set_object(self, field: str, values: list[simple_types]) -> Query:
         """Adds an update query to an object field for an update query
 
         #### Arguments:
@@ -764,7 +788,7 @@ class Query:
         self.__raise_on_error()
         return self
 
-    def set(self, field: str, values: List[simple_types]) -> Query:
+    def set(self, field: str, values: list[simple_types]) -> Query:
         """Adds a field update request to the update request
 
         #### Arguments:
@@ -829,7 +853,7 @@ class Query:
         if (self.root is not None) or (len(self.join_queries) > 0):
             raise Exception("Update does not support joined queries")
 
-        (self.err_code, self.err_msg, _,
+        (self.err_code, self.err_msg,
          wrapper_ptr, iter_count, total_count) = self.api.update_query(self.query_wrapper_ptr)
         self.__raise_on_error()
         return QueryResults(self.api, wrapper_ptr, iter_count, total_count)
@@ -1000,7 +1024,7 @@ class Query:
             If there are no fields in this list that meet these conditions, then the filter works as "*"
 
         #### Arguments:
-            fields (list[*string]): List of columns to be selected
+            fields (*string): List of columns to be selected
 
         #### Returns:
             (:obj:`Query`): Query object for further customizations
@@ -1020,7 +1044,7 @@ class Query:
         """Adds sql-functions to query
 
         #### Arguments:
-            functions (list[*string]): Functions declaration
+            functions (*string): Functions declaration
 
         #### Returns:
             (:obj:`Query`): Query object for further customizations
@@ -1040,7 +1064,7 @@ class Query:
         """Adds equal position fields to arrays queries
 
         #### Arguments:
-            equal_poses (list[*string]): Equal position fields to arrays queries
+            equal_poses (*string): Equal position fields to arrays queries
 
         #### Returns:
             (:obj:`Query`): Query object for further customizations

@@ -739,9 +739,8 @@ An object representing the context of a Reindexer query
 ### Query.where
 
 ```python
-def where(index: str,
-          condition: CondType,
-          keys: Union[simple_types, List[simple_types]] = None) -> Query
+def where(index: str, condition: CondType,
+          keys: Union[simple_types, tuple[list[simple_types], ...]]) -> Query
 ```
 
 Adds where condition to DB query with args
@@ -749,7 +748,7 @@ Adds where condition to DB query with args
 #### Arguments:
     index (string): Field name used in condition clause
     condition (:enum:`CondType`): Type of condition
-    keys (Union[None, simple_types, list[simple_types]]):
+    keys (list[simple_types], ...):
         Value of index to be compared with. For composite indexes keys must be list,
         with value of each sub-index
 
@@ -764,9 +763,9 @@ Adds where condition to DB query with args
 ### Query.where\_query
 
 ```python
-def where_query(sub_query: Query,
-                condition: CondType,
-                keys: Union[simple_types, List[simple_types]] = None) -> Query
+def where_query(
+        sub_query: Query, condition: CondType,
+        keys: Union[simple_types, tuple[list[simple_types], ...]]) -> Query
 ```
 
 Adds sub-query where condition to DB query with args
@@ -774,7 +773,7 @@ Adds sub-query where condition to DB query with args
 #### Arguments:
     sub_query (:obj:`Query`): Field name used in condition clause
     condition (:enum:`CondType`): Type of condition
-    keys (Union[None, simple_types, list[simple_types]]):
+    keys (union[simple_types, (list[simple_types], ...)]):
         Value of index to be compared with. For composite indexes keys must be list,
         with value of each sub-index
 
@@ -807,8 +806,8 @@ Adds sub-query where condition to DB query
 ### Query.where\_composite
 
 ```python
-def where_composite(index: str, condition: CondType, *keys:
-                    simple_types) -> Query
+def where_composite(index: str, condition: CondType,
+                    keys: tuple[list[simple_types], ...]) -> Query
 ```
 
 Adds where condition to DB query with interface args for composite indexes
@@ -816,10 +815,19 @@ Adds where condition to DB query with interface args for composite indexes
 #### Arguments:
     index (string): Field name used in condition clause
     condition (:enum:`CondType`): Type of condition
-    keys (*simple_types): Values of composite index to be compared with (value of each sub-index)
+    keys (list[simple_types], ...): Values of composite index to be compared with (value of each sub-index).
+        Supported variants:
+            ([1, "test1"], [2, "test2"])
+            [[1, "test1"], [2, "test2"]])
+            ([1, "testval1"], )
+            [[1, "testval1"]]
+            (1, "testval1")
 
 #### Returns:
     (:obj:`Query`): Query object for further customizations
+
+#### Raises:
+    Exception: Raises with an error message of API return on non-zero error code
 
 <a id="pyreindexer.query.Query.where_uuid"></a>
 
@@ -836,8 +844,8 @@ Adds where condition to DB query with UUID as string args.
 #### Arguments:
     index (string): Field name used in condition clause
     condition (:enum:`CondType`): Type of condition
-    keys (list[*string]): Value of index to be compared with. For composite indexes keys must be list,
-    with value of each sub-index
+    keys (*string): Value of index to be compared with. For composite indexes keys must be list,
+        with value of each sub-index
 
 #### Returns:
     (:obj:`Query`): Query object for further customizations
@@ -908,8 +916,8 @@ Adds string EQ-condition to DB query with string args
 
 #### Arguments:
     index (string): Field name used in condition clause
-    keys (list[*string]): Value of index to be compared with. For composite indexes keys must be list,
-    with value of each sub-index
+    keys (*string): Value of index to be compared with. For composite indexes keys must be list,
+        with value of each sub-index
 
 #### Returns:
     (:obj:`Query`): Query object for further customizations
@@ -1028,7 +1036,7 @@ Gets fields facet value. Applicable to multiple data fields and the result of th
     this method returns AggregationFacetRequest which has methods sort, limit and offset
 
 #### Arguments:
-    fields (list[*string]): Fields any data column name or `count`, fields should not be empty
+    fields (*string): Fields any data column name or `count`, fields should not be empty
 
 #### Returns:
     (:obj:`_AggregateFacet`): Request object for further customizations
@@ -1038,9 +1046,11 @@ Gets fields facet value. Applicable to multiple data fields and the result of th
 ### Query.sort
 
 ```python
-def sort(index: str,
-         desc: bool = False,
-         keys: Union[simple_types, List[simple_types]] = None) -> Query
+def sort(
+        index: str,
+        desc: bool = False,
+        keys: Union[simple_types, tuple[list[simple_types],
+                                        ...]] = None) -> Query
 ```
 
 Applies sort order to return from query items. If values argument specified, then items equal to values,
@@ -1049,7 +1059,7 @@ Applies sort order to return from query items. If values argument specified, the
 #### Arguments:
     index (string): The index name
     desc (bool): Sort in descending order
-    keys (Union[None, simple_types, List[simple_types]]):
+    keys (union[simple_types, (list[simple_types], ...)]):
         Value of index to match. For composite indexes keys must be list, with value of each sub-index
 
 #### Returns:
@@ -1305,7 +1315,7 @@ Executes a query, and delete items, matches query
 ### Query.set\_object
 
 ```python
-def set_object(field: str, values: List[simple_types]) -> Query
+def set_object(field: str, values: list[simple_types]) -> Query
 ```
 
 Adds an update query to an object field for an update query
@@ -1325,7 +1335,7 @@ Adds an update query to an object field for an update query
 ### Query.set
 
 ```python
-def set(field: str, values: List[simple_types]) -> Query
+def set(field: str, values: list[simple_types]) -> Query
 ```
 
 Adds a field update request to the update request
@@ -1530,7 +1540,7 @@ Sets list of columns in this namespace to be finally selected.
     If there are no fields in this list that meet these conditions, then the filter works as "*"
 
 #### Arguments:
-    fields (list[*string]): List of columns to be selected
+    fields (*string): List of columns to be selected
 
 #### Returns:
     (:obj:`Query`): Query object for further customizations
@@ -1549,7 +1559,7 @@ def functions(*functions: str) -> Query
 Adds sql-functions to query
 
 #### Arguments:
-    functions (list[*string]): Functions declaration
+    functions (*string): Functions declaration
 
 #### Returns:
     (:obj:`Query`): Query object for further customizations
@@ -1568,7 +1578,7 @@ def equal_position(*equal_position: str) -> Query
 Adds equal position fields to arrays queries
 
 #### Arguments:
-    equal_poses (list[*string]): Equal position fields to arrays queries
+    equal_poses (*string): Equal position fields to arrays queries
 
 #### Returns:
     (:obj:`Query`): Query object for further customizations
