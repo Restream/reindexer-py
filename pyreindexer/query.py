@@ -100,43 +100,43 @@ class Query:
             raise Exception(self.err_msg)
 
     @staticmethod
-    def __convert_to_list(param: Union[simple_types, List[simple_types]]) -> List[simple_types]:
-        """Converts an input parameter to a list
+    def __convert_to_list(param: tuple[list[simple_types], ...]) -> list[list[simple_types]]:
+        """Converts an input parameter to a list of lists
 
         #### Arguments:
-            param (Union[None, simple_types, list[simple_types]]): The input parameter
+            param (list[simple_types], ...): The input parameter
 
         #### Returns:
-            List[Union[int, bool, float, str]]: Always converted to a list
+            list[list[union[int, bool, float, str]]]: Always converted to a list of lists
 
         """
 
-        param = [] if param is None else param
-        param = param if isinstance(param, list) else [param]
-        return param
+        result = list(list()) if param is None else param
+        result = result if isinstance(result, list) else list(result)
+        return result
 
     @staticmethod
-    def __convert_strs_to_list(param: tuple[str, ...]) -> List[str]:
+    def __convert_strs_to_list(param: tuple[str, ...]) -> list[str]:
         """Converts an input parameter to a list
 
         #### Arguments:
             param (list[*string]): The input parameter
 
         #### Returns:
-            List[string]: Always converted to a list
+            list[string]: Always converted to a list
 
         """
 
-        param = [] if param is None else param
-        return list(param)
+        result = list() if param is None else list(param)
+        return result
 
-    def where(self, index: str, condition: CondType, keys: Union[simple_types, List[simple_types]] = None) -> Query:
+    def __where(self, index: str, condition: CondType, keys: tuple[list[simple_types], ...]) -> Query:
         """Adds where condition to DB query with args
 
         #### Arguments:
             index (string): Field name used in condition clause
             condition (:enum:`CondType`): Type of condition
-            keys (Union[None, simple_types, list[simple_types]]):
+            keys (list[simple_types], ...):
                 Value of index to be compared with. For composite indexes keys must be list,
                 with value of each sub-index
 
@@ -148,23 +148,24 @@ class Query:
 
         """
 
-        params: list = self.__convert_to_list(keys)
-
         if condition == CondType.CondDWithin:
             raise Exception("In this case, use a special method 'dwithin'")
+
+        params = self.__convert_to_list(keys)
+        print('===================== keys: ' + str(keys)) # ToDo
+        print('===================== params: ' + str(params)) # ToDo
 
         self.err_code, self.err_msg = self.api.where(self.query_wrapper_ptr, index, condition.value, params)
         self.__raise_on_error()
         return self
 
-    def where_query(self, sub_query: Query, condition: CondType,
-                    keys: Union[simple_types, List[simple_types]] = None) -> Query:
-        """Adds sub-query where condition to DB query with args
+    def where(self, index: str, condition: CondType, keys: tuple[list[simple_types], ...]) -> Query:
+        """Adds where condition to DB query with args
 
         #### Arguments:
-            sub_query (:obj:`Query`): Field name used in condition clause
+            index (string): Field name used in condition clause
             condition (:enum:`CondType`): Type of condition
-            keys (Union[None, simple_types, list[simple_types]]):
+            keys (*list[simple_types]):
                 Value of index to be compared with. For composite indexes keys must be list,
                 with value of each sub-index
 
@@ -176,7 +177,27 @@ class Query:
 
         """
 
-        params: list = self.__convert_to_list(keys)
+        return self.__where(index, condition, keys)
+
+    def where_query(self, sub_query: Query, condition: CondType, keys: tuple[list[simple_types], ...]) -> Query:
+        """Adds sub-query where condition to DB query with args
+
+        #### Arguments:
+            sub_query (:obj:`Query`): Field name used in condition clause
+            condition (:enum:`CondType`): Type of condition
+            keys (*list[simple_types]):
+                Value of index to be compared with. For composite indexes keys must be list,
+                with value of each sub-index
+
+        #### Returns:
+            (:obj:`Query`): Query object for further customizations
+
+        #### Raises:
+            Exception: Raises with an error message of API return on non-zero error code
+
+        """
+
+        params = self.__convert_to_list(keys)
 
         self.err_code, self.err_msg = self.api.where_subquery(self.query_wrapper_ptr, sub_query.query_wrapper_ptr,
                                                               condition.value, params)
@@ -199,7 +220,7 @@ class Query:
         self.api.where_field_subquery(self.query_wrapper_ptr, index, condition.value, sub_query.query_wrapper_ptr)
         return self
 
-    def where_composite(self, index: str, condition: CondType, *keys: simple_types) -> Query:
+    def where_composite(self, index: str, condition: CondType, keys: tuple[list[simple_types], ...]) -> Query:
         """Adds where condition to DB query with interface args for composite indexes
 
         #### Arguments:
@@ -210,10 +231,12 @@ class Query:
         #### Returns:
             (:obj:`Query`): Query object for further customizations
 
+        #### Raises:
+            Exception: Raises with an error message of API return on non-zero error code
+
         """
 
-        param = [key for key in keys]
-        return self.where(index, condition, param)
+        return self.__where(index, condition, keys)
 
     def where_uuid(self, index: str, condition: CondType, *keys: str) -> Query:
         """Adds where condition to DB query with UUID as string args.
@@ -476,7 +499,7 @@ class Query:
         self.__raise_on_error()
         return self._AggregateFacet(self)
 
-    def sort(self, index: str, desc: bool = False, keys: Union[simple_types, List[simple_types]] = None) -> Query:
+    def sort(self, index: str, desc: bool = False, keys: tuple[list[simple_types], ...] = None) -> Query:
         """Applies sort order to return from query items. If values argument specified, then items equal to values,
             if found will be placed in the top positions. Forced sort is support for the first sorting field only
 
@@ -494,7 +517,7 @@ class Query:
 
         """
 
-        params: list = self.__convert_to_list(keys)
+        params = self.__convert_to_list(keys)
 
         self.err_code, self.err_msg = self.api.sort(self.query_wrapper_ptr, index, desc, params)
         self.__raise_on_error()
@@ -806,7 +829,7 @@ class Query:
         if (self.root is not None) or (len(self.join_queries) > 0):
             raise Exception("Update does not support joined queries")
 
-        (self.err_code, self.err_msg,
+        (self.err_code, self.err_msg, _,
          wrapper_ptr, iter_count, total_count) = self.api.update_query(self.query_wrapper_ptr)
         self.__raise_on_error()
         return QueryResults(self.api, wrapper_ptr, iter_count, total_count)
