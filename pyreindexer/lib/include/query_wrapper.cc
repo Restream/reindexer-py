@@ -29,12 +29,6 @@ void QueryWrapper::Where(std::string_view index, CondType condition, const std::
 	ser_.PutVString(index);
 	ser_.PutVarUint(nextOperation_);
 	ser_.PutVarUint(condition);
-
-	ser_.PutVarUint(keys.size());
-	for (const auto& key : keys) {
-		ser_.PutVariant(key);
-	}
-
 	putKeys(keys);
 
 	nextOperation_ = OpType::OpAnd;
