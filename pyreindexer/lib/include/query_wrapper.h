@@ -64,7 +64,7 @@ public:
 
 	void Drop(std::string_view field);
 
-	void Join(JoinType type, unsigned joinQueryIndex, QueryWrapper* joinQuery);
+	void Join(JoinType type, QueryWrapper* joinQuery);
 	void Merge(QueryWrapper* mergeQuery);
 
 	reindexer::Error On(std::string_view joinField, CondType condition, std::string_view joinIndex);

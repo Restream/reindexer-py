@@ -231,6 +231,10 @@ reindexer::Error QueryWrapper::prepareQuery(reindexer::Query& query) {
 		}
 	} catch (const reindexer::Error& err) {
 		error = err;
+	} catch (const std::exception& ex) {
+		error = reindexer::Error(ErrorCode::errQueryExec, ex.what());
+	} catch (...) {
+		error = reindexer::Error(ErrorCode::errQueryExec, "Internal error");
 	}
 
 	return error;
@@ -299,7 +303,7 @@ void QueryWrapper::Drop(std::string_view field) {
 	ser_.PutVString(field);
 }
 
-void QueryWrapper::Join(JoinType type, unsigned joinQueryIndex, QueryWrapper* joinQuery) {
+void QueryWrapper::Join(JoinType type, QueryWrapper* joinQuery) {
 	assert(joinQuery);
 
 	joinType_ = type;
@@ -307,10 +311,14 @@ void QueryWrapper::Join(JoinType type, unsigned joinQueryIndex, QueryWrapper* jo
 		nextOperation_ = OpType::OpAnd;
 		joinType_ = JoinType::OrInnerJoin;
 	}
-	ser_.PutVarUint(QueryJoinCondition);
-	ser_.PutVarUint(joinType_);
-	ser_.PutVarUint(joinQueryIndex);
 
+	if (joinType_ != JoinType::LeftJoin) {
+		ser_.PutVarUint(QueryJoinCondition);
+		ser_.PutVarUint(joinType_);
+		ser_.PutVarUint(joinQueries_.size());
+	}
+
+	joinQuery->joinType_ = type;
 	joinQueries_.push_back(joinQuery);
 }
 

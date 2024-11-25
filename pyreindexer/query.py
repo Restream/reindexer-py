@@ -181,7 +181,7 @@ class Query:
         #### Arguments:
             index (string): Field name used in condition clause
             condition (:enum:`CondType`): Type of condition
-            keys (list[simple_types], ...):
+            keys (union[simple_types, (list[simple_types], ...)]):
                 Value of index to be compared with. For composite indexes keys must be list,
                 with value of each sub-index
 
@@ -858,7 +858,6 @@ class Query:
         self.__raise_on_error()
         return QueryResults(self.api, wrapper_ptr, iter_count, total_count)
 
-
     def must_execute(self) -> QueryResults:
         """Executes a query, and update fields in items, which matches query, with status check
 
@@ -918,9 +917,8 @@ class Query:
         if query.root is not None:
             raise Exception("Query.join call on already joined query. You should create new Query")
 
-        if join_type is not JoinType.LeftJoin:
-            # index of join query
-            self.api.join(self.query_wrapper_ptr, join_type.value, len(self.join_queries), query.query_wrapper_ptr)
+        # index of join query
+        self.api.join(self.query_wrapper_ptr, join_type.value, query.query_wrapper_ptr)
 
         query.join_type = join_type
         query.root = self

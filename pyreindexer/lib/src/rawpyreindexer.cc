@@ -1135,15 +1135,14 @@ static PyObject* SetExpression(PyObject* self, PyObject* args) {
 static PyObject* Join(PyObject* self, PyObject* args) {
 	uintptr_t queryWrapperAddr = 0;
 	unsigned type = 0;
-	unsigned index = 0;
 	uintptr_t queryWrapperAddrJoin = 0;
-	if (!PyArg_ParseTuple(args, "kIIk", &queryWrapperAddr, &type, &index, &queryWrapperAddrJoin)) {
+	if (!PyArg_ParseTuple(args, "kIk", &queryWrapperAddr, &type, &queryWrapperAddrJoin)) {
 		return nullptr;
 	}
 
 	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
 	auto queryJoin = getWrapper<QueryWrapper>(queryWrapperAddrJoin);
-	query->Join(JoinType(type), index, queryJoin);
+	query->Join(JoinType(type), queryJoin);
 
 	Py_RETURN_NONE;
 }
