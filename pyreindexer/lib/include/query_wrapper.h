@@ -77,7 +77,7 @@ public:
 	DBInterface* GetDB() const { return db_; }
 
 private:
-	void addJoinQueries(const std::vector<QueryWrapper*>& joinQueries, reindexer::Query& query) const;
+	void addJoinQueries(const std::vector<QueryWrapper*>& queries, reindexer::WrSerializer& buffer) const;
 	reindexer::Error prepareQuery(reindexer::Query& query);
 	void putKeys(const std::vector<reindexer::Variant>& keys);
 

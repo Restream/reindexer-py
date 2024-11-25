@@ -521,32 +521,31 @@ class TestQuerySelectSort:
                     raises(Exception, pattern=err_msg))
 
 
-# ToDo implement List<Actor> joinedActors = QueryResult.getJoinedActors();
-# class TestQuerySelectJoin:
-#    def test_query_select_left_join(self, db, namespace, index, items, second_namespace):
-#        # Given("Create two namespaces")
-#        second_namespace, item2 = second_namespace
-#        # Given ("Create two queries for join")
-#        query1 = db.query.new(namespace).where("id", CondType.CondLt, 3)
-#        query2 = db.query.new(second_namespace)
-#        # When ("Make select query with join")
-#        query_result = list(query1.join(query2, "joined").on("id", CondType.CondEq, "id").must_execute())
-#        # Then ("Check that joined item is in result")
-#        item_with_joined = {"id": 1, "joined": [item2]}
-#        items[1] = item_with_joined
-#        assert_that(query_result, equal_to(items[:3]), "Wrong selected items with JOIN")
-#
-#    def test_query_select_inner_join(self, db, namespace, index, items, second_namespace):
-#        # Given("Create two namespaces")
-#        second_namespace, item2 = second_namespace
-#        # Given ("Create two queries for join")
-#        query1 = db.query.new(namespace)
-#        query2 = db.query.new(second_namespace)
-#        # When ("Make select query with join")
-#        query_result = list(query1.inner_join(query2, "id").on("id", CondType.CondEq, "id").must_execute())
-#        # Then ("Check that joined item is in result")
-#        item_with_joined = {'id': 1, f'joined_{second_namespace}': [item2]}
-#        assert_that(query_result, equal_to([item_with_joined]), "Wrong selected items with JOIN")
+class TestQuerySelectJoin:
+    def test_query_select_left_join(self, db, namespace, index, items, second_namespace):
+        # Given("Create two namespaces")
+        second_namespace, item2 = second_namespace
+        # Given ("Create two queries for join")
+        query1 = db.query.new(namespace).where("id", CondType.CondLt, 3)
+        query2 = db.query.new(second_namespace)
+        # When ("Make select query with join")
+        query_result = list(query1.join(query2, "joined").on("id", CondType.CondEq, "id").must_execute())
+        # Then ("Check that joined item is in result")
+        item_with_joined = {'id': 1, 'val': 'testval1', f'joined_{second_namespace}': [item2]}
+        items[1] = item_with_joined
+        assert_that(query_result, equal_to(items[:3]), "Wrong selected items with JOIN")
+
+    def test_query_select_inner_join(self, db, namespace, index, items, second_namespace):
+        # Given("Create two namespaces")
+        second_namespace, item2 = second_namespace
+        # Given ("Create two queries for join")
+        query1 = db.query.new(namespace)
+        query2 = db.query.new(second_namespace)
+        # When ("Make select query with join")
+        query_result = list(query1.inner_join(query2, "id").on("id", CondType.CondEq, "id").must_execute())
+        # Then ("Check that joined item is in result")
+        item_with_joined = {'id': 1, 'val': 'testval1', f'joined_{second_namespace}': [item2]}
+        assert_that(query_result, equal_to([item_with_joined]), "Wrong selected items with JOIN")
 
 
 class TestQueryUpdate:

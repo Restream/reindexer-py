@@ -195,40 +195,40 @@ void QueryWrapper::Modifier(QueryItemType type) {
 }
 
 namespace {
-reindexer::Serializer prepareQueryData(reindexer::WrSerializer& data) {
-	reindexer::WrSerializer buffer;
+void serializeQuery(reindexer::WrSerializer& data, reindexer::WrSerializer& buffer) {
 	buffer.Write(data.Slice()); // do full copy of query data
 	buffer.PutVarUint(QueryItemType::QueryEnd); // close query data
-	return {buffer.Buf(), buffer.Len()};
 }
 
-reindexer::JoinedQuery createJoinedQuery(JoinType joinType, reindexer::WrSerializer& data) {
-	reindexer::Serializer jser = prepareQueryData(data);
-	return {joinType, reindexer::Query::Deserialize(jser)};
+void serializeJoinQuery(JoinType type, reindexer::WrSerializer& data, reindexer::WrSerializer& buffer) {
+	buffer.PutVarUint(type);
+	serializeQuery(data, buffer);
 }
-}  // namespace
+} // namespace
 
-void QueryWrapper::addJoinQueries(const std::vector<QueryWrapper*>& joinQueries, reindexer::Query& query) const {
-	for (auto joinQuery : joinQueries) {
-		auto jq = createJoinedQuery(joinQuery->joinType_, joinQuery->ser_);
-		query.AddJoinQuery(std::move(jq));
+void QueryWrapper::addJoinQueries(const std::vector<QueryWrapper*>& queries, reindexer::WrSerializer& buffer) const {
+	for (auto query : queries) {
+		serializeJoinQuery(query->joinType_, query->ser_, buffer);
 	}
 }
 
 reindexer::Error QueryWrapper::prepareQuery(reindexer::Query& query) {
 	reindexer::Error error = errOK;
 	try {
-		reindexer::Serializer ser = prepareQueryData(ser_);
-		query = reindexer::Query::Deserialize(ser);
+		// current query (root)
+		reindexer::WrSerializer buffer;
+		serializeQuery(ser_, buffer);
 
-		addJoinQueries(joinQueries_, query);
+		addJoinQueries(joinQueries_, buffer);
 
 		for (auto mergedQuery : mergedQueries_) {
-			auto mq = createJoinedQuery(JoinType::Merge, mergedQuery->ser_);
-			query.Merge(std::move(mq));
+			serializeJoinQuery(JoinType::Merge, mergedQuery->ser_, buffer);
 
-			addJoinQueries(mergedQuery->joinQueries_, mq);
+			addJoinQueries(mergedQuery->joinQueries_, buffer);
 		}
+
+		reindexer::Serializer fullQueryData{buffer.Buf(), buffer.Len()};
+		query = reindexer::Query::Deserialize(fullQueryData);
 	} catch (const reindexer::Error& err) {
 		error = err;
 	} catch (const std::exception& ex) {
