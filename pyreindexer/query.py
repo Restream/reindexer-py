@@ -57,7 +57,6 @@ class Query:
         err_code (int): The API error code
         err_msg (string): The API error message
         root (:object: Optional[`Query`]): The root query of the Reindexer query
-        join_type (:enum:`JoinType`): Join type
         join_queries (list[:object:`Query`]): The list of join Reindexer query objects
         merged_queries (list[:object:`Query`]): The list of merged Reindexer query objects
 
@@ -77,7 +76,6 @@ class Query:
         self.err_code: int = 0
         self.err_msg: str = ''
         self.root: Optional[Query] = None
-        self.join_type: JoinType = JoinType.LeftJoin
         self.join_queries: list[Query] = []
         self.merged_queries: list[Query] = []
 
@@ -920,7 +918,6 @@ class Query:
         # index of join query
         self.api.join(self.query_wrapper_ptr, join_type.value, query.query_wrapper_ptr)
 
-        query.join_type = join_type
         query.root = self
         self.join_queries.append(query)
         return query

@@ -318,7 +318,7 @@ void QueryWrapper::Join(JoinType type, QueryWrapper* joinQuery) {
 		ser_.PutVarUint(joinQueries_.size());
 	}
 
-	joinQuery->joinType_ = type;
+	joinQuery->joinType_ = joinType_;
 	joinQueries_.push_back(joinQuery);
 }
 
