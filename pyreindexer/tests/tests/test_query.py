@@ -27,9 +27,10 @@ class TestQuerySelect:
         # Given ("Create new query")
         query = db.query.new(namespace)
         # When ("Make select query")
-        query_result = list(query.where("arr", CondType.CondEq, [3]).must_execute())
+        query_result = list(query.where("arr", CondType.CondEq, [2, 3]).must_execute())
         # Then ("Check that selected item is in result")
-        assert_that(query_result, equal_to([items[2], items[3]]), "Wrong query results")
+        expected_items = [items[i] for i in [1, 2, 3]]
+        assert_that(query_result, equal_to(expected_items), "Wrong query results")
 
     def test_query_select_all(self, db, namespace, index, items):
         # Given("Create namespace with index and items")
@@ -102,9 +103,9 @@ class TestQuerySelect:
         # Given("Create namespace with index and items")
         # Given ("Create new query")
         sub_query = (db.query.new(namespace)
-                        .select("id")
-                        .where("id", CondType.CondLt, 5)
-                        .where("id", CondType.CondGe, 2))
+                     .select("id")
+                     .where("id", CondType.CondLt, 5)
+                     .where("id", CondType.CondGe, 2))
         # When ("Make select query with where_subquery")
         query_result = list(db.query.new(namespace).where_subquery('id', CondType.CondSet, sub_query).execute())
         # Then ("Check that selected item is in result")
@@ -137,6 +138,20 @@ class TestQuerySelect:
         query_result = list(query.where_composite("comp_idx", CondType.CondEq, (1, "testval1")).must_execute())
         # Then ("Check that selected item is in result")
         assert_that(query_result, equal_to([items[1]]), "Wrong query results")
+
+    @pytest.mark.parametrize("value", [
+        [[1, "testval1"], [2, "testval2"]],
+        [(1, "testval1"), (2, "testval2")],
+        ([1, "testval1"], [2, "testval2"])
+    ])
+    def test_query_select_where_composite_multiple_results(self, db, namespace, composite_index, items, value):
+        # Given("Create namespace with composite index")
+        # Given ("Create new query")
+        query = db.query.new(namespace)
+        # When ("Make select query with where_composite")
+        query_result = list(query.where_composite("comp_idx", CondType.CondEq, value).must_execute())
+        # Then ("Check that selected item is in result")
+        assert_that(query_result, equal_to([items[1], items[2]]), "Wrong query results")
 
     def test_query_select_where_uuid(self, db, namespace, index):
         # Given("Create namespace with index")
@@ -275,10 +290,8 @@ class TestQuerySelect:
         expected_ft_content = ["one <word>", "<sword> two", "three <work> 333"]
         assert_that(query_results_ft, contains_inanyorder(*expected_ft_content), "Wrong query results")
 
-    def test_query_select_merge(self, db, namespace, index, items, second_namespace):
-        # Given("Create namespace with index and items")
-        # Given("Create second namespace with index and items")
-        second_namespace, item2 = second_namespace
+    def test_query_select_merge(self, db, namespace, index, items, second_namespace, second_item):
+        # Given("Create two namespaces with index and items")
         # Given ("Create new query")
         query1 = db.query.new(namespace).where("id", CondType.CondEq, 2)
         # Given ("Create second query")
@@ -286,7 +299,7 @@ class TestQuerySelect:
         # When ("Make select query with merge")
         query_result = list(query1.merge(query2).must_execute())
         # Then ("Check that selected item is in result with merge applied")
-        assert_that(query_result, equal_to([items[2], item2]), "Wrong query results")
+        assert_that(query_result, equal_to([items[2], second_item]), "Wrong query results")
 
     def test_query_select_explain(self, db, namespace, index, items):
         # Given("Create namespace with index and items")
@@ -522,29 +535,118 @@ class TestQuerySelectSort:
 
 
 class TestQuerySelectJoin:
-    def test_query_select_left_join(self, db, namespace, index, items, second_namespace):
-        # Given("Create two namespaces")
-        second_namespace, item2 = second_namespace
+    def test_query_select_left_join(self, db, namespace, index, items, second_namespace, second_item):
+        # Given("Create two namespaces with index and items")
         # Given ("Create two queries for join")
         query1 = db.query.new(namespace).where("id", CondType.CondLt, 3)
         query2 = db.query.new(second_namespace)
         # When ("Make select query with join")
         query_result = list(query1.join(query2, "joined").on("id", CondType.CondEq, "id").must_execute())
         # Then ("Check that joined item is in result")
-        item_with_joined = {'id': 1, 'val': 'testval1', f'joined_{second_namespace}': [item2]}
+        item_with_joined = {"id": 1, "val": "testval1", f"joined_{second_namespace}": [second_item]}
         items[1] = item_with_joined
         assert_that(query_result, equal_to(items[:3]), "Wrong selected items with JOIN")
 
-    def test_query_select_inner_join(self, db, namespace, index, items, second_namespace):
-        # Given("Create two namespaces")
-        second_namespace, item2 = second_namespace
+    def test_query_select_inner_join(self, db, namespace, index, items, second_namespace, second_item):
+        # Given("Create two namespaces with index and items")
         # Given ("Create two queries for join")
         query1 = db.query.new(namespace)
         query2 = db.query.new(second_namespace)
         # When ("Make select query with join")
-        query_result = list(query1.inner_join(query2, "id").on("id", CondType.CondEq, "id").must_execute())
+        query_result = list(query1.inner_join(query2, "joined").on("id", CondType.CondEq, "id").must_execute())
         # Then ("Check that joined item is in result")
-        item_with_joined = {'id': 1, 'val': 'testval1', f'joined_{second_namespace}': [item2]}
+        item_with_joined = {"id": 1, "val": "testval1", f"joined_{second_namespace}": [second_item]}
+        assert_that(query_result, equal_to([item_with_joined]), "Wrong selected items with JOIN")
+
+    def test_query_select_left_and_inner_join(self, db, namespace, index, items, second_namespace, second_items):
+        # Given("Create two namespaces with index and items")
+        # Given ("Create join query 1")
+        query1 = db.query.new(namespace).where("id", CondType.CondRange, [0, 5])
+        query2 = db.query.new(second_namespace).where("id", CondType.CondGe, 2)
+        join_query1 = query1.left_join(query2, "joined").on("id", CondType.CondEq, "id")
+        query3 = db.query.new(second_namespace).where("id", CondType.CondRange, [0, 2])
+        join_query2 = join_query1.inner_join(query3, "joined").on("id", CondType.CondEq, "id")
+        # When ("Make select query with join")
+        query_result = list(join_query2.must_execute())
+        # Then ("Check that joined items are in result")
+        expected_items = [
+            {"id": 1, "val": "testval1", f"joined_2_{second_namespace}": [second_items[0]]},
+            {"id": 2, "val": "testval2", f"joined_1_{second_namespace}": [second_items[1]],
+             f"joined_2_{second_namespace}": [second_items[1]]}
+        ]
+        assert_that(query_result, equal_to(expected_items), "Wrong selected items with JOIN")
+
+    def test_cannot_query_select_join_without_on(self, db, namespace, index, items, second_namespace, second_item):
+        # Given("Create two namespaces with index and items")
+        # Given ("Create two queries for join")
+        query1 = db.query.new(namespace)
+        query2 = db.query.new(second_namespace)
+        # When ("Try to ake select query join without on")
+        assert_that(calling(query1.inner_join(query2, "joined").execute).with_args(),
+                    raises(Exception, pattern="Join without ON conditions"))
+
+    def test_query_select_merge_with_joins(self, db, namespace, index, items, second_namespace, second_item):
+        # Given("Create two namespaces with index and items")
+        # Given ("Create join query 1")
+        query11 = db.query.new(namespace)
+        query12 = db.query.new(second_namespace)
+        join_query1 = query11.inner_join(query12, "joined").on("id", CondType.CondEq, "id")
+        # Given ("Create join query 2")
+        query21 = db.query.new(namespace).where("id", CondType.CondSet, [0, 1, 3])
+        query22 = db.query.new(second_namespace)
+        join_query2 = query21.join(query22, "joined").on("id", CondType.CondEq, "id")
+        # When ("Make select query with merge")
+        query_result = list(join_query1.merge(join_query2).must_execute())
+        # Then ("Check that selected items are in result with join and merge applied")
+        item_with_joined = {"id": 1, "val": "testval1", f"joined_{second_namespace}": [second_item]}
+        expected_items = [item_with_joined, items[0], item_with_joined, items[3]]
+        assert_that(query_result, equal_to(expected_items), "Wrong query results")
+
+    def test_query_select_join_with_merges(self, db, namespace, index, items, second_namespace, second_items):
+        # Given("Create two namespaces with index and items")
+        # Given ("Create merge query 1")
+        query11 = db.query.new(namespace).where("id", CondType.CondSet, [2, 3])
+        query12 = db.query.new(second_namespace).where("id", CondType.CondEq, 5)
+        merge_query1 = query11.merge(query12)
+        # Given ("Create merge query 2")
+        query21 = db.query.new(second_namespace).where("id", CondType.CondLt, 4).where("id", CondType.CondGe, 2)
+        query22 = db.query.new(namespace).where("id", CondType.CondRange, [3, 5])
+        merge_query2 = query21.merge(query22)
+        # When ("Make select query with join")
+        query_result = list(merge_query1.inner_join(merge_query2, "joined").on("id", CondType.CondEq, "id").execute())
+        # Then ("Check that selected items are in result with join and merge applied")
+        expected_items = [{"id": 2, "val": "testval2",
+                           f"joined_{second_namespace}": [{"id": 2, "second_ns_val": "second_ns_testval_2"}]},
+                          {"id": 3, "val": "testval3",
+                           f"joined_{second_namespace}": [{"id": 3, "second_ns_val": "second_ns_testval_3"}]},
+                          {"id": 5, "second_ns_val": "second_ns_testval_5"}]
+        assert_that(query_result, equal_to(expected_items), "Wrong query results")
+
+    def test_query_select_sort_and_inner_join(self, db, namespace, index, items, second_namespace, second_items):
+        # Given("Create two namespaces with index and items")
+        # Given ("Create two queries for join")
+        query1 = db.query.new(namespace).sort("id", True)
+        query2 = db.query.new(second_namespace)
+        # When ("Make select query with sort and join")
+        query_result = list(query1.inner_join(query2, "joined").on("id", CondType.CondEq, "id").must_execute())
+        # Then ("Check that joined items are in sorted result")
+        expected_items = [{"id": i, "val": f"testval{i}", f"joined_{second_namespace}": [second_items[i - 1]]}
+                          for i in range(5, 0, -1)]
+        assert_that(query_result, equal_to(expected_items), "Wrong selected items with JOIN")
+
+    def test_query_select_inner_join_sort_joined(self, db, namespace, index, items, second_namespace):
+        # Given("Create two namespaces with index and items")
+        items_2 = [{"id": 1, "age": 1}, {"id": 3, "age": 1}, {"id": 2, "age": 1}]
+        [db.item.insert(second_namespace, item) for item in items_2]
+        # Given ("Create two queries for join")
+        query1 = db.query.new(namespace)
+        query2 = db.query.new(second_namespace)
+        # When ("Make select query with join and sort")
+        query_result = list(query1.inner_join(query2, "joined").on("id", CondType.CondEq, "age")
+                            .sort("id").must_execute())
+        # Then ("Check that sorted joined items are in result")
+        sorted_items2 = sorted(items_2, key=lambda x: x["id"])
+        item_with_joined = {"id": 1, "val": "testval1", f"joined_{second_namespace}": sorted_items2}
         assert_that(query_result, equal_to([item_with_joined]), "Wrong selected items with JOIN")
 
 
@@ -640,7 +742,6 @@ class TestQueryUpdate:
         # Given ("Create new query")
         query = db.query.new(namespace)
         # When ("Try to make update drop query with not sparse index")
-        item = random.choice(items)
         assert_that(calling(query.drop("val").update).with_args(),
                     raises(Exception,
                            pattern="It's only possible to drop sparse or non-index fields via UPDATE statement!"))

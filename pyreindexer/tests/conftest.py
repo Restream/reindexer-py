@@ -192,11 +192,29 @@ def metadata(db, namespace):
 
 @pytest.fixture
 def second_namespace(db):
-    second_namespace_name = 'test_ns_for_join'
+    second_namespace_name = "test_ns_for_join"
     db.namespace.open(second_namespace_name)
     db.index.create(second_namespace_name, index_definition)
-    second_ns_item_definition = {"id": 100, "second_ns_val": "second_ns_testval"}
-    second_ns_item_definition_join = {"id": 1, "second_ns_val": "second_ns_testval_1"}
-    db.item.insert(second_namespace_name, second_ns_item_definition)
-    db.item.insert(second_namespace_name, second_ns_item_definition_join)
-    yield second_namespace_name, second_ns_item_definition_join
+    yield second_namespace_name
+    db.namespace.drop(second_namespace_name)
+
+
+@pytest.fixture
+def second_item(db, second_namespace):
+    """
+    Create item for the second namespace
+    """
+    item = {"id": 1, "second_ns_val": "second_ns_testval_1"}
+    db.item.insert(second_namespace, item)
+    yield item
+
+
+@pytest.fixture
+def second_items(db, second_namespace):
+    """
+    Create more items for the second namespace
+    """
+    items = [{"id": i, "second_ns_val": f"second_ns_testval_{i}"} for i in range(1, 6)]
+    for item in items:
+        db.item.insert(second_namespace, item)
+    yield items

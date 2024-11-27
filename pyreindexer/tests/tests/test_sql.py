@@ -10,15 +10,14 @@ class TestSqlQueries:
         # Then ("Check that selected item is in result")
         assert_that(items_list, equal_to([item]), "Can't SQL select data")
 
-    def test_sql_select_with_join(self, db, namespace, second_namespace, index, items):
+    def test_sql_select_with_join(self, db, namespace, index, items, second_namespace, second_item):
         # Given("Create two namespaces")
-        second_namespace, second_ns_item_definition_join = second_namespace
         # When ("Execute SQL query SELECT with JOIN")
         query = f"SELECT id FROM {namespace} INNER JOIN {second_namespace} " \
                 f"ON {namespace}.id = {second_namespace}.id"
         item_list = list(db.query.sql(query))
         # Then ("Check that selected item is in result")
-        item_with_joined = {'id': 1, f'joined_{second_namespace}': [second_ns_item_definition_join]}
+        item_with_joined = {'id': 1, f'joined_{second_namespace}': [second_item]}
         assert_that(item_list, equal_to([item_with_joined]),
                     "Can't SQL select data with JOIN")
 
