@@ -27,8 +27,7 @@ public:
 
 	void Wrap(QueryResultsT&& qres) {
 		qres_ = std::move(qres);
-		it_ = qres_.begin();
-		wrap_ = true;
+		it_ = qres_->begin();
 	}
 
 	Error Select(const std::string& query) {
@@ -36,50 +35,55 @@ public:
 	}
 
 	Error Status() {
-		assert(wrap_);
+		assert(qres_.has_value());
 		return it_.Status();
 	}
 
 	size_t Count() const noexcept {
-		assert(wrap_);
-		return qres_.Count();
+		assert(qres_.has_value());
+		return qres_->Count();
 	}
 
 	size_t TotalCount() const noexcept {
-		assert(wrap_);
-		return qres_.TotalCount();
+		assert(qres_.has_value());
+		return qres_->TotalCount();
 	}
 
 	void GetItemJSON(reindexer::WrSerializer& wrser, bool withHdrLen) {
-		assert(wrap_);
+		assert(qres_.has_value());
 		it_.GetJSON(wrser, withHdrLen);
 	}
 
 	void Next() {
-		assert(wrap_);
+		assert(qres_.has_value());
 		db_->FetchResults(*this);
 	}
 
 	void FetchResults() {
-		assert(wrap_);
+		assert(qres_.has_value());
 		++it_;
-		if (it_ == qres_.end()) {
-			it_ = qres_.begin();
+		if (it_ == qres_->end()) {
+			it_ = qres_->begin();
 		}
 	}
 
-	const std::string& GetExplainResults() const& noexcept { return qres_.GetExplainResults(); }
-	const std::string& GetExplainResults() const&& = delete;
+	const std::string& GetExplainResults() & noexcept {
+		assert(qres_.has_value());
+		return qres_->GetExplainResults();
+	}
+	const std::string& GetExplainResults() && = delete;
 
 	const std::vector<reindexer::AggregationResult>& GetAggregationResults() &
-	{ return qres_.GetAggregationResults(); }
+	{
+		assert(qres_.has_value());
+		return qres_->GetAggregationResults();
+	}
 	const std::vector<reindexer::AggregationResult>& GetAggregationResults() && = delete;
 
 private:
 	DBInterface* db_{nullptr};
-	QueryResultsT qres_;
+	std::optional<QueryResultsT> qres_;
 	QueryResultsT::Iterator it_;
-	bool wrap_{false};
 };
 
 }  // namespace pyreindexer
