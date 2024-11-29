@@ -167,11 +167,6 @@ void QueryWrapper::AddValue(QueryItemType type, unsigned value) {
 	ser_.PutVarUint(value);
 }
 
-void QueryWrapper::Strict(StrictMode mode) {
-	ser_.PutVarUint(QueryItemType::QueryStrictMode);
-	ser_.PutVarUint(mode);
-}
-
 void QueryWrapper::Modifier(QueryItemType type) {
 	ser_.PutVarUint(type);
 }

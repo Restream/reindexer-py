@@ -31,6 +31,17 @@ class QueryResults:
         self.err_code = 0
         self.err_msg = ""
 
+    def __raise_on_error(self):
+        """Checks if there is an error code and raises with an error message
+
+        #### Raises:
+            Exception: Raises with an error message of API return on non-zero error code
+
+        """
+
+        if self.err_code:
+            raise Exception(self.err_msg)
+
     def __iter__(self):
         """Returns the current iteration result
 
@@ -49,8 +60,7 @@ class QueryResults:
         if self.pos < self.qres_iter_count:
             self.pos += 1
             self.err_code, self.err_msg, res = self.api.query_results_iterate(self.qres_wrapper_ptr)
-            if self.err_code:
-                raise Exception(self.err_msg)
+            self.__raise_on_error()
             return res
         else:
             del self
@@ -72,8 +82,7 @@ class QueryResults:
         """
 
         self.err_code, self.err_msg = self.api.query_results_status(self.qres_wrapper_ptr)
-        if self.err_code:
-            raise Exception(self.err_msg)
+        self.__raise_on_error()
 
     def count(self) -> int:
         """Returns a count of results for iterations
@@ -115,8 +124,7 @@ class QueryResults:
         """
 
         self.err_code, self.err_msg, res = self.api.get_agg_results(self.qres_wrapper_ptr)
-        if self.err_code:
-            raise Exception(self.err_msg)
+        self.__raise_on_error()
         return res
 
     def get_explain_results(self) -> str:
@@ -131,6 +139,5 @@ class QueryResults:
         """
 
         self.err_code, self.err_msg, res = self.api.get_explain_results(self.qres_wrapper_ptr)
-        if self.err_code:
-            raise Exception(self.err_msg)
+        self.__raise_on_error()
         return res

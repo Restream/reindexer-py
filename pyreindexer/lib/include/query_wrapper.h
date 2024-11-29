@@ -50,8 +50,6 @@ public:
 
 	void AddValue(QueryItemType type, unsigned value);
 
-	void Strict(StrictMode mode);
-
 	void Modifier(QueryItemType type);
 
 	enum class ExecuteType { Select, Update };

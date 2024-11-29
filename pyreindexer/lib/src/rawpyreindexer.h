@@ -46,10 +46,10 @@ static PyObject* GetAggregationResults(PyObject* self, PyObject* args);
 static PyObject* GetExplainResults(PyObject* self, PyObject* args);
 // transaction (sync)
 static PyObject* NewTransaction(PyObject* self, PyObject* args);
-static PyObject* ItemInsertTransaction(PyObject* self, PyObject* args);
-static PyObject* ItemUpdateTransaction(PyObject* self, PyObject* args);
-static PyObject* ItemUpsertTransaction(PyObject* self, PyObject* args);
-static PyObject* ItemDeleteTransaction(PyObject* self, PyObject* args);
+static PyObject* InsertTransaction(PyObject* self, PyObject* args);
+static PyObject* UpdateTransaction(PyObject* self, PyObject* args);
+static PyObject* UpsertTransaction(PyObject* self, PyObject* args);
+static PyObject* DeleteTransaction(PyObject* self, PyObject* args);
 static PyObject* CommitTransaction(PyObject* self, PyObject* args);
 static PyObject* RollbackTransaction(PyObject* self, PyObject* args);
 // query
@@ -131,10 +131,10 @@ static PyMethodDef module_methods[] = {
 	{"get_explain_results", GetExplainResults, METH_VARARGS, "get explain results"},
 	// transaction (sync)
 	{"new_transaction", NewTransaction, METH_VARARGS, "start new transaction"},
-	{"item_insert_transaction", ItemInsertTransaction, METH_VARARGS, "item insert transaction"},
-	{"item_update_transaction", ItemUpdateTransaction, METH_VARARGS, "item update transaction"},
-	{"item_upsert_transaction", ItemUpsertTransaction, METH_VARARGS, "item upsert transaction"},
-	{"item_delete_transaction", ItemDeleteTransaction, METH_VARARGS, "item delete transaction"},
+	{"item_insert_transaction", InsertTransaction, METH_VARARGS, "item insert transaction"},
+	{"item_update_transaction", UpdateTransaction, METH_VARARGS, "item update transaction"},
+	{"item_upsert_transaction", UpsertTransaction, METH_VARARGS, "item upsert transaction"},
+	{"item_delete_transaction", DeleteTransaction, METH_VARARGS, "item delete transaction"},
 	{"commit_transaction", CommitTransaction, METH_VARARGS, "apply changes. Free transaction object memory"},
 	{"rollback_transaction", RollbackTransaction, METH_VARARGS, "rollback changes. Free transaction object memory"},
 	// query
