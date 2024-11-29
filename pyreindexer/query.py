@@ -777,10 +777,12 @@ class Query:
 
         #### Raises:
             Exception: Raises with an error message of API return on non-zero error code
+            Exception: Raises with an error message if no values are specified
 
         """
 
-        values = [] if values is None else values
+        if values is None:
+            raise Exception("A required parameter is not specified. `values` can't be None")
 
         self.err_code, self.err_msg = self.api.set_object(self.query_wrapper_ptr, field, values)
         self.__raise_on_error()

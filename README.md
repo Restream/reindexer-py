@@ -730,7 +730,6 @@ An object representing the context of a Reindexer query
     err_code (int): The API error code
     err_msg (string): The API error message
     root (:object: Optional[`Query`]): The root query of the Reindexer query
-    join_type (:enum:`JoinType`): Join type
     join_queries (list[:object:`Query`]): The list of join Reindexer query objects
     merged_queries (list[:object:`Query`]): The list of merged Reindexer query objects
 
@@ -748,7 +747,7 @@ Adds where condition to DB query with args
 #### Arguments:
     index (string): Field name used in condition clause
     condition (:enum:`CondType`): Type of condition
-    keys (list[simple_types], ...):
+    keys (union[simple_types, (list[simple_types], ...)]):
         Value of index to be compared with. For composite indexes keys must be list,
         with value of each sub-index
 
@@ -1329,6 +1328,7 @@ Adds an update query to an object field for an update query
 
 #### Raises:
     Exception: Raises with an error message of API return on non-zero error code
+    Exception: Raises with an error message if no values are specified
 
 <a id="pyreindexer.query.Query.set"></a>
 

@@ -106,7 +106,7 @@ Error ReindexerInterface<DBT>::commitTransaction(typename DBT::TransactionT& tra
 
 template <typename DBT>
 Error ReindexerInterface<DBT>::selectQuery(const reindexer::Query& query, QueryResultsWrapper& result) {
-	typename DBT::QueryResultsT qres;
+	typename DBT::QueryResultsT qres(QRESULTS_FLAGS);
 	auto err = db_.Select(query, qres);
 	result.Wrap(std::move(qres));
 	return err;

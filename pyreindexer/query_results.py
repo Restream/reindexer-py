@@ -19,7 +19,7 @@ class QueryResults:
             api (module): An API module for Reindexer calls
             qres_wrapper_ptr (int): A memory pointer to Reindexer iterator object
             qres_iter_count (int): A count of results for iterations
-            qres_total_count (int): A total\cached count of results
+            qres_total_count (int): A total or cached count of results
 
         """
 

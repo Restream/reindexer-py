@@ -6,19 +6,6 @@
 #include "core/keyvalue/uuid.h"
 
 namespace pyreindexer {
-namespace {
-const int VALUE_INT_64    = 0;
-const int VALUE_DOUBLE    = 1;
-const int VALUE_STRING    = 2;
-const int VALUE_BOOL      = 3;
-const int VALUE_NULL      = 4;
-const int VALUE_INT       = 8;
-const int VALUE_UNDEFINED = 9;
-const int VALUE_COMPOSITE = 10;
-const int VALUE_TUPLE     = 11;
-const int VALUE_UUID      = 12;
-} // namespace
-
 QueryWrapper::QueryWrapper(DBInterface* db, std::string_view ns) : db_{db} {
 	assert(db_);
 	ser_.PutVString(ns);
@@ -67,11 +54,9 @@ void QueryWrapper::WhereUUID(std::string_view index, CondType condition, const s
 	for (const auto& key : keys) {
 		try {
 			auto uuid = reindexer::Uuid(key);
-			ser_.PutVarUint(VALUE_UUID);
-			ser_.PutUuid(uuid);
+			ser_.PutVariant(reindexer::Variant(uuid));
 		} catch (const Error& err) {
-			ser_.PutVarUint(VALUE_STRING);
-			ser_.PutVString(key);
+			ser_.PutVariant(reindexer::Variant(key));
 		}
 	}
 
@@ -123,12 +108,9 @@ void QueryWrapper::DWithin(std::string_view index, double x, double y, double di
 	ser_.PutVarUint(CondType::CondDWithin);
 
 	ser_.PutVarUint(3);
-	ser_.PutVarUint(VALUE_DOUBLE);
-	ser_.PutDouble(x);
-	ser_.PutVarUint(VALUE_DOUBLE);
-	ser_.PutDouble(y);
-	ser_.PutVarUint(VALUE_DOUBLE);
-	ser_.PutDouble(distance);
+	ser_.PutVariant(reindexer::Variant(x));
+	ser_.PutVariant(reindexer::Variant(y));
+	ser_.PutVariant(reindexer::Variant(distance));
 
 	nextOperation_ = OpType::OpAnd;
 	++queriesCount_;
@@ -292,8 +274,7 @@ void QueryWrapper::SetObject(std::string_view field, const std::vector<std::stri
 	ser_.PutVarUint(values.size() > 1? 1 : 0); // is array flag
 	for (const auto& value : values) {
 		ser_.PutVarUint(0); // function/value flag
-		ser_.PutVarUint(VALUE_STRING); // type ID
-		ser_.PutVString(value);
+		ser_.PutVariant(reindexer::Variant(value));
 		break;
 	}
 }

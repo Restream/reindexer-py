@@ -21,7 +21,7 @@ using QueryResultsT = reindexer::QueryResults;
 
 class QueryResultsWrapper {
 public:
-	QueryResultsWrapper(DBInterface* db) : db_{db}, qres_{kResultsJson} {
+	QueryResultsWrapper(DBInterface* db) : db_{db} {
 		assert(db_);
 	}
 
