@@ -173,7 +173,7 @@ class Query:
         return self
 
     def where(self, index: str, condition: CondType,
-              keys: Union[simple_types, tuple[list[simple_types],...]]) -> Query:
+              keys: Union[simple_types, tuple[list[simple_types],...]] = None) -> Query:
         """Adds where condition to DB query with args
 
         #### Arguments:
@@ -194,7 +194,7 @@ class Query:
         return self.__where(index, condition, keys)
 
     def where_query(self, sub_query: Query, condition: CondType,
-                    keys: Union[simple_types, tuple[list[simple_types],...]]) -> Query:
+                    keys: Union[simple_types, tuple[list[simple_types],...]] = None) -> Query:
         """Adds sub-query where condition to DB query with args
 
         #### Arguments:
