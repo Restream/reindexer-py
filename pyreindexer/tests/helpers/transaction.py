@@ -1,12 +1,8 @@
-from tests.helpers.log_helper import log_operation
-
-
 def insert_item_transaction(namespace, item_definition):
     """
     Insert an item into namespace using transaction
     """
     db, namespace_name = namespace
-    log_operation.info(f"Insert item: {item_definition} to namespace {namespace_name} by transaction")
     transaction = db.new_transaction(namespace_name)
     transaction.insert(item_definition)
     transaction.commit()
@@ -17,7 +13,6 @@ def upsert_item_transaction(namespace, item_definition):
     Insert or update an item into namespace using transaction
     """
     db, namespace_name = namespace
-    log_operation.info(f"Upsert item: {item_definition} to namespace {namespace_name} by transaction")
     transaction = db.new_transaction(namespace_name)
     transaction.upsert(item_definition)
     transaction.commit()
@@ -28,7 +23,6 @@ def update_item_transaction(namespace, item_definition):
     Update an item in namespace using transaction
     """
     db, namespace_name = namespace
-    log_operation.info(f"Update item: {item_definition} in namespace {namespace_name} by transaction")
     transaction = db.new_transaction(namespace_name)
     transaction.update(item_definition)
     transaction.commit()
@@ -39,7 +33,6 @@ def delete_item_transaction(namespace, item_definition):
     Delete item from namespace using transaction
     """
     db, namespace_name = namespace
-    log_operation.info(f"Delete item: {item_definition} from namespace {namespace_name} by transaction")
     transaction = db.new_transaction(namespace_name)
     transaction.delete(item_definition)
     transaction.commit()
