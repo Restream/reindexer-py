@@ -1,6 +1,6 @@
 from hamcrest import *
 
-from tests.helpers.items import *
+from tests.helpers.base_helper import get_ns_items
 from tests.helpers.transaction import *
 from tests.test_data.constants import item_definition
 
@@ -122,7 +122,7 @@ class TestCrudTransaction:
         # When ("Insert item into namespace")
         insert_item_transaction(namespace, item_definition)
         # Then ("Check that item is added")
-        select_result = list(db.select(f'SELECT * FROM {namespace_name}'))
+        select_result = get_ns_items(db, namespace)
         assert_that(select_result, has_length(1), "Transaction: item wasn't created")
         assert_that(select_result, has_item(item_definition), "Transaction: item wasn't created")
         delete_item(namespace, item_definition)
@@ -138,7 +138,7 @@ class TestCrudTransaction:
         count = transaction.commit_with_count()
         assert_that(count, equal_to(number_items), "Transaction: items wasn't created")
         # Then ("Check that item is added")
-        select_result = list(db.select(f'SELECT * FROM {namespace_name}'))
+        select_result = get_ns_items(db, namespace)
         assert_that(select_result, has_length(number_items), "Transaction: items wasn't created")
         for i in range(number_items):
             assert_that(select_result[i],
@@ -151,7 +151,7 @@ class TestCrudTransaction:
         # When ("Upsert item into namespace")
         upsert_item_transaction(namespace, item_definition)
         # Then ("Check that item is added")
-        select_result = list(db.select(f'SELECT * FROM {namespace_name}'))
+        select_result = get_ns_items(db, namespace)
         assert_that(select_result, has_length(1), "Transaction: item wasn't created")
         assert_that(select_result, has_item(item_definition), "Transaction: item wasn't created")
         delete_item(namespace, item_definition)
@@ -163,7 +163,7 @@ class TestCrudTransaction:
         item_definition_updated = {'id': 100, 'val': "new_value"}
         upsert_item_transaction(namespace, item_definition_updated)
         # Then ("Check that item is updated")
-        select_result = list(db.select(f'SELECT * FROM {namespace_name}'))
+        select_result = get_ns_items(db, namespace)
         assert_that(select_result, has_length(1), "Transaction: item wasn't updated")
         assert_that(select_result, has_item(item_definition_updated), "Transaction: item wasn't updated")
 
@@ -174,7 +174,7 @@ class TestCrudTransaction:
         item_definition_updated = {'id': 100, 'val': "new_value"}
         update_item_transaction(namespace, item_definition_updated)
         # Then ("Check that item is updated")
-        select_result = list(db.select(f'SELECT * FROM {namespace_name}'))
+        select_result = get_ns_items(db, namespace)
         assert_that(select_result, has_length(1), "Transaction: item wasn't updated")
         assert_that(select_result, has_item(item_definition_updated), "Transaction: item wasn't updated")
 
@@ -184,7 +184,7 @@ class TestCrudTransaction:
         # When ("Delete item")
         delete_item_transaction(namespace, item)
         # Then ("Check that item is deleted")
-        select_result = list(db.select(f'SELECT * FROM {namespace_name}'))
+        select_result = get_ns_items(db, namespace)
         assert_that(select_result, has_length(0), "Transaction: item wasn't deleted")
         assert_that(select_result, equal_to([]), "Transaction: item wasn't deleted")
 
@@ -199,7 +199,7 @@ class TestCrudTransaction:
         # Then ("Rollback transaction")
         transaction.rollback()
         # When ("Get namespace information")
-        select_result = list(db.select(f'SELECT * FROM {namespace_name}'))
+        select_result = get_ns_items(db, namespace)
         # Then ("Check that list of items in namespace is empty")
         assert_that(select_result, has_length(0), "Transaction: item list is not empty")
         assert_that(select_result, equal_to([]), "Transaction: item list is not empty")
