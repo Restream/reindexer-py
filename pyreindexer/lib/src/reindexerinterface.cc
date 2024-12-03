@@ -11,8 +11,9 @@ namespace {
 	const int QRESULTS_FLAGS = kResultsJson | kResultsWithRank | kResultsWithJoined;
 }
 
-
-struct ICommand {
+class ICommand {
+public:
+	virtual ~ICommand() = default;
 	virtual Error Status() const = 0;
 	virtual void Execute() = 0;
 	virtual bool IsExecuted() const = 0;
