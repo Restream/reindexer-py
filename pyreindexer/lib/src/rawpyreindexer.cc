@@ -1,8 +1,8 @@
 #include "rawpyreindexer.h"
 
-#include "pyobjtools.h"
 #include "queryresults_wrapper.h"
 #include "query_wrapper.h"
+#include "pyobjtools.h"
 #include "transaction_wrapper.h"
 #include "tools/serializer.h"
 
@@ -10,12 +10,11 @@ namespace pyreindexer {
 
 using reindexer::Error;
 using reindexer::IndexDef;
-using reindexer::NamespaceDef;
 using reindexer::WrSerializer;
 
 namespace {
-uintptr_t initReindexer() {
-	auto db = std::make_unique<DBInterface>();
+uintptr_t initReindexer(const ReindexerConfig& cfg) {
+	auto db = std::make_unique<DBInterface>(cfg);
 	return reinterpret_cast<uintptr_t>(db.release());
 }
 
@@ -59,7 +58,23 @@ PyObject* queryResultsWrapperIterate(uintptr_t qresWrapperAddr) {
 // common --------------------------------------------------------------------------------------------------------------
 
 static PyObject* Init(PyObject* self, PyObject* args) {
-	uintptr_t rx = initReindexer();
+	ReindexerConfig cfg;
+	char* clientName = nullptr;
+	unsigned enableCompression = 0;
+	unsigned startSpecialThread = 0;
+	unsigned maxReplUpdatesSize = 0;
+	if (!PyArg_ParseTuple(args, "iiiIIsIif", &cfg.fetchAmount, &cfg.connectTimeout, &cfg.requestTimeout,
+				&enableCompression, &startSpecialThread, &clientName, &maxReplUpdatesSize,
+				&cfg.allocatorCacheLimit, &cfg.allocatorCachePart)) {
+		return nullptr;
+	}
+
+	cfg.enableCompression = (enableCompression != 0);
+	cfg.requestDedicatedThread = (startSpecialThread != 0);
+	cfg.appName = clientName;
+	cfg.maxReplUpdatesSize = maxReplUpdatesSize;
+
+	uintptr_t rx = initReindexer(cfg);
 	if (rx == 0) {
 		PyErr_SetString(PyExc_RuntimeError, "Initialization error");
 
@@ -154,7 +169,7 @@ static PyObject* EnumNamespaces(PyObject* self, PyObject* args) {
 		return nullptr;
 	}
 
-	std::vector<NamespaceDef> nsDefs;
+	std::vector<reindexer::NamespaceDef> nsDefs;
 	auto err = getWrapper<DBInterface>(rx)->EnumNamespaces(nsDefs, reindexer::EnumNamespacesOpts().WithClosed(enumAll));
 	if (!err.ok()) {
 		return Py_BuildValue("is[]", err.code(), err.what().c_str());
@@ -336,7 +351,7 @@ PyObject* itemModify(PyObject* self, PyObject* args, ItemModifyMode mode) {
 			err = getWrapper<DBInterface>(rx)->Delete(ns, item);
 			break;
 		default:
-			err = reindexer::Error(ErrorCode::errLogic, "Unknown item modify mode");
+			err = Error(ErrorCode::errLogic, "Unknown item modify mode");
 	}
 
 	return pyErr(err);
@@ -577,7 +592,7 @@ PyObject* modifyTransaction(PyObject* self, PyObject* args, ItemModifyMode mode)
 			err = transaction->Modify(std::move(item), mode);
 			return pyErr(err);
 		default:
-			return pyErr(reindexer::Error(ErrorCode::errLogic, "Unknown item modify transaction mode"));
+			return pyErr(Error(ErrorCode::errLogic, "Unknown item modify transaction mode"));
 	}
 
 	return nullptr;

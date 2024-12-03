@@ -738,8 +738,11 @@ An object representing the context of a Reindexer query
 ### Query.where
 
 ```python
-def where(index: str, condition: CondType,
-          keys: Union[simple_types, tuple[list[simple_types], ...]]) -> Query
+def where(
+        index: str,
+        condition: CondType,
+        keys: Union[simple_types, tuple[list[simple_types],
+                                        ...]] = None) -> Query
 ```
 
 Adds where condition to DB query with args
@@ -763,8 +766,10 @@ Adds where condition to DB query with args
 
 ```python
 def where_query(
-        sub_query: Query, condition: CondType,
-        keys: Union[simple_types, tuple[list[simple_types], ...]]) -> Query
+        sub_query: Query,
+        condition: CondType,
+        keys: Union[simple_types, tuple[list[simple_types],
+                                        ...]] = None) -> Query
 ```
 
 Adds sub-query where condition to DB query with args

@@ -100,7 +100,7 @@ static PyObject* AddEqualPosition(PyObject* self, PyObject* args);
 
 // clang-format off
 static PyMethodDef module_methods[] = {
-	{"init", Init, METH_NOARGS, "init reindexer instance"},
+	{"init", Init, METH_VARARGS, "init reindexer instance"},
 	{"destroy", Destroy, METH_VARARGS, "destroy reindexer instance"},
 	{"connect", Connect, METH_VARARGS, "connect to reindexer database"},
 	{"select", Select, METH_VARARGS, "select query"},

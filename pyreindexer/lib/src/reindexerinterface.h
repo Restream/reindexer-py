@@ -11,46 +11,33 @@
 
 namespace pyreindexer {
 
+using reindexer::EnumNamespacesOpts;
 using reindexer::Error;
-using reindexer::net::ev::dynamic_loop;
+using reindexer::Query;
 using reindexer::IndexDef;
 using reindexer::NamespaceDef;
-using reindexer::EnumNamespacesOpts;
 
 class QueryResultsWrapper;
 class TransactionWrapper;
+class ICommand;
 
-struct ICommand {
-	virtual Error Status() const = 0;
-	virtual void Execute() = 0;
-	virtual bool IsExecuted() const = 0;
+struct ReindexerConfig {
+	int fetchAmount{1000};
+	int connectTimeout{0};
+	int requestTimeout{0};
+	bool enableCompression{false};
+	bool requestDedicatedThread{false};
+	std::string appName;
 
-	virtual ~ICommand() = default;
-};
-
-class GenericCommand : public ICommand {
-public:
-	using CallableT = std::function<Error()>;
-
-	GenericCommand(CallableT command) : command_(std::move(command)) {}
-
-	Error Status() const override final { return err_; }
-	void Execute() override final {
-		err_ = command_();
-		executed_.store(true, std::memory_order_release);
-	}
-	bool IsExecuted() const override final { return executed_.load(std::memory_order_acquire); }
-
-private:
-	CallableT command_;
-	Error err_{errOK};
-	std::atomic_bool executed_{false};
+	size_t maxReplUpdatesSize{1024 * 1024 * 1024};
+	int64_t allocatorCacheLimit{-1};
+	float allocatorCachePart{-1.0};
 };
 
 template <typename DBT>
 class ReindexerInterface {
 public:
-	ReindexerInterface();
+	ReindexerInterface(const ReindexerConfig& cfg);
 	~ReindexerInterface();
 
 	Error Connect(const std::string& dsn) {
@@ -129,13 +116,13 @@ public:
 	Error RollbackTransaction(typename DBT::TransactionT& tr) {
 		return execute([this, &tr] { return rollbackTransaction(tr); });
 	}
-	Error SelectQuery(const reindexer::Query& query, QueryResultsWrapper& result) {
+	Error SelectQuery(const Query& query, QueryResultsWrapper& result) {
 		return execute([this, &query, &result] { return selectQuery(query, result); });
 	}
-	Error DeleteQuery(const reindexer::Query& query, size_t& count) {
+	Error DeleteQuery(const Query& query, size_t& count) {
 		return execute([this, &query, &count] { return deleteQuery(query, count); });
 	}
-	Error UpdateQuery(const reindexer::Query& query, QueryResultsWrapper& result) {
+	Error UpdateQuery(const Query& query, QueryResultsWrapper& result) {
 		return execute([this, &query, &result] { return updateQuery(query, result); });
 	}
 
@@ -165,15 +152,15 @@ private:
 	Error modify(typename DBT::TransactionT& tr, typename DBT::ItemT&& item, ItemModifyMode mode);
 	Error commitTransaction(typename DBT::TransactionT& transaction, size_t& count);
 	Error rollbackTransaction(typename DBT::TransactionT& tr) { return db_.RollBackTransaction(tr); }
-	Error selectQuery(const reindexer::Query& query, QueryResultsWrapper& result);
-	Error deleteQuery(const reindexer::Query& query, size_t& count);
-	Error updateQuery(const reindexer::Query& query, QueryResultsWrapper& result);
+	Error selectQuery(const Query& query, QueryResultsWrapper& result);
+	Error deleteQuery(const Query& query, size_t& count);
+	Error updateQuery(const Query& query, QueryResultsWrapper& result);
 	Error stop();
 
 	DBT db_;
 	std::thread executionThr_;
-	dynamic_loop loop_;
-	ICommand* curCmd_ = nullptr;
+	reindexer::net::ev::dynamic_loop loop_;
+	ICommand* curCmd_{nullptr};
 	reindexer::net::ev::async cmdAsync_;
 	std::mutex mtx_;
 	std::condition_variable condVar_;

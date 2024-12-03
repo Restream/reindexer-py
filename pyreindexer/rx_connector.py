@@ -20,21 +20,49 @@ class RxConnector(RaiserMixin):
 
     """
 
-    def __init__(self, dsn):
+    def __init__(self, dsn: str, *,
+                 # cproto options
+                 fetch_amount: int = 1000,
+                 connect_timeout: int = 0,
+                 request_timeout: int = 0,
+                 enable_compression: bool = False,
+                 start_special_thread: bool = False,
+                 client_name: str = 'pyreindexer',
+                 # builtin options
+                 max_replication_updates_size: int = 1024 * 1024 * 1024,
+                 allocator_cache_limit: int = -1,
+                 allocator_cache_part: float = -1.0):
         """Constructs a new connector object.
         Initializes an error code and a Reindexer instance descriptor to zero
 
         #### Arguments:
             dsn (string): The connection string which contains a protocol
-            Examples: 'builtin:///tmp/pyrx', 'cproto://127.0.0.1:6534/pyrx
+                Examples: 'builtin:///tmp/pyrx', 'cproto://127.0.0.1:6534/pyrx
 
+            cproto options:
+                 fetch_amount (int): The number of items that will be fetched by one operation
+                 connect_timeout (int): Connection and database login timeout value
+                 request_timeout (int): Request execution timeout value
+                 enable_compression (bool): Flag enable/disable traffic compression
+                 start_special_thread (bool): Determines whether to request a special thread of execution
+                    on the server for this connection
+                 client_name (string): Proper name of the application (as a client for Reindexer-server)
+
+            built-in options:
+                max_replication_updates_size (int): Max pended replication updates size in bytes
+                allocator_cache_limit (int): Recommended maximum free cache size of tcmalloc memory allocator in bytes
+                allocator_cache_part (float): Recommended maximum free cache size of tcmalloc memory allocator in
+                    relation to total reindexer allocated memory size, in units
         """
 
         self.err_code = 0
         self.err_msg = ''
         self.rx = 0
         self._api_import(dsn)
-        self._api_init(dsn)
+        self.rx = self.api.init(fetch_amount, connect_timeout, request_timeout, enable_compression,
+                                start_special_thread, client_name, max_replication_updates_size,
+                                allocator_cache_limit, allocator_cache_part)
+        self._api_connect(dsn)
 
     def __del__(self):
         """Closes an API instance on a connector object deletion if the API is initialized
@@ -384,7 +412,7 @@ class RxConnector(RaiserMixin):
             raise Exception(
                 "Unknown Reindexer connection protocol for dsn: ", dsn)
 
-    def _api_init(self, dsn):
+    def _api_connect(self, dsn):
         """Initializes Reindexer instance and connects to a database specified in dsn
         Obtains a pointer to Reindexer instance
 
@@ -397,7 +425,6 @@ class RxConnector(RaiserMixin):
 
         """
 
-        self.rx = self.api.init()
         self.raise_on_not_init()
         self.err_code, self.err_msg = self.api.connect(self.rx, dsn)
         self.raise_on_error()

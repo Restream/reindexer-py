@@ -1,4 +1,5 @@
 #include "reindexerinterface.h"
+#include <chrono>
 #include "client/cororeindexer.h"
 #include "core/reindexer.h"
 #include "core/type_consts.h"
@@ -10,11 +11,46 @@ namespace {
 	const int QRESULTS_FLAGS = kResultsJson | kResultsWithRank | kResultsWithJoined;
 }
 
-template <>
-ReindexerInterface<reindexer::Reindexer>::ReindexerInterface() {}
+
+struct ICommand {
+	virtual Error Status() const = 0;
+	virtual void Execute() = 0;
+	virtual bool IsExecuted() const = 0;
+
+	virtual ~ICommand() = default;
+};
+
+class GenericCommand : public ICommand {
+public:
+	using CallableT = std::function<Error()>;
+
+	GenericCommand(CallableT command) : command_(std::move(command)) {}
+
+	Error Status() const override final { return err_; }
+	void Execute() override final {
+		err_ = command_();
+		executed_.store(true, std::memory_order_release);
+	}
+	bool IsExecuted() const override final { return executed_.load(std::memory_order_acquire); }
+
+private:
+	CallableT command_;
+	Error err_{errOK};
+	std::atomic_bool executed_{false};
+};
 
 template <>
-ReindexerInterface<reindexer::client::CoroReindexer>::ReindexerInterface() {
+ReindexerInterface<reindexer::Reindexer>::ReindexerInterface(const ReindexerConfig& cfg)
+	: db_(reindexer::ReindexerConfig()
+			.WithUpdatesSize(cfg.maxReplUpdatesSize)
+			.WithAllocatorCacheLimits(cfg.allocatorCacheLimit, cfg.allocatorCachePart))
+{ }
+
+template <>
+ReindexerInterface<reindexer::client::CoroReindexer>::ReindexerInterface(const ReindexerConfig& cfg)
+	: db_(reindexer::client::ReindexerConfig(4, 1, cfg.fetchAmount, 0, std::chrono::seconds(cfg.connectTimeout),
+		  std::chrono::seconds(cfg.requestTimeout), cfg.enableCompression, cfg.requestDedicatedThread, cfg.appName))
+{
 	std::atomic_bool running{false};
 	executionThr_ = std::thread([this, &running] {
 		cmdAsync_.set(loop_);
