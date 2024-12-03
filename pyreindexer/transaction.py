@@ -1,3 +1,6 @@
+from exceptions import TransactionError
+
+
 def raise_if_error(func):
     def wrapper(self, *args, **kwargs):
         self._raise_on_is_over()
@@ -50,7 +53,7 @@ class Transaction:
         """
 
         if self.err_code:
-            raise Exception(self.err_msg)
+            raise TransactionError(self.err_msg)
 
     def _raise_on_is_over(self):
         """Checks the state of a transaction and returns an error message when necessary
@@ -61,7 +64,7 @@ class Transaction:
         """
 
         if self.transaction_wrapper_ptr <= 0:
-            raise Exception("Transaction is over")
+            raise TransactionError("Transaction is over")
 
     @raise_if_error
     def insert(self, item_def, precepts=None):

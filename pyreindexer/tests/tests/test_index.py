@@ -1,5 +1,6 @@
 from hamcrest import *
 
+from exceptions import ApiError
 from tests.helpers.base_helper import get_ns_description
 from tests.test_data.constants import index_definition, updated_index_definition
 
@@ -46,7 +47,7 @@ class TestCrudIndexes:
         db.index.create(namespace, index_definition)
         # Then ("Check that we can't add index with the same name")
         assert_that(calling(db.index.create).with_args(namespace, updated_index_definition),
-                    raises(Exception, pattern="Index '.*' already exists with different settings"),
+                    raises(ApiError, pattern="Index '.*' already exists with different settings"),
                     "Index with existing name was created")
 
     def test_cannot_update_not_existing_index_in_namespace(self, db, namespace):
@@ -54,7 +55,7 @@ class TestCrudIndexes:
         # When ("Update index")
         # Then ("Check that we can't update index that was not created")
         assert_that(calling(db.index.update).with_args(namespace, index_definition),
-                    raises(Exception, pattern=f"Index 'id' not found in '{namespace}'"),
+                    raises(ApiError, pattern=f"Index 'id' not found in '{namespace}'"),
                     "Not existing index was updated")
 
     def test_cannot_delete_not_existing_index_in_namespace(self, db, namespace):
@@ -63,5 +64,5 @@ class TestCrudIndexes:
         # Then ("Check that we can't delete index that was not created")
         index_name = 'id'
         assert_that(calling(db.index.drop).with_args(namespace, index_name),
-                    raises(Exception, pattern=f"Cannot remove index {index_name}: doesn't exist"),
+                    raises(ApiError, pattern=f"Cannot remove index {index_name}: doesn't exist"),
                     "Not existing index was deleted")

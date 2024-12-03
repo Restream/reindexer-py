@@ -1,3 +1,6 @@
+from exceptions import ApiError
+
+
 class RaiserMixin:
     """RaiserMixin contains methods for checking some typical API bad events and raise if there is a necessity
 
@@ -15,7 +18,7 @@ class RaiserMixin:
         """
 
         if self.err_code:
-            raise Exception(self.err_msg)
+            raise ApiError(self.err_msg)
 
     def raise_on_not_init(self):
         """Checks if there is an error code and raises with an error message
@@ -26,7 +29,7 @@ class RaiserMixin:
         """
 
         if self.rx <= 0:
-            raise Exception("Connection is not initialized")
+            raise ConnectionError("Connection is not initialized")
 
 
 def raise_if_error(func):

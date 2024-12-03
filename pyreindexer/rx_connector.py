@@ -381,8 +381,7 @@ class RxConnector(RaiserMixin):
         elif dsn.startswith('cproto://'):
             self.api = __import__('rawpyreindexerc')
         else:
-            raise Exception(
-                "Unknown Reindexer connection protocol for dsn: ", dsn)
+            raise ConnectionError(f"Unknown Reindexer connection protocol for dsn: {dsn}")
 
     def _api_init(self, dsn):
         """Initializes Reindexer instance and connects to a database specified in dsn

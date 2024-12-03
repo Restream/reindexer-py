@@ -1,3 +1,6 @@
+from exceptions import QueryResultsError
+
+
 class QueryResults:
     """QueryResults is a disposable iterator of Reindexer results for such queries as SELECT etc.
         When the results are fetched the iterator closes and frees a memory of results buffer of Reindexer
@@ -40,7 +43,7 @@ class QueryResults:
         """
 
         if self.err_code:
-            raise Exception(self.err_msg)
+            raise QueryResultsError(self.err_msg)
 
     def __iter__(self):
         """Returns the current iteration result

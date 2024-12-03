@@ -1,3 +1,4 @@
+from exceptions import ApiError
 from pyreindexer import RxConnector
 from pyreindexer.query import CondType
 
@@ -20,7 +21,7 @@ def create_index_example(db, namespace):
 
     try:
         db.index_add(namespace, index_definition)
-    except (Exception,):
+    except ApiError:
         db.index_drop(namespace, 'id')
         db.index_add(namespace, index_definition)
 
@@ -63,7 +64,7 @@ def transaction_example(db, namespace, items_in_base):
     items_count = len(items_in_base)
 
     # delete first few items
-    for i in range(int(items_count/2)):
+    for i in range(int(items_count / 2)):
         transaction.delete(items_in_base[i])
 
     # update last one item, overwrite field 'value'
@@ -118,7 +119,7 @@ def query_example(db, namespace):
 
 def rx_example():
     db = RxConnector('builtin:///tmp/pyrx')
-#    db = RxConnector('cproto://127.0.0.1:6534/pyrx')
+    #    db = RxConnector('cproto://127.0.0.1:6534/pyrx')
 
     namespace = 'test_table'
 
