@@ -1,4 +1,4 @@
-from exceptions import QueryResultsError
+from exceptions import ApiError
 
 
 class QueryResults:
@@ -38,12 +38,12 @@ class QueryResults:
         """Checks if there is an error code and raises with an error message
 
         #### Raises:
-            Exception: Raises with an error message of API return on non-zero error code
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
         if self.err_code:
-            raise QueryResultsError(self.err_msg)
+            raise ApiError(self.err_msg)
 
     def __iter__(self):
         """Returns the current iteration result
@@ -80,7 +80,7 @@ class QueryResults:
         """Check status
 
         #### Raises:
-            Exception: Raises with an error message of API return on non-zero error code
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -122,7 +122,7 @@ class QueryResults:
             (:obj:`dict`): Dictionary with all results for the current query
 
         #### Raises:
-            Exception: Raises with an error message of API return on non-zero error code
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -137,7 +137,7 @@ class QueryResults:
             (string): Formatted string with explain of results for the current query
 
         #### Raises:
-            Exception: Raises with an error message of API return on non-zero error code
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 

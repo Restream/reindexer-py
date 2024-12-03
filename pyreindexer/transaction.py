@@ -1,4 +1,4 @@
-from exceptions import TransactionError
+from exceptions import ApiError, TransactionError
 
 
 def raise_if_error(func):
@@ -48,18 +48,18 @@ class Transaction:
         """Checks if there is an error code and raises with an error message
 
         #### Raises:
-            Exception: Raises with an error message of API return on non-zero error code
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
         if self.err_code:
-            raise TransactionError(self.err_msg)
+            raise ApiError(self.err_msg)
 
     def _raise_on_is_over(self):
         """Checks the state of a transaction and returns an error message when necessary
 
         #### Raises:
-            Exception: Raises with an error message of API return if Transaction is over
+            TransactionError: Raises with an error message of API return if Transaction is over
 
         """
 
@@ -75,8 +75,8 @@ class Transaction:
             precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
 
         #### Raises:
-            Exception: Raises with an error message of API return if Transaction is over
-            Exception: Raises with an error message of API return on non-zero error code
+            TransactionError: Raises with an error message of API return if Transaction is over
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -92,8 +92,8 @@ class Transaction:
             precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
 
         #### Raises:
-            Exception: Raises with an error message of API return if Transaction is over
-            Exception: Raises with an error message of API return on non-zero error code
+            TransactionError: Raises with an error message of API return if Transaction is over
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -109,8 +109,8 @@ class Transaction:
             precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
 
         #### Raises:
-            Exception: Raises with an error message of API return if Transaction is over
-            Exception: Raises with an error message of API return on non-zero error code
+            TransactionError: Raises with an error message of API return if Transaction is over
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -125,8 +125,8 @@ class Transaction:
             item_def (dict): A dictionary of item definition
 
         #### Raises:
-            Exception: Raises with an error message of API return if Transaction is over
-            Exception: Raises with an error message of API return on non-zero error code
+            TransactionError: Raises with an error message of API return if Transaction is over
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -137,8 +137,8 @@ class Transaction:
         """Applies changes
 
         #### Raises:
-            Exception: Raises with an error message of API return if Transaction is over
-            Exception: Raises with an error message of API return on non-zero error code
+            TransactionError: Raises with an error message of API return if Transaction is over
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -150,8 +150,8 @@ class Transaction:
         """Applies changes and return the number of count of changed items
 
         #### Raises:
-            Exception: Raises with an error message of API return if Transaction is over
-            Exception: Raises with an error message of API return on non-zero error code
+            TransactionError: Raises with an error message of API return if Transaction is over
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -164,8 +164,8 @@ class Transaction:
         """Rollbacks changes
 
         #### Raises:
-            Exception: Raises with an error message of API return if Transaction is over
-            Exception: Raises with an error message of API return on non-zero error code
+            TransactionError: Raises with an error message of API return if Transaction is over
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 

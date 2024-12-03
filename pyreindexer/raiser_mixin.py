@@ -13,7 +13,7 @@ class RaiserMixin:
         """Checks if there is an error code and raises with an error message
 
         #### Raises:
-            Exception: Raises with an error message of API return on non-zero error code
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -24,7 +24,7 @@ class RaiserMixin:
         """Checks if there is an error code and raises with an error message
 
         #### Raises:
-            Exception: Raises with an error message when Reindexer instance is not initialized yet
+            ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
 
         """
 

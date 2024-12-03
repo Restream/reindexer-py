@@ -4,7 +4,7 @@ from collections.abc import Iterable
 from enum import Enum
 from typing import Optional, Union
 
-from exceptions import QueryError
+from exceptions import ApiError, QueryError
 from pyreindexer.point import Point
 from pyreindexer.query_results import QueryResults
 
@@ -98,12 +98,12 @@ class Query:
         """Checks if there is an error code and raises with an error message
 
         #### Raises:
-            Exception: Raises with an error message of API return on non-zero error code
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
         if self.err_code:
-            raise QueryError(self.err_msg)
+            raise ApiError(self.err_msg)
 
     @staticmethod
     def __convert_to_list(param: Union[simple_types, tuple[list[simple_types], ...]]) -> list:
@@ -166,7 +166,8 @@ class Query:
             (:obj:`Query`): Query object for further customizations
 
         #### Raises:
-            Exception: Raises with an error message of API return on non-zero error code
+            QueryError: Raises with an error message if inappropriate condition is used
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -194,7 +195,7 @@ class Query:
             (:obj:`Query`): Query object for further customizations
 
         #### Raises:
-            Exception: Raises with an error message of API return on non-zero error code
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -215,7 +216,7 @@ class Query:
             (:obj:`Query`): Query object for further customizations
 
         #### Raises:
-            Exception: Raises with an error message of API return on non-zero error code
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -260,7 +261,7 @@ class Query:
             (:obj:`Query`): Query object for further customizations
 
         #### Raises:
-            Exception: Raises with an error message of API return on non-zero error code
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -281,7 +282,7 @@ class Query:
             (:obj:`Query`): Query object for further customizations
 
         #### Raises:
-            Exception: Raises with an error message of API return on non-zero error code
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -314,7 +315,7 @@ class Query:
             (:obj:`Query`): Query object for further customizations
 
         #### Raises:
-            Exception: Raises with an error message of API return on non-zero error code
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -329,7 +330,7 @@ class Query:
             (:obj:`Query`): Query object for further customizations
 
         #### Raises:
-            Exception: Raises with an error message of API return on non-zero error code
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -349,7 +350,7 @@ class Query:
             (:obj:`Query`): Query object for further customizations
 
         #### Raises:
-            Exception: Raises with an error message of API return on non-zero error code
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -542,7 +543,7 @@ class Query:
             (:obj:`Query`): Query object for further customizations
 
         #### Raises:
-            Exception: Raises with an error message of API return on non-zero error code
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -582,7 +583,7 @@ class Query:
             (:obj:`Query`): Query object for further customizations
 
         #### Raises:
-            Exception: Raises with an error message of API return on non-zero error code
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -740,8 +741,8 @@ class Query:
             (:obj:`QueryResults`): A QueryResults iterator
 
         #### Raises:
-            Exception: Raises with an error message when query is in an invalid state
-            Exception: Raises with an error message of API return on non-zero error code
+            ApiError: Raises with an error message when query is in an invalid state
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -760,8 +761,8 @@ class Query:
             (int): Number of deleted elements
 
         #### Raises:
-            Exception: Raises with an error message when query is in an invalid state
-            Exception: Raises with an error message of API return on non-zero error code
+            QueryError: Raises with an error message when query is in an invalid state
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -783,8 +784,8 @@ class Query:
             (:obj:`Query`): Query object for further customizations
 
         #### Raises:
-            Exception: Raises with an error message of API return on non-zero error code
-            Exception: Raises with an error message if no values are specified
+            QueryError: Raises with an error message if no values are specified
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -806,7 +807,7 @@ class Query:
             (:obj:`Query`): Query object for further customizations
 
         #### Raises:
-            Exception: Raises with an error message of API return on non-zero error code
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -852,8 +853,8 @@ class Query:
             (:obj:`QueryResults`): A QueryResults iterator
 
         #### Raises:
-            Exception: Raises with an error message when query is in an invalid state
-            Exception: Raises with an error message of API return on non-zero error code
+            QueryError: Raises with an error message when query is in an invalid state
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -872,8 +873,8 @@ class Query:
             (:obj:`QueryResults`): A QueryResults iterator
 
         #### Raises:
-            Exception: Raises with an error message when query is in an invalid state
-            Exception: Raises with an error message of API return on non-zero error code
+            ApiError: Raises with an error message when query is in an invalid state
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -888,8 +889,8 @@ class Query:
             (:tuple:string,bool): 1st string item and found flag
 
         #### Raises:
-            Exception: Raises with an error message when query is in an invalid state
-            Exception: Raises with an error message of API return on non-zero error code
+            ApiError: Raises with an error message when query is in an invalid state
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -1013,6 +1014,9 @@ class Query:
         #### Returns:
             (:obj:`Query`): Query object for further customizations
 
+        #### Raises:
+            QueryError: Raises with an error message when query is in an invalid state
+
         """
 
         if self.root is None:
@@ -1034,7 +1038,7 @@ class Query:
             (:obj:`Query`): Query object for further customizations
 
         #### Raises:
-            Exception: Raises with an error message of API return on non-zero error code
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -1054,7 +1058,7 @@ class Query:
             (:obj:`Query`): Query object for further customizations
 
         #### Raises:
-            Exception: Raises with an error message of API return on non-zero error code
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -1074,7 +1078,7 @@ class Query:
             (:obj:`Query`): Query object for further customizations
 
         #### Raises:
-            Exception: Raises with an error message of API return on non-zero error code
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
