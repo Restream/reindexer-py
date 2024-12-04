@@ -1,5 +1,5 @@
-from exceptions import ApiError
 from pyreindexer import RxConnector
+from pyreindexer.exceptions import ApiError
 from pyreindexer.query import CondType
 
 
