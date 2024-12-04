@@ -1,5 +1,4 @@
 #include "reindexerinterface.h"
-#include <chrono>
 #include "client/cororeindexer.h"
 #include "core/reindexer.h"
 #include "core/type_consts.h"
@@ -41,15 +40,15 @@ private:
 
 template <>
 ReindexerInterface<reindexer::Reindexer>::ReindexerInterface(const ReindexerConfig& cfg)
-	: db_(reindexer::ReindexerConfig()
-			.WithUpdatesSize(cfg.maxReplUpdatesSize)
-			.WithAllocatorCacheLimits(cfg.allocatorCacheLimit, cfg.allocatorCachePart))
+	: db_(std::make_unique<reindexer::Reindexer>(reindexer::ReindexerConfig()
+					.WithUpdatesSize(cfg.maxReplUpdatesSize)
+					.WithAllocatorCacheLimits(cfg.allocatorCacheLimit, cfg.allocatorCachePart)))
 { }
 
 template <>
 ReindexerInterface<reindexer::client::CoroReindexer>::ReindexerInterface(const ReindexerConfig& cfg)
-	: db_(reindexer::client::ReindexerConfig(4, 1, cfg.fetchAmount, 0, std::chrono::seconds(cfg.connectTimeout),
-		  std::chrono::seconds(cfg.requestTimeout), cfg.enableCompression, cfg.requestDedicatedThread, cfg.appName))
+	: db_(std::make_unique<reindexer::client::CoroReindexer>(reindexer::client::ReindexerConfig(4, 1, cfg.fetchAmount,
+			0, cfg.connectTimeout, cfg.requestTimeout, cfg.enableCompression, cfg.requestDedicatedThread, cfg.appName)))
 {
 	std::atomic_bool running{false};
 	executionThr_ = std::thread([this, &running] {
@@ -103,6 +102,15 @@ Error ReindexerInterface<DBT>::Select(const std::string& query, QueryResultsWrap
 }
 
 template <typename DBT>
+Error ReindexerInterface<DBT>::WithTimeout(std::chrono::milliseconds timeout) {
+	return execute([this, timeout] {
+		auto db = db_->WithTimeout(timeout);
+		db_ = std::make_unique<DBT>(std::move(db));
+		return errOK;
+	});
+}
+
+template <typename DBT>
 Error ReindexerInterface<DBT>::FetchResults(QueryResultsWrapper& result) {
 	return execute([&result] {
 		result.FetchResults();
@@ -135,7 +143,7 @@ Error ReindexerInterface<reindexer::client::CoroReindexer>::modify(reindexer::cl
 template <typename DBT>
 Error ReindexerInterface<DBT>::commitTransaction(typename DBT::TransactionT& transaction, size_t& count) {
 	typename DBT::QueryResultsT qres(QRESULTS_FLAGS);
-	auto err = db_.CommitTransaction(transaction, qres);
+	auto err = db_->CommitTransaction(transaction, qres);
 	count = qres.Count();
 	return err;
 }
@@ -143,7 +151,7 @@ Error ReindexerInterface<DBT>::commitTransaction(typename DBT::TransactionT& tra
 template <typename DBT>
 Error ReindexerInterface<DBT>::selectQuery(const reindexer::Query& query, QueryResultsWrapper& result) {
 	typename DBT::QueryResultsT qres(QRESULTS_FLAGS);
-	auto err = db_.Select(query, qres);
+	auto err = db_->Select(query, qres);
 	result.Wrap(std::move(qres));
 	return err;
 }
@@ -151,7 +159,7 @@ Error ReindexerInterface<DBT>::selectQuery(const reindexer::Query& query, QueryR
 template <typename DBT>
 Error ReindexerInterface<DBT>::deleteQuery(const reindexer::Query& query, size_t& count) {
 	typename DBT::QueryResultsT qres;
-	auto err = db_.Delete(query, qres);
+	auto err = db_->Delete(query, qres);
 	count = qres.Count();
 	return err;
 }
@@ -159,7 +167,7 @@ Error ReindexerInterface<DBT>::deleteQuery(const reindexer::Query& query, size_t
 template <typename DBT>
 Error ReindexerInterface<DBT>::updateQuery(const reindexer::Query& query, QueryResultsWrapper& result) {
 	typename DBT::QueryResultsT qres(QRESULTS_FLAGS);
-	auto err = db_.Update(query, qres);
+	auto err = db_->Update(query, qres);
 	result.Wrap(std::move(qres));
 	return err;
 }
@@ -182,12 +190,12 @@ Error ReindexerInterface<reindexer::client::CoroReindexer>::execute(std::functio
 
 template <>
 Error ReindexerInterface<reindexer::Reindexer>::connect(const std::string& dsn) {
-	return db_.Connect(dsn);
+	return db_->Connect(dsn);
 }
 
 template <>
 Error ReindexerInterface<reindexer::client::CoroReindexer>::connect(const std::string& dsn) {
-	return db_.Connect(dsn, loop_, reindexer::client::ConnectOpts().CreateDBIfMissing());
+	return db_->Connect(dsn, loop_, reindexer::client::ConnectOpts().CreateDBIfMissing());
 }
 
 template <>
@@ -197,7 +205,7 @@ Error ReindexerInterface<reindexer::Reindexer>::stop() {
 
 template <>
 Error ReindexerInterface<reindexer::client::CoroReindexer>::stop() {
-	db_.Stop();
+	db_->Stop();
 	stopCh_.close();
 	return errOK;
 }

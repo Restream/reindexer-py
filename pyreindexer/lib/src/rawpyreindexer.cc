@@ -60,6 +60,8 @@ PyObject* queryResultsWrapperIterate(uintptr_t qresWrapperAddr) {
 static PyObject* Init(PyObject* self, PyObject* args) {
 	ReindexerConfig cfg;
 	char* clientName = nullptr;
+	int connectTimeout = 0;
+	int requestTimeout = 0;
 	unsigned enableCompression = 0;
 	unsigned startSpecialThread = 0;
 	unsigned maxReplUpdatesSize = 0;
@@ -69,6 +71,8 @@ static PyObject* Init(PyObject* self, PyObject* args) {
 		return nullptr;
 	}
 
+	cfg.connectTimeout = std::chrono::seconds(connectTimeout);
+	cfg.requestTimeout = std::chrono::seconds(requestTimeout);
 	cfg.enableCompression = (enableCompression != 0);
 	cfg.requestDedicatedThread = (startSpecialThread != 0);
 	cfg.appName = clientName;
@@ -125,6 +129,17 @@ static PyObject* Select(PyObject* self, PyObject* args) {
 	auto totalCount = qresWrapper->TotalCount();
 	return Py_BuildValue("iskII", err.code(), err.what().c_str(),
 						 reinterpret_cast<uintptr_t>(qresWrapper.release()), count, totalCount);
+}
+
+static PyObject* WithTimeout(PyObject* self, PyObject* args) {
+	uintptr_t rx = 0;
+	unsigned timeout = 0;
+	if (!PyArg_ParseTuple(args, "kI", &rx, &timeout)) {
+		return nullptr;
+	}
+
+	auto err = getWrapper<DBInterface>(rx)->WithTimeout(std::chrono::milliseconds(timeout));
+	return pyErr(err);
 }
 
 // namespace ----------------------------------------------------------------------------------------------------------

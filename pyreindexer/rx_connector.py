@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Dict, List
 
 from pyreindexer.query import Query
@@ -37,12 +39,12 @@ class RxConnector(RaiserMixin):
 
         #### Arguments:
             dsn (string): The connection string which contains a protocol
-                Examples: 'builtin:///tmp/pyrx', 'cproto://127.0.0.1:6534/pyrx
+                Examples: 'builtin:///tmp/pyrx', 'cproto://127.0.0.1:6534/pyrx'
 
             cproto options:
                  fetch_amount (int): The number of items that will be fetched by one operation
-                 connect_timeout (int): Connection and database login timeout value
-                 request_timeout (int): Request execution timeout value
+                 connect_timeout (int): Connection and database login timeout value [seconds]
+                 request_timeout (int): Request execution timeout value [seconds]
                  enable_compression (bool): Flag enable/disable traffic compression
                  start_special_thread (bool): Determines whether to request a special thread of execution
                     on the server for this connection
@@ -392,6 +394,21 @@ class RxConnector(RaiserMixin):
 
         self.err_code, self.err_msg, query_wrapper_ptr = self.api.create_query(self.rx, namespace)
         return Query(self.api, query_wrapper_ptr)
+
+    @raise_if_error
+    def with_timeout(self, timeout: int) -> RxConnector:
+        """Add execution timeout to the next query
+
+        #### Arguments:
+            timeout (int): Optional server-side execution timeout for each subquery [milliseconds]
+
+        #### Returns:
+            (:obj:`RxConnector`): RxConnector object for further customizations
+
+        """
+
+        self.api.with_timeout(self.rx, timeout)
+        return self
 
     def _api_import(self, dsn):
         """Imports an API dynamically depending on protocol specified in dsn

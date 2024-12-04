@@ -19,6 +19,7 @@ static PyObject* Init(PyObject* self, PyObject* args);
 static PyObject* Destroy(PyObject* self, PyObject* args);
 static PyObject* Connect(PyObject* self, PyObject* args);
 static PyObject* Select(PyObject* self, PyObject* args);
+static PyObject* WithTimeout(PyObject* self, PyObject* args);
 // namespace
 static PyObject* NamespaceOpen(PyObject* self, PyObject* args);
 static PyObject* NamespaceClose(PyObject* self, PyObject* args);
@@ -104,6 +105,7 @@ static PyMethodDef module_methods[] = {
 	{"destroy", Destroy, METH_VARARGS, "destroy reindexer instance"},
 	{"connect", Connect, METH_VARARGS, "connect to reindexer database"},
 	{"select", Select, METH_VARARGS, "select query"},
+	{"with_timeout", WithTimeout, METH_VARARGS, "Add execution timeout"},
 	// namespace
 	{"namespace_open", NamespaceOpen, METH_VARARGS, "open namespace"},
 	{"namespace_close", NamespaceClose, METH_VARARGS, "close namespace"},
