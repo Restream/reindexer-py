@@ -26,7 +26,7 @@ class RxConnector(RaiserMixin):
 
         #### Arguments:
             dsn (string): The connection string which contains a protocol
-            Examples: 'builtin:///tmp/pyrx', 'cproto://127.0.0.1:6534/pyrx
+            Examples: 'builtin:///tmp/pyrx', 'cproto://127.0.0.1:6534/pyrx'
 
         """
 
