@@ -119,22 +119,18 @@ class Query:
         """
 
         if param is None:
-            return list()
+            return []
 
         if isinstance(param, str) or not isinstance(param, Iterable):
-            result: list = [param]
-            return result
+            return [param]
 
         if isinstance(param, list):
             return param
 
-        res = param
-        if not isinstance(res, list):
-            res = list(res)
-        if len(res) == 0 or (len(res) > 0 and not isinstance(res[0], list)):
-            wrap: list = [res]
-            res = wrap
-        return res
+        result = list(param)
+        if len(result) == 0 or not isinstance(result[0], list):
+            result: list = [result]
+        return result
 
     @staticmethod
     def __convert_strs_to_list(param: tuple[str, ...]) -> list[str]:
@@ -148,8 +144,7 @@ class Query:
 
         """
 
-        result = list() if param is None else list(param)
-        return result
+        return [] if param is None else list(param)
 
     def __where(self, index: str, condition: CondType,
                 keys: Union[simple_types, tuple[list[simple_types], ...]]) -> Query:
