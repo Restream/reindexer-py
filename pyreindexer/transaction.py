@@ -1,4 +1,4 @@
-from exceptions import ApiError, TransactionError
+from pyreindexer.exceptions import ApiError, TransactionError
 
 
 def raise_if_error(func):

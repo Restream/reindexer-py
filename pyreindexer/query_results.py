@@ -1,4 +1,4 @@
-from exceptions import ApiError
+from pyreindexer.exceptions import ApiError
 
 
 class QueryResults:

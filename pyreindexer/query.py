@@ -4,9 +4,9 @@ from collections.abc import Iterable
 from enum import Enum
 from typing import Optional, Union
 
-from exceptions import ApiError, QueryError
-from pyreindexer.point import Point
+from pyreindexer.exceptions import ApiError, QueryError
 from pyreindexer.query_results import QueryResults
+from pyreindexer.point import Point
 
 
 class ExtendedEnum(Enum):
