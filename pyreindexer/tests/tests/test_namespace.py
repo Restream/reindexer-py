@@ -1,6 +1,6 @@
 from hamcrest import *
 
-from exceptions import ApiError
+from pyreindexer.exceptions import ApiError
 
 
 class TestCrudNamespace:

@@ -1,6 +1,6 @@
 from hamcrest import *
 
-from exceptions import TransactionError
+from pyreindexer.exceptions import TransactionError
 from tests.helpers.base_helper import get_ns_items
 from tests.helpers.transaction import *
 from tests.test_data.constants import item_definition

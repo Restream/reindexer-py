@@ -5,7 +5,7 @@ import random
 import pytest
 from hamcrest import *
 
-from exceptions import ApiError
+from pyreindexer.exceptions import ApiError
 from point import Point
 from query import CondType, LogLevel, StrictMode
 from tests.helpers.base_helper import calculate_distance, get_ns_items

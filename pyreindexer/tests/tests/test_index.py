@@ -1,6 +1,6 @@
 from hamcrest import *
 
-from exceptions import ApiError
+from pyreindexer.exceptions import ApiError
 from tests.helpers.base_helper import get_ns_description
 from tests.test_data.constants import index_definition, updated_index_definition
 
