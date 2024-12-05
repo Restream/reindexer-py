@@ -61,10 +61,8 @@ public:
 
 	void FetchResults() {
 		assert(qres_.has_value());
+		// when results are fetched iterator closes and frees memory of results buffer of Reindexer
 		++it_;
-		if (it_ == qres_->end()) {
-			it_ = qres_->begin();
-		}
 	}
 
 	const std::string& GetExplainResults() & noexcept {
