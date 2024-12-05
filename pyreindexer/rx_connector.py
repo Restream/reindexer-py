@@ -395,7 +395,6 @@ class RxConnector(RaiserMixin):
         self.err_code, self.err_msg, query_wrapper_ptr = self.api.create_query(self.rx, namespace)
         return Query(self.api, query_wrapper_ptr)
 
-    @raise_if_error
     def with_timeout(self, timeout: int) -> RxConnector:
         """Add execution timeout to the next query
 

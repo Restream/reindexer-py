@@ -21,6 +21,7 @@
     * [select](#pyreindexer.rx_connector.RxConnector.select)
     * [new\_transaction](#pyreindexer.rx_connector.RxConnector.new_transaction)
     * [new\_query](#pyreindexer.rx_connector.RxConnector.new_query)
+    * [with\_timeout](#pyreindexer.rx_connector.RxConnector.with_timeout)
 * [pyreindexer.query\_results](#pyreindexer.query_results)
   * [QueryResults](#pyreindexer.query_results.QueryResults)
     * [status](#pyreindexer.query_results.QueryResults.status)
@@ -464,6 +465,22 @@ Creates a new query and return the query object to processing
 
 #### Raises:
     Exception: Raises with an error message when Reindexer instance is not initialized yet
+
+<a id="pyreindexer.rx_connector.RxConnector.with_timeout"></a>
+
+### RxConnector.with\_timeout
+
+```python
+def with_timeout(timeout: int) -> RxConnector
+```
+
+Add execution timeout to the next query
+
+#### Arguments:
+    timeout (int): Optional server-side execution timeout for each subquery [milliseconds]
+
+#### Returns:
+    (:obj:`RxConnector`): RxConnector object for further customizations
 
 <a id="pyreindexer.query_results"></a>
 

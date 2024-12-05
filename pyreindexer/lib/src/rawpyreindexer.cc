@@ -138,8 +138,9 @@ static PyObject* WithTimeout(PyObject* self, PyObject* args) {
 		return nullptr;
 	}
 
-	auto err = getWrapper<DBInterface>(rx)->WithTimeout(std::chrono::milliseconds(timeout));
-	return pyErr(err);
+	getWrapper<DBInterface>(rx)->WithTimeout(std::chrono::milliseconds(timeout));
+
+	Py_RETURN_NONE;
 }
 
 // namespace ----------------------------------------------------------------------------------------------------------

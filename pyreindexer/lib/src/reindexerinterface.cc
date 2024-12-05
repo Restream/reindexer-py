@@ -40,15 +40,14 @@ private:
 
 template <>
 ReindexerInterface<reindexer::Reindexer>::ReindexerInterface(const ReindexerConfig& cfg)
-	: db_(std::make_unique<reindexer::Reindexer>(reindexer::ReindexerConfig()
-					.WithUpdatesSize(cfg.maxReplUpdatesSize)
-					.WithAllocatorCacheLimits(cfg.allocatorCacheLimit, cfg.allocatorCachePart)))
+	: db_(reindexer::ReindexerConfig().WithUpdatesSize(cfg.maxReplUpdatesSize)
+							.WithAllocatorCacheLimits(cfg.allocatorCacheLimit, cfg.allocatorCachePart))
 { }
 
 template <>
 ReindexerInterface<reindexer::client::CoroReindexer>::ReindexerInterface(const ReindexerConfig& cfg)
-	: db_(std::make_unique<reindexer::client::CoroReindexer>(reindexer::client::ReindexerConfig(4, 1, cfg.fetchAmount,
-			0, cfg.connectTimeout, cfg.requestTimeout, cfg.enableCompression, cfg.requestDedicatedThread, cfg.appName)))
+	: db_(reindexer::client::ReindexerConfig(4, 1, cfg.fetchAmount, 0,
+			cfg.connectTimeout, cfg.requestTimeout, cfg.enableCompression, cfg.requestDedicatedThread, cfg.appName))
 {
 	std::atomic_bool running{false};
 	executionThr_ = std::thread([this, &running] {
@@ -102,15 +101,6 @@ Error ReindexerInterface<DBT>::Select(const std::string& query, QueryResultsWrap
 }
 
 template <typename DBT>
-Error ReindexerInterface<DBT>::WithTimeout(std::chrono::milliseconds timeout) {
-	return execute([this, timeout] {
-		auto db = db_->WithTimeout(timeout);
-		db_ = std::make_unique<DBT>(std::move(db));
-		return errOK;
-	});
-}
-
-template <typename DBT>
 Error ReindexerInterface<DBT>::FetchResults(QueryResultsWrapper& result) {
 	return execute([&result] {
 		result.FetchResults();
@@ -128,6 +118,125 @@ Error ReindexerInterface<DBT>::StartTransaction(std::string_view ns, Transaction
 	});
 }
 
+template <typename DBT>
+Error ReindexerInterface<DBT>::openNamespace(std::string_view ns) {
+	auto err = db_.WithTimeout(timeout_).OpenNamespace({ns.data(), ns.size()});
+	timeout_ = std::chrono::milliseconds{0};
+	return err;
+}
+
+template <typename DBT>
+Error ReindexerInterface<DBT>::closeNamespace(std::string_view ns) {
+	auto err = db_.WithTimeout(timeout_).CloseNamespace({ns.data(), ns.size()});
+	timeout_ = std::chrono::milliseconds{0};
+	return err;
+}
+
+template <typename DBT>
+Error ReindexerInterface<DBT>::dropNamespace(std::string_view ns) {
+	auto err = db_.WithTimeout(timeout_).DropNamespace(ns);
+	timeout_ = std::chrono::milliseconds{0};
+	return err;
+}
+
+template <typename DBT>
+Error ReindexerInterface<DBT>::addIndex(std::string_view ns, const IndexDef& idx) {
+	auto err = db_.WithTimeout(timeout_).AddIndex(ns, idx);
+	timeout_ = std::chrono::milliseconds{0};
+	return err;
+}
+
+template <typename DBT>
+Error ReindexerInterface<DBT>::updateIndex(std::string_view ns, const IndexDef& idx) {
+	auto err = db_.WithTimeout(timeout_).UpdateIndex(ns, idx);
+	timeout_ = std::chrono::milliseconds{0};
+	return err;
+}
+
+template <typename DBT>
+Error ReindexerInterface<DBT>::dropIndex(std::string_view ns, const IndexDef& idx) {
+	auto err = db_.WithTimeout(timeout_).DropIndex({ns.data(), ns.size()}, idx);
+	timeout_ = std::chrono::milliseconds{0};
+	return err;
+}
+
+template <typename DBT>
+typename DBT::ItemT ReindexerInterface<DBT>::newItem(std::string_view ns) {
+	auto item = db_.WithTimeout(timeout_).NewItem({ns.data(), ns.size()});
+	timeout_ = std::chrono::milliseconds{0};
+	return item;
+}
+
+template <typename DBT>
+Error ReindexerInterface<DBT>::insert(std::string_view ns, typename DBT::ItemT& item) {
+	auto err = db_.WithTimeout(timeout_).Insert({ns.data(), ns.size()}, item);
+	timeout_ = std::chrono::milliseconds{0};
+	return err;
+}
+
+template <typename DBT>
+Error ReindexerInterface<DBT>::upsert(std::string_view ns, typename DBT::ItemT& item) {
+	auto err = db_.WithTimeout(timeout_).Upsert({ns.data(), ns.size()}, item);
+	timeout_ = std::chrono::milliseconds{0};
+	return err;
+}
+
+template <typename DBT>
+Error ReindexerInterface<DBT>::update(std::string_view ns, typename DBT::ItemT& item) {
+	auto err = db_.WithTimeout(timeout_).Update({ns.data(), ns.size()}, item);
+	timeout_ = std::chrono::milliseconds{0};
+	return err;
+}
+
+template <typename DBT>
+Error ReindexerInterface<DBT>::deleteItem(std::string_view ns, typename DBT::ItemT& item) {
+	auto err = db_.WithTimeout(timeout_).Delete({ns.data(), ns.size()}, item);
+	timeout_ = std::chrono::milliseconds{0};
+	return err;
+}
+
+template <typename DBT>
+Error ReindexerInterface<DBT>::putMeta(std::string_view ns, const std::string& key, std::string_view data) {
+	auto err = db_.WithTimeout(timeout_).PutMeta(ns, key, data);
+	timeout_ = std::chrono::milliseconds{0};
+	return err;
+}
+
+template <typename DBT>
+Error ReindexerInterface<DBT>::getMeta(std::string_view ns, const std::string& key, std::string& data) {
+	auto err = db_.WithTimeout(timeout_).GetMeta(ns, key, data);
+	timeout_ = std::chrono::milliseconds{0};
+	return err;
+}
+
+template <typename DBT>
+Error ReindexerInterface<DBT>::deleteMeta(std::string_view ns, const std::string& key) {
+	auto err = db_.WithTimeout(timeout_).DeleteMeta(ns, key);
+	timeout_ = std::chrono::milliseconds{0};
+	return err;
+}
+
+template <typename DBT>
+Error ReindexerInterface<DBT>::enumMeta(std::string_view ns, std::vector<std::string>& keys) {
+	auto err = db_.WithTimeout(timeout_).EnumMeta(ns, keys);
+	timeout_ = std::chrono::milliseconds{0};
+	return err;
+}
+
+template <typename DBT>
+Error ReindexerInterface<DBT>::select(const std::string& query, typename DBT::QueryResultsT& result) {
+	auto err = db_.WithTimeout(timeout_).Select(query, result);
+	timeout_ = std::chrono::milliseconds{0};
+	return err;
+}
+
+template <typename DBT>
+Error ReindexerInterface<DBT>::enumNamespaces(std::vector<NamespaceDef>& defs, EnumNamespacesOpts opts) {
+	auto err =  db_.WithTimeout(timeout_).EnumNamespaces(defs, opts);
+	timeout_ = std::chrono::milliseconds{0};
+	return err;
+}
+
 template <>
 Error ReindexerInterface<reindexer::Reindexer>::modify(reindexer::Transaction& transaction,
 			reindexer::Item&& item, ItemModifyMode mode) {
@@ -141,17 +250,33 @@ Error ReindexerInterface<reindexer::client::CoroReindexer>::modify(reindexer::cl
 }
 
 template <typename DBT>
+typename DBT::TransactionT ReindexerInterface<DBT>::startTransaction(std::string_view ns) {
+	auto transaction = db_.WithTimeout(timeout_).NewTransaction(ns);
+	timeout_ = std::chrono::milliseconds{0};
+	return transaction;
+}
+
+template <typename DBT>
 Error ReindexerInterface<DBT>::commitTransaction(typename DBT::TransactionT& transaction, size_t& count) {
 	typename DBT::QueryResultsT qres(QRESULTS_FLAGS);
-	auto err = db_->CommitTransaction(transaction, qres);
+	auto err = db_.WithTimeout(timeout_).CommitTransaction(transaction, qres);
+	timeout_ = std::chrono::milliseconds{0};
 	count = qres.Count();
+	return err;
+}
+
+template <typename DBT>
+Error ReindexerInterface<DBT>::rollbackTransaction(typename DBT::TransactionT& tr) {
+	auto err = db_.WithTimeout(timeout_).RollBackTransaction(tr);
+	timeout_ = std::chrono::milliseconds{0};
 	return err;
 }
 
 template <typename DBT>
 Error ReindexerInterface<DBT>::selectQuery(const reindexer::Query& query, QueryResultsWrapper& result) {
 	typename DBT::QueryResultsT qres(QRESULTS_FLAGS);
-	auto err = db_->Select(query, qres);
+	auto err = db_.WithTimeout(timeout_).Select(query, qres);
+	timeout_ = std::chrono::milliseconds{0};
 	result.Wrap(std::move(qres));
 	return err;
 }
@@ -159,7 +284,8 @@ Error ReindexerInterface<DBT>::selectQuery(const reindexer::Query& query, QueryR
 template <typename DBT>
 Error ReindexerInterface<DBT>::deleteQuery(const reindexer::Query& query, size_t& count) {
 	typename DBT::QueryResultsT qres;
-	auto err = db_->Delete(query, qres);
+	auto err = db_.WithTimeout(timeout_).Delete(query, qres);
+	timeout_ = std::chrono::milliseconds{0};
 	count = qres.Count();
 	return err;
 }
@@ -167,7 +293,8 @@ Error ReindexerInterface<DBT>::deleteQuery(const reindexer::Query& query, size_t
 template <typename DBT>
 Error ReindexerInterface<DBT>::updateQuery(const reindexer::Query& query, QueryResultsWrapper& result) {
 	typename DBT::QueryResultsT qres(QRESULTS_FLAGS);
-	auto err = db_->Update(query, qres);
+	auto err = db_.WithTimeout(timeout_).Update(query, qres);
+	timeout_ = std::chrono::milliseconds{0};
 	result.Wrap(std::move(qres));
 	return err;
 }
@@ -190,12 +317,16 @@ Error ReindexerInterface<reindexer::client::CoroReindexer>::execute(std::functio
 
 template <>
 Error ReindexerInterface<reindexer::Reindexer>::connect(const std::string& dsn) {
-	return db_->Connect(dsn);
+	auto err = db_.WithTimeout(timeout_).Connect(dsn);
+	timeout_ = std::chrono::milliseconds{0};
+	return err;
 }
 
 template <>
 Error ReindexerInterface<reindexer::client::CoroReindexer>::connect(const std::string& dsn) {
-	return db_->Connect(dsn, loop_, reindexer::client::ConnectOpts().CreateDBIfMissing());
+	auto err = db_.WithTimeout(timeout_).Connect(dsn, loop_, reindexer::client::ConnectOpts().CreateDBIfMissing());
+	timeout_ = std::chrono::milliseconds{0};
+	return err;
 }
 
 template <>
@@ -205,7 +336,7 @@ Error ReindexerInterface<reindexer::Reindexer>::stop() {
 
 template <>
 Error ReindexerInterface<reindexer::client::CoroReindexer>::stop() {
-	db_->Stop();
+	db_.Stop();
 	stopCh_.close();
 	return errOK;
 }
