@@ -298,8 +298,7 @@ PyObject* itemModify(PyObject* self, PyObject* args, ItemModifyMode mode) {
 
 	Py_DECREF(itemDefDict);
 
-	char* json = const_cast<char*>(wrSer.c_str());
-	err = item.Unsafe().FromJSON(json, 0, mode == ModeDelete);
+	err = item.Unsafe().FromJSON(wrSer.c_str(), 0, mode == ModeDelete);
 	if (!err.ok()) {
 		Py_XDECREF(preceptsList);
 
@@ -317,7 +316,7 @@ PyObject* itemModify(PyObject* self, PyObject* args, ItemModifyMode mode) {
 			return pyErr(err);
 		}
 
-		item.SetPrecepts(itemPrecepts);
+		item.SetPrecepts(itemPrecepts); // ToDo after migrate on v.4, do std::move
 	}
 
 	Py_XDECREF(preceptsList);
@@ -545,8 +544,7 @@ PyObject* modifyTransaction(PyObject* self, PyObject* args, ItemModifyMode mode)
 
 	Py_DECREF(defDict);
 
-	char* json = const_cast<char*>(wrSer.c_str());
-	err = item.Unsafe().FromJSON(json, 0, mode == ModeDelete);
+	err = item.Unsafe().FromJSON(wrSer.c_str(), 0, mode == ModeDelete);
 	if (!err.ok()) {
 		Py_XDECREF(precepts);
 
@@ -564,7 +562,7 @@ PyObject* modifyTransaction(PyObject* self, PyObject* args, ItemModifyMode mode)
 			return pyErr(err);
 		}
 
-		item.SetPrecepts(itemPrecepts);
+		item.SetPrecepts(itemPrecepts); // ToDo after migrate on v.4, do std::move
 	}
 
 	Py_XDECREF(precepts);
@@ -594,7 +592,6 @@ static PyObject* CommitTransaction(PyObject* self, PyObject* args) {
 		return nullptr;
 	}
 
-	assert((StopTransactionMode::Commit == stopMode) || (StopTransactionMode::Rollback == stopMode));
 	size_t count = 0;
 	auto err = getWrapper<TransactionWrapper>(transactionWrapperAddr)->Commit(count);
 
@@ -609,7 +606,6 @@ static PyObject* RollbackTransaction(PyObject* self, PyObject* args) {
 		return nullptr;
 	}
 
-	assert((StopTransactionMode::Commit == stopMode) || (StopTransactionMode::Rollback == stopMode));
 	auto err = getWrapper<TransactionWrapper>(transactionWrapperAddr)->Rollback();
 
 	deleteWrapper<TransactionWrapper>(transactionWrapperAddr);
