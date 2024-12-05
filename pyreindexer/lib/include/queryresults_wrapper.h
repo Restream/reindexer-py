@@ -52,10 +52,8 @@ public:
 
 	void FetchResults() {
 		assert(wrap_);
+		// when results are fetched iterator closes and frees a memory of results buffer of Reindexer
 		++it_;
-		if (it_ == qres_.end()) {
-			it_ = qres_.begin();
-		}
 	}
 
 	const std::vector<reindexer::AggregationResult>& GetAggregationResults() & { return qres_.GetAggregationResults(); }
