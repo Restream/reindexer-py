@@ -5,10 +5,10 @@
 
 
 class IndexDefinition(dict):
-    """ IndexDefinition is a dictionary subclass which allows to construct and manage indexes more efficiently.
+    """IndexDefinition is a dictionary subclass which allows to construct and manage indexes more efficiently.
     NOT IMPLEMENTED YET. USE FIELDS DESCRIPTION ONLY.
 
-    # Arguments:
+    #### Arguments:
         name (str): An index name.
         json_paths (:obj:`list` of :obj:`str`): A name for mapping a value to a json field.
         field_type (str): A type of field. Possible values are: `int`, `int64`, `double`, `string`, `bool`, `composite`.
@@ -25,7 +25,7 @@ class IndexDefinition(dict):
             `none`, `ascii`, `utf8`, `numeric`, `custom`.
         sort_order_letters (str): Order for a sort sequence for a custom collate mode.
         config (dict): A config for a fulltext engine.
-        [More](https://github.com/Restream/reindexer/blob/master/fulltext.md) .
+        [More](https://github.com/Restream/reindexer/blob/master/fulltext.md).
     """
 
     def __getitem__(self, attr):
@@ -37,7 +37,7 @@ class IndexDefinition(dict):
         super(IndexDefinition, self).update({attr: value})
         return self
 
-    def update(self, dict_part=None):
+    def update(self, *args, **kwargs):
         raise NotImplementedError(
             'Bulk update is not implemented for IndexDefinition instance')
 

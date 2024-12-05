@@ -1,9 +1,10 @@
 from pyreindexer import RxConnector
+from query import Query
 from tests.helpers.log_helper import log_api
 
 
-def make_request_and_response_log(method_description, request_msg, res=None) -> str:
-    return f"{method_description}\n\t[Request] => {request_msg}\n\t[Response] => {res}"
+def make_request_and_response_log(method_description, call_msg, res=None) -> str:
+    return f"{method_description}\n\t[Call] => {call_msg}\n\t[Return] <= {res}"
 
 
 def api_method(func):
@@ -15,10 +16,10 @@ def api_method(func):
 
         args_str = ", ".join(repr(a) for a in args)
         kwargs_str = ", ".join(f"{k}={v}" for k, v in kwargs.items())
-        request_msg = f"Called {func.__name__} with args ({args_str}) and kwargs ({kwargs_str})"
+        call_msg = f"args ({args_str}), kwargs ({kwargs_str})"
 
         r = func(self, *args, **kwargs)
-        log = make_request_and_response_log(method_description, request_msg, r)
+        log = make_request_and_response_log(method_description, call_msg, r)
         log_api.info(log)
         return r
 
@@ -30,10 +31,11 @@ class ConnectorApi(RxConnector):
     def __init__(self, dsn):
         super().__init__(dsn)
         self.namespace = NamespaceApiMethods(self)
-        self.index = IndexesApiMethods(self)
+        self.index = IndexApiMethods(self)
         self.item = ItemApiMethods(self)
         self.query = QueryApiMethods(self)
         self.meta = MetaApiMethods(self)
+        self.tx = TransactionApiMethods(self)
 
 
 class NamespaceApiMethods:
@@ -61,7 +63,7 @@ class NamespaceApiMethods:
         return self.api.namespaces_enum(enum_not_opened)
 
 
-class IndexesApiMethods:
+class IndexApiMethods:
     def __init__(self, api):
         self.api = api
 
@@ -115,6 +117,11 @@ class QueryApiMethods:
         """ Execute SQL query """
         return self.api.select(q)
 
+    @api_method
+    def new(self, ns_name) -> Query:
+        """ Create a new query """
+        return self.api.new_query(ns_name)
+
 
 class MetaApiMethods:
     def __init__(self, api):
@@ -139,3 +146,53 @@ class MetaApiMethods:
     def delete(self, ns_name, key):
         """ Delete meta by key """
         return self.api.meta_delete(ns_name, key)
+
+
+class TransactionApiMethods:
+    def __init__(self, api):
+        self.api = api
+
+    class _TransactionApi:
+        def __init__(self, tx):
+            self.tx = tx
+
+        @api_method
+        def commit(self):
+            """ Commit the transaction """
+            return self.tx.commit()
+
+        @api_method
+        def commit_with_count(self):
+            """ Commit the transaction and return the number of changed items """
+            return self.tx.commit_with_count()
+
+        @api_method
+        def rollback(self):
+            """ Rollback the transaction """
+            return self.tx.rollback()
+
+        @api_method
+        def insert_item(self, item, precepts=None):
+            """ Insert item into transaction """
+            return self.tx.insert(item, precepts)
+
+        @api_method
+        def upsert_item(self, item, precepts=None):
+            """ Upsert item into transaction """
+            return self.tx.upsert(item, precepts)
+
+        @api_method
+        def update_item(self, item, precepts=None):
+            """ Update item into transaction """
+            return self.tx.update(item, precepts)
+
+        @api_method
+        def delete_item(self, item):
+            """ Delete item from transaction """
+            return self.tx.delete(item)
+
+    @api_method
+    def begin(self, ns_name) -> "_TransactionApi":
+        """ Begin new transaction """
+        tx = self.api.new_transaction(ns_name)
+        return self._TransactionApi(tx)

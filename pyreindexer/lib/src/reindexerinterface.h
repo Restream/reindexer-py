@@ -2,6 +2,7 @@
 
 #include <condition_variable>
 #include <thread>
+#include "core/query/query.h"
 #include "core/indexdef.h"
 #include "core/namespacedef.h"
 #include "coroutine/channel.h"
@@ -17,6 +18,7 @@ using reindexer::NamespaceDef;
 using reindexer::EnumNamespacesOpts;
 
 class QueryResultsWrapper;
+class TransactionWrapper;
 
 struct ICommand {
 	virtual Error Status() const = 0;
@@ -41,8 +43,8 @@ public:
 
 private:
 	CallableT command_;
-	Error err_;
-	std::atomic<bool> executed_ = {false};
+	Error err_{errOK};
+	std::atomic_bool executed_{false};
 };
 
 template <typename DBT>
@@ -109,6 +111,33 @@ public:
 		return execute([this, &defs, &opts] { return enumNamespaces(defs, opts); });
 	}
 	Error FetchResults(QueryResultsWrapper& result);
+	Error StartTransaction(std::string_view ns, TransactionWrapper& transactionWrapper);
+	typename DBT::ItemT NewItem(typename DBT::TransactionT& tr) {
+		typename DBT::ItemT item;
+		execute([this, &tr, &item] {
+			item = newItem(tr);
+			return item.Status();
+		});
+		return item;
+	}
+	Error Modify(typename DBT::TransactionT& tr, typename DBT::ItemT&& item, ItemModifyMode mode) {
+		return execute([this, &tr, &item, mode] { return modify(tr, std::move(item), mode); });
+	}
+	Error CommitTransaction(typename DBT::TransactionT& tr, size_t& count) {
+		return execute([this, &tr, &count] { return commitTransaction(tr, count); });
+	}
+	Error RollbackTransaction(typename DBT::TransactionT& tr) {
+		return execute([this, &tr] { return rollbackTransaction(tr); });
+	}
+	Error SelectQuery(const reindexer::Query& query, QueryResultsWrapper& result) {
+		return execute([this, &query, &result] { return selectQuery(query, result); });
+	}
+	Error DeleteQuery(const reindexer::Query& query, size_t& count) {
+		return execute([this, &query, &count] { return deleteQuery(query, count); });
+	}
+	Error UpdateQuery(const reindexer::Query& query, QueryResultsWrapper& result) {
+		return execute([this, &query, &result] { return updateQuery(query, result); });
+	}
 
 private:
 	Error execute(std::function<Error()> f);
@@ -131,6 +160,14 @@ private:
 	Error enumMeta(std::string_view ns, std::vector<std::string>& keys) { return db_.EnumMeta({ns.data(), ns.size()}, keys); }
 	Error select(const std::string& query, typename DBT::QueryResultsT& result) { return db_.Select(query, result); }
 	Error enumNamespaces(std::vector<NamespaceDef>& defs, EnumNamespacesOpts opts) { return db_.EnumNamespaces(defs, opts); }
+	typename DBT::TransactionT startTransaction(std::string_view ns) { return db_.NewTransaction({ns.data(), ns.size()}); }
+	typename DBT::ItemT newItem(typename DBT::TransactionT& tr) { return tr.NewItem(); }
+	Error modify(typename DBT::TransactionT& tr, typename DBT::ItemT&& item, ItemModifyMode mode);
+	Error commitTransaction(typename DBT::TransactionT& transaction, size_t& count);
+	Error rollbackTransaction(typename DBT::TransactionT& tr) { return db_.RollBackTransaction(tr); }
+	Error selectQuery(const reindexer::Query& query, QueryResultsWrapper& result);
+	Error deleteQuery(const reindexer::Query& query, size_t& count);
+	Error updateQuery(const reindexer::Query& query, QueryResultsWrapper& result);
 	Error stop();
 
 	DBT db_;

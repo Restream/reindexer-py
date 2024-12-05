@@ -1,16 +1,21 @@
 #include "reindexerinterface.h"
 #include "client/cororeindexer.h"
 #include "core/reindexer.h"
+#include "core/type_consts.h"
 #include "queryresults_wrapper.h"
+#include "transaction_wrapper.h"
 
 namespace pyreindexer {
+namespace {
+	const int QRESULTS_FLAGS = kResultsJson | kResultsWithRank | kResultsWithJoined;
+}
 
 template <>
 ReindexerInterface<reindexer::Reindexer>::ReindexerInterface() {}
 
 template <>
 ReindexerInterface<reindexer::client::CoroReindexer>::ReindexerInterface() {
-	std::atomic<bool> running{false};
+	std::atomic_bool running{false};
 	executionThr_ = std::thread([this, &running] {
 		cmdAsync_.set(loop_);
 		cmdAsync_.set([this](reindexer::net::ev::async&) {
@@ -53,10 +58,10 @@ ReindexerInterface<DBT>::~ReindexerInterface() {
 
 template <typename DBT>
 Error ReindexerInterface<DBT>::Select(const std::string& query, QueryResultsWrapper& result) {
-	return execute([this, &query, &result] {
-		auto res = select(query, result.qresPtr);
-		result.db_ = this;
-		result.iterInit();
+	return execute([this, query, &result] {
+		typename DBT::QueryResultsT qres(QRESULTS_FLAGS);
+		auto res = select(query, qres);
+		result.Wrap(std::move(qres));
 		return res;
 	});
 }
@@ -64,12 +69,63 @@ Error ReindexerInterface<DBT>::Select(const std::string& query, QueryResultsWrap
 template <typename DBT>
 Error ReindexerInterface<DBT>::FetchResults(QueryResultsWrapper& result) {
 	return execute([&result] {
-		++(result.itPtr);
-		if (result.itPtr == result.qresPtr.end()) {
-			result.iterInit();
-		}
+		result.FetchResults();
 		return errOK;
 	});
+}
+
+template <typename DBT>
+Error ReindexerInterface<DBT>::StartTransaction(std::string_view ns, TransactionWrapper& transactionWrapper) {
+	return execute([this, ns, &transactionWrapper] {
+		auto transaction = startTransaction(ns);
+		auto error = transaction.Status();
+		transactionWrapper.Wrap(std::move(transaction));
+		return error;
+	});
+}
+
+template <>
+Error ReindexerInterface<reindexer::Reindexer>::modify(reindexer::Transaction& transaction,
+			reindexer::Item&& item, ItemModifyMode mode) {
+	transaction.Modify(std::move(item), mode);
+	return errOK;
+}
+template <>
+Error ReindexerInterface<reindexer::client::CoroReindexer>::modify(reindexer::client::CoroTransaction& transaction,
+			reindexer::client::Item&& item, ItemModifyMode mode) {
+	return transaction.Modify(std::move(item), mode);
+}
+
+template <typename DBT>
+Error ReindexerInterface<DBT>::commitTransaction(typename DBT::TransactionT& transaction, size_t& count) {
+	typename DBT::QueryResultsT qres(QRESULTS_FLAGS);
+	auto err = db_.CommitTransaction(transaction, qres);
+	count = qres.Count();
+	return err;
+}
+
+template <typename DBT>
+Error ReindexerInterface<DBT>::selectQuery(const reindexer::Query& query, QueryResultsWrapper& result) {
+	typename DBT::QueryResultsT qres(QRESULTS_FLAGS);
+	auto err = db_.Select(query, qres);
+	result.Wrap(std::move(qres));
+	return err;
+}
+
+template <typename DBT>
+Error ReindexerInterface<DBT>::deleteQuery(const reindexer::Query& query, size_t& count) {
+	typename DBT::QueryResultsT qres;
+	auto err = db_.Delete(query, qres);
+	count = qres.Count();
+	return err;
+}
+
+template <typename DBT>
+Error ReindexerInterface<DBT>::updateQuery(const reindexer::Query& query, QueryResultsWrapper& result) {
+	typename DBT::QueryResultsT qres(QRESULTS_FLAGS);
+	auto err = db_.Update(query, qres);
+	result.Wrap(std::move(qres));
+	return err;
 }
 
 template <>

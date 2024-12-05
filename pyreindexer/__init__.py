@@ -3,4 +3,3 @@ The pyreindexer module provides a connector and its auxiliary tools for interact
 """
 
 from pyreindexer.rx_connector import RxConnector
-# from pyreindexer.index_definition import IndexDefinition
