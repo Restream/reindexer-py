@@ -1,14 +1,44 @@
 #include "rawpyreindexer.h"
 
+#include "pyobjtools.h"
+#include "queryresults_wrapper.h"
+#include "transaction_wrapper.h"
+#include "tools/serializer.h"
+
 namespace pyreindexer {
 
-static void queryResultsWrapperDelete(uintptr_t qresWrapperAddr) {
-	QueryResultsWrapper* qresWrapperPtr = getQueryResultsWrapper(qresWrapperAddr);
-	delete qresWrapperPtr;
+using reindexer::Error;
+using reindexer::IndexDef;
+using reindexer::NamespaceDef;
+using reindexer::WrSerializer;
+
+static uintptr_t initReindexer() {
+	DBInterface* db = new DBInterface();
+	return reinterpret_cast<uintptr_t>(db);
+}
+
+static DBInterface* getDB(uintptr_t rx) { return reinterpret_cast<DBInterface*>(rx); }
+
+static void destroyReindexer(uintptr_t rx) {
+	DBInterface* db = getDB(rx);
+	delete db;
+}
+
+static PyObject* pyErr(const Error& err) { return Py_BuildValue("is", err.code(), err.what().c_str()); }
+
+template <typename T>
+static T* getWrapper(uintptr_t wrapperAddr) {
+	return reinterpret_cast<T*>(wrapperAddr);
+}
+
+template <typename T>
+static void wrapperDelete(uintptr_t wrapperAddr) {
+	T* queryWrapperPtr = getWrapper<T>(wrapperAddr);
+	delete queryWrapperPtr;
 }
 
 static PyObject* queryResultsWrapperIterate(uintptr_t qresWrapperAddr) {
-	QueryResultsWrapper* qresWrapperPtr = getQueryResultsWrapper(qresWrapperAddr);
+	QueryResultsWrapper* qresWrapperPtr = getWrapper<QueryResultsWrapper>(qresWrapperAddr);
 
 	WrSerializer wrSer;
 	qresWrapperPtr->GetItemJSON(wrSer, false);
@@ -23,7 +53,7 @@ static PyObject* queryResultsWrapperIterate(uintptr_t qresWrapperAddr) {
 		return Py_BuildValue("is{}", err.code(), err.what().c_str());
 	}
 
-	PyObject* res = Py_BuildValue("isO", errOK, "", dictFromJson); // new ref
+	PyObject* res = Py_BuildValue("isO", errOK, "", dictFromJson);  // new ref
 	Py_DECREF(dictFromJson);
 
 	return res;
@@ -98,7 +128,7 @@ static PyObject* NamespaceDrop(PyObject* self, PyObject* args) {
 static PyObject* IndexAdd(PyObject* self, PyObject* args) {
 	uintptr_t rx = 0;
 	char* ns = nullptr;
-	PyObject* indexDefDict = nullptr;	// borrowed ref after ParseTuple
+	PyObject* indexDefDict = nullptr;  // borrowed ref after ParseTuple
 	if (!PyArg_ParseTuple(args, "ksO!", &rx, &ns, &PyDict_Type, &indexDefDict)) {
 		return nullptr;
 	}
@@ -128,7 +158,7 @@ static PyObject* IndexAdd(PyObject* self, PyObject* args) {
 static PyObject* IndexUpdate(PyObject* self, PyObject* args) {
 	uintptr_t rx = 0;
 	char* ns = nullptr;
-	PyObject* indexDefDict = nullptr;	// borrowed ref after ParseTuple
+	PyObject* indexDefDict = nullptr;  // borrowed ref after ParseTuple
 	if (!PyArg_ParseTuple(args, "ksO!", &rx, &ns, &PyDict_Type, &indexDefDict)) {
 		return nullptr;
 	}
@@ -169,8 +199,8 @@ static PyObject* IndexDrop(PyObject* self, PyObject* args) {
 static PyObject* itemModify(PyObject* self, PyObject* args, ItemModifyMode mode) {
 	uintptr_t rx = 0;
 	char* ns = nullptr;
-	PyObject* itemDefDict = nullptr;	// borrowed ref after ParseTuple
-	PyObject* preceptsList = nullptr;	// borrowed ref after ParseTuple if passed
+	PyObject* itemDefDict = nullptr;  	// borrowed ref after ParseTuple
+	PyObject* preceptsList = nullptr;  	// borrowed ref after ParseTuple if passed
 	if (!PyArg_ParseTuple(args, "ksO!|O!", &rx, &ns, &PyDict_Type, &itemDefDict, &PyList_Type, &preceptsList)) {
 		return nullptr;
 	}
@@ -197,8 +227,7 @@ static PyObject* itemModify(PyObject* self, PyObject* args, ItemModifyMode mode)
 
 	Py_DECREF(itemDefDict);
 
-	char* json = const_cast<char*>(wrSer.c_str());
-	err = item.Unsafe().FromJSON(json, 0, mode == ModeDelete);
+	err = item.Unsafe().FromJSON(wrSer.c_str(), 0, mode == ModeDelete);
 	if (!err.ok()) {
 		Py_XDECREF(preceptsList);
 
@@ -216,7 +245,7 @@ static PyObject* itemModify(PyObject* self, PyObject* args, ItemModifyMode mode)
 			return pyErr(err);
 		}
 
-		item.SetPrecepts(itemPrecepts);
+		item.SetPrecepts(itemPrecepts); // ToDo after migrate on v.4, do std::move
 	}
 
 	Py_XDECREF(preceptsList);
@@ -288,8 +317,9 @@ static PyObject* Select(PyObject* self, PyObject* args) {
 		return nullptr;
 	}
 
-	auto qresWrapper = new QueryResultsWrapper();
-	Error err = getDB(rx)->Select(query, *qresWrapper);
+	auto db = getDB(rx);
+	auto qresWrapper = new QueryResultsWrapper(db);
+	Error err = qresWrapper->Select(query);
 
 	if (!err.ok()) {
 		delete qresWrapper;
@@ -320,7 +350,7 @@ static PyObject* EnumMeta(PyObject* self, PyObject* args) {
 
 	Py_ssize_t pos = 0;
 	for (const auto& key : keys) {
-		PyObject* pyKey = PyUnicode_FromStringAndSize(key.data(), key.size()); // new ref
+		PyObject* pyKey = PyUnicode_FromStringAndSize(key.data(), key.size());  // new ref
 		PyList_SetItem(list, pos, pyKey);  // stolen ref
 		++pos;
 	}
@@ -390,7 +420,7 @@ static PyObject* QueryResultsWrapperDelete(PyObject* self, PyObject* args) {
 		return nullptr;
 	}
 
-	queryResultsWrapperDelete(qresWrapperAddr);
+	wrapperDelete<QueryResultsWrapper>(qresWrapperAddr);
 
 	Py_RETURN_NONE;
 }
@@ -401,7 +431,7 @@ static PyObject* GetAggregationResults(PyObject* self, PyObject* args) {
 		return nullptr;
 	}
 
-	QueryResultsWrapper* qresWrapper = getQueryResultsWrapper(qresWrapperAddr);
+	QueryResultsWrapper* qresWrapper = getWrapper<QueryResultsWrapper>(qresWrapperAddr);
 
 	const auto& aggResults = qresWrapper->GetAggregationResults();
 	WrSerializer wrSer;
@@ -417,17 +447,144 @@ static PyObject* GetAggregationResults(PyObject* self, PyObject* args) {
 
 	PyObject* dictFromJson = nullptr;
 	try {
-		dictFromJson = PyObjectFromJson(reindexer::giftStr(wrSer.Slice()));	// stolen ref
+		dictFromJson = PyObjectFromJson(reindexer::giftStr(wrSer.Slice()));  // stolen ref
 	} catch (const Error& err) {
 		Py_XDECREF(dictFromJson);
 
 		return Py_BuildValue("is{}", err.code(), err.what().c_str());
 	}
 
-	PyObject* res = Py_BuildValue("isO", errOK, "", dictFromJson); // new ref
+	PyObject* res = Py_BuildValue("isO", errOK, "", dictFromJson);  // new ref
 	Py_DECREF(dictFromJson);
 
 	return res;
+}
+
+static PyObject* NewTransaction(PyObject* self, PyObject* args) {
+	uintptr_t rx = 0;
+	char* ns = nullptr;
+	if (!PyArg_ParseTuple(args, "ks", &rx, &ns)) {
+		return nullptr;
+	}
+
+	auto db = getDB(rx);
+	auto transaction = new TransactionWrapper(db);
+	Error err =  transaction->Start(ns);
+	if (!err.ok()) {
+		delete transaction;
+
+		return Py_BuildValue("isk", err.code(), err.what().c_str(), 0);
+	}
+
+	return Py_BuildValue("isk", err.code(), err.what().c_str(), reinterpret_cast<uintptr_t>(transaction));
+}
+
+static PyObject* itemModifyTransaction(PyObject* self, PyObject* args, ItemModifyMode mode) {
+	uintptr_t transactionWrapperAddr = 0;
+	PyObject* itemDefDict = nullptr;  	// borrowed ref after ParseTuple
+	PyObject* preceptsList = nullptr;  	// borrowed ref after ParseTuple if passed
+	if (!PyArg_ParseTuple(args, "kO!|O!", &transactionWrapperAddr, &PyDict_Type, &itemDefDict, &PyList_Type, &preceptsList)) {
+		return nullptr;
+	}
+
+	Py_INCREF(itemDefDict);
+	Py_XINCREF(preceptsList);
+
+	auto transaction = getWrapper<TransactionWrapper>(transactionWrapperAddr);
+
+	auto item = transaction->NewItem();
+	Error err = item.Status();
+	if (!err.ok()) {
+		Py_DECREF(itemDefDict);
+		Py_XDECREF(preceptsList);
+
+		return pyErr(err);
+	}
+
+	WrSerializer wrSer;
+
+	try {
+		PyObjectToJson(&itemDefDict, wrSer);
+	} catch (const Error& err) {
+		Py_DECREF(itemDefDict);
+		Py_XDECREF(preceptsList);
+
+		return pyErr(err);
+	}
+
+	Py_DECREF(itemDefDict);
+
+	err = item.Unsafe().FromJSON(wrSer.c_str(), 0, mode == ModeDelete);
+	if (!err.ok()) {
+		Py_XDECREF(preceptsList);
+
+		return pyErr(err);
+	}
+
+	if (preceptsList != nullptr && mode != ModeDelete) {
+		std::vector<std::string> itemPrecepts;
+
+		try {
+			itemPrecepts = ParseListToStrVec(&preceptsList);
+		} catch (const Error& err) {
+			Py_DECREF(preceptsList);
+
+			return pyErr(err);
+		}
+
+		item.SetPrecepts(itemPrecepts); // ToDo after migrate on v.4, do std::move
+	}
+
+	Py_XDECREF(preceptsList);
+
+	switch (mode) {
+		case ModeInsert:
+		case ModeUpdate:
+		case ModeUpsert:
+		case ModeDelete:
+			err = transaction->Modify(std::move(item), mode);
+			return pyErr(err);
+		default:
+			PyErr_SetString(PyExc_RuntimeError, "Unknown item modify transaction mode");
+			return nullptr;
+	}
+
+	return nullptr;
+}
+static PyObject* ItemInsertTransaction(PyObject* self, PyObject* args) { return itemModifyTransaction(self, args, ModeInsert); }
+static PyObject* ItemUpdateTransaction(PyObject* self, PyObject* args) { return itemModifyTransaction(self, args, ModeUpdate); }
+static PyObject* ItemUpsertTransaction(PyObject* self, PyObject* args) { return itemModifyTransaction(self, args, ModeUpsert); }
+static PyObject* ItemDeleteTransaction(PyObject* self, PyObject* args) { return itemModifyTransaction(self, args, ModeDelete); }
+
+static PyObject* CommitTransaction(PyObject* self, PyObject* args) {
+	uintptr_t transactionWrapperAddr = 0;
+	if (!PyArg_ParseTuple(args, "k", &transactionWrapperAddr)) {
+		return nullptr;
+	}
+
+	auto transaction = getWrapper<TransactionWrapper>(transactionWrapperAddr);
+
+	size_t count = 0;
+	Error err = transaction->Commit(count);
+
+	wrapperDelete<TransactionWrapper>(transactionWrapperAddr);
+
+	return Py_BuildValue("isI", err.code(), err.what().c_str(), count);
+}
+
+static PyObject* RollbackTransaction(PyObject* self, PyObject* args) {
+	uintptr_t transactionWrapperAddr = 0;
+	if (!PyArg_ParseTuple(args, "k", &transactionWrapperAddr)) {
+		return nullptr;
+	}
+
+	auto transaction = getWrapper<TransactionWrapper>(transactionWrapperAddr);
+
+	Error err = transaction->Rollback();
+
+	wrapperDelete<TransactionWrapper>(transactionWrapperAddr);
+
+	return pyErr(err);
 }
 
 }  // namespace pyreindexer

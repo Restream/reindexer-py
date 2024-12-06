@@ -49,8 +49,8 @@ __Arguments:__
 
 __Raises:__
 
-    Exception: Raises with an error message of API return if Reindexer instance is not initialized yet.
-    Exception: Raises with an error message of API return on non-zero error code.
+    Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
+    Exception: Raises with an error message of API return on non-zero error code
 
 
 <h3 id="pyreindexer.rx_connector.RxConnector.namespace_close">namespace_close</h3>
@@ -66,8 +66,8 @@ __Arguments:__
 
 __Raises:__
 
-    Exception: Raises with an error message of API return if Reindexer instance is not initialized yet.
-    Exception: Raises with an error message of API return on non-zero error code.
+    Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
+    Exception: Raises with an error message of API return on non-zero error code
 
 
 <h3 id="pyreindexer.rx_connector.RxConnector.namespace_drop">namespace_drop</h3>
@@ -83,8 +83,8 @@ __Arguments:__
 
 __Raises:__
 
-    Exception: Raises with an error message of API return if Reindexer instance is not initialized yet.
-    Exception: Raises with an error message of API return on non-zero error code.
+    Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
+    Exception: Raises with an error message of API return on non-zero error code
 
 
 <h3 id="pyreindexer.rx_connector.RxConnector.namespaces_enum">namespaces_enum</h3>
@@ -97,16 +97,16 @@ Gets a list of namespaces available
 __Arguments:__
 
     enum_not_opened (bool, optional): An enumeration mode flag. If it is
-        set then closed namespaces are in result list too. Defaults to False.
+        set then closed namespaces are in result list too. Defaults to False
 
 __Returns:__
 
-    (:obj:`list` of :obj:`dict`): A list of dictionaries which describe each namespace.
+    (:obj:`list` of :obj:`dict`): A list of dictionaries which describe each namespace
 
 __Raises:__
 
-    Exception: Raises with an error message of API return if Reindexer instance is not initialized yet.
-    Exception: Raises with an error message of API return on non-zero error code.
+    Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
+    Exception: Raises with an error message of API return on non-zero error code
 
 
 <h3 id="pyreindexer.rx_connector.RxConnector.index_add">index_add</h3>
@@ -123,8 +123,8 @@ __Arguments:__
 
 __Raises:__
 
-    Exception: Raises with an error message of API return if Reindexer instance is not initialized yet.
-    Exception: Raises with an error message of API return on non-zero error code.
+    Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
+    Exception: Raises with an error message of API return on non-zero error code
 
 
 <h3 id="pyreindexer.rx_connector.RxConnector.index_update">index_update</h3>
@@ -141,8 +141,8 @@ __Arguments:__
 
 __Raises:__
 
-    Exception: Raises with an error message of API return if Reindexer instance is not initialized yet.
-    Exception: Raises with an error message of API return on non-zero error code.
+    Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
+    Exception: Raises with an error message of API return on non-zero error code
 
 
 <h3 id="pyreindexer.rx_connector.RxConnector.index_drop">index_drop</h3>
@@ -159,8 +159,8 @@ __Arguments:__
 
 __Raises:__
 
-    Exception: Raises with an error message of API return if Reindexer instance is not initialized yet.
-    Exception: Raises with an error message of API return on non-zero error code.
+    Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
+    Exception: Raises with an error message of API return on non-zero error code
 
 
 <h3 id="pyreindexer.rx_connector.RxConnector.item_insert">item_insert</h3>
@@ -178,8 +178,8 @@ __Arguments:__
 
 __Raises:__
 
-    Exception: Raises with an error message of API return if Reindexer instance is not initialized yet.
-    Exception: Raises with an error message of API return on non-zero error code.
+    Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
+    Exception: Raises with an error message of API return on non-zero error code
 
 
 <h3 id="pyreindexer.rx_connector.RxConnector.item_update">item_update</h3>
@@ -197,8 +197,8 @@ __Arguments:__
 
 __Raises:__
 
-    Exception: Raises with an error message of API return if Reindexer instance is not initialized yet.
-    Exception: Raises with an error message of API return on non-zero error code.
+    Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
+    Exception: Raises with an error message of API return on non-zero error code
 
 
 <h3 id="pyreindexer.rx_connector.RxConnector.item_upsert">item_upsert</h3>
@@ -206,7 +206,7 @@ __Raises:__
 ```python
 RxConnector.item_upsert(self, namespace, item_def, precepts=[])
 ```
-Updates an item with its precepts in the namespace specified. Creates the item if it not exist.
+Updates an item with its precepts in the namespace specified. Creates the item if it not exists
 
 __Arguments:__
 
@@ -216,8 +216,8 @@ __Arguments:__
 
 __Raises:__
 
-    Exception: Raises with an error message of API return if Reindexer instance is not initialized yet.
-    Exception: Raises with an error message of API return on non-zero error code.
+    Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
+    Exception: Raises with an error message of API return on non-zero error code
 
 
 <h3 id="pyreindexer.rx_connector.RxConnector.item_delete">item_delete</h3>
@@ -225,7 +225,7 @@ __Raises:__
 ```python
 RxConnector.item_delete(self, namespace, item_def)
 ```
-Deletes an item from the namespace specified.
+Deletes an item from the namespace specified
 
 __Arguments:__
 
@@ -234,8 +234,8 @@ __Arguments:__
 
 __Raises:__
 
-    Exception: Raises with an error message of API return if Reindexer instance is not initialized yet.
-    Exception: Raises with an error message of API return on non-zero error code.
+    Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
+    Exception: Raises with an error message of API return on non-zero error code
 
 
 <h3 id="pyreindexer.rx_connector.RxConnector.meta_put">meta_put</h3>
@@ -253,8 +253,8 @@ __Arguments:__
 
 __Raises:__
 
-    Exception: Raises with an error message of API return if Reindexer instance is not initialized yet.
-    Exception: Raises with an error message of API return on non-zero error code.
+    Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
+    Exception: Raises with an error message of API return on non-zero error code
 
 
 <h3 id="pyreindexer.rx_connector.RxConnector.meta_get">meta_get</h3>
@@ -275,8 +275,8 @@ __Returns:__
 
 __Raises:__
 
-    Exception: Raises with an error message of API return if Reindexer instance is not initialized yet.
-    Exception: Raises with an error message of API return on non-zero error code.
+    Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
+    Exception: Raises with an error message of API return on non-zero error code
 
 
 <h3 id="pyreindexer.rx_connector.RxConnector.meta_delete">meta_delete</h3>
@@ -293,8 +293,8 @@ __Arguments:__
 
 __Raises:__
 
-    Exception: Raises with an error message of API return if Reindexer instance is not initialized yet.
-    Exception: Raises with an error message of API return on non-zero error code.
+    Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
+    Exception: Raises with an error message of API return on non-zero error code
 
 
 <h3 id="pyreindexer.rx_connector.RxConnector.meta_enum">meta_enum</h3>
@@ -310,12 +310,12 @@ __Arguments:__
 
 __Returns:__
 
-    (:obj:`list` of :obj:`str`): A list of all metadata keys.
+    (:obj:`list` of :obj:`str`): A list of all metadata keys
 
 __Raises:__
 
-    Exception: Raises with an error message of API return if Reindexer instance is not initialized yet.
-    Exception: Raises with an error message of API return on non-zero error code.
+    Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
+    Exception: Raises with an error message of API return on non-zero error code
 
 
 <h3 id="pyreindexer.rx_connector.RxConnector.select">select</h3>
@@ -331,12 +331,33 @@ __Arguments:__
 
 __Returns:__
 
-    (:obj:`QueryResults`): A QueryResults iterator.
+    (:obj:`QueryResults`): A QueryResults iterator
 
 __Raises:__
 
-    Exception: Raises with an error message of API return if Reindexer instance is not initialized yet.
-    Exception: Raises with an error message of API return on non-zero error code.
+    Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
+    Exception: Raises with an error message of API return on non-zero error code
+
+
+<h3 id="pyreindexer.rx_connector.RxConnector.new_transaction">new_transaction</h3>
+
+```python
+RxConnector.new_transaction(self, namespace)
+```
+Start a new transaction and return the transaction object to processing
+
+__Arguments:__
+
+    namespace (string): A name of a namespace
+
+__Returns:__
+
+    (:obj:`Transaction`): A new transaction
+
+__Raises:__
+
+    Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
+    Exception: Raises with an error message of API return on non-zero error code
 
 
 <h1 id="pyreindexer.query_results">pyreindexer.query_results</h1>
@@ -347,7 +368,7 @@ __Raises:__
 ```python
 QueryResults(self, api, qres_wrapper_ptr, qres_iter_count)
 ```
-QueryResults is a disposable iterator of Reindexer results for such queries as SELECT and etc.
+QueryResults is a disposable iterator of Reindexer results for such queries as SELECT etc.
 When the results are fetched the iterator closes and frees a memory of results buffer of Reindexer
 
 __Attributes:__
@@ -359,6 +380,7 @@ __Attributes:__
     qres_iter_count (int): A count of results for iterations
     pos (int): The current result position in iterator
 
+
 <h3 id="pyreindexer.query_results.QueryResults.count">count</h3>
 
 ```python
@@ -368,7 +390,138 @@ Returns a count of results
 
 __Returns__
 
-`int`: A count of results
+    `int`: A count of results
+
+
+<h3 id="pyreindexer.rx_connector.QueryResults.get_agg_results">get_agg_results</h3>
+
+```python
+QueryResults.get_agg_results(self)
+```
+Returns aggregation results for the current query
+
+__Returns__
+
+    (:obj:`dict`): Dictionary with all results for the current query
+
+__Raises__
+
+    Exception: Raises with an error message of API return on non-zero error code
+
+
+<h1 id="pyreindexer.transaction">pyreindexer.transaction</h1>
+
+
+<h2 id="pyreindexer.transaction.Transaction">Transaction</h2>
+
+```python
+Transaction(self, api, transaction_wrapper_ptr)
+```
+An object representing the context of a Reindexer transaction
+
+__Attributes:__
+
+    api (module): An API module for Reindexer calls
+    transaction_wrapper_ptr (int): A memory pointer to Reindexer transaction object
+    err_code (int): the API error code
+    err_msg (string): the API error message
+
+
+<h3 id="pyreindexer.transaction.Transaction.commit">commit</h3>
+
+```python
+Transaction.commit(self)
+```
+Commit a transaction
+
+__Raises:__
+
+    Exception: Raises with an error message of API return if Transaction is over
+    Exception: Raises with an error message of API return on non-zero error code
+
+
+<h3 id="pyreindexer.transaction.Transaction.delete">delete</h3>
+
+```python
+Transaction.delete(self, item_def)
+```
+Delete an item from the transaction.
+
+__Arguments:__
+
+    item_def (dict): A dictionary of item definition
+
+__Raises:__
+
+    Exception: Raises with an error message of API return if Transaction is over
+    Exception: Raises with an error message of API return on non-zero error code
+
+
+<h3 id="pyreindexer.transaction.Transaction.insert">insert</h3>
+
+```python
+Transaction.insert(self, item_def, precepts=None)
+```
+Inserts an item with its precepts to the transaction
+
+__Arguments:__
+
+    item_def (dict): A dictionary of item definition
+    precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
+
+__Raises:__
+
+    Exception: Raises with an error message of API return if Transaction is over
+    Exception: Raises with an error message of API return on non-zero error code
+
+
+<h3 id="pyreindexer.transaction.Transaction.rollback">rollback</h3>
+
+```python
+Transaction.rollback(self)
+```
+Roll back a transaction
+
+__Raises:__
+
+    Exception: Raises with an error message of API return if Transaction is over
+    Exception: Raises with an error message of API return on non-zero error code
+
+
+<h3 id="pyreindexer.transaction.Transaction.update">update</h3>
+
+```python
+Transaction.update(self, item_def, precepts=None)
+```
+Update an item with its precepts to the transaction
+
+__Arguments:__
+
+    item_def (dict): A dictionary of item definition
+    precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
+
+__Raises:__
+
+    Exception: Raises with an error message of API return if Transaction is over
+    Exception: Raises with an error message of API return on non-zero error code
+
+
+<h3 id="pyreindexer.transaction.Transaction.upsert">upsert</h3>
+
+```python
+Transaction.upsert(self, item_def, precepts=None)
+```
+Update an item with its precepts to the transaction. Creates the item if it not exists
+
+__Arguments:__
+
+    item_def (dict): A dictionary of item definition
+    precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
+
+__Raises:__
+
+    Exception: Raises with an error message of API return if Transaction is over
+    Exception: Raises with an error message of API return on non-zero error code
 
 
 <h1 id="pyreindexer.index_definition">pyreindexer.index_definition</h1>
@@ -377,7 +530,7 @@ __Returns__
 <h2 id="pyreindexer.index_definition.IndexDefinition">IndexDefinition</h2>
 
 ```python
-IndexDefinition(self, /, *args, **kwargs)
+IndexDefinition(dict)
 ```
 IndexDefinition is a dictionary subclass which allows to construct and manage indexes more efficiently.
 NOT IMPLEMENTED YET. USE FIELDS DESCRIPTION ONLY.
@@ -396,5 +549,4 @@ __Arguments:__
     is_sparse (bool): True if a value of an index may be not presented.
     collate_mode (str): Sets an order of values by collate mode. Possible values are: `none`, `ascii`, `utf8`, `numeric`, `custom`.
     sort_order_letters (str): Order for a sort sequence for a custom collate mode.
-    config (dict): A config for a fulltext engine. [More](https://github.com/Restream/reindexer/blob/master/fulltext.md) .
-
+    config (dict): A config for a fulltext engine. [More](https://github.com/Restream/reindexer/blob/master/fulltext.md).

@@ -17,6 +17,7 @@ using reindexer::NamespaceDef;
 using reindexer::EnumNamespacesOpts;
 
 class QueryResultsWrapper;
+class TransactionWrapper;
 
 struct ICommand {
 	virtual Error Status() const = 0;
@@ -42,7 +43,7 @@ public:
 private:
 	CallableT command_;
 	Error err_;
-	std::atomic<bool> executed_ = {false};
+	std::atomic_bool executed_{false};
 };
 
 template <typename DBT>
@@ -109,6 +110,24 @@ public:
 		return execute([this, &defs, &opts] { return enumNamespaces(defs, opts); });
 	}
 	Error FetchResults(QueryResultsWrapper& result);
+	Error StartTransaction(std::string_view ns, TransactionWrapper& transactionWrapper);
+	typename DBT::ItemT NewItem(typename DBT::TransactionT& tr) {
+		typename DBT::ItemT item;
+		execute([this, &tr, &item] {
+			item = newItem(tr);
+			return item.Status();
+		});
+		return item;
+	}
+	Error Modify(typename DBT::TransactionT& tr, typename DBT::ItemT&& item, ItemModifyMode mode) {
+		return execute([this, &tr, &item, mode] { return modify(tr, std::move(item), mode); });
+	}
+	Error CommitTransaction(typename DBT::TransactionT& tr, size_t& count) {
+		return execute([this, &tr, &count] { return commitTransaction(tr, count); });
+	}
+	Error RollbackTransaction(typename DBT::TransactionT& tr) {
+		return execute([this, &tr] { return rollbackTransaction(tr); });
+	}
 
 private:
 	Error execute(std::function<Error()> f);
@@ -131,6 +150,11 @@ private:
 	Error enumMeta(std::string_view ns, std::vector<std::string>& keys) { return db_.EnumMeta({ns.data(), ns.size()}, keys); }
 	Error select(const std::string& query, typename DBT::QueryResultsT& result) { return db_.Select(query, result); }
 	Error enumNamespaces(std::vector<NamespaceDef>& defs, EnumNamespacesOpts opts) { return db_.EnumNamespaces(defs, opts); }
+	typename DBT::TransactionT startTransaction(std::string_view ns) { return db_.NewTransaction({ns.data(), ns.size()}); }
+	typename DBT::ItemT newItem(typename DBT::TransactionT& tr) { return tr.NewItem(); }
+	Error modify(typename DBT::TransactionT& tr, typename DBT::ItemT&& item, ItemModifyMode mode);
+	Error commitTransaction(typename DBT::TransactionT& transaction, size_t& count);
+	Error rollbackTransaction(typename DBT::TransactionT& tr) { return db_.RollBackTransaction(tr); }
 	Error stop();
 
 	DBT db_;

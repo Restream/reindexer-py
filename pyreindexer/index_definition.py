@@ -25,7 +25,7 @@ class IndexDefinition(dict):
             `none`, `ascii`, `utf8`, `numeric`, `custom`.
         sort_order_letters (str): Order for a sort sequence for a custom collate mode.
         config (dict): A config for a fulltext engine.
-        [More](https://github.com/Restream/reindexer/blob/master/fulltext.md) .
+        [More](https://github.com/Restream/reindexer/blob/master/fulltext.md).
     """
 
     def __getitem__(self, attr):
@@ -37,7 +37,7 @@ class IndexDefinition(dict):
         super(IndexDefinition, self).update({attr: value})
         return self
 
-    def update(self, dict_part=None):
+    def update(self, *args, **kwargs):
         raise NotImplementedError(
             'Bulk update is not implemented for IndexDefinition instance')
 

@@ -1,13 +1,16 @@
 class RaiserMixin(object):
-    """ RaiserMixin contains methods for checking some typical API bad events and raise if there is a necessity.
+    """ RaiserMixin contains methods for checking some typical API bad events and raise if there is a necessity
 
     """
+    err_code: int
+    err_msg: str
+    rx: int
 
     def raise_on_error(self):
-        """Checks if there is an error code and raises with an error message.
+        """Checks if there is an error code and raises with an error message
 
         # Raises:
-            Exception: Raises with an error message of API return on non-zero error code.
+            Exception: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -15,10 +18,10 @@ class RaiserMixin(object):
             raise Exception(self.err_msg)
 
     def raise_on_not_init(self):
-        """Checks if there is an error code and raises with an error message.
+        """Checks if there is an error code and raises with an error message
 
         # Raises:
-            Exception: Raises with an error message of API return if Reindexer instance is not initialized yet.
+            Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
 
         """
 

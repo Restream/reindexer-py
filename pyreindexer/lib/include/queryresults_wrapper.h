@@ -21,25 +21,49 @@ using QueryResultsT = reindexer::QueryResults;
 
 class QueryResultsWrapper {
 public:
-	QueryResultsWrapper() : qresPtr(kResultsJson) {}
-	size_t Count() const { return qresPtr.Count(); }
-	void GetItemJSON(reindexer::WrSerializer& wrser, bool withHdrLen) { itPtr.GetJSON(wrser, withHdrLen); }
-	void Next() {
+	QueryResultsWrapper(DBInterface* db) : db_{db}, qres_{kResultsJson} {
 		assert(db_);
+	}
+
+	void Wrap(QueryResultsT&& qres) {
+		qres_ = std::move(qres);
+		it_ = qres_.begin();
+		wrap_ = true;
+	}
+
+	Error Select(const std::string& query) {
+		return db_->Select(query, *this);
+	}
+
+	size_t Count() const {
+		assert(wrap_);
+		return qres_.Count();
+	}
+
+	void GetItemJSON(reindexer::WrSerializer& wrser, bool withHdrLen) {
+		assert(wrap_);
+		it_.GetJSON(wrser, withHdrLen);
+	}
+
+	void Next() {
+		assert(wrap_);
 		db_->FetchResults(*this);
 	}
 
-	const std::vector<reindexer::AggregationResult>& GetAggregationResults() & { return qresPtr.GetAggregationResults(); }
+	void FetchResults() {
+		assert(wrap_);
+		// when results are fetched iterator closes and frees a memory of results buffer of Reindexer
+		++it_;
+	}
+
+	const std::vector<reindexer::AggregationResult>& GetAggregationResults() & { return qres_.GetAggregationResults(); }
 	const std::vector<reindexer::AggregationResult>& GetAggregationResults() && = delete;
 
 private:
-	friend DBInterface;
-
-	void iterInit() { itPtr = qresPtr.begin(); }
-
-	DBInterface* db_ = nullptr;
-	QueryResultsT qresPtr;
-	QueryResultsT::Iterator itPtr;
+	DBInterface* db_{nullptr};
+	QueryResultsT qres_;
+	QueryResultsT::Iterator it_;
+	bool wrap_{false};
 };
 
 }  // namespace pyreindexer

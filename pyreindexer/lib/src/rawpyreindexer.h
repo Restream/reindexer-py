@@ -12,42 +12,7 @@
 
 #include <Python.h>
 
-#include "pyobjtools.h"
-#include "queryresults_wrapper.h"
-#include "tools/serializer.h"
-
-#ifdef PYREINDEXER_CPROTO
-#include "client/cororeindexer.h"
-#else
-#include "core/reindexer.h"
-#endif
-
 namespace pyreindexer {
-
-using reindexer::Error;
-using reindexer::IndexDef;
-using reindexer::NamespaceDef;
-using reindexer::WrSerializer;
-
-inline static uintptr_t initReindexer() {
-	DBInterface* db = new DBInterface();
-	return reinterpret_cast<uintptr_t>(db);
-}
-
-inline static DBInterface* getDB(uintptr_t rx) { return reinterpret_cast<DBInterface*>(rx); }
-
-inline static void destroyReindexer(uintptr_t rx) {
-	DBInterface* db = getDB(rx);
-	delete db;
-}
-
-inline static PyObject* pyErr(const Error& err) { return Py_BuildValue("is", err.code(), err.what().c_str()); }
-
-inline static QueryResultsWrapper* getQueryResultsWrapper(uintptr_t qresWrapperAddr) {
-	return reinterpret_cast<QueryResultsWrapper*>(qresWrapperAddr);
-}
-
-static void queryResultsWrapperDelete(uintptr_t qresWrapperAddr);
 
 static PyObject* Init(PyObject* self, PyObject* args);
 static PyObject* Destroy(PyObject* self, PyObject* args);
@@ -72,6 +37,14 @@ static PyObject* EnumNamespaces(PyObject* self, PyObject* args);
 static PyObject* QueryResultsWrapperIterate(PyObject* self, PyObject* args);
 static PyObject* QueryResultsWrapperDelete(PyObject* self, PyObject* args);
 static PyObject* GetAggregationResults(PyObject* self, PyObject* args);
+
+static PyObject* NewTransaction(PyObject* self, PyObject* args);
+static PyObject* ItemInsertTransaction(PyObject* self, PyObject* args);
+static PyObject* ItemUpdateTransaction(PyObject* self, PyObject* args);
+static PyObject* ItemUpsertTransaction(PyObject* self, PyObject* args);
+static PyObject* ItemDeleteTransaction(PyObject* self, PyObject* args);
+static PyObject* CommitTransaction(PyObject* self, PyObject* args);
+static PyObject* RollbackTransaction(PyObject* self, PyObject* args);
 
 // clang-format off
 static PyMethodDef module_methods[] = {
@@ -98,6 +71,14 @@ static PyMethodDef module_methods[] = {
 	{"query_results_iterate", QueryResultsWrapperIterate, METH_VARARGS, "get query result"},
 	{"query_results_delete", QueryResultsWrapperDelete, METH_VARARGS, "free query results buffer"},
 	{"get_agg_results", GetAggregationResults, METH_VARARGS, "get aggregation results"},
+
+	{"new_transaction", NewTransaction, METH_VARARGS, "start new transaction"},
+	{"item_insert_transaction", ItemInsertTransaction, METH_VARARGS, "item insert transaction"},
+	{"item_update_transaction", ItemUpdateTransaction, METH_VARARGS, "item update transaction"},
+	{"item_upsert_transaction", ItemUpsertTransaction, METH_VARARGS, "item upsert transaction"},
+	{"item_delete_transaction", ItemDeleteTransaction, METH_VARARGS, "item delete transaction"},
+	{"commit_transaction", CommitTransaction, METH_VARARGS, "apply changes. Free transaction object memory"},
+	{"rollback_transaction", RollbackTransaction, METH_VARARGS, "rollback changes. Free transaction object memory"},
 
 	{nullptr, nullptr, 0, nullptr}
 };

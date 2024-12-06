@@ -1,4 +1,4 @@
-class QueryResults:
+class QueryResults(object):
     """ QueryResults is a disposable iterator of Reindexer results for such queries as SELECT etc.
     When the results are fetched the iterator closes and frees a memory of results buffer of Reindexer
 
@@ -6,17 +6,18 @@ class QueryResults:
         api (module): An API module for Reindexer calls
         err_code (int): the API error code
         err_msg (string): the API error message
-        qres_wrapper_ptr (int): A memory pointer to Reindexer iterator object 
+        qres_wrapper_ptr (int): A memory pointer to Reindexer iterator object
         qres_iter_count (int): A count of results for iterations
         pos (int): The current result position in iterator
+
     """
 
     def __init__(self, api, qres_wrapper_ptr, qres_iter_count):
-        """Constructs a new Reindexer query results iterator object.
+        """Constructs a new Reindexer query results iterator object
 
         # Arguments:
             api (module): An API module for Reindexer calls
-            qres_wrapper_ptr (int): A memory pointer to Reindexer iterator object 
+            qres_wrapper_ptr (int): A memory pointer to Reindexer iterator object
             qres_iter_count (int): A count of results for iterations
 
         """
@@ -25,19 +26,21 @@ class QueryResults:
         self.qres_wrapper_ptr = qres_wrapper_ptr
         self.qres_iter_count = qres_iter_count
         self.pos = 0
+        self.err_code = 0
+        self.err_msg = ""
 
     def __iter__(self):
-        """Returns the current iteration result.
+        """Returns the current iteration result
 
         """
 
         return self
 
     def __next__(self):
-        """Returns the next iteration result.
+        """Returns the next iteration result
 
         # Raises:
-            StopIteration: Frees results on end of iterator and raises with iteration stop.
+            StopIteration: Frees results on end of iterator and raises with iteration stop
 
         """
 
@@ -79,6 +82,12 @@ class QueryResults:
 
     def get_agg_results(self):
         """Returns aggregation results for the current query
+
+        # Returns
+            (:obj:`dict`): Dictionary with all results for the current query
+
+        # Raises:
+            Exception: Raises with an error message of API return on non-zero error code
 
         """
 
