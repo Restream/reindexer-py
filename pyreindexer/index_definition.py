@@ -5,10 +5,10 @@
 
 
 class IndexDefinition(dict):
-    """ IndexDefinition is a dictionary subclass which allows to construct and manage indexes more efficiently.
+    """IndexDefinition is a dictionary subclass which allows to construct and manage indexes more efficiently.
     NOT IMPLEMENTED YET. USE FIELDS DESCRIPTION ONLY.
 
-    # Arguments:
+    #### Arguments:
         name (str): An index name.
         json_paths (:obj:`list` of :obj:`str`): A name for mapping a value to a json field.
         field_type (str): A type of field. Possible values are: `int`, `int64`, `double`, `string`, `bool`, `composite`.

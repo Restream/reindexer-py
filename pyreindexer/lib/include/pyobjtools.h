@@ -2,15 +2,16 @@
 
 #include <Python.h>
 #include <vector>
-#include "estl/span.h"
-#include "vendor/gason/gason.h"
-#include "tools/serializer.h"
+#include "core/keyvalue/variant.h"
+#include "estl/h_vector.h"
 
 namespace pyreindexer {
 
-std::vector<std::string> ParseListToStrVec(PyObject** dict);
+reindexer::h_vector<std::string, 2> ParseStrListToStrVec(PyObject** list);
+reindexer::VariantArray ParseListToVec(PyObject** list);
 
-void PyObjectToJson(PyObject** dict, reindexer::WrSerializer& wrSer);
+void PyObjectToJson(PyObject** obj, reindexer::WrSerializer& wrSer);
+reindexer::h_vector<std::string, 2> PyObjectToJson(PyObject** obj);
 PyObject* PyObjectFromJson(reindexer::span<char> json);
 
 }  // namespace pyreindexer

@@ -30,7 +30,6 @@ public:
 
 	void Wrap(TransactionT&& transaction) {
 		transaction_ = std::move(transaction);
-		wrap_ = true;
 	}
 
 	Error Start(std::string_view ns) {
@@ -38,29 +37,28 @@ public:
 	}
 
 	ItemT NewItem() {
-		assert(wrap_);
-		return db_->NewItem(transaction_);
+		assert(transaction_.has_value());
+		return db_->NewItem(*transaction_);
 	}
 
 	Error Modify(ItemT&& item, ItemModifyMode mode) {
-		assert(wrap_);
-		return db_->Modify(transaction_, std::move(item), mode);
+		assert(transaction_.has_value());
+		return db_->Modify(*transaction_, std::move(item), mode);
 	}
 
 	Error Commit(size_t& count) {
-		assert(wrap_);
-		return db_->CommitTransaction(transaction_, count);
+		assert(transaction_.has_value());
+		return db_->CommitTransaction(*transaction_, count);
 	}
 
 	Error Rollback() {
-		assert(wrap_);
-		return db_->RollbackTransaction(transaction_);
+		assert(transaction_.has_value());
+		return db_->RollbackTransaction(*transaction_);
 	}
 
 private:
 	DBInterface* db_{nullptr};
-	TransactionT transaction_;
-	bool wrap_{false};
+	std::optional<TransactionT> transaction_;
 };
 
 }  // namespace pyreindexer

@@ -1,10 +1,14 @@
 #include "reindexerinterface.h"
 #include "client/cororeindexer.h"
 #include "core/reindexer.h"
+#include "core/type_consts.h"
 #include "queryresults_wrapper.h"
 #include "transaction_wrapper.h"
 
 namespace pyreindexer {
+namespace {
+	const int QRESULTS_FLAGS = kResultsJson | kResultsWithJoined;
+}
 
 template <>
 ReindexerInterface<reindexer::Reindexer>::ReindexerInterface() {}
@@ -54,8 +58,8 @@ ReindexerInterface<DBT>::~ReindexerInterface() {
 
 template <typename DBT>
 Error ReindexerInterface<DBT>::Select(const std::string& query, QueryResultsWrapper& result) {
-	return execute([this, query, &result] {
-		typename DBT::QueryResultsT qres;
+	return execute([this, &query, &result] {
+		typename DBT::QueryResultsT qres(QRESULTS_FLAGS);
 		auto res = select(query, qres);
 		result.Wrap(std::move(qres));
 		return res;
@@ -94,9 +98,33 @@ Error ReindexerInterface<reindexer::client::CoroReindexer>::modify(reindexer::cl
 
 template <typename DBT>
 Error ReindexerInterface<DBT>::commitTransaction(typename DBT::TransactionT& transaction, size_t& count) {
-	typename DBT::QueryResultsT qr;
-	auto err = db_.CommitTransaction(transaction, qr);
-	count = qr.Count();
+	typename DBT::QueryResultsT qres(QRESULTS_FLAGS);
+	auto err = db_.CommitTransaction(transaction, qres);
+	count = qres.Count();
+	return err;
+}
+
+template <typename DBT>
+Error ReindexerInterface<DBT>::selectQuery(const reindexer::Query& query, QueryResultsWrapper& result) {
+	typename DBT::QueryResultsT qres(QRESULTS_FLAGS);
+	auto err = db_.Select(query, qres);
+	result.Wrap(std::move(qres));
+	return err;
+}
+
+template <typename DBT>
+Error ReindexerInterface<DBT>::deleteQuery(const reindexer::Query& query, size_t& count) {
+	typename DBT::QueryResultsT qres;
+	auto err = db_.Delete(query, qres);
+	count = qres.Count();
+	return err;
+}
+
+template <typename DBT>
+Error ReindexerInterface<DBT>::updateQuery(const reindexer::Query& query, QueryResultsWrapper& result) {
+	typename DBT::QueryResultsT qres(QRESULTS_FLAGS);
+	auto err = db_.Update(query, qres);
+	result.Wrap(std::move(qres));
 	return err;
 }
 

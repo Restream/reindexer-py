@@ -1,4 +1,5 @@
 from pyreindexer import RxConnector
+from query import Query
 from tests.helpers.log_helper import log_api
 
 
@@ -115,6 +116,11 @@ class QueryApiMethods:
     def sql(self, q):
         """ Execute SQL query """
         return self.api.select(q)
+
+    @api_method
+    def new(self, ns_name) -> Query:
+        """ Create a new query """
+        return self.api.new_query(ns_name)
 
 
 class MetaApiMethods:
