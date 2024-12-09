@@ -74,10 +74,10 @@ public:
 	void AddEqualPosition(const reindexer::h_vector<std::string, 2>& equalPositions);
 
 	DBInterface* GetDB() const { return db_; }
+	reindexer::Error CreateQuery(reindexer::Query& query);
 
 private:
-	void addJoinQueries(const reindexer::h_vector<QueryWrapper*, 2>& queries, reindexer::WrSerializer& buffer) const;
-	reindexer::Error prepareQuery(reindexer::Query& query);
+	void addJoinQueries(const reindexer::h_vector<QueryWrapper*, 1>& queries, reindexer::WrSerializer& buffer) const;
 	void putKeys(const reindexer::VariantArray& keys);
 
 	DBInterface* db_{nullptr};

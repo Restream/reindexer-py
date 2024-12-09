@@ -184,14 +184,14 @@ void serializeJoinQuery(JoinType type, reindexer::WrSerializer& data, reindexer:
 }
 } // namespace
 
-void QueryWrapper::addJoinQueries(const reindexer::h_vector<QueryWrapper*, 2>& queries, reindexer::WrSerializer& buffer)
+void QueryWrapper::addJoinQueries(const reindexer::h_vector<QueryWrapper*, 1>& queries, reindexer::WrSerializer& buffer)
  const {
 	for (auto query : queries) {
 		serializeJoinQuery(query->joinType_, query->ser_, buffer);
 	}
 }
 
-reindexer::Error QueryWrapper::prepareQuery(reindexer::Query& query) {
+reindexer::Error QueryWrapper::CreateQuery(reindexer::Query& query) {
 	reindexer::Error error = errOK;
 	try {
 		// current query (root)
@@ -221,7 +221,7 @@ reindexer::Error QueryWrapper::prepareQuery(reindexer::Query& query) {
 
 reindexer::Error QueryWrapper::SelectQuery(QueryResultsWrapper& qr) {
 	reindexer::Query query;
-	auto err = prepareQuery(query);
+	auto err = CreateQuery(query);
 	if (!err.ok()) {
 		return err;
 	}
@@ -235,7 +235,7 @@ reindexer::Error QueryWrapper::SelectQuery(QueryResultsWrapper& qr) {
 
 reindexer::Error QueryWrapper::UpdateQuery(QueryResultsWrapper& qr) {
 	reindexer::Query query;
-	auto err = prepareQuery(query);
+	auto err = CreateQuery(query);
 	if (!err.ok()) {
 		return err;
 	}
@@ -244,7 +244,7 @@ reindexer::Error QueryWrapper::UpdateQuery(QueryResultsWrapper& qr) {
 
 reindexer::Error QueryWrapper::DeleteQuery(size_t& count) {
 	reindexer::Query query;
-	auto err = prepareQuery(query);
+	auto err = CreateQuery(query);
 	if (!err.ok()) {
 		return err;
 	}
