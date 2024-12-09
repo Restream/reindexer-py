@@ -3,6 +3,7 @@
 #include <deque>
 
 #include "core/type_consts.h"
+#include "estl/h_vector.h"
 #include "tools/serializer.h"
 #include "tools/errors.h"
 #ifdef PYREINDEXER_CPROTO
@@ -26,10 +27,10 @@ class QueryWrapper {
 public:
 	QueryWrapper(DBInterface* db, std::string_view ns);
 
-	void Where(std::string_view index, CondType condition, const std::vector<reindexer::Variant>& keys);
-	void WhereSubQuery(QueryWrapper& query, CondType condition, const std::vector<reindexer::Variant>& keys);
+	void Where(std::string_view index, CondType condition, const reindexer::VariantArray& keys);
+	void WhereSubQuery(QueryWrapper& query, CondType condition, const reindexer::VariantArray& keys);
 	void WhereFieldSubQuery(std::string_view index, CondType condition, QueryWrapper& query);
-	void WhereUUID(std::string_view index, CondType condition, const std::vector<std::string>& keys);
+	void WhereUUID(std::string_view index, CondType condition, const reindexer::h_vector<std::string, 2>& keys);
 
 	void WhereBetweenFields(std::string_view firstField, CondType condition, std::string_view secondField);
 
@@ -39,10 +40,10 @@ public:
 	void DWithin(std::string_view index, double x, double y, double distance);
 
 	void Aggregate(std::string_view index, AggType type);
-	void Aggregation(const std::vector<std::string>& fields);
+	void Aggregation(const reindexer::h_vector<std::string, 2>& fields);
 	void AggregationSort(std::string_view field, bool desc);
 
-	void Sort(std::string_view index, bool desc, const std::vector<reindexer::Variant>& keys);
+	void Sort(std::string_view index, bool desc, const reindexer::VariantArray& sortValues);
 
 	void LogOp(OpType op);
 
@@ -52,13 +53,13 @@ public:
 
 	void Modifier(QueryItemType type);
 
-	enum class ExecuteType { Select, Update };
-	reindexer::Error ExecuteQuery(ExecuteType type, QueryResultsWrapper& qr);
+	reindexer::Error SelectQuery(QueryResultsWrapper& qr);
+	reindexer::Error UpdateQuery(QueryResultsWrapper& qr);
 	reindexer::Error DeleteQuery(size_t& count);
 
 	enum class IsExpression { Yes, No };
-	void Set(std::string_view field, const std::vector<reindexer::Variant>& values, IsExpression isExpression);
-	void SetObject(std::string_view field, const std::vector<std::string>& values);
+	void Set(std::string_view field, const reindexer::VariantArray& values, IsExpression isExpression);
+	void SetObject(std::string_view field, const reindexer::h_vector<std::string, 2>& values);
 
 	void Drop(std::string_view field);
 
@@ -67,17 +68,17 @@ public:
 
 	reindexer::Error On(std::string_view joinField, CondType condition, std::string_view joinIndex);
 
-	void SelectFilter(const std::vector<std::string>& fields);
+	void SelectFilter(const reindexer::h_vector<std::string, 2>& fields);
 
-	void AddFunctions(const std::vector<std::string>& functions);
-	void AddEqualPosition(const std::vector<std::string>& equalPositions);
+	void AddFunctions(const reindexer::h_vector<std::string, 2>& functions);
+	void AddEqualPosition(const reindexer::h_vector<std::string, 2>& equalPositions);
 
 	DBInterface* GetDB() const { return db_; }
 
 private:
-	void addJoinQueries(const std::vector<QueryWrapper*>& queries, reindexer::WrSerializer& buffer) const;
+	void addJoinQueries(const reindexer::h_vector<QueryWrapper*, 2>& queries, reindexer::WrSerializer& buffer) const;
 	reindexer::Error prepareQuery(reindexer::Query& query);
-	void putKeys(const std::vector<reindexer::Variant>& keys);
+	void putKeys(const reindexer::VariantArray& keys);
 
 	DBInterface* db_{nullptr};
 	reindexer::WrSerializer ser_;
@@ -86,8 +87,8 @@ private:
 	unsigned queriesCount_{0};
 	std::deque<uint32_t> openedBrackets_;
 	JoinType joinType_{JoinType::LeftJoin};
-	std::vector<QueryWrapper*> joinQueries_;
-	std::vector<QueryWrapper*> mergedQueries_;
+	reindexer::h_vector<QueryWrapper*, 1> joinQueries_;
+	reindexer::h_vector<QueryWrapper*, 1> mergedQueries_;
 };
 
 }  // namespace pyreindexer

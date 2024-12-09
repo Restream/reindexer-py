@@ -7,7 +7,7 @@
 
 namespace pyreindexer {
 namespace {
-	const int QRESULTS_FLAGS = kResultsJson | kResultsWithRank | kResultsWithJoined;
+	const int QRESULTS_FLAGS = kResultsJson | kResultsWithJoined;
 }
 
 template <>
@@ -58,7 +58,7 @@ ReindexerInterface<DBT>::~ReindexerInterface() {
 
 template <typename DBT>
 Error ReindexerInterface<DBT>::Select(const std::string& query, QueryResultsWrapper& result) {
-	return execute([this, query, &result] {
+	return execute([this, &query, &result] {
 		typename DBT::QueryResultsT qres(QRESULTS_FLAGS);
 		auto res = select(query, qres);
 		result.Wrap(std::move(qres));

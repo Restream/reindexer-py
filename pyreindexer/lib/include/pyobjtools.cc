@@ -99,8 +99,8 @@ void PyObjectToJson(PyObject** obj, reindexer::WrSerializer& wrSer) {
 	}
 }
 
-std::vector<std::string> PyObjectToJson(PyObject** obj) {
-	std::vector<std::string> values;
+reindexer::h_vector<std::string, 2> PyObjectToJson(PyObject** obj) {
+	reindexer::h_vector<std::string, 2> values;
 
 	reindexer::WrSerializer wrSer;
 	if (PyDict_Check(*obj)) {
@@ -132,8 +132,8 @@ std::vector<std::string> PyObjectToJson(PyObject** obj) {
 	return values;
 }
 
-std::vector<std::string> ParseStrListToStrVec(PyObject** list) {
-	std::vector<std::string> result;
+reindexer::h_vector<std::string, 2> ParseStrListToStrVec(PyObject** list) {
+	reindexer::h_vector<std::string, 2> result;
 
 	Py_ssize_t sz = PyList_Size(*list);
 	result.reserve(sz);
@@ -191,8 +191,8 @@ reindexer::Variant convert(PyObject** value) {
 	return {};
 }
 
-std::vector<reindexer::Variant> ParseListToVec(PyObject** list) {
-	std::vector<reindexer::Variant> result;
+reindexer::VariantArray ParseListToVec(PyObject** list) {
+	reindexer::VariantArray result;
 
 	Py_ssize_t sz = PyList_Size(*list);
 	result.reserve(sz);

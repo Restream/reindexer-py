@@ -524,14 +524,15 @@ class Query:
         return self._AggregateFacet(self)
 
     def sort(self, index: str, desc: bool = False,
-             keys: Union[simple_types, tuple[list[simple_types], ...]] = None) -> Query:
-        """Applies sort order to return from query items. If values argument specified, then items equal to values,
-            if found will be placed in the top positions. Forced sort is support for the first sorting field only
+             forced_sort_values: Union[simple_types, tuple[list[simple_types], ...]] = None) -> Query:
+        """Applies sort order to return from query items. If forced_sort_values argument specified, then items equal to
+            values, if found will be placed in the top positions. Forced sort is support for the first sorting field
+            only
 
         #### Arguments:
             index (string): The index name
             desc (bool): Sort in descending order
-            keys (union[simple_types, (list[simple_types], ...)]):
+            forced_sort_values (union[simple_types, (list[simple_types], ...)]):
                 Value of index to match. For composite indexes keys must be list, with value of each sub-index
 
         #### Returns:
@@ -542,9 +543,9 @@ class Query:
 
         """
 
-        params = self.__convert_to_list(keys)
+        values = self.__convert_to_list(forced_sort_values)
 
-        self.err_code, self.err_msg = self.api.sort(self.query_wrapper_ptr, index, desc, params)
+        self.err_code, self.err_msg = self.api.sort(self.query_wrapper_ptr, index, desc, values)
         self.__raise_on_error()
         return self
 

@@ -838,7 +838,7 @@ Adds where condition to DB query with interface args for composite indexes
 ### Query.where\_uuid
 
 ```python
-def where_uuid(index: str, condition: CondType, *keys: str) -> Query
+def where_uuid(index: str, condition: CondType, *uuids: UUID) -> Query
 ```
 
 Adds where condition to DB query with UUID as string args.
@@ -848,7 +848,7 @@ Adds where condition to DB query with UUID as string args.
 #### Arguments:
     index (string): Field name used in condition clause
     condition (:enum:`CondType`): Type of condition
-    keys (*string): Value of index to be compared with. For composite indexes keys must be list,
+    uuids (*:obj:`UUID`): Value of index to be compared with. For composite indexes keys must be list,
         with value of each sub-index
 
 #### Returns:
@@ -1051,19 +1051,21 @@ Gets fields facet value. Applicable to multiple data fields and the result of th
 
 ```python
 def sort(
-        index: str,
-        desc: bool = False,
-        keys: Union[simple_types, tuple[list[simple_types],
-                                        ...]] = None) -> Query
+    index: str,
+    desc: bool = False,
+    forced_sort_values: Union[simple_types, tuple[list[simple_types],
+                                                  ...]] = None
+) -> Query
 ```
 
-Applies sort order to return from query items. If values argument specified, then items equal to values,
-    if found will be placed in the top positions. Forced sort is support for the first sorting field only
+Applies sort order to return from query items. If forced_sort_values argument specified, then items equal to
+    values, if found will be placed in the top positions. Forced sort is support for the first sorting field
+    only
 
 #### Arguments:
     index (string): The index name
     desc (bool): Sort in descending order
-    keys (union[simple_types, (list[simple_types], ...)]):
+    forced_sort_values (union[simple_types, (list[simple_types], ...)]):
         Value of index to match. For composite indexes keys must be list, with value of each sub-index
 
 #### Returns:
