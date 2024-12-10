@@ -1,5 +1,7 @@
 from hamcrest import *
 
+from pyreindexer.exceptions import ApiError
+
 
 class TestSqlQueries:
     def test_sql_select(self, db, namespace, index, item):
@@ -55,7 +57,7 @@ class TestSqlQueries:
         query = "SELECT *"
         # Then ("Check that selected item is in result")
         assert_that(calling(db.query.sql).with_args(query),
-                    raises(Exception, pattern="Expected .* but found"),
+                    raises(ApiError, pattern="Expected .* but found"),
                     "Error wasn't raised when syntax was incorrect")
 
     def test_sql_select_with_aggregations(self, db, namespace, index, items):

@@ -8,7 +8,7 @@
 
 namespace pyreindexer {
 namespace {
-	const int QRESULTS_FLAGS = kResultsJson | kResultsWithRank | kResultsWithJoined;
+	const int QRESULTS_FLAGS = kResultsJson | kResultsWithJoined;
 }
 
 class ICommand {
@@ -94,7 +94,7 @@ ReindexerInterface<DBT>::~ReindexerInterface() {
 
 template <typename DBT>
 Error ReindexerInterface<DBT>::Select(const std::string& query, QueryResultsWrapper& result) {
-	return execute([this, query, &result] {
+	return execute([this, &query, &result] {
 		typename DBT::QueryResultsT qres(QRESULTS_FLAGS);
 		auto res = select(query, qres);
 		result.Wrap(std::move(qres));
@@ -130,6 +130,12 @@ template <>
 Error ReindexerInterface<reindexer::client::CoroReindexer>::modify(reindexer::client::CoroTransaction& transaction,
 			reindexer::client::Item&& item, ItemModifyMode mode) {
 	return transaction.Modify(std::move(item), mode);
+}
+
+template <typename DBT>
+Error ReindexerInterface<DBT>::modify(typename DBT::TransactionT& transaction, reindexer::Query&& query) {
+	transaction.Modify(std::move(query));
+	return errOK;
 }
 
 template <typename DBT>

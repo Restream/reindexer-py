@@ -32,8 +32,10 @@
   * [Transaction](#pyreindexer.transaction.Transaction)
     * [insert](#pyreindexer.transaction.Transaction.insert)
     * [update](#pyreindexer.transaction.Transaction.update)
+    * [update\_query](#pyreindexer.transaction.Transaction.update_query)
     * [upsert](#pyreindexer.transaction.Transaction.upsert)
     * [delete](#pyreindexer.transaction.Transaction.delete)
+    * [delete\_query](#pyreindexer.transaction.Transaction.delete_query)
     * [commit](#pyreindexer.transaction.Transaction.commit)
     * [commit\_with\_count](#pyreindexer.transaction.Transaction.commit_with_count)
     * [rollback](#pyreindexer.transaction.Transaction.rollback)
@@ -125,7 +127,7 @@ def close() -> None
 Closes an API instance with Reindexer resources freeing
 
 #### Raises:
-    Exception: Raises with an error message when Reindexer instance is not initialized yet
+    ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
 
 <a id="pyreindexer.rx_connector.RxConnector.namespace_open"></a>
 
@@ -141,8 +143,8 @@ Opens a namespace specified or creates a namespace if it does not exist
     namespace (string): A name of a namespace
 
 #### Raises:
-    Exception: Raises with an error message when Reindexer instance is not initialized yet
-    Exception: Raises with an error message of API return on non-zero error code
+    ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
+    ApiError: Raises with an error message of API return on non-zero error code
 
 <a id="pyreindexer.rx_connector.RxConnector.namespace_close"></a>
 
@@ -158,8 +160,8 @@ Closes a namespace specified
     namespace (string): A name of a namespace
 
 #### Raises:
-    Exception: Raises with an error message when Reindexer instance is not initialized yet
-    Exception: Raises with an error message of API return on non-zero error code
+    ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
+    ApiError: Raises with an error message of API return on non-zero error code
 
 <a id="pyreindexer.rx_connector.RxConnector.namespace_drop"></a>
 
@@ -196,8 +198,8 @@ Gets a list of namespaces available
     (:obj:`list` of :obj:`dict`): A list of dictionaries which describe each namespace
 
 #### Raises:
-    Exception: Raises with an error message when Reindexer instance is not initialized yet
-    Exception: Raises with an error message of API return on non-zero error code
+    ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
+    ApiError: Raises with an error message of API return on non-zero error code
 
 <a id="pyreindexer.rx_connector.RxConnector.index_add"></a>
 
@@ -214,8 +216,8 @@ Adds an index to the namespace specified
     index_def (dict): A dictionary of index definition
 
 #### Raises:
-    Exception: Raises with an error message when Reindexer instance is not initialized yet
-    Exception: Raises with an error message of API return on non-zero error code
+    ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
+    ApiError: Raises with an error message of API return on non-zero error code
 
 <a id="pyreindexer.rx_connector.RxConnector.index_update"></a>
 
@@ -232,8 +234,8 @@ Updates an index in the namespace specified
     index_def (dict): A dictionary of index definition
 
 #### Raises:
-    Exception: Raises with an error message when Reindexer instance is not initialized yet
-    Exception: Raises with an error message of API return on non-zero error code
+    ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
+    ApiError: Raises with an error message of API return on non-zero error code
 
 <a id="pyreindexer.rx_connector.RxConnector.index_drop"></a>
 
@@ -250,8 +252,8 @@ Drops an index from the namespace specified
     index_name (string): A name of an index
 
 #### Raises:
-    Exception: Raises with an error message when Reindexer instance is not initialized yet
-    Exception: Raises with an error message of API return on non-zero error code
+    ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
+    ApiError: Raises with an error message of API return on non-zero error code
 
 <a id="pyreindexer.rx_connector.RxConnector.item_insert"></a>
 
@@ -269,8 +271,8 @@ Inserts an item with its precepts to the namespace specified
     precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
 
 #### Raises:
-    Exception: Raises with an error message when Reindexer instance is not initialized yet
-    Exception: Raises with an error message of API return on non-zero error code
+    ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
+    ApiError: Raises with an error message of API return on non-zero error code
 
 <a id="pyreindexer.rx_connector.RxConnector.item_update"></a>
 
@@ -288,8 +290,8 @@ Updates an item with its precepts in the namespace specified
     precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
 
 #### Raises:
-    Exception: Raises with an error message when Reindexer instance is not initialized yet
-    Exception: Raises with an error message of API return on non-zero error code
+    ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
+    ApiError: Raises with an error message of API return on non-zero error code
 
 <a id="pyreindexer.rx_connector.RxConnector.item_upsert"></a>
 
@@ -307,8 +309,8 @@ Updates an item with its precepts in the namespace specified. Creates the item i
     precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
 
 #### Raises:
-    Exception: Raises with an error message when Reindexer instance is not initialized yet
-    Exception: Raises with an error message of API return on non-zero error code
+    ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
+    ApiError: Raises with an error message of API return on non-zero error code
 
 <a id="pyreindexer.rx_connector.RxConnector.item_delete"></a>
 
@@ -325,8 +327,8 @@ Deletes an item from the namespace specified
     item_def (dict): A dictionary of item definition
 
 #### Raises:
-    Exception: Raises with an error message when Reindexer instance is not initialized yet
-    Exception: Raises with an error message of API return on non-zero error code
+    ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
+    ApiError: Raises with an error message of API return on non-zero error code
 
 <a id="pyreindexer.rx_connector.RxConnector.meta_put"></a>
 
@@ -344,8 +346,8 @@ Puts metadata to a storage of Reindexer by key
     value (string): A metadata for storage
 
 #### Raises:
-    Exception: Raises with an error message when Reindexer instance is not initialized yet
-    Exception: Raises with an error message of API return on non-zero error code
+    ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
+    ApiError: Raises with an error message of API return on non-zero error code
 
 <a id="pyreindexer.rx_connector.RxConnector.meta_get"></a>
 
@@ -365,8 +367,8 @@ Gets metadata from a storage of Reindexer by key specified
     string: A metadata value
 
 #### Raises:
-    Exception: Raises with an error message when Reindexer instance is not initialized yet
-    Exception: Raises with an error message of API return on non-zero error code
+    ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
+    ApiError: Raises with an error message of API return on non-zero error code
 
 <a id="pyreindexer.rx_connector.RxConnector.meta_delete"></a>
 
@@ -383,8 +385,8 @@ Deletes metadata from a storage of Reindexer by key specified
     key (string): A key in a storage of Reindexer where metadata is kept
 
 #### Raises:
-    Exception: Raises with an error message when Reindexer instance is not initialized yet
-    Exception: Raises with an error message of API return on non-zero error code
+    ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
+    ApiError: Raises with an error message of API return on non-zero error code
 
 <a id="pyreindexer.rx_connector.RxConnector.meta_enum"></a>
 
@@ -403,8 +405,8 @@ Gets a list of metadata keys from a storage of Reindexer
     (:obj:`list` of :obj:`str`): A list of all metadata keys
 
 #### Raises:
-    Exception: Raises with an error message when Reindexer instance is not initialized yet
-    Exception: Raises with an error message of API return on non-zero error code
+    ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
+    ApiError: Raises with an error message of API return on non-zero error code
 
 <a id="pyreindexer.rx_connector.RxConnector.select"></a>
 
@@ -423,8 +425,8 @@ Executes an SQL query and returns query results
     (:obj:`QueryResults`): A QueryResults iterator
 
 #### Raises:
-    Exception: Raises with an error message when Reindexer instance is not initialized yet
-    Exception: Raises with an error message of API return on non-zero error code
+    ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
+    ApiError: Raises with an error message of API return on non-zero error code
 
 <a id="pyreindexer.rx_connector.RxConnector.new_transaction"></a>
 
@@ -443,8 +445,8 @@ Starts a new transaction and return the transaction object to processing
     (:obj:`Transaction`): A new transaction
 
 #### Raises:
-    Exception: Raises with an error message when Reindexer instance is not initialized yet
-    Exception: Raises with an error message of API return on non-zero error code
+    ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
+    ApiError: Raises with an error message of API return on non-zero error code
 
 <a id="pyreindexer.rx_connector.RxConnector.new_query"></a>
 
@@ -463,7 +465,7 @@ Creates a new query and return the query object to processing
     (:obj:`Query`): A new query
 
 #### Raises:
-    Exception: Raises with an error message when Reindexer instance is not initialized yet
+    ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
 
 <a id="pyreindexer.query_results"></a>
 
@@ -499,7 +501,7 @@ def status() -> None
 Check status
 
 #### Raises:
-    Exception: Raises with an error message of API return on non-zero error code
+    ApiError: Raises with an error message of API return on non-zero error code
 
 <a id="pyreindexer.query_results.QueryResults.count"></a>
 
@@ -541,7 +543,7 @@ Returns aggregation results for the current query
     (:obj:`dict`): Dictionary with all results for the current query
 
 #### Raises:
-    Exception: Raises with an error message of API return on non-zero error code
+    ApiError: Raises with an error message of API return on non-zero error code
 
 <a id="pyreindexer.query_results.QueryResults.get_explain_results"></a>
 
@@ -557,7 +559,7 @@ Returns explain results for the current query
     (string): Formatted string with explain of results for the current query
 
 #### Raises:
-    Exception: Raises with an error message of API return on non-zero error code
+    ApiError: Raises with an error message of API return on non-zero error code
 
 <a id="pyreindexer.transaction"></a>
 
@@ -594,8 +596,8 @@ Inserts an item with its precepts to the transaction
     precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
 
 #### Raises:
-    Exception: Raises with an error message of API return if Transaction is over
-    Exception: Raises with an error message of API return on non-zero error code
+    TransactionError: Raises with an error message of API return if Transaction is over
+    ApiError: Raises with an error message of API return on non-zero error code
 
 <a id="pyreindexer.transaction.Transaction.update"></a>
 
@@ -612,8 +614,27 @@ Updates an item with its precepts to the transaction
     precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
 
 #### Raises:
-    Exception: Raises with an error message of API return if Transaction is over
-    Exception: Raises with an error message of API return on non-zero error code
+    TransactionError: Raises with an error message of API return if Transaction is over
+    ApiError: Raises with an error message of API return on non-zero error code
+
+<a id="pyreindexer.transaction.Transaction.update_query"></a>
+
+### Transaction.update\_query
+
+```python
+def update_query(query: Query)
+```
+
+Updates items with the transaction
+    Read-committed isolation is available for read operations.
+    Changes made in active transaction is invisible to current and another transactions.
+
+#### Arguments:
+    query (:obj:`Query`): A query object to modify
+
+#### Raises:
+    TransactionError: Raises with an error message of API return if Transaction is over
+    ApiError: Raises with an error message of API return on non-zero error code
 
 <a id="pyreindexer.transaction.Transaction.upsert"></a>
 
@@ -630,8 +651,8 @@ Updates an item with its precepts to the transaction. Creates the item if it not
     precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
 
 #### Raises:
-    Exception: Raises with an error message of API return if Transaction is over
-    Exception: Raises with an error message of API return on non-zero error code
+    TransactionError: Raises with an error message of API return if Transaction is over
+    ApiError: Raises with an error message of API return on non-zero error code
 
 <a id="pyreindexer.transaction.Transaction.delete"></a>
 
@@ -647,8 +668,27 @@ Deletes an item from the transaction
     item_def (dict): A dictionary of item definition
 
 #### Raises:
-    Exception: Raises with an error message of API return if Transaction is over
-    Exception: Raises with an error message of API return on non-zero error code
+    TransactionError: Raises with an error message of API return if Transaction is over
+    ApiError: Raises with an error message of API return on non-zero error code
+
+<a id="pyreindexer.transaction.Transaction.delete_query"></a>
+
+### Transaction.delete\_query
+
+```python
+def delete_query(query: Query)
+```
+
+Deletes items with the transaction
+    Read-committed isolation is available for read operations.
+    Changes made in active transaction is invisible to current and another transactions.
+
+#### Arguments:
+    query (:obj:`Query`): A query object to modify
+
+#### Raises:
+    TransactionError: Raises with an error message of API return if Transaction is over
+    ApiError: Raises with an error message of API return on non-zero error code
 
 <a id="pyreindexer.transaction.Transaction.commit"></a>
 
@@ -661,8 +701,8 @@ def commit()
 Applies changes
 
 #### Raises:
-    Exception: Raises with an error message of API return if Transaction is over
-    Exception: Raises with an error message of API return on non-zero error code
+    TransactionError: Raises with an error message of API return if Transaction is over
+    ApiError: Raises with an error message of API return on non-zero error code
 
 <a id="pyreindexer.transaction.Transaction.commit_with_count"></a>
 
@@ -675,8 +715,8 @@ def commit_with_count() -> int
 Applies changes and return the number of count of changed items
 
 #### Raises:
-    Exception: Raises with an error message of API return if Transaction is over
-    Exception: Raises with an error message of API return on non-zero error code
+    TransactionError: Raises with an error message of API return if Transaction is over
+    ApiError: Raises with an error message of API return on non-zero error code
 
 <a id="pyreindexer.transaction.Transaction.rollback"></a>
 
@@ -689,8 +729,8 @@ def rollback()
 Rollbacks changes
 
 #### Raises:
-    Exception: Raises with an error message of API return if Transaction is over
-    Exception: Raises with an error message of API return on non-zero error code
+    TransactionError: Raises with an error message of API return if Transaction is over
+    ApiError: Raises with an error message of API return on non-zero error code
 
 <a id="pyreindexer.point"></a>
 
@@ -758,7 +798,7 @@ Adds where condition to DB query with args
     (:obj:`Query`): Query object for further customizations
 
 #### Raises:
-    Exception: Raises with an error message of API return on non-zero error code
+    ApiError: Raises with an error message of API return on non-zero error code
 
 <a id="pyreindexer.query.Query.where_query"></a>
 
@@ -785,7 +825,7 @@ Adds sub-query where condition to DB query with args
     (:obj:`Query`): Query object for further customizations
 
 #### Raises:
-    Exception: Raises with an error message of API return on non-zero error code
+    ApiError: Raises with an error message of API return on non-zero error code
 
 <a id="pyreindexer.query.Query.where_subquery"></a>
 
@@ -831,14 +871,14 @@ Adds where condition to DB query with interface args for composite indexes
     (:obj:`Query`): Query object for further customizations
 
 #### Raises:
-    Exception: Raises with an error message of API return on non-zero error code
+    ApiError: Raises with an error message of API return on non-zero error code
 
 <a id="pyreindexer.query.Query.where_uuid"></a>
 
 ### Query.where\_uuid
 
 ```python
-def where_uuid(index: str, condition: CondType, *keys: str) -> Query
+def where_uuid(index: str, condition: CondType, *uuids: UUID) -> Query
 ```
 
 Adds where condition to DB query with UUID as string args.
@@ -848,14 +888,14 @@ Adds where condition to DB query with UUID as string args.
 #### Arguments:
     index (string): Field name used in condition clause
     condition (:enum:`CondType`): Type of condition
-    keys (*string): Value of index to be compared with. For composite indexes keys must be list,
+    uuids (*:obj:`UUID`): Value of index to be compared with. For composite indexes uuids must be list,
         with value of each sub-index
 
 #### Returns:
     (:obj:`Query`): Query object for further customizations
 
 #### Raises:
-    Exception: Raises with an error message of API return on non-zero error code
+    ApiError: Raises with an error message of API return on non-zero error code
 
 <a id="pyreindexer.query.Query.where_between_fields"></a>
 
@@ -890,7 +930,7 @@ Opens bracket for where condition to DB query
     (:obj:`Query`): Query object for further customizations
 
 #### Raises:
-    Exception: Raises with an error message of API return on non-zero error code
+    ApiError: Raises with an error message of API return on non-zero error code
 
 <a id="pyreindexer.query.Query.close_bracket"></a>
 
@@ -906,7 +946,7 @@ Closes bracket for where condition to DB query
     (:obj:`Query`): Query object for further customizations
 
 #### Raises:
-    Exception: Raises with an error message of API return on non-zero error code
+    ApiError: Raises with an error message of API return on non-zero error code
 
 <a id="pyreindexer.query.Query.match"></a>
 
@@ -927,7 +967,7 @@ Adds string EQ-condition to DB query with string args
     (:obj:`Query`): Query object for further customizations
 
 #### Raises:
-    Exception: Raises with an error message of API return on non-zero error code
+    ApiError: Raises with an error message of API return on non-zero error code
 
 <a id="pyreindexer.query.Query.dwithin"></a>
 
@@ -1051,26 +1091,28 @@ Gets fields facet value. Applicable to multiple data fields and the result of th
 
 ```python
 def sort(
-        index: str,
-        desc: bool = False,
-        keys: Union[simple_types, tuple[list[simple_types],
-                                        ...]] = None) -> Query
+    index: str,
+    desc: bool = False,
+    forced_sort_values: Union[simple_types, tuple[list[simple_types],
+                                                  ...]] = None
+) -> Query
 ```
 
-Applies sort order to return from query items. If values argument specified, then items equal to values,
-    if found will be placed in the top positions. Forced sort is support for the first sorting field only
+Applies sort order to return from query items. If forced_sort_values argument specified, then items equal to
+    values, if found will be placed in the top positions. Forced sort is support for the first sorting field
+    only
 
 #### Arguments:
     index (string): The index name
     desc (bool): Sort in descending order
-    keys (union[simple_types, (list[simple_types], ...)]):
+    forced_sort_values (union[simple_types, (list[simple_types], ...)]):
         Value of index to match. For composite indexes keys must be list, with value of each sub-index
 
 #### Returns:
     (:obj:`Query`): Query object for further customizations
 
 #### Raises:
-    Exception: Raises with an error message of API return on non-zero error code
+    ApiError: Raises with an error message of API return on non-zero error code
 
 <a id="pyreindexer.query.Query.sort_stpoint_distance"></a>
 
@@ -1112,7 +1154,7 @@ Applies geometry sort order to return from query items. Wrapper for geometry sor
     (:obj:`Query`): Query object for further customizations
 
 #### Raises:
-    Exception: Raises with an error message of API return on non-zero error code
+    ApiError: Raises with an error message of API return on non-zero error code
 
 <a id="pyreindexer.query.Query.op_and"></a>
 
@@ -1294,8 +1336,8 @@ Executes a select query
     (:obj:`QueryResults`): A QueryResults iterator
 
 #### Raises:
-    Exception: Raises with an error message when query is in an invalid state
-    Exception: Raises with an error message of API return on non-zero error code
+    ApiError: Raises with an error message when query is in an invalid state
+    ApiError: Raises with an error message of API return on non-zero error code
 
 <a id="pyreindexer.query.Query.delete"></a>
 
@@ -1311,8 +1353,8 @@ Executes a query, and delete items, matches query
     (int): Number of deleted elements
 
 #### Raises:
-    Exception: Raises with an error message when query is in an invalid state
-    Exception: Raises with an error message of API return on non-zero error code
+    QueryError: Raises with an error message when query is in an invalid state
+    ApiError: Raises with an error message of API return on non-zero error code
 
 <a id="pyreindexer.query.Query.set_object"></a>
 
@@ -1332,8 +1374,8 @@ Adds an update query to an object field for an update query
     (:obj:`Query`): Query object for further customizations
 
 #### Raises:
-    Exception: Raises with an error message of API return on non-zero error code
-    Exception: Raises with an error message if no values are specified
+    QueryError: Raises with an error message if no values are specified
+    ApiError: Raises with an error message of API return on non-zero error code
 
 <a id="pyreindexer.query.Query.set"></a>
 
@@ -1353,7 +1395,7 @@ Adds a field update request to the update request
     (:obj:`Query`): Query object for further customizations
 
 #### Raises:
-    Exception: Raises with an error message of API return on non-zero error code
+    ApiError: Raises with an error message of API return on non-zero error code
 
 <a id="pyreindexer.query.Query.drop"></a>
 
@@ -1402,8 +1444,8 @@ Executes update query, and update fields in items, which matches query
     (:obj:`QueryResults`): A QueryResults iterator
 
 #### Raises:
-    Exception: Raises with an error message when query is in an invalid state
-    Exception: Raises with an error message of API return on non-zero error code
+    QueryError: Raises with an error message when query is in an invalid state
+    ApiError: Raises with an error message of API return on non-zero error code
 
 <a id="pyreindexer.query.Query.must_execute"></a>
 
@@ -1419,8 +1461,8 @@ Executes a query, and update fields in items, which matches query, with status c
     (:obj:`QueryResults`): A QueryResults iterator
 
 #### Raises:
-    Exception: Raises with an error message when query is in an invalid state
-    Exception: Raises with an error message of API return on non-zero error code
+    ApiError: Raises with an error message when query is in an invalid state
+    ApiError: Raises with an error message of API return on non-zero error code
 
 <a id="pyreindexer.query.Query.get"></a>
 
@@ -1436,8 +1478,8 @@ Executes a query, and return 1 JSON item
     (:tuple:string,bool): 1st string item and found flag
 
 #### Raises:
-    Exception: Raises with an error message when query is in an invalid state
-    Exception: Raises with an error message of API return on non-zero error code
+    ApiError: Raises with an error message when query is in an invalid state
+    ApiError: Raises with an error message of API return on non-zero error code
 
 <a id="pyreindexer.query.Query.inner_join"></a>
 
@@ -1531,6 +1573,9 @@ On specifies join condition
 #### Returns:
     (:obj:`Query`): Query object for further customizations
 
+#### Raises:
+    QueryError: Raises with an error message when query is in an invalid state
+
 <a id="pyreindexer.query.Query.select"></a>
 
 ### Query.select
@@ -1551,7 +1596,7 @@ Sets list of columns in this namespace to be finally selected.
     (:obj:`Query`): Query object for further customizations
 
 #### Raises:
-    Exception: Raises with an error message of API return on non-zero error code
+    ApiError: Raises with an error message of API return on non-zero error code
 
 <a id="pyreindexer.query.Query.functions"></a>
 
@@ -1570,7 +1615,7 @@ Adds sql-functions to query
     (:obj:`Query`): Query object for further customizations
 
 #### Raises:
-    Exception: Raises with an error message of API return on non-zero error code
+    ApiError: Raises with an error message of API return on non-zero error code
 
 <a id="pyreindexer.query.Query.equal_position"></a>
 
@@ -1589,7 +1634,7 @@ Adds equal position fields to arrays queries
     (:obj:`Query`): Query object for further customizations
 
 #### Raises:
-    Exception: Raises with an error message of API return on non-zero error code
+    ApiError: Raises with an error message of API return on non-zero error code
 
 <a id="pyreindexer.index_definition"></a>
 

@@ -1,3 +1,7 @@
+from pyreindexer.exceptions import ApiError, TransactionError
+from pyreindexer.query import Query
+
+
 def raise_if_error(func):
     def wrapper(self, *args, **kwargs):
         self._raise_on_is_over()
@@ -45,23 +49,23 @@ class Transaction:
         """Checks if there is an error code and raises with an error message
 
         #### Raises:
-            Exception: Raises with an error message of API return on non-zero error code
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
         if self.err_code:
-            raise Exception(self.err_msg)
+            raise ApiError(self.err_msg)
 
     def _raise_on_is_over(self):
         """Checks the state of a transaction and returns an error message when necessary
 
         #### Raises:
-            Exception: Raises with an error message of API return if Transaction is over
+            TransactionError: Raises with an error message of API return if Transaction is over
 
         """
 
         if self.transaction_wrapper_ptr <= 0:
-            raise Exception("Transaction is over")
+            raise TransactionError("Transaction is over")
 
     @raise_if_error
     def insert(self, item_def, precepts=None):
@@ -72,8 +76,8 @@ class Transaction:
             precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
 
         #### Raises:
-            Exception: Raises with an error message of API return if Transaction is over
-            Exception: Raises with an error message of API return on non-zero error code
+            TransactionError: Raises with an error message of API return if Transaction is over
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -89,13 +93,30 @@ class Transaction:
             precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
 
         #### Raises:
-            Exception: Raises with an error message of API return if Transaction is over
-            Exception: Raises with an error message of API return on non-zero error code
+            TransactionError: Raises with an error message of API return if Transaction is over
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
         precepts = [] if precepts is None else precepts
         self.err_code, self.err_msg = self.api.item_update_transaction(self.transaction_wrapper_ptr, item_def, precepts)
+
+    @raise_if_error
+    def update_query(self, query: Query):
+        """Updates items with the transaction
+            Read-committed isolation is available for read operations.
+            Changes made in active transaction is invisible to current and another transactions.
+
+        #### Arguments:
+            query (:obj:`Query`): A query object to modify
+
+        #### Raises:
+            TransactionError: Raises with an error message of API return if Transaction is over
+            ApiError: Raises with an error message of API return on non-zero error code
+
+        """
+
+        self.err_code, self.err_msg = self.api.modify_transaction(self.transaction_wrapper_ptr, query.query_wrapper_ptr)
 
     @raise_if_error
     def upsert(self, item_def, precepts=None):
@@ -106,8 +127,8 @@ class Transaction:
             precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
 
         #### Raises:
-            Exception: Raises with an error message of API return if Transaction is over
-            Exception: Raises with an error message of API return on non-zero error code
+            TransactionError: Raises with an error message of API return if Transaction is over
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -122,20 +143,37 @@ class Transaction:
             item_def (dict): A dictionary of item definition
 
         #### Raises:
-            Exception: Raises with an error message of API return if Transaction is over
-            Exception: Raises with an error message of API return on non-zero error code
+            TransactionError: Raises with an error message of API return if Transaction is over
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
         self.err_code, self.err_msg = self.api.item_delete_transaction(self.transaction_wrapper_ptr, item_def)
 
     @raise_if_error
+    def delete_query(self, query: Query):
+        """Deletes items with the transaction
+            Read-committed isolation is available for read operations.
+            Changes made in active transaction is invisible to current and another transactions.
+
+        #### Arguments:
+            query (:obj:`Query`): A query object to modify
+
+        #### Raises:
+            TransactionError: Raises with an error message of API return if Transaction is over
+            ApiError: Raises with an error message of API return on non-zero error code
+
+        """
+
+        self.err_code, self.err_msg = self.api.delete_transaction(self.transaction_wrapper_ptr, query.query_wrapper_ptr)
+
+    @raise_if_error
     def commit(self):
         """Applies changes
 
         #### Raises:
-            Exception: Raises with an error message of API return if Transaction is over
-            Exception: Raises with an error message of API return on non-zero error code
+            TransactionError: Raises with an error message of API return if Transaction is over
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -147,8 +185,8 @@ class Transaction:
         """Applies changes and return the number of count of changed items
 
         #### Raises:
-            Exception: Raises with an error message of API return if Transaction is over
-            Exception: Raises with an error message of API return on non-zero error code
+            TransactionError: Raises with an error message of API return if Transaction is over
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -161,8 +199,8 @@ class Transaction:
         """Rollbacks changes
 
         #### Raises:
-            Exception: Raises with an error message of API return if Transaction is over
-            Exception: Raises with an error message of API return on non-zero error code
+            TransactionError: Raises with an error message of API return if Transaction is over
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 

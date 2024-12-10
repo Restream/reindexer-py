@@ -1,4 +1,5 @@
 from pyreindexer import RxConnector
+from pyreindexer.exceptions import ApiError
 from pyreindexer.query import CondType
 
 
@@ -20,7 +21,7 @@ def create_index_example(db, namespace):
 
     try:
         db.index_add(namespace, index_definition)
-    except (Exception,):
+    except ApiError:
         db.index_drop(namespace, 'id')
         db.index_add(namespace, index_definition)
 
@@ -56,14 +57,26 @@ def select_item_query_example(db, namespace):
 
     return db.select("SELECT * FROM " + namespace + " WHERE name='" + item_name_for_lookup + "'")
 
+def select_all_item_query_example(db, namespace):
+    return db.select("SELECT * FROM " + namespace)
+
+def print_all_records_from_namespace(db, namespace, message):
+    selected_items_tr = select_all_item_query_example(db, namespace)
+
+    res_count = selected_items_tr.count()
+    print(message, res_count)
+
+    for item in selected_items_tr:
+        print('Item: ', item)
 
 def transaction_example(db, namespace, items_in_base):
+    # start transaction
     transaction = db.new_transaction(namespace)
 
     items_count = len(items_in_base)
 
     # delete first few items
-    for i in range(int(items_count/2)):
+    for i in range(int(items_count / 2)):
         transaction.delete(items_in_base[i])
 
     # update last one item, overwrite field 'value'
@@ -74,18 +87,10 @@ def transaction_example(db, namespace, items_in_base):
     # stop transaction and commit changes to namespace
     transaction.commit()
 
-    # print records from namespace
-    selected_items_tr = select_item_query_example(db, namespace)
-
-    res_count = selected_items_tr.count()
-    print('Transaction results count: ', res_count)
-
-    # disposable QueryResults iterator
-    for item in selected_items_tr:
-        print('Item: ', item)
-
+    print_all_records_from_namespace(db, namespace, 'Transaction results count: ')
 
 def query_example(db, namespace):
+    # query all items
     any_items = (db.new_query(namespace)
                  .where('value', CondType.CondAny)
                  .sort('id')
@@ -94,6 +99,7 @@ def query_example(db, namespace):
     for item in any_items:
         print('Item: ', item)
 
+    # query some items
     selected_items = (db.new_query(namespace)
                       .where('value', CondType.CondEq, 'check')
                       .sort('id')
@@ -103,11 +109,13 @@ def query_example(db, namespace):
     for item in selected_items:
         print('Item: ', item)
 
+    # delete some items
     del_count = (db.new_query(namespace)
                  .where('name', CondType.CondEq, 'item_1')
                  .delete())
     print(f'Deleted count: {del_count}')
 
+    # query all actual items
     any_items = (db.new_query(namespace)
                  .where('value', CondType.CondAny)
                  .must_execute())
@@ -115,10 +123,26 @@ def query_example(db, namespace):
     for item in any_items:
         print('Item: ', item)
 
+def modify_query_transaction(db, namespace):
+    # start transaction
+    transaction = db.new_transaction(namespace)
+
+    # create an update query and set it for the transaction
+    query_upd = db.new_query(namespace).where("id", CondType.CondGe, 4).set("name", ["update_with_query_tx"])
+    transaction.update_query(query_upd)
+
+    # create a delete query and set it for the transaction
+    query_del = db.new_query(namespace).where("id", CondType.CondLt, 3)
+    transaction.delete_query(query_del)
+
+    # stop transaction and commit changes to namespace
+    count = transaction.commit()
+
+    print_all_records_from_namespace(db, namespace, 'Transaction with Query results count: ')
 
 def rx_example():
     db = RxConnector('builtin:///tmp/pyrx', max_replication_updates_size = 10 * 1024 * 1024)
-#    db = RxConnector('cproto://127.0.0.1:6534/pyrx', enable_compression = True, fetch_amount = 500)
+    #    db = RxConnector('cproto://127.0.0.1:6534/pyrx', enable_compression = True, fetch_amount = 500)
 
     namespace = 'test_table'
 
@@ -147,6 +171,8 @@ def rx_example():
     transaction_example(db, namespace, items_copy)
 
     query_example(db, namespace)
+
+    modify_query_transaction(db, namespace)
 
     db.close()
 
