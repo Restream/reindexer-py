@@ -191,6 +191,15 @@ class TransactionApiMethods:
             """ Delete item from transaction """
             return self.tx.delete(item)
 
+        @api_method
+        def update_query(self, query):
+            """ Call update query in transaction """
+            return self.tx.update_query(query)
+        @api_method
+        def delete_query(self, query):
+            """ Call delete query in transaction """
+            return self.tx.delete_query(query)
+
     @api_method
     def begin(self, ns_name) -> "_TransactionApi":
         """ Begin new transaction """

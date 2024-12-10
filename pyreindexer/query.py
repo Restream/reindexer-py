@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from enum import Enum
 from typing import Optional, Union
+from uuid import UUID
 
 from pyreindexer.exceptions import ApiError, QueryError
 from pyreindexer.query_results import QueryResults
@@ -262,7 +263,7 @@ class Query:
 
         return self.__where(index, condition, keys)
 
-    def where_uuid(self, index: str, condition: CondType, *keys: str) -> Query:
+    def where_uuid(self, index: str, condition: CondType, *uuids: UUID) -> Query:
         """Adds where condition to DB query with UUID as string args.
             This function applies binary encoding to the UUID value.
             `index` MUST be declared as uuid index in this case
@@ -270,7 +271,7 @@ class Query:
         #### Arguments:
             index (string): Field name used in condition clause
             condition (:enum:`CondType`): Type of condition
-            keys (*string): Value of index to be compared with. For composite indexes keys must be list,
+            uuids (*:obj:`UUID`): Value of index to be compared with. For composite indexes uuids must be list,
                 with value of each sub-index
 
         #### Returns:
@@ -281,7 +282,9 @@ class Query:
 
         """
 
-        params: list = self.__convert_strs_to_list(keys)
+        params: list[str] = []
+        for item in uuids:
+            params.append(str(item))
 
         self.err_code, self.err_msg = self.api.where_uuid(self.query_wrapper_ptr, index, condition.value, params)
         self.__raise_on_error()

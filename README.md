@@ -32,8 +32,10 @@
   * [Transaction](#pyreindexer.transaction.Transaction)
     * [insert](#pyreindexer.transaction.Transaction.insert)
     * [update](#pyreindexer.transaction.Transaction.update)
+    * [update\_query](#pyreindexer.transaction.Transaction.update_query)
     * [upsert](#pyreindexer.transaction.Transaction.upsert)
     * [delete](#pyreindexer.transaction.Transaction.delete)
+    * [delete\_query](#pyreindexer.transaction.Transaction.delete_query)
     * [commit](#pyreindexer.transaction.Transaction.commit)
     * [commit\_with\_count](#pyreindexer.transaction.Transaction.commit_with_count)
     * [rollback](#pyreindexer.transaction.Transaction.rollback)
@@ -615,6 +617,25 @@ Updates an item with its precepts to the transaction
     TransactionError: Raises with an error message of API return if Transaction is over
     ApiError: Raises with an error message of API return on non-zero error code
 
+<a id="pyreindexer.transaction.Transaction.update_query"></a>
+
+### Transaction.update\_query
+
+```python
+def update_query(query: Query)
+```
+
+Updates items with the transaction
+    Read-committed isolation is available for read operations.
+    Changes made in active transaction is invisible to current and another transactions.
+
+#### Arguments:
+    query (:obj:`Query`): A query object to modify
+
+#### Raises:
+    TransactionError: Raises with an error message of API return if Transaction is over
+    ApiError: Raises with an error message of API return on non-zero error code
+
 <a id="pyreindexer.transaction.Transaction.upsert"></a>
 
 ### Transaction.upsert
@@ -645,6 +666,25 @@ Deletes an item from the transaction
 
 #### Arguments:
     item_def (dict): A dictionary of item definition
+
+#### Raises:
+    TransactionError: Raises with an error message of API return if Transaction is over
+    ApiError: Raises with an error message of API return on non-zero error code
+
+<a id="pyreindexer.transaction.Transaction.delete_query"></a>
+
+### Transaction.delete\_query
+
+```python
+def delete_query(query: Query)
+```
+
+Deletes items with the transaction
+    Read-committed isolation is available for read operations.
+    Changes made in active transaction is invisible to current and another transactions.
+
+#### Arguments:
+    query (:obj:`Query`): A query object to modify
 
 #### Raises:
     TransactionError: Raises with an error message of API return if Transaction is over
@@ -848,7 +888,7 @@ Adds where condition to DB query with UUID as string args.
 #### Arguments:
     index (string): Field name used in condition clause
     condition (:enum:`CondType`): Type of condition
-    uuids (*:obj:`UUID`): Value of index to be compared with. For composite indexes keys must be list,
+    uuids (*:obj:`UUID`): Value of index to be compared with. For composite indexes uuids must be list,
         with value of each sub-index
 
 #### Returns:

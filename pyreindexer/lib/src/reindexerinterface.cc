@@ -97,6 +97,12 @@ Error ReindexerInterface<reindexer::client::CoroReindexer>::modify(reindexer::cl
 }
 
 template <typename DBT>
+Error ReindexerInterface<DBT>::modify(typename DBT::TransactionT& transaction, reindexer::Query&& query) {
+	transaction.Modify(std::move(query));
+	return errOK;
+}
+
+template <typename DBT>
 Error ReindexerInterface<DBT>::commitTransaction(typename DBT::TransactionT& transaction, size_t& count) {
 	typename DBT::QueryResultsT qres(QRESULTS_FLAGS);
 	auto err = db_.CommitTransaction(transaction, qres);

@@ -5,6 +5,8 @@ from tests.helpers.base_helper import get_ns_items
 from tests.helpers.transaction import *
 from tests.test_data.constants import item_definition
 
+from pyreindexer.query import CondType
+
 
 class TestCrudTransaction:
     def test_negative_commit_after_rollback(self, db, namespace):
@@ -183,3 +185,29 @@ class TestCrudTransaction:
         select_result = get_ns_items(db, namespace)
         # Then ("Check that list of items in namespace is empty")
         assert_that(select_result, empty(), "Transaction: item list is not empty")
+
+    def test_transaction_query_delete(self, db, namespace, index, items):
+        # Given("Create namespace with items")
+        # When ("Delete items with transaction")
+        transaction = db.tx.begin(namespace)
+        query = db.query.new(namespace)
+        query.where('id', CondType.CondGe, 0)
+        transaction.delete_query(query)
+        transaction.commit()
+        # Then ("Check that items is deleted")
+        select_result = get_ns_items(db, namespace)
+        assert_that(select_result, empty(), "Transaction: item wasn't deleted")
+
+    def test_transaction_query_update(self, db, namespace, index, item):
+        # Given("Create namespace with item")
+        # When ("Update item")
+        item_definition_updated = {'id': 100, 'val': "new_value"}
+        transaction = db.tx.begin(namespace)
+        query = db.query.new(namespace)
+        query.where('id', CondType.CondEq, 100).set('val', ['new_value'])
+        transaction.update_query(query)
+        transaction.commit()
+        # Then ("Check that item is updated")
+        select_result = get_ns_items(db, namespace)
+        assert_that(select_result, has_length(1), "Transaction: item wasn't updated")
+        assert_that(select_result, has_item(item_definition_updated), "Transaction: item wasn't updated")

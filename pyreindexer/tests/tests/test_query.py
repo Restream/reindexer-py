@@ -1,6 +1,7 @@
 import copy
 import json
 import random
+import uuid
 
 import pytest
 from hamcrest import *
@@ -168,7 +169,8 @@ class TestQuerySelect:
         query = db.query.new(namespace)
         # When ("Make select query with where_uuid")
         item = items[1]
-        query_result = list(query.where_uuid("uuid", CondType.CondEq, item["uuid"]).must_execute())
+        some_uuid = uuid.UUID(item["uuid"])
+        query_result = list(query.where_uuid("uuid", CondType.CondEq, some_uuid).must_execute())
         # Then ("Check that selected item is in result")
         assert_that(query_result, equal_to([item]), "Wrong query results")
 

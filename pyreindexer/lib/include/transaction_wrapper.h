@@ -1,6 +1,7 @@
 #pragma once
 
 #include "reindexerinterface.h"
+#include "core/query/query.h"
 
 #ifdef PYREINDEXER_CPROTO
 #include "client/cororeindexer.h"
@@ -44,6 +45,11 @@ public:
 	Error Modify(ItemT&& item, ItemModifyMode mode) {
 		assert(transaction_.has_value());
 		return db_->Modify(*transaction_, std::move(item), mode);
+	}
+
+	Error Modify(reindexer::Query&& query) {
+		assert(transaction_.has_value());
+		return db_->Modify(*transaction_, std::move(query));
 	}
 
 	Error Commit(size_t& count) {

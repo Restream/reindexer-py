@@ -50,6 +50,8 @@ static PyObject* InsertTransaction(PyObject* self, PyObject* args);
 static PyObject* UpdateTransaction(PyObject* self, PyObject* args);
 static PyObject* UpsertTransaction(PyObject* self, PyObject* args);
 static PyObject* DeleteTransaction(PyObject* self, PyObject* args);
+static PyObject* UpdateQueryTransaction(PyObject* self, PyObject* args);
+static PyObject* DeleteQueryTransaction(PyObject* self, PyObject* args);
 static PyObject* CommitTransaction(PyObject* self, PyObject* args);
 static PyObject* RollbackTransaction(PyObject* self, PyObject* args);
 // query
@@ -135,6 +137,8 @@ static PyMethodDef module_methods[] = {
 	{"item_update_transaction", UpdateTransaction, METH_VARARGS, "item update transaction"},
 	{"item_upsert_transaction", UpsertTransaction, METH_VARARGS, "item upsert transaction"},
 	{"item_delete_transaction", DeleteTransaction, METH_VARARGS, "item delete transaction"},
+	{"modify_transaction", UpdateQueryTransaction, METH_VARARGS, "update query transaction"},
+	{"delete_transaction", DeleteQueryTransaction, METH_VARARGS, "delete query transaction"},
 	{"commit_transaction", CommitTransaction, METH_VARARGS, "apply changes. Free transaction object memory"},
 	{"rollback_transaction", RollbackTransaction, METH_VARARGS, "rollback changes. Free transaction object memory"},
 	// query

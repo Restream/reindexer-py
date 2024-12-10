@@ -13,7 +13,6 @@
 #endif
 
 #include "reindexerinterface.h"
-#include "queryresults_wrapper.h"
 
 namespace pyreindexer {
 
@@ -22,6 +21,8 @@ using DBInterface = ReindexerInterface<reindexer::client::CoroReindexer>;
 #else
 using DBInterface = ReindexerInterface<reindexer::Reindexer>;
 #endif
+
+class QueryResultsWrapper;
 
 class QueryWrapper {
 public:
@@ -53,8 +54,8 @@ public:
 
 	void Modifier(QueryItemType type);
 
-	reindexer::Error SelectQuery(QueryResultsWrapper& qr);
-	reindexer::Error UpdateQuery(QueryResultsWrapper& qr);
+	reindexer::Error SelectQuery(std::unique_ptr<QueryResultsWrapper>& qr);
+	reindexer::Error UpdateQuery(std::unique_ptr<QueryResultsWrapper>& qr);
 	reindexer::Error DeleteQuery(size_t& count);
 
 	enum class IsExpression { Yes, No };
@@ -73,7 +74,6 @@ public:
 	void AddFunctions(const reindexer::h_vector<std::string, 2>& functions);
 	void AddEqualPosition(const reindexer::h_vector<std::string, 2>& equalPositions);
 
-	DBInterface* GetDB() const { return db_; }
 	reindexer::Error CreateQuery(reindexer::Query& query);
 
 private:

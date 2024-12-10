@@ -4,6 +4,7 @@
 
 #include "core/query/query.h"
 #include "core/keyvalue/uuid.h"
+#include "queryresults_wrapper.h"
 
 namespace pyreindexer {
 QueryWrapper::QueryWrapper(DBInterface* db, std::string_view ns) : db_{db} {
@@ -219,7 +220,7 @@ reindexer::Error QueryWrapper::CreateQuery(reindexer::Query& query) {
 	return error;
 }
 
-reindexer::Error QueryWrapper::SelectQuery(QueryResultsWrapper& qr) {
+reindexer::Error QueryWrapper::SelectQuery(std::unique_ptr<QueryResultsWrapper>& qr) {
 	reindexer::Query query;
 	auto err = CreateQuery(query);
 	if (!err.ok()) {
@@ -230,16 +231,18 @@ reindexer::Error QueryWrapper::SelectQuery(QueryResultsWrapper& qr) {
 		return reindexer::Error(ErrorCode::errQueryExec, "WAL queries are not supported");
 	}
 
-	return db_->SelectQuery(query, qr);
+	qr = std::make_unique<QueryResultsWrapper>(db_);
+	return db_->SelectQuery(query, *qr);
 }
 
-reindexer::Error QueryWrapper::UpdateQuery(QueryResultsWrapper& qr) {
+reindexer::Error QueryWrapper::UpdateQuery(std::unique_ptr<QueryResultsWrapper>& qr) {
 	reindexer::Query query;
 	auto err = CreateQuery(query);
 	if (!err.ok()) {
 		return err;
 	}
-	return db_->UpdateQuery(query, qr);
+	qr = std::make_unique<QueryResultsWrapper>(db_);
+	return db_->UpdateQuery(query, *qr);
 }
 
 reindexer::Error QueryWrapper::DeleteQuery(size_t& count) {
