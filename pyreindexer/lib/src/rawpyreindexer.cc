@@ -118,17 +118,16 @@ static PyObject* Select(PyObject* self, PyObject* args) {
 	}
 
 	auto db = getWrapper<DBInterface>(rx);
-	auto qresWrapper = std::make_unique<QueryResultsWrapper>(db);
-	auto err = qresWrapper->Select(query);
-
+	auto qresult = std::make_unique<QueryResultsWrapper>(db);
+	auto err = qresult->Select(query);
 	if (!err.ok()) {
 		return Py_BuildValue("iskII", err.code(), err.what().c_str(), 0, 0);
 	}
 
-	auto count = qresWrapper->Count();
-	auto totalCount = qresWrapper->TotalCount();
+	const auto count = qresult->Count();
+	const auto totalCount = qresult->TotalCount();
 	return Py_BuildValue("iskII", err.code(), err.what().c_str(),
-						 reinterpret_cast<uintptr_t>(qresWrapper.release()), count, totalCount);
+						 reinterpret_cast<uintptr_t>(qresult.release()), count, totalCount);
 }
 
 static PyObject* WithTimeout(PyObject* self, PyObject* args) {
@@ -329,8 +328,7 @@ PyObject* itemModify(PyObject* self, PyObject* args, ItemModifyMode mode) {
 
 	Py_DECREF(itemDefDict);
 
-	char* json = const_cast<char*>(wrSer.c_str());
-	err = item.Unsafe().FromJSON(json, 0, mode == ModeDelete);
+	err = item.Unsafe().FromJSON(wrSer.Slice(), 0, mode == ModeDelete);
 	if (!err.ok()) {
 		Py_XDECREF(preceptsList);
 
@@ -338,8 +336,7 @@ PyObject* itemModify(PyObject* self, PyObject* args, ItemModifyMode mode) {
 	}
 
 	if (preceptsList != nullptr && mode != ModeDelete) {
-		std::vector<std::string> itemPrecepts;
-
+		reindexer::h_vector<std::string, 2> itemPrecepts;
 		try {
 			itemPrecepts = ParseStrListToStrVec(&preceptsList);
 		} catch (const Error& err) {
@@ -348,7 +345,8 @@ PyObject* itemModify(PyObject* self, PyObject* args, ItemModifyMode mode) {
 			return pyErr(err);
 		}
 
-		item.SetPrecepts(itemPrecepts);
+		std::vector<std::string> prets(itemPrecepts.begin(), itemPrecepts.end());
+		item.SetPrecepts(prets); // ToDo after migrate on v.4, do std::move
 	}
 
 	Py_XDECREF(preceptsList);
@@ -576,8 +574,7 @@ PyObject* modifyTransaction(PyObject* self, PyObject* args, ItemModifyMode mode)
 
 	Py_DECREF(defDict);
 
-	char* json = const_cast<char*>(wrSer.c_str());
-	err = item.Unsafe().FromJSON(json, 0, mode == ModeDelete);
+	err = item.Unsafe().FromJSON(wrSer.Slice(), 0, mode == ModeDelete);
 	if (!err.ok()) {
 		Py_XDECREF(precepts);
 
@@ -585,7 +582,7 @@ PyObject* modifyTransaction(PyObject* self, PyObject* args, ItemModifyMode mode)
 	}
 
 	if (precepts != nullptr && mode != ModeDelete) {
-		std::vector<std::string> itemPrecepts;
+		reindexer::h_vector<std::string, 2> itemPrecepts;
 
 		try {
 			itemPrecepts = ParseStrListToStrVec(&precepts);
@@ -595,7 +592,8 @@ PyObject* modifyTransaction(PyObject* self, PyObject* args, ItemModifyMode mode)
 			return pyErr(err);
 		}
 
-		item.SetPrecepts(itemPrecepts);
+		std::vector<std::string> prets(itemPrecepts.begin(), itemPrecepts.end());
+		item.SetPrecepts(prets); // ToDo after migrate on v.4, do std::move
 	}
 
 	Py_XDECREF(precepts);
@@ -619,17 +617,44 @@ static PyObject* UpdateTransaction(PyObject* self, PyObject* args) { return modi
 static PyObject* UpsertTransaction(PyObject* self, PyObject* args) { return modifyTransaction(self, args, ModeUpsert); }
 static PyObject* DeleteTransaction(PyObject* self, PyObject* args) { return modifyTransaction(self, args, ModeDelete); }
 
+namespace {
+PyObject* modifyQueryTransaction(PyObject* self, PyObject* args, QueryType type) {
+	uintptr_t transactionWrapperAddr = 0;
+	uintptr_t queryWrapperAddr = 0;
+	if (!PyArg_ParseTuple(args, "kk", &transactionWrapperAddr, &queryWrapperAddr)) {
+		return nullptr;
+	}
+
+	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
+
+	reindexer::Query rxQuery;
+	auto err = query->CreateQuery(rxQuery);
+	if (!err.ok()) {
+		return pyErr(err);
+	}
+	rxQuery.type_ = type;
+
+	err = getWrapper<TransactionWrapper>(transactionWrapperAddr)->Modify(std::move(rxQuery));
+	return pyErr(err);
+}
+};
+static PyObject* UpdateQueryTransaction(PyObject* self, PyObject* args) {
+	return modifyQueryTransaction(self, args, QueryType::QueryUpdate);
+}
+static PyObject* DeleteQueryTransaction(PyObject* self, PyObject* args) {
+	return modifyQueryTransaction(self, args, QueryType::QueryDelete);
+}
+
 static PyObject* CommitTransaction(PyObject* self, PyObject* args) {
 	uintptr_t transactionWrapperAddr = 0;
 	if (!PyArg_ParseTuple(args, "k", &transactionWrapperAddr)) {
 		return nullptr;
 	}
 
-	assert((StopTransactionMode::Commit == stopMode) || (StopTransactionMode::Rollback == stopMode));
 	size_t count = 0;
 	auto err = getWrapper<TransactionWrapper>(transactionWrapperAddr)->Commit(count);
 
-	deleteWrapper<TransactionWrapper>(transactionWrapperAddr);
+	deleteWrapper<TransactionWrapper>(transactionWrapperAddr); // free memory
 
 	return Py_BuildValue("isI", err.code(), err.what().c_str(), count);
 }
@@ -640,10 +665,9 @@ static PyObject* RollbackTransaction(PyObject* self, PyObject* args) {
 		return nullptr;
 	}
 
-	assert((StopTransactionMode::Commit == stopMode) || (StopTransactionMode::Rollback == stopMode));
 	auto err = getWrapper<TransactionWrapper>(transactionWrapperAddr)->Rollback();
 
-	deleteWrapper<TransactionWrapper>(transactionWrapperAddr);
+	deleteWrapper<TransactionWrapper>(transactionWrapperAddr); // free memory
 
 	return pyErr(err);
 }
@@ -684,7 +708,7 @@ static PyObject* Where(PyObject* self, PyObject* args) {
 
 	Py_XINCREF(keysList);
 
-	std::vector<reindexer::Variant> keys;
+	reindexer::VariantArray keys;
 	if (keysList != nullptr) {
 		try {
 			keys = ParseListToVec(&keysList);
@@ -713,7 +737,7 @@ static PyObject* WhereSubQuery(PyObject* self, PyObject* args) {
 
 	Py_XINCREF(keysList);
 
-	std::vector<reindexer::Variant> keys;
+	reindexer::VariantArray keys;
 	if (keysList != nullptr) {
 		try {
 			keys = ParseListToVec(&keysList);
@@ -728,7 +752,6 @@ static PyObject* WhereSubQuery(PyObject* self, PyObject* args) {
 
 	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
 	auto subQuery = getWrapper<QueryWrapper>(subQueryWrapperAddr);
-
 	query->WhereSubQuery(*subQuery, CondType(cond), keys);
 
 	return pyErr(errOK);
@@ -762,7 +785,7 @@ static PyObject* WhereUUID(PyObject* self, PyObject* args) {
 
 	Py_XINCREF(keysList);
 
-	std::vector<std::string> keys;
+	reindexer::h_vector<std::string, 2> keys;
 	if (keysList != nullptr) {
 		try {
 			keys = ParseStrListToStrVec(&keysList);
@@ -887,7 +910,7 @@ static PyObject* Aggregation(PyObject* self, PyObject* args) {
 
 	Py_XINCREF(fieldsList);
 
-	std::vector<std::string> fields;
+	reindexer::h_vector<std::string, 2> fields;
 	if (fieldsList != nullptr) {
 		try {
 			fields = ParseStrListToStrVec(&fieldsList);
@@ -909,27 +932,27 @@ static PyObject* Sort(PyObject* self, PyObject* args) {
 	uintptr_t queryWrapperAddr = 0;
 	char* index = nullptr;
 	unsigned desc = 0;
-	PyObject* keysList = nullptr;  // borrowed ref after ParseTuple if passed
-	if (!PyArg_ParseTuple(args, "ksIO!", &queryWrapperAddr, &index, &desc, &PyList_Type, &keysList)) {
+	PyObject* sortValuesList = nullptr;  // borrowed ref after ParseTuple if passed
+	if (!PyArg_ParseTuple(args, "ksIO!", &queryWrapperAddr, &index, &desc, &PyList_Type, &sortValuesList)) {
 		return nullptr;
 	}
 
-	Py_XINCREF(keysList);
+	Py_XINCREF(sortValuesList);
 
-	std::vector<reindexer::Variant> keys;
-	if (keysList != nullptr) {
+	reindexer::VariantArray sortValues;
+	if (sortValuesList != nullptr) {
 		try {
-			keys = ParseListToVec(&keysList);
+			sortValues = ParseListToVec(&sortValuesList);
 		} catch (const Error& err) {
-			Py_DECREF(keysList);
+			Py_DECREF(sortValuesList);
 
 			return pyErr(err);
 		}
 	}
 
-	Py_XDECREF(keysList);
+	Py_XDECREF(sortValuesList);
 
-	getWrapper<QueryWrapper>(queryWrapperAddr)->Sort(index, (desc != 0), keys);
+	getWrapper<QueryWrapper>(queryWrapperAddr)->Sort(index, (desc != 0), sortValues);
 
 	return pyErr(errOK);
 }
@@ -1013,32 +1036,39 @@ static PyObject* DeleteQuery(PyObject* self, PyObject* args) {
 }
 
 namespace {
-static PyObject* executeQuery(PyObject* self, PyObject* args, QueryWrapper::ExecuteType type) {
+enum class ExecuteType { Select, Update };
+static PyObject* executeQuery(PyObject* self, PyObject* args, ExecuteType type) {
 	uintptr_t queryWrapperAddr = 0;
 	if (!PyArg_ParseTuple(args, "k", &queryWrapperAddr)) {
 		return nullptr;
 	}
 
 	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
+	std::unique_ptr<QueryResultsWrapper> qresult;
+	Error err;
+	switch (type) {
+		case ExecuteType::Select:
+			err = query->SelectQuery(qresult);
+			break;
+		case ExecuteType::Update:
+			err = query->UpdateQuery(qresult);
+			break;
+		default:
+			return pyErr(reindexer::Error(ErrorCode::errLogic, "Unknown query execute mode"));
+	}
 
-	auto qresWrapper = std::make_unique<QueryResultsWrapper>(query->GetDB());
-	auto err = query->ExecuteQuery(type, *qresWrapper);
 	if (!err.ok()) {
 		return Py_BuildValue("iskII", err.code(), err.what().c_str(), 0, 0, 0);
 	}
 
-	auto count = qresWrapper->Count();
-	auto totalCount = qresWrapper->TotalCount();
+	const auto count = qresult->Count();
+	const auto totalCount = qresult->TotalCount();
 	return Py_BuildValue("iskII", err.code(), err.what().c_str(),
-						 reinterpret_cast<uintptr_t>(qresWrapper.release()), count, totalCount);
+						 reinterpret_cast<uintptr_t>(qresult.release()), count, totalCount);
 }
 } // namespace
-static PyObject* SelectQuery(PyObject* self, PyObject* args) {
-	return executeQuery(self, args,	QueryWrapper::ExecuteType::Select);
-}
-static PyObject* UpdateQuery(PyObject* self, PyObject* args) {
-	return executeQuery(self, args, QueryWrapper::ExecuteType::Update);
-}
+static PyObject* SelectQuery(PyObject* self, PyObject* args) { return executeQuery(self, args, ExecuteType::Select); }
+static PyObject* UpdateQuery(PyObject* self, PyObject* args) { return executeQuery(self, args, ExecuteType::Update); }
 
 static PyObject* SetObject(PyObject* self, PyObject* args) {
 	uintptr_t queryWrapperAddr = 0;
@@ -1050,7 +1080,7 @@ static PyObject* SetObject(PyObject* self, PyObject* args) {
 
 	Py_INCREF(valuesList);
 
-	std::vector<std::string> values;
+	reindexer::h_vector<std::string, 2> values;
 	if (valuesList != nullptr) {
 		try {
 			values = PyObjectToJson(&valuesList);
@@ -1078,7 +1108,7 @@ static PyObject* Set(PyObject* self, PyObject* args) {
 
 	Py_INCREF(valuesList);
 
-	std::vector<reindexer::Variant> values;
+	reindexer::VariantArray values;
 	if (valuesList != nullptr) {
 		try {
 			values = ParseListToVec(&valuesList);
@@ -1176,7 +1206,7 @@ static PyObject* SelectFilter(PyObject* self, PyObject* args) {
 
 	Py_XINCREF(fieldsList);
 
-	std::vector<std::string> fields;
+	reindexer::h_vector<std::string, 2> fields;
 	if (fieldsList != nullptr) {
 		try {
 			fields = ParseStrListToStrVec(&fieldsList);
@@ -1203,7 +1233,7 @@ static PyObject* AddFunctions(PyObject* self, PyObject* args) {
 
 	Py_XINCREF(functionsList);
 
-	std::vector<std::string> functions;
+	reindexer::h_vector<std::string, 2> functions;
 	if (functionsList != nullptr) {
 		try {
 			functions = ParseStrListToStrVec(&functionsList);
@@ -1230,7 +1260,7 @@ static PyObject* AddEqualPosition(PyObject* self, PyObject* args) {
 
 	Py_XINCREF(equalPosesList);
 
-	std::vector<std::string> equalPoses;
+	reindexer::h_vector<std::string, 2> equalPoses;
 	if (equalPosesList != nullptr) {
 		try {
 			equalPoses = ParseStrListToStrVec(&equalPosesList);

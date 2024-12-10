@@ -3,12 +3,20 @@ from __future__ import annotations
 from collections.abc import Iterable
 from enum import Enum
 from typing import Optional, Union
+from uuid import UUID
 
-from pyreindexer.point import Point
+from pyreindexer.exceptions import ApiError, QueryError
 from pyreindexer.query_results import QueryResults
+from pyreindexer.point import Point
 
 
-class CondType(Enum):
+class ExtendedEnum(Enum):
+
+    def __eq__(self, other):
+        return self.value == other
+
+
+class CondType(ExtendedEnum):
     CondAny = 0
     CondEq = 1
     CondLt = 2
@@ -23,21 +31,21 @@ class CondType(Enum):
     CondDWithin = 11
 
 
-class StrictMode(Enum):
+class StrictMode(ExtendedEnum):
     NotSet = 0
     Empty = 1
     Names = 2
     Indexes = 3
 
 
-class JoinType(Enum):
+class JoinType(ExtendedEnum):
     LeftJoin = 0
     InnerJoin = 1
     OrInnerJoin = 2
     Merge = 3
 
 
-class LogLevel(Enum):
+class LogLevel(ExtendedEnum):
     Off = 0
     Error = 1
     Warning = 2
@@ -87,16 +95,16 @@ class Query:
         if self.query_wrapper_ptr > 0:
             self.api.destroy_query(self.query_wrapper_ptr)
 
-    def __raise_on_error(self):
+    def __raise_on_error(self) -> None:
         """Checks if there is an error code and raises with an error message
 
         #### Raises:
-            Exception: Raises with an error message of API return on non-zero error code
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
         if self.err_code:
-            raise Exception(self.err_msg)
+            raise ApiError(self.err_msg)
 
     @staticmethod
     def __convert_to_list(param: Union[simple_types, tuple[list[simple_types], ...]]) -> list:
@@ -112,22 +120,18 @@ class Query:
         """
 
         if param is None:
-            return list()
+            return []
 
         if isinstance(param, str) or not isinstance(param, Iterable):
-            result: list = [param]
-            return result
+            return [param]
 
         if isinstance(param, list):
             return param
 
-        res = param
-        if not isinstance(res, list):
-            res = list(res)
-        if len(res) == 0 or (len(res) > 0 and not isinstance(res[0], list)):
-            wrap : list = [res]
-            res = wrap
-        return res
+        result = list(param)
+        if len(result) == 0 or not isinstance(result[0], list):
+            result: list = [result]
+        return result
 
     @staticmethod
     def __convert_strs_to_list(param: tuple[str, ...]) -> list[str]:
@@ -141,8 +145,7 @@ class Query:
 
         """
 
-        result = list() if param is None else list(param)
-        return result
+        return [] if param is None else list(param)
 
     def __where(self, index: str, condition: CondType,
                 keys: Union[simple_types, tuple[list[simple_types], ...]]) -> Query:
@@ -159,12 +162,13 @@ class Query:
             (:obj:`Query`): Query object for further customizations
 
         #### Raises:
-            Exception: Raises with an error message of API return on non-zero error code
+            QueryError: Raises with an error message if inappropriate condition is used
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
         if condition == CondType.CondDWithin:
-            raise Exception("In this case, use a special method 'dwithin'")
+            raise QueryError("In this case, use a special method 'dwithin'")
 
         params = self.__convert_to_list(keys)
 
@@ -173,7 +177,7 @@ class Query:
         return self
 
     def where(self, index: str, condition: CondType,
-              keys: Union[simple_types, tuple[list[simple_types],...]] = None) -> Query:
+              keys: Union[simple_types, tuple[list[simple_types], ...]] = None) -> Query:
         """Adds where condition to DB query with args
 
         #### Arguments:
@@ -187,14 +191,14 @@ class Query:
             (:obj:`Query`): Query object for further customizations
 
         #### Raises:
-            Exception: Raises with an error message of API return on non-zero error code
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
         return self.__where(index, condition, keys)
 
     def where_query(self, sub_query: Query, condition: CondType,
-                    keys: Union[simple_types, tuple[list[simple_types],...]] = None) -> Query:
+                    keys: Union[simple_types, tuple[list[simple_types], ...]] = None) -> Query:
         """Adds sub-query where condition to DB query with args
 
         #### Arguments:
@@ -208,7 +212,7 @@ class Query:
             (:obj:`Query`): Query object for further customizations
 
         #### Raises:
-            Exception: Raises with an error message of API return on non-zero error code
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -253,13 +257,13 @@ class Query:
             (:obj:`Query`): Query object for further customizations
 
         #### Raises:
-            Exception: Raises with an error message of API return on non-zero error code
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
         return self.__where(index, condition, keys)
 
-    def where_uuid(self, index: str, condition: CondType, *keys: str) -> Query:
+    def where_uuid(self, index: str, condition: CondType, *uuids: UUID) -> Query:
         """Adds where condition to DB query with UUID as string args.
             This function applies binary encoding to the UUID value.
             `index` MUST be declared as uuid index in this case
@@ -267,18 +271,20 @@ class Query:
         #### Arguments:
             index (string): Field name used in condition clause
             condition (:enum:`CondType`): Type of condition
-            keys (*string): Value of index to be compared with. For composite indexes keys must be list,
+            uuids (*:obj:`UUID`): Value of index to be compared with. For composite indexes uuids must be list,
                 with value of each sub-index
 
         #### Returns:
             (:obj:`Query`): Query object for further customizations
 
         #### Raises:
-            Exception: Raises with an error message of API return on non-zero error code
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
-        params: list = self.__convert_strs_to_list(keys)
+        params: list[str] = []
+        for item in uuids:
+            params.append(str(item))
 
         self.err_code, self.err_msg = self.api.where_uuid(self.query_wrapper_ptr, index, condition.value, params)
         self.__raise_on_error()
@@ -307,7 +313,7 @@ class Query:
             (:obj:`Query`): Query object for further customizations
 
         #### Raises:
-            Exception: Raises with an error message of API return on non-zero error code
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -322,7 +328,7 @@ class Query:
             (:obj:`Query`): Query object for further customizations
 
         #### Raises:
-            Exception: Raises with an error message of API return on non-zero error code
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -342,7 +348,7 @@ class Query:
             (:obj:`Query`): Query object for further customizations
 
         #### Raises:
-            Exception: Raises with an error message of API return on non-zero error code
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -521,27 +527,28 @@ class Query:
         return self._AggregateFacet(self)
 
     def sort(self, index: str, desc: bool = False,
-             keys: Union[simple_types, tuple[list[simple_types],...]] = None) -> Query:
-        """Applies sort order to return from query items. If values argument specified, then items equal to values,
-            if found will be placed in the top positions. Forced sort is support for the first sorting field only
+             forced_sort_values: Union[simple_types, tuple[list[simple_types], ...]] = None) -> Query:
+        """Applies sort order to return from query items. If forced_sort_values argument specified, then items equal to
+            values, if found will be placed in the top positions. Forced sort is support for the first sorting field
+            only
 
         #### Arguments:
             index (string): The index name
             desc (bool): Sort in descending order
-            keys (union[simple_types, (list[simple_types], ...)]):
+            forced_sort_values (union[simple_types, (list[simple_types], ...)]):
                 Value of index to match. For composite indexes keys must be list, with value of each sub-index
 
         #### Returns:
             (:obj:`Query`): Query object for further customizations
 
         #### Raises:
-            Exception: Raises with an error message of API return on non-zero error code
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
-        params = self.__convert_to_list(keys)
+        values = self.__convert_to_list(forced_sort_values)
 
-        self.err_code, self.err_msg = self.api.sort(self.query_wrapper_ptr, index, desc, params)
+        self.err_code, self.err_msg = self.api.sort(self.query_wrapper_ptr, index, desc, values)
         self.__raise_on_error()
         return self
 
@@ -575,7 +582,7 @@ class Query:
             (:obj:`Query`): Query object for further customizations
 
         #### Raises:
-            Exception: Raises with an error message of API return on non-zero error code
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -733,8 +740,8 @@ class Query:
             (:obj:`QueryResults`): A QueryResults iterator
 
         #### Raises:
-            Exception: Raises with an error message when query is in an invalid state
-            Exception: Raises with an error message of API return on non-zero error code
+            ApiError: Raises with an error message when query is in an invalid state
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -753,13 +760,13 @@ class Query:
             (int): Number of deleted elements
 
         #### Raises:
-            Exception: Raises with an error message when query is in an invalid state
-            Exception: Raises with an error message of API return on non-zero error code
+            QueryError: Raises with an error message when query is in an invalid state
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
         if (self.root is not None) or (len(self.join_queries) > 0):
-            raise Exception("Delete does not support joined queries")
+            raise QueryError("Delete does not support joined queries")
 
         self.err_code, self.err_msg, number = self.api.delete_query(self.query_wrapper_ptr)
         self.__raise_on_error()
@@ -776,13 +783,13 @@ class Query:
             (:obj:`Query`): Query object for further customizations
 
         #### Raises:
-            Exception: Raises with an error message of API return on non-zero error code
-            Exception: Raises with an error message if no values are specified
+            QueryError: Raises with an error message if no values are specified
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
         if values is None:
-            raise Exception("A required parameter is not specified. `values` can't be None")
+            raise QueryError("A required parameter is not specified. `values` can't be None")
 
         self.err_code, self.err_msg = self.api.set_object(self.query_wrapper_ptr, field, values)
         self.__raise_on_error()
@@ -799,7 +806,7 @@ class Query:
             (:obj:`Query`): Query object for further customizations
 
         #### Raises:
-            Exception: Raises with an error message of API return on non-zero error code
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -845,13 +852,13 @@ class Query:
             (:obj:`QueryResults`): A QueryResults iterator
 
         #### Raises:
-            Exception: Raises with an error message when query is in an invalid state
-            Exception: Raises with an error message of API return on non-zero error code
+            QueryError: Raises with an error message when query is in an invalid state
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
         if (self.root is not None) or (len(self.join_queries) > 0):
-            raise Exception("Update does not support joined queries")
+            raise QueryError("Update does not support joined queries")
 
         (self.err_code, self.err_msg,
          wrapper_ptr, iter_count, total_count) = self.api.update_query(self.query_wrapper_ptr)
@@ -865,8 +872,8 @@ class Query:
             (:obj:`QueryResults`): A QueryResults iterator
 
         #### Raises:
-            Exception: Raises with an error message when query is in an invalid state
-            Exception: Raises with an error message of API return on non-zero error code
+            ApiError: Raises with an error message when query is in an invalid state
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -881,8 +888,8 @@ class Query:
             (:tuple:string,bool): 1st string item and found flag
 
         #### Raises:
-            Exception: Raises with an error message when query is in an invalid state
-            Exception: Raises with an error message of API return on non-zero error code
+            ApiError: Raises with an error message when query is in an invalid state
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -915,7 +922,7 @@ class Query:
             return self.root.__join(query, field, join_type)
 
         if query.root is not None:
-            raise Exception("Query.join call on already joined query. You should create new Query")
+            raise QueryError("Query.join call on already joined query. You should create new Query")
 
         # index of join query
         self.api.join(self.query_wrapper_ptr, join_type.value, query.query_wrapper_ptr)
@@ -1006,10 +1013,13 @@ class Query:
         #### Returns:
             (:obj:`Query`): Query object for further customizations
 
+        #### Raises:
+            QueryError: Raises with an error message when query is in an invalid state
+
         """
 
         if self.root is None:
-            raise Exception("Can't join on root query")
+            raise QueryError("Can't join on root query")
 
         self.api.on(self.query_wrapper_ptr, index, condition.value, join_index)
         return self
@@ -1027,7 +1037,7 @@ class Query:
             (:obj:`Query`): Query object for further customizations
 
         #### Raises:
-            Exception: Raises with an error message of API return on non-zero error code
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -1047,7 +1057,7 @@ class Query:
             (:obj:`Query`): Query object for further customizations
 
         #### Raises:
-            Exception: Raises with an error message of API return on non-zero error code
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
@@ -1067,7 +1077,7 @@ class Query:
             (:obj:`Query`): Query object for further customizations
 
         #### Raises:
-            Exception: Raises with an error message of API return on non-zero error code
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 

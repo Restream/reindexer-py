@@ -1,5 +1,7 @@
 from hamcrest import *
 
+from pyreindexer.exceptions import ApiError
+
 
 class TestCrudNamespace:
 
@@ -30,4 +32,4 @@ class TestCrudNamespace:
         # Then ("Check that we cannot delete namespace that does not exist")
         namespace_name = 'test_ns'
         assert_that(calling(db.namespace.drop).with_args(namespace_name),
-                    raises(Exception, pattern=f"Namespace '{namespace_name}' does not exist"))
+                    raises(ApiError, pattern=f"Namespace '{namespace_name}' does not exist"))

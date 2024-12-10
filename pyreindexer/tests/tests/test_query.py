@@ -1,10 +1,12 @@
 import copy
 import json
 import random
+import uuid
 
 import pytest
 from hamcrest import *
 
+from pyreindexer.exceptions import ApiError
 from point import Point
 from query import CondType, LogLevel, StrictMode
 from tests.helpers.base_helper import calculate_distance, get_ns_items
@@ -167,7 +169,8 @@ class TestQuerySelect:
         query = db.query.new(namespace)
         # When ("Make select query with where_uuid")
         item = items[1]
-        query_result = list(query.where_uuid("uuid", CondType.CondEq, item["uuid"]).must_execute())
+        some_uuid = uuid.UUID(item["uuid"])
+        query_result = list(query.where_uuid("uuid", CondType.CondEq, some_uuid).must_execute())
         # Then ("Check that selected item is in result")
         assert_that(query_result, equal_to([item]), "Wrong query results")
 
@@ -342,8 +345,7 @@ class TestQuerySelect:
         query.strict(strict_mode).where("rand", CondType.CondEq, 1)
         err_msg = "Current query strict mode allows filtering by existing fields only. " \
                   f"There are no fields with name 'rand' in namespace '{namespace}'"
-        assert_that(calling(query.execute).with_args(),
-                    raises(Exception, pattern=err_msg))
+        assert_that(calling(query.execute).with_args(), raises(ApiError, pattern=err_msg))
 
     def test_query_select_strict_mode_indexes(self, db, namespace, index, items):
         # Given("Create namespace with index and items")
@@ -353,8 +355,7 @@ class TestQuerySelect:
         query.strict(StrictMode.Indexes).where("rand", CondType.CondEq, 1)
         err_msg = "Current query strict mode allows filtering by indexes only. " \
                   f"There are no indexes with name 'rand' in namespace '{namespace}'"
-        assert_that(calling(query.execute).with_args(),
-                    raises(Exception, pattern=err_msg))
+        assert_that(calling(query.execute).with_args(), raises(ApiError, pattern=err_msg))
 
     def test_query_select_wal_any(self, db, namespace, index, items):
         # Given("Create namespace with index and items")
@@ -363,7 +364,7 @@ class TestQuerySelect:
         # When ("Make select query with lsn any")
         err_msg = "WAL queries are not supported"
         query.where("#lsn", CondType.CondAny, None)
-        assert_that(calling(query.execute).with_args(), raises(Exception, pattern=err_msg))
+        assert_that(calling(query.execute).with_args(), raises(ApiError, pattern=err_msg))
 
 
 class TestQuerySelectAggregations:
@@ -530,8 +531,7 @@ class TestQuerySelectSort:
         query.strict(StrictMode.Indexes).sort("rand")
         err_msg = "Current query strict mode allows sort by index fields only. " \
                   f"There are no indexes with name 'rand' in namespace '{namespace}'"
-        assert_that(calling(query.execute).with_args(),
-                    raises(Exception, pattern=err_msg))
+        assert_that(calling(query.execute).with_args(), raises(ApiError, pattern=err_msg))
 
 
 class TestQuerySelectJoin:
@@ -583,7 +583,7 @@ class TestQuerySelectJoin:
         query2 = db.query.new(second_namespace)
         # When ("Try to ake select query join without on")
         assert_that(calling(query1.inner_join(query2, "joined").execute).with_args(),
-                    raises(Exception, pattern="Join without ON conditions"))
+                    raises(ApiError, pattern="Join without ON conditions"))
 
     def test_query_select_merge_with_joins(self, db, namespace, index, items, second_namespace, second_item):
         # Given("Create two namespaces with index and items")

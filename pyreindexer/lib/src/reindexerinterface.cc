@@ -7,7 +7,7 @@
 
 namespace pyreindexer {
 namespace {
-	const int QRESULTS_FLAGS = kResultsJson | kResultsWithRank | kResultsWithJoined;
+	const int QRESULTS_FLAGS = kResultsJson | kResultsWithJoined;
 }
 
 class ICommand {
@@ -34,20 +34,27 @@ public:
 
 private:
 	CallableT command_;
-	Error err_{errOK};
+	Error err_;
 	std::atomic_bool executed_{false};
 };
 
 template <>
 ReindexerInterface<reindexer::Reindexer>::ReindexerInterface(const ReindexerConfig& cfg)
 	: db_(reindexer::ReindexerConfig().WithUpdatesSize(cfg.maxReplUpdatesSize)
-							.WithAllocatorCacheLimits(cfg.allocatorCacheLimit, cfg.allocatorCachePart))
+										.WithAllocatorCacheLimits(cfg.allocatorCacheLimit, cfg.allocatorCachePart))
 { }
 
 template <>
 ReindexerInterface<reindexer::client::CoroReindexer>::ReindexerInterface(const ReindexerConfig& cfg)
-	: db_(reindexer::client::ReindexerConfig(4, 1, cfg.fetchAmount, 0,
-			cfg.connectTimeout, cfg.requestTimeout, cfg.enableCompression, cfg.requestDedicatedThread, cfg.appName))
+	: db_(reindexer::client::ReindexerConfig(4,
+											 1,
+											 cfg.fetchAmount,
+											 0,
+											 cfg.connectTimeout,
+											 cfg.requestTimeout,
+											 cfg.enableCompression,
+											 cfg.requestDedicatedThread,
+											 cfg.appName))
 {
 	std::atomic_bool running{false};
 	executionThr_ = std::thread([this, &running] {
@@ -91,7 +98,7 @@ ReindexerInterface<DBT>::~ReindexerInterface() {
 }
 
 template <typename DBT>
-Error ReindexerInterface<DBT>::Select(const std::string& query, QueryResultsWrapper& result) {
+Error ReindexerInterface<DBT>::Select(std::string_view query, QueryResultsWrapper& result) {
 	return execute([this, query, &result] {
 		typename DBT::QueryResultsT qres(QRESULTS_FLAGS);
 		auto res = select(query, qres);
@@ -224,7 +231,7 @@ Error ReindexerInterface<DBT>::enumMeta(std::string_view ns, std::vector<std::st
 }
 
 template <typename DBT>
-Error ReindexerInterface<DBT>::select(const std::string& query, typename DBT::QueryResultsT& result) {
+Error ReindexerInterface<DBT>::select(std::string_view query, typename DBT::QueryResultsT& result) {
 	auto err = db_.WithTimeout(timeout_).Select(query, result);
 	timeout_ = std::chrono::milliseconds{0};
 	return err;
@@ -250,6 +257,12 @@ Error ReindexerInterface<reindexer::client::CoroReindexer>::modify(reindexer::cl
 }
 
 template <typename DBT>
+Error ReindexerInterface<DBT>::modify(typename DBT::TransactionT& transaction, Query&& query) {
+	transaction.Modify(std::move(query));
+	return errOK;
+}
+
+template <typename DBT>
 typename DBT::TransactionT ReindexerInterface<DBT>::startTransaction(std::string_view ns) {
 	auto transaction = db_.WithTimeout(timeout_).NewTransaction(ns);
 	timeout_ = std::chrono::milliseconds{0};
@@ -266,14 +279,14 @@ Error ReindexerInterface<DBT>::commitTransaction(typename DBT::TransactionT& tra
 }
 
 template <typename DBT>
-Error ReindexerInterface<DBT>::rollbackTransaction(typename DBT::TransactionT& tr) {
-	auto err = db_.WithTimeout(timeout_).RollBackTransaction(tr);
+Error ReindexerInterface<DBT>::rollbackTransaction(typename DBT::TransactionT& transaction) {
+	auto err = db_.WithTimeout(timeout_).RollBackTransaction(transaction);
 	timeout_ = std::chrono::milliseconds{0};
 	return err;
 }
 
 template <typename DBT>
-Error ReindexerInterface<DBT>::selectQuery(const reindexer::Query& query, QueryResultsWrapper& result) {
+Error ReindexerInterface<DBT>::selectQuery(const Query& query, QueryResultsWrapper& result) {
 	typename DBT::QueryResultsT qres(QRESULTS_FLAGS);
 	auto err = db_.WithTimeout(timeout_).Select(query, qres);
 	timeout_ = std::chrono::milliseconds{0};
@@ -282,7 +295,7 @@ Error ReindexerInterface<DBT>::selectQuery(const reindexer::Query& query, QueryR
 }
 
 template <typename DBT>
-Error ReindexerInterface<DBT>::deleteQuery(const reindexer::Query& query, size_t& count) {
+Error ReindexerInterface<DBT>::deleteQuery(const Query& query, size_t& count) {
 	typename DBT::QueryResultsT qres;
 	auto err = db_.WithTimeout(timeout_).Delete(query, qres);
 	timeout_ = std::chrono::milliseconds{0};
@@ -291,7 +304,7 @@ Error ReindexerInterface<DBT>::deleteQuery(const reindexer::Query& query, size_t
 }
 
 template <typename DBT>
-Error ReindexerInterface<DBT>::updateQuery(const reindexer::Query& query, QueryResultsWrapper& result) {
+Error ReindexerInterface<DBT>::updateQuery(const Query& query, QueryResultsWrapper& result) {
 	typename DBT::QueryResultsT qres(QRESULTS_FLAGS);
 	auto err = db_.WithTimeout(timeout_).Update(query, qres);
 	timeout_ = std::chrono::milliseconds{0};

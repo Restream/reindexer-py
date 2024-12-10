@@ -4,6 +4,7 @@
 
 #include "core/query/query.h"
 #include "core/keyvalue/uuid.h"
+#include "queryresults_wrapper.h"
 
 namespace pyreindexer {
 QueryWrapper::QueryWrapper(DBInterface* db, std::string_view ns) : db_{db} {
@@ -11,7 +12,7 @@ QueryWrapper::QueryWrapper(DBInterface* db, std::string_view ns) : db_{db} {
 	ser_.PutVString(ns);
 }
 
-void QueryWrapper::Where(std::string_view index, CondType condition, const std::vector<reindexer::Variant>& keys) {
+void QueryWrapper::Where(std::string_view index, CondType condition, const reindexer::VariantArray& keys) {
 	ser_.PutVarUint(QueryItemType::QueryCondition);
 	ser_.PutVString(index);
 	ser_.PutVarUint(nextOperation_);
@@ -22,7 +23,7 @@ void QueryWrapper::Where(std::string_view index, CondType condition, const std::
 	++queriesCount_;
 }
 
-void QueryWrapper::WhereSubQuery(QueryWrapper& query, CondType condition, const std::vector<reindexer::Variant>& keys) {
+void QueryWrapper::WhereSubQuery(QueryWrapper& query, CondType condition, const reindexer::VariantArray& keys) {
 	ser_.PutVarUint(QueryItemType::QuerySubQueryCondition);
 	ser_.PutVarUint(nextOperation_);
 	ser_.PutVString(query.ser_.Slice());
@@ -44,7 +45,8 @@ void QueryWrapper::WhereFieldSubQuery(std::string_view index, CondType condition
 	++queriesCount_;
 }
 
-void QueryWrapper::WhereUUID(std::string_view index, CondType condition, const std::vector<std::string>& keys) {
+void QueryWrapper::WhereUUID(std::string_view index, CondType condition,
+							 const reindexer::h_vector<std::string, 2>& keys) {
 	ser_.PutVarUint(QueryItemType::QueryCondition);
 	ser_.PutVString(index);
 	ser_.PutVarUint(nextOperation_);
@@ -129,7 +131,7 @@ void QueryWrapper::Aggregate(std::string_view index, AggType type) {
 	ser_.PutVString(index);
 }
 
-void QueryWrapper::Aggregation(const std::vector<std::string>& fields) {
+void QueryWrapper::Aggregation(const reindexer::h_vector<std::string, 2>& fields) {
 	ser_.PutVarUint(QueryItemType::QueryAggregation);
 	ser_.PutVarUint(AggType::AggFacet);
 	ser_.PutVarUint(fields.size());
@@ -138,11 +140,11 @@ void QueryWrapper::Aggregation(const std::vector<std::string>& fields) {
 	}
 }
 
-void QueryWrapper::Sort(std::string_view index, bool desc, const std::vector<reindexer::Variant>& keys) {
+void QueryWrapper::Sort(std::string_view index, bool desc, const reindexer::VariantArray& sortValues) {
 	ser_.PutVarUint(QueryItemType::QuerySortIndex);
 	ser_.PutVString(index);
 	ser_.PutVarUint(desc? 1 : 0);
-	putKeys(keys);
+	putKeys(sortValues);
 }
 
 void QueryWrapper::LogOp(OpType op) {
@@ -183,13 +185,14 @@ void serializeJoinQuery(JoinType type, reindexer::WrSerializer& data, reindexer:
 }
 } // namespace
 
-void QueryWrapper::addJoinQueries(const std::vector<QueryWrapper*>& queries, reindexer::WrSerializer& buffer) const {
+void QueryWrapper::addJoinQueries(const reindexer::h_vector<QueryWrapper*, 1>& queries, reindexer::WrSerializer& buffer)
+ const {
 	for (auto query : queries) {
 		serializeJoinQuery(query->joinType_, query->ser_, buffer);
 	}
 }
 
-reindexer::Error QueryWrapper::prepareQuery(reindexer::Query& query) {
+reindexer::Error QueryWrapper::CreateQuery(reindexer::Query& query) {
 	reindexer::Error error = errOK;
 	try {
 		// current query (root)
@@ -217,9 +220,9 @@ reindexer::Error QueryWrapper::prepareQuery(reindexer::Query& query) {
 	return error;
 }
 
-reindexer::Error QueryWrapper::ExecuteQuery(ExecuteType type, QueryResultsWrapper& qr) {
+reindexer::Error QueryWrapper::SelectQuery(std::unique_ptr<QueryResultsWrapper>& qr) {
 	reindexer::Query query;
-	auto err = prepareQuery(query);
+	auto err = CreateQuery(query);
 	if (!err.ok()) {
 		return err;
 	}
@@ -228,29 +231,30 @@ reindexer::Error QueryWrapper::ExecuteQuery(ExecuteType type, QueryResultsWrappe
 		return reindexer::Error(ErrorCode::errQueryExec, "WAL queries are not supported");
 	}
 
-	switch (type) {
-		case ExecuteType::Select:
-			err = db_->SelectQuery(query, qr);
-			break;
-		case ExecuteType::Update:
-			err = db_->UpdateQuery(query, qr);
-			break;
-		default:
-			assert(false);
+	qr = std::make_unique<QueryResultsWrapper>(db_);
+	return db_->SelectQuery(query, *qr);
+}
+
+reindexer::Error QueryWrapper::UpdateQuery(std::unique_ptr<QueryResultsWrapper>& qr) {
+	reindexer::Query query;
+	auto err = CreateQuery(query);
+	if (!err.ok()) {
+		return err;
 	}
-	return err;
+	qr = std::make_unique<QueryResultsWrapper>(db_);
+	return db_->UpdateQuery(query, *qr);
 }
 
 reindexer::Error QueryWrapper::DeleteQuery(size_t& count) {
 	reindexer::Query query;
-	auto err = prepareQuery(query);
+	auto err = CreateQuery(query);
 	if (!err.ok()) {
 		return err;
 	}
 	return db_->DeleteQuery(query, count);
 }
 
-void QueryWrapper::Set(std::string_view field, const std::vector<reindexer::Variant>& values,
+void QueryWrapper::Set(std::string_view field, const reindexer::VariantArray& values,
 					   IsExpression isExpression) {
 	ser_.PutVarUint(QueryItemType::QueryUpdateFieldV2);
 	ser_.PutVString(field);
@@ -262,7 +266,7 @@ void QueryWrapper::Set(std::string_view field, const std::vector<reindexer::Vari
 	}
 }
 
-void QueryWrapper::SetObject(std::string_view field, const std::vector<std::string>& values) {
+void QueryWrapper::SetObject(std::string_view field, const reindexer::h_vector<std::string, 2>& values) {
 	ser_.PutVarUint(QueryItemType::QueryUpdateObject);
 	ser_.PutVString(field);
 	ser_.PutVarUint(values.size()); // values count
@@ -315,21 +319,21 @@ reindexer::Error QueryWrapper::On(std::string_view joinField, CondType condition
 	return errOK;
 }
 
-void QueryWrapper::SelectFilter(const std::vector<std::string>& fields) {
+void QueryWrapper::SelectFilter(const reindexer::h_vector<std::string, 2>& fields) {
 	for (const auto& field : fields) {
 		ser_.PutVarUint(QueryItemType::QuerySelectFilter);
 		ser_.PutVString(field);
 	}
 }
 
-void QueryWrapper::AddFunctions(const std::vector<std::string>& functions) {
+void QueryWrapper::AddFunctions(const reindexer::h_vector<std::string, 2>& functions) {
 	for (const auto& function : functions) {
 		ser_.PutVarUint(QueryItemType::QuerySelectFunction);
 		ser_.PutVString(function);
 	}
 }
 
-void QueryWrapper::AddEqualPosition(const std::vector<std::string>& equalPositions) {
+void QueryWrapper::AddEqualPosition(const reindexer::h_vector<std::string, 2>& equalPositions) {
 	ser_.PutVarUint(QueryItemType::QueryEqualPosition);
 	ser_.PutVarUint(openedBrackets_.empty()? 0 : int(openedBrackets_.back() + 1));
 	ser_.PutVarUint(equalPositions.size());
@@ -338,7 +342,7 @@ void QueryWrapper::AddEqualPosition(const std::vector<std::string>& equalPositio
 	}
 }
 
-void QueryWrapper::putKeys(const std::vector<reindexer::Variant>& keys) {
+void QueryWrapper::putKeys(const reindexer::VariantArray& keys) {
 	ser_.PutVarUint(keys.size());
 	for (const auto& key : keys) {
 		ser_.PutVariant(key);

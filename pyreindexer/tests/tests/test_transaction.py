@@ -1,8 +1,11 @@
 from hamcrest import *
 
+from pyreindexer.exceptions import TransactionError
 from tests.helpers.base_helper import get_ns_items
 from tests.helpers.transaction import *
 from tests.test_data.constants import item_definition
+
+from pyreindexer.query import CondType
 
 
 class TestCrudTransaction:
@@ -14,7 +17,7 @@ class TestCrudTransaction:
         transaction.rollback()
         # Then ("Commit transaction")
         assert_that(calling(transaction.commit).with_args(),
-                    raises(Exception, matching=has_string("Transaction is over")))
+                    raises(TransactionError, matching=has_string("Transaction is over")))
 
     def test_negative_rollback_after_commit(self, db, namespace):
         # Given("Create namespace")
@@ -24,7 +27,7 @@ class TestCrudTransaction:
         transaction.commit()
         # Then ("Rollback transaction")
         assert_that(calling(transaction.rollback).with_args(),
-                    raises(Exception, matching=has_string("Transaction is over")))
+                    raises(TransactionError, matching=has_string("Transaction is over")))
 
     def test_negative_insert_after_rollback(self, db, namespace, index):
         # Given("Create namespace with index")
@@ -34,7 +37,7 @@ class TestCrudTransaction:
         transaction.rollback()
         # Then ("Insert transaction")
         assert_that(calling(transaction.insert_item).with_args(item_definition),
-                    raises(Exception, matching=has_string("Transaction is over")))
+                    raises(TransactionError, matching=has_string("Transaction is over")))
 
     def test_negative_update_after_rollback(self, db, namespace, index):
         # Given("Create namespace with index")
@@ -44,7 +47,7 @@ class TestCrudTransaction:
         transaction.rollback()
         # Then ("Update transaction")
         assert_that(calling(transaction.update_item).with_args(item_definition),
-                    raises(Exception, matching=has_string("Transaction is over")))
+                    raises(TransactionError, matching=has_string("Transaction is over")))
 
     def test_negative_upsert_after_rollback(self, db, namespace, index):
         # Given("Create namespace with index")
@@ -54,7 +57,7 @@ class TestCrudTransaction:
         transaction.rollback()
         # Then ("Upsert transaction")
         assert_that(calling(transaction.upsert_item).with_args(item_definition),
-                    raises(Exception, matching=has_string("Transaction is over")))
+                    raises(TransactionError, matching=has_string("Transaction is over")))
 
     def test_negative_delete_after_rollback(self, db, namespace, index):
         # Given("Create namespace with index")
@@ -64,7 +67,7 @@ class TestCrudTransaction:
         transaction.rollback()
         # Then ("Delete transaction")
         assert_that(calling(transaction.delete_item).with_args(item_definition),
-                    raises(Exception, matching=has_string("Transaction is over")))
+                    raises(TransactionError, matching=has_string("Transaction is over")))
 
     def test_negative_insert_after_commit(self, db, namespace, index):
         # Given("Create namespace with index")
@@ -74,7 +77,7 @@ class TestCrudTransaction:
         transaction.commit()
         # Then ("Insert transaction")
         assert_that(calling(transaction.insert_item).with_args(item_definition),
-                    raises(Exception, matching=has_string("Transaction is over")))
+                    raises(TransactionError, matching=has_string("Transaction is over")))
 
     def test_negative_update_after_commit(self, db, namespace, index):
         # Given("Create namespace with index")
@@ -84,7 +87,7 @@ class TestCrudTransaction:
         transaction.commit()
         # Then ("Update transaction")
         assert_that(calling(transaction.update_item).with_args(item_definition),
-                    raises(Exception, matching=has_string("Transaction is over")))
+                    raises(TransactionError, matching=has_string("Transaction is over")))
 
     def test_negative_upsert_after_commit(self, db, namespace, index):
         # Given("Create namespace with index")
@@ -94,7 +97,7 @@ class TestCrudTransaction:
         transaction.commit()
         # Then ("Upsert transaction")
         assert_that(calling(transaction.upsert_item).with_args(item_definition),
-                    raises(Exception, matching=has_string("Transaction is over")))
+                    raises(TransactionError, matching=has_string("Transaction is over")))
 
     def test_negative_delete_after_commit(self, db, namespace, index):
         # Given("Create namespace with index")
@@ -104,7 +107,7 @@ class TestCrudTransaction:
         transaction.commit()
         # Then ("Delete transaction")
         assert_that(calling(transaction.delete_item).with_args(item_definition),
-                    raises(Exception, matching=has_string("Transaction is over")))
+                    raises(TransactionError, matching=has_string("Transaction is over")))
 
     def test_create_item_insert(self, db, namespace, index):
         # Given("Create namespace with index")
@@ -182,3 +185,29 @@ class TestCrudTransaction:
         select_result = get_ns_items(db, namespace)
         # Then ("Check that list of items in namespace is empty")
         assert_that(select_result, empty(), "Transaction: item list is not empty")
+
+    def test_transaction_query_delete(self, db, namespace, index, items):
+        # Given("Create namespace with items")
+        # When ("Delete items with transaction")
+        transaction = db.tx.begin(namespace)
+        query = db.query.new(namespace)
+        query.where('id', CondType.CondGe, 0)
+        transaction.delete_query(query)
+        transaction.commit()
+        # Then ("Check that items is deleted")
+        select_result = get_ns_items(db, namespace)
+        assert_that(select_result, empty(), "Transaction: item wasn't deleted")
+
+    def test_transaction_query_update(self, db, namespace, index, item):
+        # Given("Create namespace with item")
+        # When ("Update item")
+        item_definition_updated = {'id': 100, 'val': "new_value"}
+        transaction = db.tx.begin(namespace)
+        query = db.query.new(namespace)
+        query.where('id', CondType.CondEq, 100).set('val', ['new_value'])
+        transaction.update_query(query)
+        transaction.commit()
+        # Then ("Check that item is updated")
+        select_result = get_ns_items(db, namespace)
+        assert_that(select_result, has_length(1), "Transaction: item wasn't updated")
+        assert_that(select_result, has_item(item_definition_updated), "Transaction: item wasn't updated")
