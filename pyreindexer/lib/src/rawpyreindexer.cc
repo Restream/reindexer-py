@@ -597,7 +597,7 @@ PyObject* modifyQueryTransaction(PyObject* self, PyObject* args, QueryType type)
 	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
 
 	reindexer::Query rxQuery;
-	auto err = query->CreateQuery(rxQuery);
+	auto err = query->BuildQuery(rxQuery);
 	if (!err.ok()) {
 		return pyErr(err);
 	}

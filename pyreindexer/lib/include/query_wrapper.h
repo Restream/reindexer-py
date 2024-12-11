@@ -74,7 +74,7 @@ public:
 	void AddFunctions(const reindexer::h_vector<std::string, 2>& functions);
 	void AddEqualPosition(const reindexer::h_vector<std::string, 2>& equalPositions);
 
-	reindexer::Error CreateQuery(reindexer::Query& query);
+	reindexer::Error BuildQuery(reindexer::Query& query);
 
 private:
 	void addJoinQueries(const reindexer::h_vector<QueryWrapper*, 1>& queries, reindexer::WrSerializer& buffer) const;

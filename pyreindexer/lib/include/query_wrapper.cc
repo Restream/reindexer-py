@@ -192,7 +192,7 @@ void QueryWrapper::addJoinQueries(const reindexer::h_vector<QueryWrapper*, 1>& q
 	}
 }
 
-reindexer::Error QueryWrapper::CreateQuery(reindexer::Query& query) {
+reindexer::Error QueryWrapper::BuildQuery(reindexer::Query& query) {
 	reindexer::Error error = errOK;
 	try {
 		// current query (root)
@@ -222,7 +222,7 @@ reindexer::Error QueryWrapper::CreateQuery(reindexer::Query& query) {
 
 reindexer::Error QueryWrapper::SelectQuery(std::unique_ptr<QueryResultsWrapper>& qr) {
 	reindexer::Query query;
-	auto err = CreateQuery(query);
+	auto err = BuildQuery(query);
 	if (!err.ok()) {
 		return err;
 	}
@@ -237,7 +237,7 @@ reindexer::Error QueryWrapper::SelectQuery(std::unique_ptr<QueryResultsWrapper>&
 
 reindexer::Error QueryWrapper::UpdateQuery(std::unique_ptr<QueryResultsWrapper>& qr) {
 	reindexer::Query query;
-	auto err = CreateQuery(query);
+	auto err = BuildQuery(query);
 	if (!err.ok()) {
 		return err;
 	}
@@ -247,7 +247,7 @@ reindexer::Error QueryWrapper::UpdateQuery(std::unique_ptr<QueryResultsWrapper>&
 
 reindexer::Error QueryWrapper::DeleteQuery(size_t& count) {
 	reindexer::Query query;
-	auto err = CreateQuery(query);
+	auto err = BuildQuery(query);
 	if (!err.ok()) {
 		return err;
 	}
