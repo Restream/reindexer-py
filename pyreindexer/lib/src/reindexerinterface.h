@@ -123,9 +123,6 @@ public:
 	Error Modify(typename DBT::TransactionT& tr, typename DBT::ItemT&& item, ItemModifyMode mode) {
 		return execute([this, &tr, &item, mode] { return modify(tr, std::move(item), mode); });
 	}
-	Error Modify(typename DBT::TransactionT& tr, reindexer::Query&& query) {
-		return execute([this, &tr, &query] { return modify(tr, std::move(query)); });
-	}
 	Error CommitTransaction(typename DBT::TransactionT& tr, size_t& count) {
 		return execute([this, &tr, &count] { return commitTransaction(tr, count); });
 	}
@@ -166,7 +163,6 @@ private:
 	typename DBT::TransactionT startTransaction(std::string_view ns) { return db_.NewTransaction({ns.data(), ns.size()}); }
 	typename DBT::ItemT newItem(typename DBT::TransactionT& tr) { return tr.NewItem(); }
 	Error modify(typename DBT::TransactionT& tr, typename DBT::ItemT&& item, ItemModifyMode mode);
-	Error modify(typename DBT::TransactionT& tr, reindexer::Query&& query);
 	Error commitTransaction(typename DBT::TransactionT& transaction, size_t& count);
 	Error rollbackTransaction(typename DBT::TransactionT& tr) { return db_.RollBackTransaction(tr); }
 	Error selectQuery(const reindexer::Query& query, QueryResultsWrapper& result);

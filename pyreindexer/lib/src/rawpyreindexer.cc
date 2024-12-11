@@ -586,34 +586,6 @@ static PyObject* UpdateTransaction(PyObject* self, PyObject* args) { return modi
 static PyObject* UpsertTransaction(PyObject* self, PyObject* args) { return modifyTransaction(self, args, ModeUpsert); }
 static PyObject* DeleteTransaction(PyObject* self, PyObject* args) { return modifyTransaction(self, args, ModeDelete); }
 
-namespace {
-PyObject* modifyQueryTransaction(PyObject* self, PyObject* args, QueryType type) {
-	uintptr_t transactionWrapperAddr = 0;
-	uintptr_t queryWrapperAddr = 0;
-	if (!PyArg_ParseTuple(args, "kk", &transactionWrapperAddr, &queryWrapperAddr)) {
-		return nullptr;
-	}
-
-	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
-
-	reindexer::Query rxQuery;
-	auto err = query->CreateQuery(rxQuery);
-	if (!err.ok()) {
-		return pyErr(err);
-	}
-	rxQuery.type_ = type;
-
-	err = getWrapper<TransactionWrapper>(transactionWrapperAddr)->Modify(std::move(rxQuery));
-	return pyErr(err);
-}
-};
-static PyObject* UpdateQueryTransaction(PyObject* self, PyObject* args) {
-	return modifyQueryTransaction(self, args, QueryType::QueryUpdate);
-}
-static PyObject* DeleteQueryTransaction(PyObject* self, PyObject* args) {
-	return modifyQueryTransaction(self, args, QueryType::QueryDelete);
-}
-
 static PyObject* CommitTransaction(PyObject* self, PyObject* args) {
 	uintptr_t transactionWrapperAddr = 0;
 	if (!PyArg_ParseTuple(args, "k", &transactionWrapperAddr)) {
