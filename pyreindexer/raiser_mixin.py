@@ -1,5 +1,8 @@
-class RaiserMixin(object):
-    """ RaiserMixin contains methods for checking some typical API bad events and raise if there is a necessity
+from pyreindexer.exceptions import ApiError
+
+
+class RaiserMixin:
+    """RaiserMixin contains methods for checking some typical API bad events and raise if there is a necessity
 
     """
     err_code: int
@@ -9,21 +12,31 @@ class RaiserMixin(object):
     def raise_on_error(self):
         """Checks if there is an error code and raises with an error message
 
-        # Raises:
-            Exception: Raises with an error message of API return on non-zero error code
+        #### Raises:
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
         if self.err_code:
-            raise Exception(self.err_msg)
+            raise ApiError(self.err_msg)
 
     def raise_on_not_init(self):
         """Checks if there is an error code and raises with an error message
 
-        # Raises:
-            Exception: Raises with an error message of API return if Reindexer instance is not initialized yet
+        #### Raises:
+            ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
 
         """
 
         if self.rx <= 0:
-            raise Exception("Connection is not initialized")
+            raise ConnectionError("Connection is not initialized")
+
+
+def raise_if_error(func):
+    def wrapper(self, *args, **kwargs):
+        self.raise_on_not_init()
+        res = func(self, *args, **kwargs)
+        self.raise_on_error()
+        return res
+
+    return wrapper

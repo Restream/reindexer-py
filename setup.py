@@ -1,8 +1,9 @@
 import os
 import sys
 
-from setuptools import setup, Extension
+from setuptools import Extension, setup
 from setuptools.command.build_ext import build_ext as build_ext_orig
+
 
 if sys.version_info < (3, 6):
     raise RuntimeError('Require Python 3.6 or greater')
@@ -52,10 +53,9 @@ class BuildExt(build_ext_orig):
 
 
 setup(name=PACKAGE_NAME,
-      version='0.2.45',
+      version='0.3',
       description='A connector that allows to interact with Reindexer',
       author='Igor Tulmentyev',
-      author_email='igtulm@gmail.com',
       maintainer='Reindexer Team',
       maintainer_email='contactus@reindexer.io',
       url='https://github.com/Restream/reindexer-py',
@@ -63,6 +63,7 @@ setup(name=PACKAGE_NAME,
           'Documentation': 'https://reindexer.io/',
           'Releases': 'https://github.com/Restream/reindexer-py/releases',
           'Tracker': 'https://github.com/Restream/reindexer-py/issues',
+          'Telegram chat': 'https://t.me/reindexer',
       },
       long_description=open("README.md", encoding="utf-8").read(),
       long_description_content_type="text/markdown",
@@ -73,14 +74,12 @@ setup(name=PACKAGE_NAME,
       keywords=["reindexer", "in-memory-database", "database", "python", "connector"],
       package_data={'pyreindexer': [
           'CMakeLists.txt',
-          'lib/include/*.h',
-          'lib/include/*.cc',
-          'lib/src/*.h',
-          'lib/src/*.cc',
+          'lib/**/*.h',
+          'lib/**/*.cc',
           'example/main.py',
           'tests/**/*.py'
       ]},
-      python_requires=">=3.6,<3.13",
+      python_requires=">=3.6",
       test_suite='tests',
       install_requires=['envoy==0.0.3', 'delegator==0.0.3', 'pyhamcrest==2.0.2', 'pytest==6.2.5'],
       classifiers=[
@@ -92,7 +91,6 @@ setup(name=PACKAGE_NAME,
           _c2('Natural Language', 'Russian'),
           _c2('Operating System', 'MacOS'),
           _c2('Operating System', 'POSIX', 'Linux'),
-          _c2('Operating System', 'Microsoft', 'Windows'),
           _c2('Programming Language', 'Python'),
           _c2('Programming Language', 'Python', '3.6'),
           _c2('Programming Language', 'Python', '3.7'),
@@ -101,10 +99,15 @@ setup(name=PACKAGE_NAME,
           _c2('Programming Language', 'Python', '3.10'),
           _c2('Programming Language', 'Python', '3.11'),
           _c2('Programming Language', 'Python', '3.12'),
+          _c2('Programming Language', 'Python', 'Implementation'),
+          _c2('Programming Language', 'Python', 'Implementation', 'CPython'),
+          _c2('Programming Language', 'Python', 'Implementation', 'PyPy'),
           _c2('Topic', 'Database'),
           _c2('Topic', 'Database', 'Database Engines/Servers'),
           _c2('Topic', 'Software Development'),
+          _c2('Topic', 'Software Development', 'Libraries'),
           _c2('Topic', 'Software Development', 'Libraries', 'Python Modules'),
+          _c2('Topic', 'Software Development', 'Libraries', 'Application Frameworks'),
       ],
       platforms=['ALT Linux', 'RED OS', 'Astra Linux'],
       )

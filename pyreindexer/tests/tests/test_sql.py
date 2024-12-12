@@ -1,5 +1,7 @@
 from hamcrest import *
 
+from pyreindexer.exceptions import ApiError
+
 
 class TestSqlQueries:
     def test_sql_select(self, db, namespace, index, item):
@@ -10,15 +12,14 @@ class TestSqlQueries:
         # Then ("Check that selected item is in result")
         assert_that(items_list, equal_to([item]), "Can't SQL select data")
 
-    def test_sql_select_with_join(self, db, namespace, second_namespace_for_join, index, items):
+    def test_sql_select_with_join(self, db, namespace, index, items, second_namespace, second_item):
         # Given("Create two namespaces")
-        second_namespace, second_ns_item_definition_join = second_namespace_for_join
         # When ("Execute SQL query SELECT with JOIN")
         query = f"SELECT id FROM {namespace} INNER JOIN {second_namespace} " \
                 f"ON {namespace}.id = {second_namespace}.id"
         item_list = list(db.query.sql(query))
         # Then ("Check that selected item is in result")
-        item_with_joined = {'id': 1, f'joined_{second_namespace}': [second_ns_item_definition_join]}
+        item_with_joined = {'id': 1, f'joined_{second_namespace}': [second_item]}
         assert_that(item_list, equal_to([item_with_joined]),
                     "Can't SQL select data with JOIN")
 
@@ -56,7 +57,7 @@ class TestSqlQueries:
         query = "SELECT *"
         # Then ("Check that selected item is in result")
         assert_that(calling(db.query.sql).with_args(query),
-                    raises(Exception, pattern="Expected .* but found"),
+                    raises(ApiError, pattern="Expected .* but found"),
                     "Error wasn't raised when syntax was incorrect")
 
     def test_sql_select_with_aggregations(self, db, namespace, index, items):

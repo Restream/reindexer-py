@@ -1,18 +1,32 @@
-class Transaction(object):
-    """ An object representing the context of a Reindexer transaction
+from pyreindexer.exceptions import ApiError, TransactionError
+from pyreindexer.query import Query
 
-    # Attributes:
+
+def raise_if_error(func):
+    def wrapper(self, *args, **kwargs):
+        self._raise_on_is_over()
+        res = func(self, *args, **kwargs)
+        self._raise_on_error()
+        return res
+
+    return wrapper
+
+
+class Transaction:
+    """An object representing the context of a Reindexer transaction
+
+    #### Attributes:
         api (module): An API module for Reindexer calls
         transaction_wrapper_ptr (int): A memory pointer to Reindexer transaction object
-        err_code (int): the API error code
-        err_msg (string): the API error message
+        err_code (int): The API error code
+        err_msg (string): The API error message
 
     """
 
-    def __init__(self, api, transaction_wrapper_ptr):
+    def __init__(self, api, transaction_wrapper_ptr: int):
         """Constructs a new Reindexer transaction object
 
-        # Arguments:
+        #### Arguments:
             api (module): An API module for Reindexer calls
             transaction_wrapper_ptr (int): A memory pointer to Reindexer transaction object
 
@@ -24,7 +38,7 @@ class Transaction(object):
         self.err_msg = ""
 
     def __del__(self):
-        """Roll back a transaction if it was not previously stopped
+        """Rollbacks a transaction if it was not previously stopped
 
         """
 
@@ -34,137 +48,127 @@ class Transaction(object):
     def _raise_on_error(self):
         """Checks if there is an error code and raises with an error message
 
-        # Raises:
-            Exception: Raises with an error message of API return on non-zero error code
+        #### Raises:
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
         if self.err_code:
-            raise Exception(self.err_msg)
+            raise ApiError(self.err_msg)
 
     def _raise_on_is_over(self):
-        """Checks if there is an error code and raises with an error message
+        """Checks the state of a transaction and returns an error message when necessary
 
-        # Raises:
-            Exception: Raises with an error message of API return if Transaction is over
+        #### Raises:
+            TransactionError: Raises with an error message of API return if Transaction is over
 
         """
 
         if self.transaction_wrapper_ptr <= 0:
-            raise Exception("Transaction is over")
+            raise TransactionError("Transaction is over")
 
+    @raise_if_error
     def insert(self, item_def, precepts=None):
         """Inserts an item with its precepts to the transaction
 
-        # Arguments:
+        #### Arguments:
             item_def (dict): A dictionary of item definition
             precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
 
-        # Raises:
-            Exception: Raises with an error message of API return if Transaction is over
-            Exception: Raises with an error message of API return on non-zero error code
+        #### Raises:
+            TransactionError: Raises with an error message of API return if Transaction is over
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
-        self._raise_on_is_over()
-        if precepts is None:
-            precepts = []
+        precepts = [] if precepts is None else precepts
         self.err_code, self.err_msg = self.api.item_insert_transaction(self.transaction_wrapper_ptr, item_def, precepts)
-        self._raise_on_error()
 
+    @raise_if_error
     def update(self, item_def, precepts=None):
-        """Update an item with its precepts to the transaction
+        """Updates an item with its precepts to the transaction
 
-        # Arguments:
+        #### Arguments:
             item_def (dict): A dictionary of item definition
             precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
 
-        # Raises:
-            Exception: Raises with an error message of API return if Transaction is over
-            Exception: Raises with an error message of API return on non-zero error code
+        #### Raises:
+            TransactionError: Raises with an error message of API return if Transaction is over
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
-        self._raise_on_is_over()
-        if precepts is None:
-            precepts = []
+        precepts = [] if precepts is None else precepts
         self.err_code, self.err_msg = self.api.item_update_transaction(self.transaction_wrapper_ptr, item_def, precepts)
-        self._raise_on_error()
 
+    @raise_if_error
     def upsert(self, item_def, precepts=None):
-        """Update an item with its precepts to the transaction. Creates the item if it not exists
+        """Updates an item with its precepts to the transaction. Creates the item if it not exists
 
-        # Arguments:
+        #### Arguments:
             item_def (dict): A dictionary of item definition
             precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
 
-        # Raises:
-            Exception: Raises with an error message of API return if Transaction is over
-            Exception: Raises with an error message of API return on non-zero error code
+        #### Raises:
+            TransactionError: Raises with an error message of API return if Transaction is over
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
-        self._raise_on_is_over()
-        if precepts is None:
-            precepts = []
+        precepts = [] if precepts is None else precepts
         self.err_code, self.err_msg = self.api.item_upsert_transaction(self.transaction_wrapper_ptr, item_def, precepts)
-        self._raise_on_error()
 
+    @raise_if_error
     def delete(self, item_def):
-        """Delete an item from the transaction
+        """Deletes an item from the transaction
 
-        # Arguments:
+        #### Arguments:
             item_def (dict): A dictionary of item definition
 
-        # Raises:
-            Exception: Raises with an error message of API return if Transaction is over
-            Exception: Raises with an error message of API return on non-zero error code
+        #### Raises:
+            TransactionError: Raises with an error message of API return if Transaction is over
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
-        self._raise_on_is_over()
         self.err_code, self.err_msg = self.api.item_delete_transaction(self.transaction_wrapper_ptr, item_def)
-        self._raise_on_error()
 
+    @raise_if_error
     def commit(self):
-        """Apply changes
+        """Applies changes
 
-        # Raises:
-            Exception: Raises with an error message of API return if Transaction is over
-            Exception: Raises with an error message of API return on non-zero error code
+        #### Raises:
+            TransactionError: Raises with an error message of API return if Transaction is over
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
-        self._raise_on_is_over()
         self.err_code, self.err_msg, _ = self.api.commit_transaction(self.transaction_wrapper_ptr)
         self.transaction_wrapper_ptr = 0
-        self._raise_on_error()
 
+    @raise_if_error
     def commit_with_count(self) -> int:
-        """Apply changes and return the number of count of changed items
+        """Applies changes and return the number of count of changed items
 
-        # Raises:
-            Exception: Raises with an error message of API return if Transaction is over
-            Exception: Raises with an error message of API return on non-zero error code
+        #### Raises:
+            TransactionError: Raises with an error message of API return if Transaction is over
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
-        self._raise_on_is_over()
         self.err_code, self.err_msg, count = self.api.commit_transaction(self.transaction_wrapper_ptr)
         self.transaction_wrapper_ptr = 0
-        self._raise_on_error()
         return count
 
+    @raise_if_error
     def rollback(self):
-        """Rollback changes
+        """Rollbacks changes
 
-        # Raises:
-            Exception: Raises with an error message of API return if Transaction is over
-            Exception: Raises with an error message of API return on non-zero error code
+        #### Raises:
+            TransactionError: Raises with an error message of API return if Transaction is over
+            ApiError: Raises with an error message of API return on non-zero error code
 
         """
 
-        self._raise_on_is_over()
         self.err_code, self.err_msg = self.api.rollback_transaction(self.transaction_wrapper_ptr)
         self.transaction_wrapper_ptr = 0
-        self._raise_on_error()
