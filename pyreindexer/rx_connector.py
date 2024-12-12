@@ -41,8 +41,8 @@ class RxConnector(RaiserMixin):
 
             cproto options:
                  fetch_amount (int): The number of items that will be fetched by one operation
-                 connect_timeout (int): Connection and database login timeout value
-                 request_timeout (int): Request execution timeout value
+                 connect_timeout (int): Connection and database login timeout value [seconds]
+                 request_timeout (int): Request execution timeout value [seconds]
                  enable_compression (bool): Flag enable/disable traffic compression
                  start_special_thread (bool): Determines whether to request a special thread of execution
                     on the server for this connection
@@ -52,7 +52,7 @@ class RxConnector(RaiserMixin):
                 max_replication_updates_size (int): Max pended replication updates size in bytes
                 allocator_cache_limit (int): Recommended maximum free cache size of tcmalloc memory allocator in bytes
                 allocator_cache_part (float): Recommended maximum free cache size of tcmalloc memory allocator in
-                    relation to total reindexer allocated memory size, in units
+                    relation to total Reindexer allocated memory size, in units
         """
 
         self.err_code = 0
@@ -412,8 +412,7 @@ class RxConnector(RaiserMixin):
             raise ConnectionError(f"Unknown Reindexer connection protocol for dsn: {dsn}")
 
     def _api_connect(self, dsn):
-        """Initializes Reindexer instance and connects to a database specified in dsn
-        Obtains a pointer to Reindexer instance
+        """Connects to a database specified in dsn Obtains a pointer to Reindexer instance
 
         #### Arguments:
             dsn (string): The connection string which contains a protocol

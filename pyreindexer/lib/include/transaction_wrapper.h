@@ -47,11 +47,6 @@ public:
 		return db_->Modify(*transaction_, std::move(item), mode);
 	}
 
-	Error Modify(reindexer::Query&& query) {
-		assert(transaction_.has_value());
-		return db_->Modify(*transaction_, std::move(query));
-	}
-
 	Error Commit(size_t& count) {
 		assert(transaction_.has_value());
 		return db_->CommitTransaction(*transaction_, count);

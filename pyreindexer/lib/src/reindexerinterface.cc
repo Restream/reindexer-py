@@ -1,5 +1,4 @@
 #include "reindexerinterface.h"
-#include <chrono>
 #include "client/cororeindexer.h"
 #include "core/reindexer.h"
 #include "core/type_consts.h"
@@ -35,22 +34,20 @@ public:
 
 private:
 	CallableT command_;
-	Error err_{errOK};
+	Error err_;
 	std::atomic_bool executed_{false};
 };
 
 template <>
 ReindexerInterface<reindexer::Reindexer>::ReindexerInterface(const ReindexerConfig& cfg)
-	: db_(reindexer::ReindexerConfig()
-			.WithUpdatesSize(cfg.maxReplUpdatesSize)
-			.WithAllocatorCacheLimits(cfg.allocatorCacheLimit, cfg.allocatorCachePart))
+	: db_(reindexer::ReindexerConfig().WithUpdatesSize(cfg.maxReplUpdatesSize)
+									  .WithAllocatorCacheLimits(cfg.allocatorCacheLimit, cfg.allocatorCachePart))
 { }
 
 template <>
 ReindexerInterface<reindexer::client::CoroReindexer>::ReindexerInterface(const ReindexerConfig& cfg)
-	: db_(reindexer::client::ReindexerConfig(4, 1, cfg.fetchAmount, 0, std::chrono::seconds(cfg.connectTimeout),
-		  std::chrono::seconds(cfg.requestTimeout), cfg.enableCompression, cfg.requestDedicatedThread, cfg.appName))
-{
+	: db_(reindexer::client::ReindexerConfig(4, 1, cfg.fetchAmount, 0, cfg.connectTimeout, cfg.requestTimeout,
+											 cfg.enableCompression, cfg.requestDedicatedThread, cfg.appName)) {
 	std::atomic_bool running{false};
 	executionThr_ = std::thread([this, &running] {
 		cmdAsync_.set(loop_);
@@ -106,7 +103,7 @@ template <typename DBT>
 Error ReindexerInterface<DBT>::FetchResults(QueryResultsWrapper& result) {
 	return execute([&result] {
 		result.FetchResults();
-		return errOK;
+		return Error();
 	});
 }
 
@@ -124,18 +121,12 @@ template <>
 Error ReindexerInterface<reindexer::Reindexer>::modify(reindexer::Transaction& transaction,
 			reindexer::Item&& item, ItemModifyMode mode) {
 	transaction.Modify(std::move(item), mode);
-	return errOK;
+	return {};
 }
 template <>
 Error ReindexerInterface<reindexer::client::CoroReindexer>::modify(reindexer::client::CoroTransaction& transaction,
 			reindexer::client::Item&& item, ItemModifyMode mode) {
 	return transaction.Modify(std::move(item), mode);
-}
-
-template <typename DBT>
-Error ReindexerInterface<DBT>::modify(typename DBT::TransactionT& transaction, reindexer::Query&& query) {
-	transaction.Modify(std::move(query));
-	return errOK;
 }
 
 template <typename DBT>
@@ -198,14 +189,14 @@ Error ReindexerInterface<reindexer::client::CoroReindexer>::connect(const std::s
 
 template <>
 Error ReindexerInterface<reindexer::Reindexer>::stop() {
-	return errOK;
+	return {};
 }
 
 template <>
 Error ReindexerInterface<reindexer::client::CoroReindexer>::stop() {
 	db_.Stop();
 	stopCh_.close();
-	return errOK;
+	return {};
 }
 
 #ifdef PYREINDEXER_CPROTO

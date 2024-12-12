@@ -123,23 +123,6 @@ def query_example(db, namespace):
     for item in any_items:
         print('Item: ', item)
 
-def modify_query_transaction(db, namespace):
-    # start transaction
-    transaction = db.new_transaction(namespace)
-
-    # create an update query and set it for the transaction
-    query_upd = db.new_query(namespace).where("id", CondType.CondGe, 4).set("name", ["update_with_query_tx"])
-    transaction.update_query(query_upd)
-
-    # create a delete query and set it for the transaction
-    query_del = db.new_query(namespace).where("id", CondType.CondLt, 3)
-    transaction.delete_query(query_del)
-
-    # stop transaction and commit changes to namespace
-    count = transaction.commit()
-
-    print_all_records_from_namespace(db, namespace, 'Transaction with Query results count: ')
-
 def rx_example():
     db = RxConnector('builtin:///tmp/pyrx', max_replication_updates_size = 10 * 1024 * 1024)
     #    db = RxConnector('cproto://127.0.0.1:6534/pyrx', enable_compression = True, fetch_amount = 500)
@@ -171,8 +154,6 @@ def rx_example():
     transaction_example(db, namespace, items_copy)
 
     query_example(db, namespace)
-
-    modify_query_transaction(db, namespace)
 
     db.close()
 
