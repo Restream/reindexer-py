@@ -1,3 +1,4 @@
+import pytest
 from hamcrest import *
 
 from tests.helpers.base_helper import get_ns_items
@@ -21,12 +22,23 @@ class TestCrudItems:
         assert_that(select_result, has_length(1), "Item wasn't created")
         assert_that(select_result, has_item(item_definition), "Item wasn't created")
 
+    @pytest.mark.parametrize("value", [-1, -2.33])
+    def test_create_item_insert_negative(self, db, namespace, index, value):
+        # Given("Create namespace with index")
+        # When ("Insert item into namespace")
+        item_empty = {"id": -1, "field": value, "empty_field": None}
+        db.item.insert(namespace, item_empty)
+        # Then ("Check that item is added")
+        select_result = get_ns_items(db, namespace)
+        assert_that(select_result, has_length(1), "Item wasn't created")
+        assert_that(select_result, has_item(item_empty), "Item wasn't created")
+
     def test_create_item_insert_with_precepts(self, db, namespace, index):
         # Given("Create namespace with index")
         # When ("Insert items into namespace")
         number_items = 5
         for _ in range(number_items):
-            db.item_insert(namespace, {"id": 100, "field": "value"}, ["id=serial()"])
+            db.item.insert(namespace, {"id": 100, "field": "value"}, ["id=serial()"])
         # Then ("Check that item is added")
         select_result = get_ns_items(db, namespace)
         assert_that(select_result, has_length(number_items), "Items wasn't created")

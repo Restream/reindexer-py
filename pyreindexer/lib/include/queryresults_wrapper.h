@@ -21,49 +21,67 @@ using QueryResultsT = reindexer::QueryResults;
 
 class QueryResultsWrapper {
 public:
-	QueryResultsWrapper(DBInterface* db) : db_{db}, qres_{kResultsJson} {
+	QueryResultsWrapper(DBInterface* db) : db_{db} {
 		assert(db_);
 	}
 
 	void Wrap(QueryResultsT&& qres) {
 		qres_ = std::move(qres);
-		it_ = qres_.begin();
-		wrap_ = true;
+		it_ = qres_->begin();
 	}
 
 	Error Select(const std::string& query) {
 		return db_->Select(query, *this);
 	}
 
-	size_t Count() const {
-		assert(wrap_);
-		return qres_.Count();
+	Error Status() {
+		assert(qres_.has_value());
+		return it_.Status();
+	}
+
+	size_t Count() const noexcept {
+		assert(qres_.has_value());
+		return qres_->Count();
+	}
+
+	size_t TotalCount() const noexcept {
+		assert(qres_.has_value());
+		return qres_->TotalCount();
 	}
 
 	void GetItemJSON(reindexer::WrSerializer& wrser, bool withHdrLen) {
-		assert(wrap_);
+		assert(qres_.has_value());
 		it_.GetJSON(wrser, withHdrLen);
 	}
 
 	void Next() {
-		assert(wrap_);
+		assert(qres_.has_value());
 		db_->FetchResults(*this);
 	}
 
 	void FetchResults() {
-		assert(wrap_);
-		// when results are fetched iterator closes and frees a memory of results buffer of Reindexer
+		assert(qres_.has_value());
+		// when results are fetched iterator closes and frees memory of results buffer of Reindexer
 		++it_;
 	}
 
-	const std::vector<reindexer::AggregationResult>& GetAggregationResults() & { return qres_.GetAggregationResults(); }
+	const std::string& GetExplainResults() & noexcept {
+		assert(qres_.has_value());
+		return qres_->GetExplainResults();
+	}
+	const std::string& GetExplainResults() && = delete;
+
+	const std::vector<reindexer::AggregationResult>& GetAggregationResults() &
+	{
+		assert(qres_.has_value());
+		return qres_->GetAggregationResults();
+	}
 	const std::vector<reindexer::AggregationResult>& GetAggregationResults() && = delete;
 
 private:
 	DBInterface* db_{nullptr};
-	QueryResultsT qres_;
+	std::optional<QueryResultsT> qres_;
 	QueryResultsT::Iterator it_;
-	bool wrap_{false};
 };
 
 }  // namespace pyreindexer

@@ -1,4 +1,5 @@
 from pyreindexer import RxConnector
+from query import Query
 from tests.helpers.log_helper import log_api
 
 
@@ -116,6 +117,11 @@ class QueryApiMethods:
         """ Execute SQL query """
         return self.api.select(q)
 
+    @api_method
+    def new(self, ns_name) -> Query:
+        """ Create a new query """
+        return self.api.new_query(ns_name)
+
 
 class MetaApiMethods:
     def __init__(self, api):
@@ -184,6 +190,15 @@ class TransactionApiMethods:
         def delete_item(self, item):
             """ Delete item from transaction """
             return self.tx.delete(item)
+
+        @api_method
+        def update_query(self, query):
+            """ Call update query in transaction """
+            return self.tx.update_query(query)
+        @api_method
+        def delete_query(self, query):
+            """ Call delete query in transaction """
+            return self.tx.delete_query(query)
 
     @api_method
     def begin(self, ns_name) -> "_TransactionApi":
