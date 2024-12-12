@@ -85,10 +85,10 @@ Error QueryWrapper::OpenBracket() {
 	nextOperation_ = OpType::OpAnd;
 	++queriesCount_;
 
-	return errOK;
+	return {};
 }
 
-reindexer::Error QueryWrapper::CloseBracket() {
+Error QueryWrapper::CloseBracket() {
 	if (nextOperation_ != OpType::OpAnd) {
 		return reindexer::Error(ErrorCode::errLogic, "Operation before close bracket");
 	}
@@ -100,7 +100,7 @@ reindexer::Error QueryWrapper::CloseBracket() {
 	ser_.PutVarUint(QueryItemType::QueryCloseBracket);
 	openedBrackets_.pop_back();
 
-	return errOK;
+	return {};
 }
 
 void QueryWrapper::DWithin(std::string_view index, double x, double y, double distance) {
@@ -307,7 +307,7 @@ void QueryWrapper::Merge(QueryWrapper* mergeQuery) {
 	mergedQueries_.push_back(mergeQuery);
 }
 
-reindexer::Error QueryWrapper::On(std::string_view joinField, CondType condition, std::string_view joinIndex) {
+Error QueryWrapper::On(std::string_view joinField, CondType condition, std::string_view joinIndex) {
 	ser_.PutVarUint(QueryItemType::QueryJoinOn);
 	ser_.PutVarUint(nextOperation_);
 	ser_.PutVarUint(condition);
@@ -316,7 +316,7 @@ reindexer::Error QueryWrapper::On(std::string_view joinField, CondType condition
 
 	nextOperation_ = OpType::OpAnd;
 
-	return errOK;
+	return {};
 }
 
 void QueryWrapper::SelectFilter(const reindexer::h_vector<std::string, 2>& fields) {

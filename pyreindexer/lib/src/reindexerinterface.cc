@@ -70,7 +70,7 @@ template <typename DBT>
 Error ReindexerInterface<DBT>::FetchResults(QueryResultsWrapper& result) {
 	return execute([&result] {
 		result.FetchResults();
-		return errOK;
+		return Error();
 	});
 }
 
@@ -88,7 +88,7 @@ template <>
 Error ReindexerInterface<reindexer::Reindexer>::modify(reindexer::Transaction& transaction,
 			reindexer::Item&& item, ItemModifyMode mode) {
 	transaction.Modify(std::move(item), mode);
-	return errOK;
+	return {};
 }
 template <>
 Error ReindexerInterface<reindexer::client::CoroReindexer>::modify(reindexer::client::CoroTransaction& transaction,
@@ -156,14 +156,14 @@ Error ReindexerInterface<reindexer::client::CoroReindexer>::connect(const std::s
 
 template <>
 Error ReindexerInterface<reindexer::Reindexer>::stop() {
-	return errOK;
+	return {};
 }
 
 template <>
 Error ReindexerInterface<reindexer::client::CoroReindexer>::stop() {
 	db_.Stop();
 	stopCh_.close();
-	return errOK;
+	return {};
 }
 
 #ifdef PYREINDEXER_CPROTO

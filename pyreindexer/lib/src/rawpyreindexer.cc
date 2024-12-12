@@ -305,17 +305,16 @@ PyObject* itemModify(PyObject* self, PyObject* args, ItemModifyMode mode) {
 	}
 
 	if (preceptsList != nullptr && mode != ModeDelete) {
-		reindexer::h_vector<std::string, 2> itemPrecepts;
+		std::vector<std::string> precepts;
 		try {
-			itemPrecepts = ParseStrListToStrVec(&preceptsList);
+			precepts = ParseStrListToStrVec<std::vector>(&preceptsList);
 		} catch (const Error& err) {
 			Py_DECREF(preceptsList);
 
 			return pyErr(err);
 		}
 
-		std::vector<std::string> prets(itemPrecepts.begin(), itemPrecepts.end());
-		item.SetPrecepts(prets); // ToDo after migrate on v.4, do std::move
+		item.SetPrecepts(precepts); // ToDo after migrate on v.4, do std::move
 	}
 
 	Py_XDECREF(preceptsList);
@@ -511,13 +510,13 @@ namespace {
 PyObject* modifyTransaction(PyObject* self, PyObject* args, ItemModifyMode mode) {
 	uintptr_t transactionWrapperAddr = 0;
 	PyObject* defDict = nullptr;   // borrowed ref after ParseTuple
-	PyObject* precepts = nullptr;  // borrowed ref after ParseTuple if passed
-	if (!PyArg_ParseTuple(args, "kO!|O!", &transactionWrapperAddr, &PyDict_Type, &defDict, &PyList_Type, &precepts)) {
+	PyObject* preceptsList = nullptr;  // borrowed ref after ParseTuple if passed
+	if (!PyArg_ParseTuple(args, "kO!|O!", &transactionWrapperAddr, &PyDict_Type, &defDict, &PyList_Type, &preceptsList)) {
 		return nullptr;
 	}
 
 	Py_INCREF(defDict);
-	Py_XINCREF(precepts);
+	Py_XINCREF(preceptsList);
 
 	auto transaction = getWrapper<TransactionWrapper>(transactionWrapperAddr);
 
@@ -525,7 +524,7 @@ PyObject* modifyTransaction(PyObject* self, PyObject* args, ItemModifyMode mode)
 	auto err = item.Status();
 	if (!err.ok()) {
 		Py_DECREF(defDict);
-		Py_XDECREF(precepts);
+		Py_XDECREF(preceptsList);
 
 		return pyErr(err);
 	}
@@ -536,7 +535,7 @@ PyObject* modifyTransaction(PyObject* self, PyObject* args, ItemModifyMode mode)
 		PyObjectToJson(&defDict, wrSer);
 	} catch (const Error& err) {
 		Py_DECREF(defDict);
-		Py_XDECREF(precepts);
+		Py_XDECREF(preceptsList);
 
 		return pyErr(err);
 	}
@@ -545,27 +544,26 @@ PyObject* modifyTransaction(PyObject* self, PyObject* args, ItemModifyMode mode)
 
 	err = item.Unsafe().FromJSON(wrSer.Slice(), 0, mode == ModeDelete);
 	if (!err.ok()) {
-		Py_XDECREF(precepts);
+		Py_XDECREF(preceptsList);
 
 		return pyErr(err);
 	}
 
-	if (precepts != nullptr && mode != ModeDelete) {
-		reindexer::h_vector<std::string, 2> itemPrecepts;
+	if (preceptsList != nullptr && mode != ModeDelete) {
+		std::vector<std::string> precepts;
 
 		try {
-			itemPrecepts = ParseStrListToStrVec(&precepts);
+			precepts = ParseStrListToStrVec<std::vector>(&preceptsList);
 		} catch (const Error& err) {
-			Py_DECREF(precepts);
+			Py_DECREF(preceptsList);
 
 			return pyErr(err);
 		}
 
-		std::vector<std::string> prets(itemPrecepts.begin(), itemPrecepts.end());
-		item.SetPrecepts(prets); // ToDo after migrate on v.4, do std::move
+		item.SetPrecepts(precepts); // ToDo after migrate on v.4, do std::move
 	}
 
-	Py_XDECREF(precepts);
+	Py_XDECREF(preceptsList);
 
 	switch (mode) {
 		case ModeInsert:

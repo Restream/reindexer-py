@@ -132,25 +132,6 @@ reindexer::h_vector<std::string, 2> PyObjectToJson(PyObject** obj) {
 	return values;
 }
 
-reindexer::h_vector<std::string, 2> ParseStrListToStrVec(PyObject** list) {
-	reindexer::h_vector<std::string, 2> result;
-
-	Py_ssize_t sz = PyList_Size(*list);
-	result.reserve(sz);
-	for (Py_ssize_t i = 0; i < sz; i++) {
-		PyObject* item = PyList_GetItem(*list, i);
-
-		if (!PyUnicode_Check(item)) {
-			throw reindexer::Error(ErrorCode::errParseJson,
-									std::string("String expected, got ") + Py_TYPE(item)->tp_name);
-		}
-
-		result.push_back(PyUnicode_AsUTF8(item));
-	}
-
-	return result;
-}
-
 reindexer::Variant convert(PyObject** value) {
 	if (PyFloat_Check(*value)) {
 		double v = PyFloat_AsDouble(*value);
