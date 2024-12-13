@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Python.h>
-#include <vector>
 #include "core/keyvalue/variant.h"
 #include "estl/h_vector.h"
 

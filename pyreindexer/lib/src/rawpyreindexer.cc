@@ -1,10 +1,10 @@
 #include "rawpyreindexer.h"
 
 #include "pyobjtools.h"
-#include "queryresults_wrapper.h"
 #include "query_wrapper.h"
-#include "transaction_wrapper.h"
+#include "queryresults_wrapper.h"
 #include "tools/serializer.h"
+#include "transaction_wrapper.h"
 
 namespace pyreindexer {
 
@@ -542,7 +542,7 @@ PyObject* modifyTransaction(PyObject* self, PyObject* args, ItemModifyMode mode)
 
 	Py_DECREF(defDict);
 
-	err = item.Unsafe().FromJSON(wrSer.Slice(), 0, mode == ModeDelete);
+	err = item.FromJSON(wrSer.Slice(), 0, mode == ModeDelete);
 	if (!err.ok()) {
 		Py_XDECREF(preceptsList);
 
