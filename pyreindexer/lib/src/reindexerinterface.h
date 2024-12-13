@@ -12,11 +12,11 @@
 
 namespace pyreindexer {
 
-using reindexer::EnumNamespacesOpts;
 using reindexer::Error;
 using reindexer::Query;
 using reindexer::IndexDef;
 using reindexer::NamespaceDef;
+using reindexer::EnumNamespacesOpts;
 
 class QueryResultsWrapper;
 class TransactionWrapper;
@@ -104,9 +104,6 @@ public:
 	Error Modify(typename DBT::TransactionT& transaction, typename DBT::ItemT&& item, ItemModifyMode mode) {
 		return execute([this, &transaction, &item, mode] { return modify(transaction, std::move(item), mode); });
 	}
-	Error Modify(typename DBT::TransactionT& transaction, reindexer::Query&& query) {
-		return execute([this, &transaction, &query] { return modify(transaction, std::move(query)); });
-	}
 	Error CommitTransaction(typename DBT::TransactionT& transaction, size_t& count) {
 		return execute([this, &transaction, &count] { return commitTransaction(transaction, count); });
 	}
@@ -147,7 +144,6 @@ private:
 	typename DBT::TransactionT startTransaction(std::string_view ns);
 	typename DBT::ItemT newItem(typename DBT::TransactionT& transaction) { return transaction.NewItem(); }
 	Error modify(typename DBT::TransactionT& transaction, typename DBT::ItemT&& item, ItemModifyMode mode);
-	Error modify(typename DBT::TransactionT& transaction, Query&& query);
 	Error commitTransaction(typename DBT::TransactionT& transaction, size_t& count);
 	Error rollbackTransaction(typename DBT::TransactionT& transaction);
 	Error selectQuery(const Query& query, QueryResultsWrapper& result);

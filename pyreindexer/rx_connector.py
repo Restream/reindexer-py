@@ -54,7 +54,7 @@ class RxConnector(RaiserMixin):
                 max_replication_updates_size (int): Max pended replication updates size in bytes
                 allocator_cache_limit (int): Recommended maximum free cache size of tcmalloc memory allocator in bytes
                 allocator_cache_part (float): Recommended maximum free cache size of tcmalloc memory allocator in
-                    relation to total reindexer allocated memory size, in units
+                    relation to total Reindexer allocated memory size, in units
 
         """
 
@@ -183,7 +183,7 @@ class RxConnector(RaiserMixin):
         self.err_code, self.err_msg = self.api.index_update(self.rx, namespace, index_def)
 
     @raise_if_error
-    def index_drop(self, namespace: str, index_name: Dict) -> None:
+    def index_drop(self, namespace: str, index_name: str) -> None:
         """Drops an index from the namespace specified
 
         #### Arguments:

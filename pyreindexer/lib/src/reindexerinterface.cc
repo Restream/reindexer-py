@@ -257,12 +257,6 @@ Error ReindexerInterface<reindexer::client::CoroReindexer>::modify(reindexer::cl
 }
 
 template <typename DBT>
-Error ReindexerInterface<DBT>::modify(typename DBT::TransactionT& transaction, Query&& query) {
-	transaction.Modify(std::move(query));
-	return errOK;
-}
-
-template <typename DBT>
 typename DBT::TransactionT ReindexerInterface<DBT>::startTransaction(std::string_view ns) {
 	auto transaction = db_.WithTimeout(timeout_).NewTransaction(ns);
 	timeout_ = std::chrono::milliseconds{0};

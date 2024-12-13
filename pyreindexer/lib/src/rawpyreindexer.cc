@@ -2,8 +2,8 @@
 
 #include "queryresults_wrapper.h"
 #include "query_wrapper.h"
-#include "pyobjtools.h"
 #include "transaction_wrapper.h"
+#include "pyobjtools.h"
 #include "tools/serializer.h"
 
 namespace pyreindexer {
@@ -65,9 +65,9 @@ static PyObject* Init(PyObject* self, PyObject* args) {
 	unsigned enableCompression = 0;
 	unsigned startSpecialThread = 0;
 	unsigned maxReplUpdatesSize = 0;
-	if (!PyArg_ParseTuple(args, "iiiIIsIif", &cfg.fetchAmount, &cfg.connectTimeout, &cfg.requestTimeout,
-				&enableCompression, &startSpecialThread, &clientName, &maxReplUpdatesSize,
-				&cfg.allocatorCacheLimit, &cfg.allocatorCachePart)) {
+	if (!PyArg_ParseTuple(args, "iiiIIsIif", &cfg.fetchAmount, &connectTimeout, &requestTimeout,
+			&enableCompression, &startSpecialThread, &clientName, &maxReplUpdatesSize,
+			&cfg.allocatorCacheLimit, &cfg.allocatorCachePart)) {
 		return nullptr;
 	}
 
@@ -336,17 +336,16 @@ PyObject* itemModify(PyObject* self, PyObject* args, ItemModifyMode mode) {
 	}
 
 	if (preceptsList != nullptr && mode != ModeDelete) {
-		reindexer::h_vector<std::string, 2> itemPrecepts;
+		std::vector<std::string> precepts;
 		try {
-			itemPrecepts = ParseStrListToStrVec(&preceptsList);
+			precepts = ParseStrListToStrVec<std::vector>(&preceptsList);
 		} catch (const Error& err) {
 			Py_DECREF(preceptsList);
 
 			return pyErr(err);
 		}
 
-		std::vector<std::string> prets(itemPrecepts.begin(), itemPrecepts.end());
-		item.SetPrecepts(prets); // ToDo after migrate on v.4, do std::move
+		item.SetPrecepts(precepts); // ToDo after migrate on v.4, do std::move
 	}
 
 	Py_XDECREF(preceptsList);
@@ -542,13 +541,13 @@ namespace {
 PyObject* modifyTransaction(PyObject* self, PyObject* args, ItemModifyMode mode) {
 	uintptr_t transactionWrapperAddr = 0;
 	PyObject* defDict = nullptr;   // borrowed ref after ParseTuple
-	PyObject* precepts = nullptr;  // borrowed ref after ParseTuple if passed
-	if (!PyArg_ParseTuple(args, "kO!|O!", &transactionWrapperAddr, &PyDict_Type, &defDict, &PyList_Type, &precepts)) {
+	PyObject* preceptsList = nullptr;  // borrowed ref after ParseTuple if passed
+	if (!PyArg_ParseTuple(args, "kO!|O!", &transactionWrapperAddr, &PyDict_Type, &defDict, &PyList_Type, &preceptsList)) {
 		return nullptr;
 	}
 
 	Py_INCREF(defDict);
-	Py_XINCREF(precepts);
+	Py_XINCREF(preceptsList);
 
 	auto transaction = getWrapper<TransactionWrapper>(transactionWrapperAddr);
 
@@ -556,7 +555,7 @@ PyObject* modifyTransaction(PyObject* self, PyObject* args, ItemModifyMode mode)
 	auto err = item.Status();
 	if (!err.ok()) {
 		Py_DECREF(defDict);
-		Py_XDECREF(precepts);
+		Py_XDECREF(preceptsList);
 
 		return pyErr(err);
 	}
@@ -567,7 +566,7 @@ PyObject* modifyTransaction(PyObject* self, PyObject* args, ItemModifyMode mode)
 		PyObjectToJson(&defDict, wrSer);
 	} catch (const Error& err) {
 		Py_DECREF(defDict);
-		Py_XDECREF(precepts);
+		Py_XDECREF(preceptsList);
 
 		return pyErr(err);
 	}
@@ -576,27 +575,26 @@ PyObject* modifyTransaction(PyObject* self, PyObject* args, ItemModifyMode mode)
 
 	err = item.Unsafe().FromJSON(wrSer.Slice(), 0, mode == ModeDelete);
 	if (!err.ok()) {
-		Py_XDECREF(precepts);
+		Py_XDECREF(preceptsList);
 
 		return pyErr(err);
 	}
 
-	if (precepts != nullptr && mode != ModeDelete) {
-		reindexer::h_vector<std::string, 2> itemPrecepts;
+	if (preceptsList != nullptr && mode != ModeDelete) {
+		std::vector<std::string> precepts;
 
 		try {
-			itemPrecepts = ParseStrListToStrVec(&precepts);
+			precepts = ParseStrListToStrVec<std::vector>(&preceptsList);
 		} catch (const Error& err) {
-			Py_DECREF(precepts);
+			Py_DECREF(preceptsList);
 
 			return pyErr(err);
 		}
 
-		std::vector<std::string> prets(itemPrecepts.begin(), itemPrecepts.end());
-		item.SetPrecepts(prets); // ToDo after migrate on v.4, do std::move
+		item.SetPrecepts(precepts); // ToDo after migrate on v.4, do std::move
 	}
 
-	Py_XDECREF(precepts);
+	Py_XDECREF(preceptsList);
 
 	switch (mode) {
 		case ModeInsert:
@@ -616,34 +614,6 @@ static PyObject* InsertTransaction(PyObject* self, PyObject* args) { return modi
 static PyObject* UpdateTransaction(PyObject* self, PyObject* args) { return modifyTransaction(self, args, ModeUpdate); }
 static PyObject* UpsertTransaction(PyObject* self, PyObject* args) { return modifyTransaction(self, args, ModeUpsert); }
 static PyObject* DeleteTransaction(PyObject* self, PyObject* args) { return modifyTransaction(self, args, ModeDelete); }
-
-namespace {
-PyObject* modifyQueryTransaction(PyObject* self, PyObject* args, QueryType type) {
-	uintptr_t transactionWrapperAddr = 0;
-	uintptr_t queryWrapperAddr = 0;
-	if (!PyArg_ParseTuple(args, "kk", &transactionWrapperAddr, &queryWrapperAddr)) {
-		return nullptr;
-	}
-
-	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
-
-	reindexer::Query rxQuery;
-	auto err = query->CreateQuery(rxQuery);
-	if (!err.ok()) {
-		return pyErr(err);
-	}
-	rxQuery.type_ = type;
-
-	err = getWrapper<TransactionWrapper>(transactionWrapperAddr)->Modify(std::move(rxQuery));
-	return pyErr(err);
-}
-};
-static PyObject* UpdateQueryTransaction(PyObject* self, PyObject* args) {
-	return modifyQueryTransaction(self, args, QueryType::QueryUpdate);
-}
-static PyObject* DeleteQueryTransaction(PyObject* self, PyObject* args) {
-	return modifyQueryTransaction(self, args, QueryType::QueryDelete);
-}
 
 static PyObject* CommitTransaction(PyObject* self, PyObject* args) {
 	uintptr_t transactionWrapperAddr = 0;
@@ -723,7 +693,7 @@ static PyObject* Where(PyObject* self, PyObject* args) {
 
 	getWrapper<QueryWrapper>(queryWrapperAddr)->Where(index, CondType(condition), keys);
 
-	return pyErr(errOK);
+	return pyErr({});
 }
 
 static PyObject* WhereSubQuery(PyObject* self, PyObject* args) {
@@ -754,7 +724,7 @@ static PyObject* WhereSubQuery(PyObject* self, PyObject* args) {
 	auto subQuery = getWrapper<QueryWrapper>(subQueryWrapperAddr);
 	query->WhereSubQuery(*subQuery, CondType(cond), keys);
 
-	return pyErr(errOK);
+	return pyErr({});
 }
 
 static PyObject* WhereFieldSubQuery(PyObject* self, PyObject* args) {
@@ -800,7 +770,7 @@ static PyObject* WhereUUID(PyObject* self, PyObject* args) {
 
 	getWrapper<QueryWrapper>(queryWrapperAddr)->WhereUUID(index, CondType(condition), keys);
 
-	return pyErr(errOK);
+	return pyErr({});
 }
 
 static PyObject* WhereBetweenFields(PyObject* self, PyObject* args) {
@@ -898,7 +868,7 @@ static PyObject* AggregationSort(PyObject* self, PyObject* args) {
 
 	getWrapper<QueryWrapper>(queryWrapperAddr)->AggregationSort(field, (desc != 0));
 
-	return pyErr(errOK);
+	return pyErr({});
 }
 
 static PyObject* Aggregation(PyObject* self, PyObject* args) {
@@ -925,7 +895,7 @@ static PyObject* Aggregation(PyObject* self, PyObject* args) {
 
 	getWrapper<QueryWrapper>(queryWrapperAddr)->Aggregation(fields);
 
-	return pyErr(errOK);
+	return pyErr({});
 }
 
 static PyObject* Sort(PyObject* self, PyObject* args) {
@@ -954,7 +924,7 @@ static PyObject* Sort(PyObject* self, PyObject* args) {
 
 	getWrapper<QueryWrapper>(queryWrapperAddr)->Sort(index, (desc != 0), sortValues);
 
-	return pyErr(errOK);
+	return pyErr({});
 }
 
 namespace {
@@ -1054,7 +1024,7 @@ static PyObject* executeQuery(PyObject* self, PyObject* args, ExecuteType type) 
 			err = query->UpdateQuery(qresult);
 			break;
 		default:
-			return pyErr(reindexer::Error(ErrorCode::errLogic, "Unknown query execute mode"));
+			return pyErr(Error(ErrorCode::errLogic, "Unknown query execute mode"));
 	}
 
 	if (!err.ok()) {
@@ -1095,7 +1065,7 @@ static PyObject* SetObject(PyObject* self, PyObject* args) {
 
 	getWrapper<QueryWrapper>(queryWrapperAddr)->SetObject(field, values);
 
-	return pyErr(errOK);
+	return pyErr({});
 }
 
 static PyObject* Set(PyObject* self, PyObject* args) {
@@ -1123,7 +1093,7 @@ static PyObject* Set(PyObject* self, PyObject* args) {
 
 	getWrapper<QueryWrapper>(queryWrapperAddr)->Set(field, values, QueryWrapper::IsExpression::No);
 
-	return pyErr(errOK);
+	return pyErr({});
 }
 
 static PyObject* Drop(PyObject* self, PyObject* args) {
@@ -1221,7 +1191,7 @@ static PyObject* SelectFilter(PyObject* self, PyObject* args) {
 
 	getWrapper<QueryWrapper>(queryWrapperAddr)->SelectFilter(fields);
 
-	return pyErr(errOK);
+	return pyErr({});
 }
 
 static PyObject* AddFunctions(PyObject* self, PyObject* args) {
@@ -1248,7 +1218,7 @@ static PyObject* AddFunctions(PyObject* self, PyObject* args) {
 
 	getWrapper<QueryWrapper>(queryWrapperAddr)->AddFunctions(functions);
 
-	return pyErr(errOK);
+	return pyErr({});
 }
 
 static PyObject* AddEqualPosition(PyObject* self, PyObject* args) {
@@ -1275,7 +1245,7 @@ static PyObject* AddEqualPosition(PyObject* self, PyObject* args) {
 
 	getWrapper<QueryWrapper>(queryWrapperAddr)->AddEqualPosition(equalPoses);
 
-	return pyErr(errOK);
+	return pyErr({});
 }
 
 }  // namespace pyreindexer
