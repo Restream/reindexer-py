@@ -95,7 +95,7 @@ class Query:
         if self.query_wrapper_ptr > 0:
             self.api.destroy_query(self.query_wrapper_ptr)
 
-    def __raise_on_error(self):
+    def __raise_on_error(self) -> None:
         """Checks if there is an error code and raises with an error message
 
         #### Raises:

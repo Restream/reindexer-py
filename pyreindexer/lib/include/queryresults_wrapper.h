@@ -30,7 +30,7 @@ public:
 		it_ = qres_->begin();
 	}
 
-	Error Select(const std::string& query) {
+	Error Select(std::string_view query) {
 		return db_->Select(query, *this);
 	}
 

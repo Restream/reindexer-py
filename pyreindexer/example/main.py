@@ -55,10 +55,11 @@ def create_items_example(db, namespace):
 def select_item_query_example(db, namespace):
     item_name_for_lookup = 'item_0'
 
-    return db.select("SELECT * FROM " + namespace + " WHERE name='" + item_name_for_lookup + "'")
+    return (db.with_timeout(1000)
+                .select("SELECT * FROM " + namespace + " WHERE name='" + item_name_for_lookup + "'"))
 
 def select_all_item_query_example(db, namespace):
-    return db.select("SELECT * FROM " + namespace)
+    return db.with_timeout(1000).select("SELECT * FROM " + namespace)
 
 def print_all_records_from_namespace(db, namespace, message):
     selected_items_tr = select_all_item_query_example(db, namespace)
@@ -136,13 +137,13 @@ def modify_query_transaction(db, namespace):
     transaction.delete_query(query_del)
 
     # stop transaction and commit changes to namespace
-    count = transaction.commit()
+    transaction.commit() # ToDo count
 
     print_all_records_from_namespace(db, namespace, 'Transaction with Query results count: ')
 
 def rx_example():
-    db = RxConnector('builtin:///tmp/pyrx')
-    #    db = RxConnector('cproto://127.0.0.1:6534/pyrx')
+    db = RxConnector('builtin:///tmp/pyrx', max_replication_updates_size = 10 * 1024 * 1024)
+    #    db = RxConnector('cproto://127.0.0.1:6534/pyrx', enable_compression = True, fetch_amount = 500)
 
     namespace = 'test_table'
 
