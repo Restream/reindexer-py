@@ -60,22 +60,22 @@ PyObject* queryResultsWrapperIterate(uintptr_t qresWrapperAddr) {
 static PyObject* Init(PyObject* self, PyObject* args) {
 	ReindexerConfig cfg;
 	char* clientName = nullptr;
-	int connectTimeout = 0;
-	int requestTimeout = 0;
+	int netTimeout = 0;
 	unsigned enableCompression = 0;
 	unsigned startSpecialThread = 0;
+	unsigned syncRxCoroCount = 0;
 	unsigned maxReplUpdatesSize = 0;
-	if (!PyArg_ParseTuple(args, "iiiIIsIif", &cfg.fetchAmount, &connectTimeout, &requestTimeout,
-						  &enableCompression, &startSpecialThread, &clientName, &maxReplUpdatesSize,
-						  &cfg.allocatorCacheLimit, &cfg.allocatorCachePart)) {
+	if (!PyArg_ParseTuple(args, "iiiIIsIIif", &cfg.fetchAmount, &cfg.reconnectAttempts, &netTimeout,
+						  &enableCompression, &startSpecialThread, &clientName, &syncRxCoroCount,
+						  &maxReplUpdatesSize, &cfg.allocatorCacheLimit, &cfg.allocatorCachePart)) {
 		return nullptr;
 	}
 
-	cfg.connectTimeout = std::chrono::seconds(connectTimeout);
-	cfg.requestTimeout = std::chrono::seconds(requestTimeout);
+	cfg.netTimeout = std::chrono::milliseconds(netTimeout);
 	cfg.enableCompression = (enableCompression != 0);
 	cfg.requestDedicatedThread = (startSpecialThread != 0);
 	cfg.appName = clientName;
+	cfg.syncRxCoroCount = syncRxCoroCount;
 	cfg.maxReplUpdatesSize = maxReplUpdatesSize;
 
 	uintptr_t rx = initReindexer(cfg);

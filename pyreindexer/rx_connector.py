@@ -23,11 +23,12 @@ class RxConnector(RaiserMixin):
     def __init__(self, dsn: str, *,
                  # cproto options
                  fetch_amount: int = 1000,
-                 connect_timeout: int = 0,
-                 request_timeout: int = 0,
+                 reconnect_attempts: int = 0,
+                 net_timeout: int = 0,
                  enable_compression: bool = False,
                  start_special_thread: bool = False,
                  client_name: str = 'pyreindexer',
+                 sync_rxcoro_count: int = 10,
                  # builtin options
                  max_replication_updates_size: int = 1024 * 1024 * 1024,
                  allocator_cache_limit: int = -1,
@@ -41,12 +42,13 @@ class RxConnector(RaiserMixin):
 
             cproto options:
                  fetch_amount (int): The number of items that will be fetched by one operation
-                 connect_timeout (int): Connection and database login timeout value [seconds]
-                 request_timeout (int): Request execution timeout value [seconds]
+                 reconnect_attempts (int): Number of reconnection attempts when connection is lost
+                 net_timeout (int): Connection and database login timeout value [milliseconds]
                  enable_compression (bool): Flag enable/disable traffic compression
                  start_special_thread (bool): Determines whether to request a special thread of execution
                     on the server for this connection
                  client_name (string): Proper name of the application (as a client for Reindexer-server)
+                 sync_rxcoro_count (int): Client concurrency per connection
 
             built-in options:
                 max_replication_updates_size (int): Max pended replication updates size in bytes
@@ -59,9 +61,9 @@ class RxConnector(RaiserMixin):
         self.err_msg = ''
         self.rx = 0
         self._api_import(dsn)
-        self.rx = self.api.init(fetch_amount, connect_timeout, request_timeout, enable_compression,
-                                start_special_thread, client_name, max_replication_updates_size,
-                                allocator_cache_limit, allocator_cache_part)
+        self.rx = self.api.init(fetch_amount, reconnect_attempts, net_timeout, enable_compression,
+                                start_special_thread, client_name, sync_rxcoro_count,
+                                max_replication_updates_size, allocator_cache_limit, allocator_cache_part)
         self._api_connect(dsn)
 
     def __del__(self):

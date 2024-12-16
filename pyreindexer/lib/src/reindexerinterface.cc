@@ -38,6 +38,20 @@ private:
 	std::atomic_bool executed_{false};
 };
 
+namespace {
+reindexer::client::ReindexerConfig makeClientConfig(const ReindexerConfig& cfg) {
+	reindexer::client::ReindexerConfig config;
+	config.FetchAmount = cfg.fetchAmount;
+	config.ReconnectAttempts = cfg.reconnectAttempts;
+	// config.NetTimeout = cfg.netTimeout; // ToDo after migrate on v.4
+	config.EnableCompression = cfg.enableCompression;
+	config.RequestDedicatedThread = cfg.requestDedicatedThread;
+	config.AppName = cfg.appName;
+	//config.SyncRxCoroCount = cfg.syncRxCoroCount; // ToDo after migrate on v.4
+	return config;
+}
+} // namespace
+
 template <>
 ReindexerInterface<reindexer::Reindexer>::ReindexerInterface(const ReindexerConfig& cfg)
 	: db_(reindexer::ReindexerConfig().WithUpdatesSize(cfg.maxReplUpdatesSize)
@@ -46,8 +60,7 @@ ReindexerInterface<reindexer::Reindexer>::ReindexerInterface(const ReindexerConf
 
 template <>
 ReindexerInterface<reindexer::client::CoroReindexer>::ReindexerInterface(const ReindexerConfig& cfg)
-	: db_(reindexer::client::ReindexerConfig(4, 1, cfg.fetchAmount, 0, cfg.connectTimeout, cfg.requestTimeout,
-											 cfg.enableCompression, cfg.requestDedicatedThread, cfg.appName)) {
+	: db_(makeClientConfig(cfg)) {
 	std::atomic_bool running{false};
 	executionThr_ = std::thread([this, &running] {
 		cmdAsync_.set(loop_);
