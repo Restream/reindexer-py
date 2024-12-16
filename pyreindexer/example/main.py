@@ -124,8 +124,8 @@ def query_example(db, namespace):
         print('Item: ', item)
 
 def rx_example():
-    db = RxConnector('builtin:///tmp/pyrx')
-    #    db = RxConnector('cproto://127.0.0.1:6534/pyrx')
+    db = RxConnector('builtin:///tmp/pyrx', max_replication_updates_size = 10 * 1024 * 1024)
+    #    db = RxConnector('cproto://127.0.0.1:6534/pyrx', enable_compression = True, fetch_amount = 500)
 
     namespace = 'test_table'
 

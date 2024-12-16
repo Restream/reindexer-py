@@ -1,5 +1,6 @@
 #pragma once
 
+#include <chrono>
 #include <condition_variable>
 #include <thread>
 #include "core/query/query.h"
@@ -12,59 +13,39 @@
 namespace pyreindexer {
 
 using reindexer::Error;
-using reindexer::net::ev::dynamic_loop;
+using reindexer::Query;
 using reindexer::IndexDef;
 using reindexer::NamespaceDef;
 using reindexer::EnumNamespacesOpts;
 
 class QueryResultsWrapper;
 class TransactionWrapper;
+class ICommand;
 
-struct ICommand {
-	virtual Error Status() const = 0;
-	virtual void Execute() = 0;
-	virtual bool IsExecuted() const = 0;
+struct ReindexerConfig {
+	int fetchAmount{1000};
+	int reconnectAttempts{0};
+	std::chrono::milliseconds netTimeout{0};
+	bool enableCompression{false};
+	bool requestDedicatedThread{false};
+	std::string appName;
+	unsigned int syncRxCoroCount{10};
 
-	virtual ~ICommand() = default;
-};
-
-class GenericCommand : public ICommand {
-public:
-	using CallableT = std::function<Error()>;
-
-	GenericCommand(CallableT command) : command_(std::move(command)) {}
-
-	Error Status() const override final { return err_; }
-	void Execute() override final {
-		err_ = command_();
-		executed_.store(true, std::memory_order_release);
-	}
-	bool IsExecuted() const override final { return executed_.load(std::memory_order_acquire); }
-
-private:
-	CallableT command_;
-	Error err_;
-	std::atomic_bool executed_{false};
+	size_t maxReplUpdatesSize{1024 * 1024 * 1024};
+	int64_t allocatorCacheLimit{-1};
+	float allocatorCachePart{-1.0};
 };
 
 template <typename DBT>
 class ReindexerInterface {
 public:
-	ReindexerInterface();
+	ReindexerInterface(const ReindexerConfig& cfg);
 	~ReindexerInterface();
 
-	Error Connect(const std::string& dsn) {
-		return execute([this, &dsn] { return connect(dsn); });
-	}
-	Error OpenNamespace(std::string_view ns) {
-		return execute([this, &ns] { return openNamespace(ns); });
-	}
-	Error CloseNamespace(std::string_view ns) {
-		return execute([this, ns] { return closeNamespace(ns); });
-	}
-	Error DropNamespace(std::string_view ns) {
-		return execute([this, ns] { return dropNamespace(ns); });
-	}
+	Error Connect(const std::string& dsn) { return execute([this, &dsn] { return connect(dsn); }); }
+	Error OpenNamespace(std::string_view ns) { return execute([this, &ns] { return openNamespace(ns); }); }
+	Error CloseNamespace(std::string_view ns) { return execute([this, ns] { return closeNamespace(ns); }); }
+	Error DropNamespace(std::string_view ns) { return execute([this, ns] { return dropNamespace(ns); }); }
 	Error AddIndex(std::string_view ns, const IndexDef& idx) {
 		return execute([this, ns, &idx] { return addIndex(ns, idx); });
 	}
@@ -92,7 +73,7 @@ public:
 		return execute([this, ns, &item] { return update(ns, item); });
 	}
 	Error Delete(std::string_view ns, typename DBT::ItemT& item) {
-		return execute([this, ns, &item] { return deleteImpl(ns, item); });
+		return execute([this, ns, &item] { return deleteItem(ns, item); });
 	}
 	Error PutMeta(std::string_view ns, const std::string& key, std::string_view data) {
 		return execute([this, ns, &key, data] { return putMeta(ns, key, data); });
@@ -129,13 +110,13 @@ public:
 	Error RollbackTransaction(typename DBT::TransactionT& tr) {
 		return execute([this, &tr] { return rollbackTransaction(tr); });
 	}
-	Error SelectQuery(const reindexer::Query& query, QueryResultsWrapper& result) {
+	Error SelectQuery(const Query& query, QueryResultsWrapper& result) {
 		return execute([this, &query, &result] { return selectQuery(query, result); });
 	}
-	Error DeleteQuery(const reindexer::Query& query, size_t& count) {
+	Error DeleteQuery(const Query& query, size_t& count) {
 		return execute([this, &query, &count] { return deleteQuery(query, count); });
 	}
-	Error UpdateQuery(const reindexer::Query& query, QueryResultsWrapper& result) {
+	Error UpdateQuery(const Query& query, QueryResultsWrapper& result) {
 		return execute([this, &query, &result] { return updateQuery(query, result); });
 	}
 
@@ -143,37 +124,43 @@ private:
 	Error execute(std::function<Error()> f);
 
 	Error connect(const std::string& dsn);
-	Error openNamespace(std::string_view ns) { return db_.OpenNamespace({ns.data(), ns.size()}); }
-	Error closeNamespace(std::string_view ns) { return db_.CloseNamespace({ns.data(), ns.size()}); }
-	Error dropNamespace(std::string_view ns) { return db_.DropNamespace({ns.data(), ns.size()}); }
-	Error addIndex(std::string_view ns, const IndexDef& idx) { return db_.AddIndex({ns.data(), ns.size()}, idx); }
-	Error updateIndex(std::string_view ns, const IndexDef& idx) { return db_.UpdateIndex({ns.data(), ns.size()}, idx); }
-	Error dropIndex(std::string_view ns, const IndexDef& idx) { return db_.DropIndex({ns.data(), ns.size()}, idx); }
-	typename DBT::ItemT newItem(std::string_view ns) { return db_.NewItem({ns.data(), ns.size()}); }
-	Error insert(std::string_view ns, typename DBT::ItemT& item) { return db_.Insert({ns.data(), ns.size()}, item); }
-	Error upsert(std::string_view ns, typename DBT::ItemT& item) { return db_.Upsert({ns.data(), ns.size()}, item); }
-	Error update(std::string_view ns, typename DBT::ItemT& item) { return db_.Update({ns.data(), ns.size()}, item); }
-	Error deleteImpl(std::string_view ns, typename DBT::ItemT& item) { return db_.Delete({ns.data(), ns.size()}, item); }
-	Error putMeta(std::string_view ns, const std::string& key, std::string_view data) { return db_.PutMeta({ns.data(), ns.size()}, key, {data.data(), data.size()}); }
-	Error getMeta(std::string_view ns, const std::string& key, std::string& data) { return db_.GetMeta({ns.data(), ns.size()}, key, data); }
-	Error deleteMeta(std::string_view ns, const std::string& key) { return db_.DeleteMeta({ns.data(), ns.size()}, key); }
-	Error enumMeta(std::string_view ns, std::vector<std::string>& keys) { return db_.EnumMeta({ns.data(), ns.size()}, keys); }
+	Error openNamespace(std::string_view ns) { return db_.OpenNamespace(ns); }
+	Error closeNamespace(std::string_view ns) { return db_.CloseNamespace(ns); }
+	Error dropNamespace(std::string_view ns) { return db_.DropNamespace(ns); }
+	Error addIndex(std::string_view ns, const IndexDef& idx) { return db_.AddIndex(ns, idx); }
+	Error updateIndex(std::string_view ns, const IndexDef& idx) { return db_.UpdateIndex(ns, idx); }
+	Error dropIndex(std::string_view ns, const IndexDef& idx) { return db_.DropIndex(ns, idx); }
+	typename DBT::ItemT newItem(std::string_view ns) { return db_.NewItem(ns); }
+	Error insert(std::string_view ns, typename DBT::ItemT& item) { return db_.Insert(ns, item); }
+	Error upsert(std::string_view ns, typename DBT::ItemT& item) { return db_.Upsert(ns, item); }
+	Error update(std::string_view ns, typename DBT::ItemT& item) { return db_.Update(ns, item); }
+	Error deleteItem(std::string_view ns, typename DBT::ItemT& item) { return db_.Delete(ns, item); }
+	Error putMeta(std::string_view ns, const std::string& key, std::string_view data) {
+		return db_.PutMeta(ns, key, data);
+	}
+	Error getMeta(std::string_view ns, const std::string& key, std::string& data) {
+		return db_.GetMeta(ns, key, data);
+	}
+	Error deleteMeta(std::string_view ns, const std::string& key) { return db_.DeleteMeta(ns, key); }
+	Error enumMeta(std::string_view ns, std::vector<std::string>& keys) { return db_.EnumMeta(ns, keys); }
 	Error select(const std::string& query, typename DBT::QueryResultsT& result) { return db_.Select(query, result); }
-	Error enumNamespaces(std::vector<NamespaceDef>& defs, EnumNamespacesOpts opts) { return db_.EnumNamespaces(defs, opts); }
-	typename DBT::TransactionT startTransaction(std::string_view ns) { return db_.NewTransaction({ns.data(), ns.size()}); }
+	Error enumNamespaces(std::vector<NamespaceDef>& defs, EnumNamespacesOpts opts) {
+		return db_.EnumNamespaces(defs, opts);
+	}
+	typename DBT::TransactionT startTransaction(std::string_view ns) { return db_.NewTransaction(ns); }
 	typename DBT::ItemT newItem(typename DBT::TransactionT& tr) { return tr.NewItem(); }
 	Error modify(typename DBT::TransactionT& tr, typename DBT::ItemT&& item, ItemModifyMode mode);
 	Error commitTransaction(typename DBT::TransactionT& transaction, size_t& count);
 	Error rollbackTransaction(typename DBT::TransactionT& tr) { return db_.RollBackTransaction(tr); }
-	Error selectQuery(const reindexer::Query& query, QueryResultsWrapper& result);
-	Error deleteQuery(const reindexer::Query& query, size_t& count);
-	Error updateQuery(const reindexer::Query& query, QueryResultsWrapper& result);
+	Error selectQuery(const Query& query, QueryResultsWrapper& result);
+	Error deleteQuery(const Query& query, size_t& count);
+	Error updateQuery(const Query& query, QueryResultsWrapper& result);
 	Error stop();
 
 	DBT db_;
 	std::thread executionThr_;
-	dynamic_loop loop_;
-	ICommand* curCmd_ = nullptr;
+	reindexer::net::ev::dynamic_loop loop_;
+	ICommand* curCmd_{nullptr};
 	reindexer::net::ev::async cmdAsync_;
 	std::mutex mtx_;
 	std::condition_variable condVar_;

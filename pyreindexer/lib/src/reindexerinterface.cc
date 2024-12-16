@@ -10,11 +10,57 @@ namespace {
 	const int QRESULTS_FLAGS = kResultsJson | kResultsWithJoined;
 }
 
-template <>
-ReindexerInterface<reindexer::Reindexer>::ReindexerInterface() {}
+class ICommand {
+public:
+	virtual Error Status() const = 0;
+	virtual void Execute() = 0;
+	virtual bool IsExecuted() const = 0;
+
+	virtual ~ICommand() = default;
+};
+
+class GenericCommand : public ICommand {
+public:
+	using CallableT = std::function<Error()>;
+
+	GenericCommand(CallableT command) : command_(std::move(command)) {}
+
+	Error Status() const override final { return err_; }
+	void Execute() override final {
+		err_ = command_();
+		executed_.store(true, std::memory_order_release);
+	}
+	bool IsExecuted() const override final { return executed_.load(std::memory_order_acquire); }
+
+private:
+	CallableT command_;
+	Error err_;
+	std::atomic_bool executed_{false};
+};
+
+namespace {
+reindexer::client::ReindexerConfig makeClientConfig(const ReindexerConfig& cfg) {
+	reindexer::client::ReindexerConfig config;
+	config.FetchAmount = cfg.fetchAmount;
+	config.ReconnectAttempts = cfg.reconnectAttempts;
+	// config.NetTimeout = cfg.netTimeout; // ToDo after migrate on v.4
+	config.EnableCompression = cfg.enableCompression;
+	config.RequestDedicatedThread = cfg.requestDedicatedThread;
+	config.AppName = cfg.appName;
+	//config.SyncRxCoroCount = cfg.syncRxCoroCount; // ToDo after migrate on v.4
+	return config;
+}
+} // namespace
 
 template <>
-ReindexerInterface<reindexer::client::CoroReindexer>::ReindexerInterface() {
+ReindexerInterface<reindexer::Reindexer>::ReindexerInterface(const ReindexerConfig& cfg)
+	: db_(reindexer::ReindexerConfig().WithUpdatesSize(cfg.maxReplUpdatesSize)
+									  .WithAllocatorCacheLimits(cfg.allocatorCacheLimit, cfg.allocatorCachePart))
+{ }
+
+template <>
+ReindexerInterface<reindexer::client::CoroReindexer>::ReindexerInterface(const ReindexerConfig& cfg)
+	: db_(makeClientConfig(cfg)) {
 	std::atomic_bool running{false};
 	executionThr_ = std::thread([this, &running] {
 		cmdAsync_.set(loop_);

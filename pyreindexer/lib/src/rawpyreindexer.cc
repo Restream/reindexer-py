@@ -10,12 +10,11 @@ namespace pyreindexer {
 
 using reindexer::Error;
 using reindexer::IndexDef;
-using reindexer::NamespaceDef;
 using reindexer::WrSerializer;
 
 namespace {
-uintptr_t initReindexer() {
-	auto db = std::make_unique<DBInterface>();
+uintptr_t initReindexer(const ReindexerConfig& cfg) {
+	auto db = std::make_unique<DBInterface>(cfg);
 	return reinterpret_cast<uintptr_t>(db.release());
 }
 
@@ -59,7 +58,27 @@ PyObject* queryResultsWrapperIterate(uintptr_t qresWrapperAddr) {
 // common --------------------------------------------------------------------------------------------------------------
 
 static PyObject* Init(PyObject* self, PyObject* args) {
-	uintptr_t rx = initReindexer();
+	ReindexerConfig cfg;
+	char* clientName = nullptr;
+	int netTimeout = 0;
+	unsigned enableCompression = 0;
+	unsigned startSpecialThread = 0;
+	unsigned syncRxCoroCount = 0;
+	unsigned maxReplUpdatesSize = 0;
+	if (!PyArg_ParseTuple(args, "iiiIIsIIif", &cfg.fetchAmount, &cfg.reconnectAttempts, &netTimeout,
+						  &enableCompression, &startSpecialThread, &clientName, &syncRxCoroCount,
+						  &maxReplUpdatesSize, &cfg.allocatorCacheLimit, &cfg.allocatorCachePart)) {
+		return nullptr;
+	}
+
+	cfg.netTimeout = std::chrono::milliseconds(netTimeout);
+	cfg.enableCompression = (enableCompression != 0);
+	cfg.requestDedicatedThread = (startSpecialThread != 0);
+	cfg.appName = clientName;
+	cfg.syncRxCoroCount = syncRxCoroCount;
+	cfg.maxReplUpdatesSize = maxReplUpdatesSize;
+
+	uintptr_t rx = initReindexer(cfg);
 	if (rx == 0) {
 		PyErr_SetString(PyExc_RuntimeError, "Initialization error");
 
@@ -153,7 +172,7 @@ static PyObject* EnumNamespaces(PyObject* self, PyObject* args) {
 		return nullptr;
 	}
 
-	std::vector<NamespaceDef> nsDefs;
+	std::vector<reindexer::NamespaceDef> nsDefs;
 	auto err = getWrapper<DBInterface>(rx)->EnumNamespaces(nsDefs, reindexer::EnumNamespacesOpts().WithClosed(enumAll));
 	if (!err.ok()) {
 		return Py_BuildValue("is[]", err.code(), err.what().c_str());
@@ -333,7 +352,7 @@ PyObject* itemModify(PyObject* self, PyObject* args, ItemModifyMode mode) {
 			err = getWrapper<DBInterface>(rx)->Delete(ns, item);
 			break;
 		default:
-			err = reindexer::Error(ErrorCode::errLogic, "Unknown item modify mode");
+			err = Error(ErrorCode::errLogic, "Unknown item modify mode");
 	}
 
 	return pyErr(err);
@@ -573,7 +592,7 @@ PyObject* modifyTransaction(PyObject* self, PyObject* args, ItemModifyMode mode)
 			err = transaction->Modify(std::move(item), mode);
 			return pyErr(err);
 		default:
-			return pyErr(reindexer::Error(ErrorCode::errLogic, "Unknown item modify transaction mode"));
+			return pyErr(Error(ErrorCode::errLogic, "Unknown item modify transaction mode"));
 	}
 
 	return nullptr;
@@ -662,7 +681,7 @@ static PyObject* Where(PyObject* self, PyObject* args) {
 
 	getWrapper<QueryWrapper>(queryWrapperAddr)->Where(index, CondType(condition), keys);
 
-	return pyErr(errOK);
+	return pyErr({});
 }
 
 static PyObject* WhereSubQuery(PyObject* self, PyObject* args) {
@@ -693,7 +712,7 @@ static PyObject* WhereSubQuery(PyObject* self, PyObject* args) {
 	auto subQuery = getWrapper<QueryWrapper>(subQueryWrapperAddr);
 	query->WhereSubQuery(*subQuery, CondType(cond), keys);
 
-	return pyErr(errOK);
+	return pyErr({});
 }
 
 static PyObject* WhereFieldSubQuery(PyObject* self, PyObject* args) {
@@ -739,7 +758,7 @@ static PyObject* WhereUUID(PyObject* self, PyObject* args) {
 
 	getWrapper<QueryWrapper>(queryWrapperAddr)->WhereUUID(index, CondType(condition), keys);
 
-	return pyErr(errOK);
+	return pyErr({});
 }
 
 static PyObject* WhereBetweenFields(PyObject* self, PyObject* args) {
@@ -837,7 +856,7 @@ static PyObject* AggregationSort(PyObject* self, PyObject* args) {
 
 	getWrapper<QueryWrapper>(queryWrapperAddr)->AggregationSort(field, (desc != 0));
 
-	return pyErr(errOK);
+	return pyErr({});
 }
 
 static PyObject* Aggregation(PyObject* self, PyObject* args) {
@@ -864,7 +883,7 @@ static PyObject* Aggregation(PyObject* self, PyObject* args) {
 
 	getWrapper<QueryWrapper>(queryWrapperAddr)->Aggregation(fields);
 
-	return pyErr(errOK);
+	return pyErr({});
 }
 
 static PyObject* Sort(PyObject* self, PyObject* args) {
@@ -893,7 +912,7 @@ static PyObject* Sort(PyObject* self, PyObject* args) {
 
 	getWrapper<QueryWrapper>(queryWrapperAddr)->Sort(index, (desc != 0), sortValues);
 
-	return pyErr(errOK);
+	return pyErr({});
 }
 
 namespace {
@@ -993,7 +1012,7 @@ static PyObject* executeQuery(PyObject* self, PyObject* args, ExecuteType type) 
 			err = query->UpdateQuery(qresult);
 			break;
 		default:
-			return pyErr(reindexer::Error(ErrorCode::errLogic, "Unknown query execute mode"));
+			return pyErr(Error(ErrorCode::errLogic, "Unknown query execute mode"));
 	}
 
 	if (!err.ok()) {
@@ -1034,7 +1053,7 @@ static PyObject* SetObject(PyObject* self, PyObject* args) {
 
 	getWrapper<QueryWrapper>(queryWrapperAddr)->SetObject(field, values);
 
-	return pyErr(errOK);
+	return pyErr({});
 }
 
 static PyObject* Set(PyObject* self, PyObject* args) {
@@ -1062,7 +1081,7 @@ static PyObject* Set(PyObject* self, PyObject* args) {
 
 	getWrapper<QueryWrapper>(queryWrapperAddr)->Set(field, values, QueryWrapper::IsExpression::No);
 
-	return pyErr(errOK);
+	return pyErr({});
 }
 
 static PyObject* Drop(PyObject* self, PyObject* args) {
@@ -1160,7 +1179,7 @@ static PyObject* SelectFilter(PyObject* self, PyObject* args) {
 
 	getWrapper<QueryWrapper>(queryWrapperAddr)->SelectFilter(fields);
 
-	return pyErr(errOK);
+	return pyErr({});
 }
 
 static PyObject* AddFunctions(PyObject* self, PyObject* args) {
@@ -1187,7 +1206,7 @@ static PyObject* AddFunctions(PyObject* self, PyObject* args) {
 
 	getWrapper<QueryWrapper>(queryWrapperAddr)->AddFunctions(functions);
 
-	return pyErr(errOK);
+	return pyErr({});
 }
 
 static PyObject* AddEqualPosition(PyObject* self, PyObject* args) {
@@ -1214,7 +1233,7 @@ static PyObject* AddEqualPosition(PyObject* self, PyObject* args) {
 
 	getWrapper<QueryWrapper>(queryWrapperAddr)->AddEqualPosition(equalPoses);
 
-	return pyErr(errOK);
+	return pyErr({});
 }
 
 }  // namespace pyreindexer
