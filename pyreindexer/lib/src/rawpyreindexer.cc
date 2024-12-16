@@ -1,10 +1,10 @@
 #include "rawpyreindexer.h"
 
-#include "queryresults_wrapper.h"
-#include "query_wrapper.h"
-#include "transaction_wrapper.h"
 #include "pyobjtools.h"
+#include "query_wrapper.h"
+#include "queryresults_wrapper.h"
 #include "tools/serializer.h"
+#include "transaction_wrapper.h"
 
 namespace pyreindexer {
 
@@ -66,8 +66,8 @@ static PyObject* Init(PyObject* self, PyObject* args) {
 	unsigned startSpecialThread = 0;
 	unsigned maxReplUpdatesSize = 0;
 	if (!PyArg_ParseTuple(args, "iiiIIsIif", &cfg.fetchAmount, &connectTimeout, &requestTimeout,
-			&enableCompression, &startSpecialThread, &clientName, &maxReplUpdatesSize,
-			&cfg.allocatorCacheLimit, &cfg.allocatorCachePart)) {
+						  &enableCompression, &startSpecialThread, &clientName, &maxReplUpdatesSize,
+						  &cfg.allocatorCacheLimit, &cfg.allocatorCachePart)) {
 		return nullptr;
 	}
 
@@ -561,7 +561,7 @@ PyObject* modifyTransaction(PyObject* self, PyObject* args, ItemModifyMode mode)
 
 	Py_DECREF(defDict);
 
-	err = item.Unsafe().FromJSON(wrSer.Slice(), 0, mode == ModeDelete);
+	err = item.FromJSON(wrSer.Slice(), 0, mode == ModeDelete);
 	if (!err.ok()) {
 		Py_XDECREF(preceptsList);
 
