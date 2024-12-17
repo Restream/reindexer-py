@@ -109,6 +109,26 @@ RxConnector provides a binding to Reindexer upon two shared libraries (hereinaft
     be used right in-place as is. The second one acts as a lightweight client which establishes a connection to
     Reindexer server via RPC. The APIs interfaces are completely the same.
 
+#### Arguments:
+        dsn (string): The connection string which contains a protocol
+            Examples: 'builtin:///tmp/pyrx', 'cproto://127.0.0.1:6534/pyrx'
+
+        cproto options:
+             fetch_amount (int): The number of items that will be fetched by one operation
+             reconnect_attempts (int): Number of reconnection attempts when connection is lost
+             net_timeout (int): Connection and database login timeout value [milliseconds]
+             enable_compression (bool): Flag enable/disable traffic compression
+             start_special_thread (bool): Determines whether to request a special thread of execution
+                on the server for this connection
+             client_name (string): Proper name of the application (as a client for Reindexer-server)
+             sync_rxcoro_count (int): Client concurrency per connection
+
+        built-in options:
+            max_replication_updates_size (int): Max pended replication updates size in bytes
+            allocator_cache_limit (int): Recommended maximum free cache size of tcmalloc memory allocator in bytes
+            allocator_cache_part (float): Recommended maximum free cache size of tcmalloc memory allocator in
+                relation to total Reindexer allocated memory size, in units
+
 #### Attributes:
     api (module): An API module loaded dynamically for Reindexer calls
     rx (int): A memory pointer to Reindexer instance

@@ -24,11 +24,12 @@ class ICommand;
 
 struct ReindexerConfig {
 	int fetchAmount{1000};
-	std::chrono::seconds connectTimeout{0};
-	std::chrono::seconds requestTimeout{0};
+	int reconnectAttempts{0};
+	std::chrono::milliseconds netTimeout{0};
 	bool enableCompression{false};
 	bool requestDedicatedThread{false};
 	std::string appName;
+	unsigned int syncRxCoroCount{10};
 
 	size_t maxReplUpdatesSize{1024 * 1024 * 1024};
 	int64_t allocatorCacheLimit{-1};
