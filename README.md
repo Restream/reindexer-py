@@ -21,6 +21,7 @@
     * [select](#pyreindexer.rx_connector.RxConnector.select)
     * [new\_transaction](#pyreindexer.rx_connector.RxConnector.new_transaction)
     * [new\_query](#pyreindexer.rx_connector.RxConnector.new_query)
+    * [with\_timeout](#pyreindexer.rx_connector.RxConnector.with_timeout)
 * [pyreindexer.query\_results](#pyreindexer.query_results)
   * [QueryResults](#pyreindexer.query_results.QueryResults)
     * [status](#pyreindexer.query_results.QueryResults.status)
@@ -108,6 +109,26 @@ RxConnector provides a binding to Reindexer upon two shared libraries (hereinaft
     be used right in-place as is. The second one acts as a lightweight client which establishes a connection to
     Reindexer server via RPC. The APIs interfaces are completely the same.
 
+#### Arguments:
+        dsn (string): The connection string which contains a protocol
+            Examples: 'builtin:///tmp/pyrx', 'cproto://127.0.0.1:6534/pyrx'
+
+        cproto options:
+             fetch_amount (int): The number of items that will be fetched by one operation
+             reconnect_attempts (int): Number of reconnection attempts when connection is lost
+             net_timeout (int): Connection and database login timeout value [milliseconds]
+             enable_compression (bool): Flag enable/disable traffic compression
+             start_special_thread (bool): Determines whether to request a special thread of execution
+                on the server for this connection
+             client_name (string): Proper name of the application (as a client for Reindexer-server)
+             sync_rxcoro_count (int): Client concurrency per connection
+
+        built-in options:
+            max_replication_updates_size (int): Max pended replication updates size in bytes
+            allocator_cache_limit (int): Recommended maximum free cache size of tcmalloc memory allocator in bytes
+            allocator_cache_part (float): Recommended maximum free cache size of tcmalloc memory allocator in
+                relation to total Reindexer allocated memory size, in units
+
 #### Attributes:
     api (module): An API module loaded dynamically for Reindexer calls
     rx (int): A memory pointer to Reindexer instance
@@ -132,7 +153,7 @@ Closes an API instance with Reindexer resources freeing
 ### RxConnector.namespace\_open
 
 ```python
-def namespace_open(namespace) -> None
+def namespace_open(namespace: str) -> None
 ```
 
 Opens a namespace specified or creates a namespace if it does not exist
@@ -149,7 +170,7 @@ Opens a namespace specified or creates a namespace if it does not exist
 ### RxConnector.namespace\_close
 
 ```python
-def namespace_close(namespace) -> None
+def namespace_close(namespace: str) -> None
 ```
 
 Closes a namespace specified
@@ -166,7 +187,7 @@ Closes a namespace specified
 ### RxConnector.namespace\_drop
 
 ```python
-def namespace_drop(namespace) -> None
+def namespace_drop(namespace: str) -> None
 ```
 
 Drops a namespace specified
@@ -183,7 +204,7 @@ Drops a namespace specified
 ### RxConnector.namespaces\_enum
 
 ```python
-def namespaces_enum(enum_not_opened=False) -> List[Dict[str, str]]
+def namespaces_enum(enum_not_opened: bool = False) -> List[Dict[str, str]]
 ```
 
 Gets a list of namespaces available
@@ -204,7 +225,7 @@ Gets a list of namespaces available
 ### RxConnector.index\_add
 
 ```python
-def index_add(namespace, index_def) -> None
+def index_add(namespace: str, index_def: Dict) -> None
 ```
 
 Adds an index to the namespace specified
@@ -222,7 +243,7 @@ Adds an index to the namespace specified
 ### RxConnector.index\_update
 
 ```python
-def index_update(namespace, index_def) -> None
+def index_update(namespace: str, index_def: Dict) -> None
 ```
 
 Updates an index in the namespace specified
@@ -240,7 +261,7 @@ Updates an index in the namespace specified
 ### RxConnector.index\_drop
 
 ```python
-def index_drop(namespace, index_name) -> None
+def index_drop(namespace: str, index_name: str) -> None
 ```
 
 Drops an index from the namespace specified
@@ -258,7 +279,9 @@ Drops an index from the namespace specified
 ### RxConnector.item\_insert
 
 ```python
-def item_insert(namespace, item_def, precepts=None) -> None
+def item_insert(namespace: str,
+                item_def: Dict,
+                precepts: List[str] = None) -> None
 ```
 
 Inserts an item with its precepts to the namespace specified
@@ -277,7 +300,9 @@ Inserts an item with its precepts to the namespace specified
 ### RxConnector.item\_update
 
 ```python
-def item_update(namespace, item_def, precepts=None) -> None
+def item_update(namespace: str,
+                item_def: Dict,
+                precepts: List[str] = None) -> None
 ```
 
 Updates an item with its precepts in the namespace specified
@@ -296,7 +321,9 @@ Updates an item with its precepts in the namespace specified
 ### RxConnector.item\_upsert
 
 ```python
-def item_upsert(namespace, item_def, precepts=None) -> None
+def item_upsert(namespace: str,
+                item_def: Dict,
+                precepts: List[str] = None) -> None
 ```
 
 Updates an item with its precepts in the namespace specified. Creates the item if it not exists
@@ -315,7 +342,7 @@ Updates an item with its precepts in the namespace specified. Creates the item i
 ### RxConnector.item\_delete
 
 ```python
-def item_delete(namespace, item_def) -> None
+def item_delete(namespace: str, item_def: Dict) -> None
 ```
 
 Deletes an item from the namespace specified
@@ -333,7 +360,7 @@ Deletes an item from the namespace specified
 ### RxConnector.meta\_put
 
 ```python
-def meta_put(namespace, key, value) -> None
+def meta_put(namespace: str, key: str, value: str) -> None
 ```
 
 Puts metadata to a storage of Reindexer by key
@@ -352,7 +379,7 @@ Puts metadata to a storage of Reindexer by key
 ### RxConnector.meta\_get
 
 ```python
-def meta_get(namespace, key) -> str
+def meta_get(namespace: str, key: str) -> str
 ```
 
 Gets metadata from a storage of Reindexer by key specified
@@ -373,7 +400,7 @@ Gets metadata from a storage of Reindexer by key specified
 ### RxConnector.meta\_delete
 
 ```python
-def meta_delete(namespace, key) -> None
+def meta_delete(namespace: str, key: str) -> None
 ```
 
 Deletes metadata from a storage of Reindexer by key specified
@@ -391,7 +418,7 @@ Deletes metadata from a storage of Reindexer by key specified
 ### RxConnector.meta\_enum
 
 ```python
-def meta_enum(namespace) -> List[str]
+def meta_enum(namespace: str) -> List[str]
 ```
 
 Gets a list of metadata keys from a storage of Reindexer
@@ -431,7 +458,7 @@ Executes an SQL query and returns query results
 ### RxConnector.new\_transaction
 
 ```python
-def new_transaction(namespace) -> Transaction
+def new_transaction(namespace: str) -> Transaction
 ```
 
 Starts a new transaction and return the transaction object to processing
@@ -464,6 +491,22 @@ Creates a new query and return the query object to processing
 
 #### Raises:
     ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
+
+<a id="pyreindexer.rx_connector.RxConnector.with_timeout"></a>
+
+### RxConnector.with\_timeout
+
+```python
+def with_timeout(timeout: int) -> RxConnector
+```
+
+Add execution timeout to the next query
+
+#### Arguments:
+    timeout (int): Optional server-side execution timeout for each subquery [milliseconds]
+
+#### Returns:
+    (:obj:`RxConnector`): RxConnector object for further customizations
 
 <a id="pyreindexer.query_results"></a>
 
@@ -584,7 +627,7 @@ An object representing the context of a Reindexer transaction
 ### Transaction.insert
 
 ```python
-def insert(item_def, precepts=None)
+def insert(item_def: Dict, precepts: List[str] = None) -> None
 ```
 
 Inserts an item with its precepts to the transaction
@@ -602,7 +645,7 @@ Inserts an item with its precepts to the transaction
 ### Transaction.update
 
 ```python
-def update(item_def, precepts=None)
+def update(item_def: Dict, precepts: List[str] = None) -> None
 ```
 
 Updates an item with its precepts to the transaction
@@ -620,7 +663,7 @@ Updates an item with its precepts to the transaction
 ### Transaction.upsert
 
 ```python
-def upsert(item_def, precepts=None)
+def upsert(item_def: Dict, precepts: List[str] = None) -> None
 ```
 
 Updates an item with its precepts to the transaction. Creates the item if it not exists
@@ -638,7 +681,7 @@ Updates an item with its precepts to the transaction. Creates the item if it not
 ### Transaction.delete
 
 ```python
-def delete(item_def)
+def delete(item_def: Dict) -> None
 ```
 
 Deletes an item from the transaction
@@ -655,7 +698,7 @@ Deletes an item from the transaction
 ### Transaction.commit
 
 ```python
-def commit()
+def commit() -> None
 ```
 
 Applies changes
@@ -683,7 +726,7 @@ Applies changes and return the number of count of changed items
 ### Transaction.rollback
 
 ```python
-def rollback()
+def rollback() -> None
 ```
 
 Rollbacks changes

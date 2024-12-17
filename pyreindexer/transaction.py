@@ -1,5 +1,6 @@
+from typing import Dict, List
+
 from pyreindexer.exceptions import ApiError, TransactionError
-from pyreindexer.query import Query
 
 
 def raise_if_error(func):
@@ -33,9 +34,9 @@ class Transaction:
         """
 
         self.api = api
-        self.transaction_wrapper_ptr = transaction_wrapper_ptr
-        self.err_code = 0
-        self.err_msg = ""
+        self.transaction_wrapper_ptr: int = transaction_wrapper_ptr
+        self.err_code: int = 0
+        self.err_msg: str = ""
 
     def __del__(self):
         """Rollbacks a transaction if it was not previously stopped
@@ -68,7 +69,7 @@ class Transaction:
             raise TransactionError("Transaction is over")
 
     @raise_if_error
-    def insert(self, item_def, precepts=None):
+    def insert(self, item_def: Dict, precepts: List[str] = None) -> None:
         """Inserts an item with its precepts to the transaction
 
         #### Arguments:
@@ -85,7 +86,7 @@ class Transaction:
         self.err_code, self.err_msg = self.api.item_insert_transaction(self.transaction_wrapper_ptr, item_def, precepts)
 
     @raise_if_error
-    def update(self, item_def, precepts=None):
+    def update(self, item_def: Dict, precepts: List[str] = None) -> None:
         """Updates an item with its precepts to the transaction
 
         #### Arguments:
@@ -102,7 +103,7 @@ class Transaction:
         self.err_code, self.err_msg = self.api.item_update_transaction(self.transaction_wrapper_ptr, item_def, precepts)
 
     @raise_if_error
-    def upsert(self, item_def, precepts=None):
+    def upsert(self, item_def: Dict, precepts: List[str] = None) -> None:
         """Updates an item with its precepts to the transaction. Creates the item if it not exists
 
         #### Arguments:
@@ -119,7 +120,7 @@ class Transaction:
         self.err_code, self.err_msg = self.api.item_upsert_transaction(self.transaction_wrapper_ptr, item_def, precepts)
 
     @raise_if_error
-    def delete(self, item_def):
+    def delete(self, item_def: Dict) -> None:
         """Deletes an item from the transaction
 
         #### Arguments:
@@ -134,7 +135,7 @@ class Transaction:
         self.err_code, self.err_msg = self.api.item_delete_transaction(self.transaction_wrapper_ptr, item_def)
 
     @raise_if_error
-    def commit(self):
+    def commit(self) -> None:
         """Applies changes
 
         #### Raises:
@@ -161,7 +162,7 @@ class Transaction:
         return count
 
     @raise_if_error
-    def rollback(self):
+    def rollback(self) -> None:
         """Rollbacks changes
 
         #### Raises:

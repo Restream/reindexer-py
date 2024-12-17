@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Dict, List
 
 from pyreindexer.query import Query
@@ -11,6 +13,26 @@ class RxConnector(RaiserMixin):
         and 'rawpyreindexerc.so'. The first one is aimed to a builtin way usage. That API embeds Reindexer, so it could
         be used right in-place as is. The second one acts as a lightweight client which establishes a connection to
         Reindexer server via RPC. The APIs interfaces are completely the same.
+
+    #### Arguments:
+            dsn (string): The connection string which contains a protocol
+                Examples: 'builtin:///tmp/pyrx', 'cproto://127.0.0.1:6534/pyrx'
+
+            cproto options:
+                 fetch_amount (int): The number of items that will be fetched by one operation
+                 reconnect_attempts (int): Number of reconnection attempts when connection is lost
+                 net_timeout (int): Connection and database login timeout value [milliseconds]
+                 enable_compression (bool): Flag enable/disable traffic compression
+                 start_special_thread (bool): Determines whether to request a special thread of execution
+                    on the server for this connection
+                 client_name (string): Proper name of the application (as a client for Reindexer-server)
+                 sync_rxcoro_count (int): Client concurrency per connection
+
+            built-in options:
+                max_replication_updates_size (int): Max pended replication updates size in bytes
+                allocator_cache_limit (int): Recommended maximum free cache size of tcmalloc memory allocator in bytes
+                allocator_cache_part (float): Recommended maximum free cache size of tcmalloc memory allocator in
+                    relation to total Reindexer allocated memory size, in units
 
     #### Attributes:
         api (module): An API module loaded dynamically for Reindexer calls
@@ -55,10 +77,11 @@ class RxConnector(RaiserMixin):
                 allocator_cache_limit (int): Recommended maximum free cache size of tcmalloc memory allocator in bytes
                 allocator_cache_part (float): Recommended maximum free cache size of tcmalloc memory allocator in
                     relation to total Reindexer allocated memory size, in units
+
         """
 
-        self.err_code = 0
-        self.err_msg = ''
+        self.err_code: int = 0
+        self.err_msg: str = ''
         self.rx = 0
         self._api_import(dsn)
         self.rx = self.api.init(fetch_amount, reconnect_attempts, net_timeout, enable_compression,
@@ -85,7 +108,7 @@ class RxConnector(RaiserMixin):
         self._api_close()
 
     @raise_if_error
-    def namespace_open(self, namespace) -> None:
+    def namespace_open(self, namespace: str) -> None:
         """Opens a namespace specified or creates a namespace if it does not exist
 
         #### Arguments:
@@ -100,7 +123,7 @@ class RxConnector(RaiserMixin):
         self.err_code, self.err_msg = self.api.namespace_open(self.rx, namespace)
 
     @raise_if_error
-    def namespace_close(self, namespace) -> None:
+    def namespace_close(self, namespace: str) -> None:
         """Closes a namespace specified
 
         #### Arguments:
@@ -115,7 +138,7 @@ class RxConnector(RaiserMixin):
         self.err_code, self.err_msg = self.api.namespace_close(self.rx, namespace)
 
     @raise_if_error
-    def namespace_drop(self, namespace) -> None:
+    def namespace_drop(self, namespace: str) -> None:
         """Drops a namespace specified
 
         #### Arguments:
@@ -130,7 +153,7 @@ class RxConnector(RaiserMixin):
         self.err_code, self.err_msg = self.api.namespace_drop(self.rx, namespace)
 
     @raise_if_error
-    def namespaces_enum(self, enum_not_opened=False) -> List[Dict[str, str]]:
+    def namespaces_enum(self, enum_not_opened: bool = False) -> List[Dict[str, str]]:
         """Gets a list of namespaces available
 
         #### Arguments:
@@ -150,7 +173,7 @@ class RxConnector(RaiserMixin):
         return res
 
     @raise_if_error
-    def index_add(self, namespace, index_def) -> None:
+    def index_add(self, namespace: str, index_def: Dict) -> None:
         """Adds an index to the namespace specified
 
         #### Arguments:
@@ -166,7 +189,7 @@ class RxConnector(RaiserMixin):
         self.err_code, self.err_msg = self.api.index_add(self.rx, namespace, index_def)
 
     @raise_if_error
-    def index_update(self, namespace, index_def) -> None:
+    def index_update(self, namespace: str, index_def: Dict) -> None:
         """Updates an index in the namespace specified
 
         #### Arguments:
@@ -182,7 +205,7 @@ class RxConnector(RaiserMixin):
         self.err_code, self.err_msg = self.api.index_update(self.rx, namespace, index_def)
 
     @raise_if_error
-    def index_drop(self, namespace, index_name) -> None:
+    def index_drop(self, namespace: str, index_name: str) -> None:
         """Drops an index from the namespace specified
 
         #### Arguments:
@@ -198,7 +221,7 @@ class RxConnector(RaiserMixin):
         self.err_code, self.err_msg = self.api.index_drop(self.rx, namespace, index_name)
 
     @raise_if_error
-    def item_insert(self, namespace, item_def, precepts=None) -> None:
+    def item_insert(self, namespace: str, item_def: Dict, precepts: List[str] = None) -> None:
         """Inserts an item with its precepts to the namespace specified
 
         #### Arguments:
@@ -216,7 +239,7 @@ class RxConnector(RaiserMixin):
         self.err_code, self.err_msg = self.api.item_insert(self.rx, namespace, item_def, precepts)
 
     @raise_if_error
-    def item_update(self, namespace, item_def, precepts=None) -> None:
+    def item_update(self, namespace: str, item_def: Dict, precepts: List[str] = None) -> None:
         """Updates an item with its precepts in the namespace specified
 
         #### Arguments:
@@ -234,7 +257,7 @@ class RxConnector(RaiserMixin):
         self.err_code, self.err_msg = self.api.item_update(self.rx, namespace, item_def, precepts)
 
     @raise_if_error
-    def item_upsert(self, namespace, item_def, precepts=None) -> None:
+    def item_upsert(self, namespace: str, item_def: Dict, precepts: List[str] = None) -> None:
         """Updates an item with its precepts in the namespace specified. Creates the item if it not exists
 
         #### Arguments:
@@ -252,7 +275,7 @@ class RxConnector(RaiserMixin):
         self.err_code, self.err_msg = self.api.item_upsert(self.rx, namespace, item_def, precepts)
 
     @raise_if_error
-    def item_delete(self, namespace, item_def) -> None:
+    def item_delete(self, namespace: str, item_def: Dict) -> None:
         """Deletes an item from the namespace specified
 
         #### Arguments:
@@ -268,7 +291,7 @@ class RxConnector(RaiserMixin):
         self.err_code, self.err_msg = self.api.item_delete(self.rx, namespace, item_def)
 
     @raise_if_error
-    def meta_put(self, namespace, key, value) -> None:
+    def meta_put(self, namespace: str, key: str, value: str) -> None:
         """Puts metadata to a storage of Reindexer by key
 
         #### Arguments:
@@ -285,7 +308,7 @@ class RxConnector(RaiserMixin):
         self.err_code, self.err_msg = self.api.meta_put(self.rx, namespace, key, value)
 
     @raise_if_error
-    def meta_get(self, namespace, key) -> str:
+    def meta_get(self, namespace: str, key: str) -> str:
         """Gets metadata from a storage of Reindexer by key specified
 
         #### Arguments:
@@ -305,7 +328,7 @@ class RxConnector(RaiserMixin):
         return res
 
     @raise_if_error
-    def meta_delete(self, namespace, key) -> None:
+    def meta_delete(self, namespace: str, key: str) -> None:
         """Deletes metadata from a storage of Reindexer by key specified
 
         #### Arguments:
@@ -321,7 +344,7 @@ class RxConnector(RaiserMixin):
         self.err_code, self.err_msg = self.api.meta_delete(self.rx, namespace, key)
 
     @raise_if_error
-    def meta_enum(self, namespace) -> List[str]:
+    def meta_enum(self, namespace: str) -> List[str]:
         """Gets a list of metadata keys from a storage of Reindexer
 
         #### Arguments:
@@ -359,7 +382,7 @@ class RxConnector(RaiserMixin):
         return QueryResults(self.api, wrapper_ptr, iter_count, total_count)
 
     @raise_if_error
-    def new_transaction(self, namespace) -> Transaction:
+    def new_transaction(self, namespace: str) -> Transaction:
         """Starts a new transaction and return the transaction object to processing
 
         #### Arguments:
@@ -395,7 +418,21 @@ class RxConnector(RaiserMixin):
         self.err_code, self.err_msg, query_wrapper_ptr = self.api.create_query(self.rx, namespace)
         return Query(self.api, query_wrapper_ptr)
 
-    def _api_import(self, dsn):
+    def with_timeout(self, timeout: int) -> RxConnector:
+        """Add execution timeout to the next query
+
+        #### Arguments:
+            timeout (int): Optional server-side execution timeout for each subquery [milliseconds]
+
+        #### Returns:
+            (:obj:`RxConnector`): RxConnector object for further customizations
+
+        """
+
+        self.api.with_timeout(self.rx, timeout)
+        return self
+
+    def _api_import(self, dsn: str) -> None:
         """Imports an API dynamically depending on protocol specified in dsn
 
         #### Arguments:
@@ -413,8 +450,8 @@ class RxConnector(RaiserMixin):
         else:
             raise ConnectionError(f"Unknown Reindexer connection protocol for dsn: {dsn}")
 
-    def _api_connect(self, dsn):
-        """Connects to a database specified in dsn Obtains a pointer to Reindexer instance
+    def _api_connect(self, dsn: str) -> None:
+        """Connects to a database specified in dsn. Obtains a pointer to Reindexer instance
 
         #### Arguments:
             dsn (string): The connection string which contains a protocol
@@ -429,7 +466,7 @@ class RxConnector(RaiserMixin):
         self.err_code, self.err_msg = self.api.connect(self.rx, dsn)
         self.raise_on_error()
 
-    def _api_close(self):
+    def _api_close(self) -> None:
         """Destructs Reindexer instance correctly and resets memory pointer
 
         #### Raises:

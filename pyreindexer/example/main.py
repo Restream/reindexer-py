@@ -55,10 +55,11 @@ def create_items_example(db, namespace):
 def select_item_query_example(db, namespace):
     item_name_for_lookup = 'item_0'
 
-    return db.select("SELECT * FROM " + namespace + " WHERE name='" + item_name_for_lookup + "'")
+    return (db.with_timeout(1000)
+                .select("SELECT * FROM " + namespace + " WHERE name='" + item_name_for_lookup + "'"))
 
 def select_all_item_query_example(db, namespace):
-    return db.select("SELECT * FROM " + namespace)
+    return db.with_timeout(1000).select("SELECT * FROM " + namespace)
 
 def print_all_records_from_namespace(db, namespace, message):
     selected_items_tr = select_all_item_query_example(db, namespace)

@@ -1,9 +1,10 @@
 #include "rawpyreindexer.h"
 
-#include "pyobjtools.h"
-#include "query_wrapper.h"
-#include "queryresults_wrapper.h"
 #include "tools/serializer.h"
+
+#include "queryresults_wrapper.h"
+#include "query_wrapper.h"
+#include "pyobjtools.h"
 #include "transaction_wrapper.h"
 
 namespace pyreindexer {
@@ -128,6 +129,18 @@ static PyObject* Select(PyObject* self, PyObject* args) {
 	const auto totalCount = qresult->TotalCount();
 	return Py_BuildValue("iskII", err.code(), err.what().c_str(),
 						 reinterpret_cast<uintptr_t>(qresult.release()), count, totalCount);
+}
+
+static PyObject* WithTimeout(PyObject* self, PyObject* args) {
+	uintptr_t rx = 0;
+	unsigned timeout = 0;
+	if (!PyArg_ParseTuple(args, "kI", &rx, &timeout)) {
+		return nullptr;
+	}
+
+	getWrapper<DBInterface>(rx)->WithTimeout(std::chrono::milliseconds(timeout));
+
+	Py_RETURN_NONE;
 }
 
 // namespace ----------------------------------------------------------------------------------------------------------

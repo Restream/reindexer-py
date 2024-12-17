@@ -189,30 +189,30 @@ PyObject* pyValueFromJsonValue(const gason::JsonValue& value) {
 	PyObject* pyValue = nullptr;
 
 	switch (value.getTag()) {
-		case gason::JSON_NUMBER:
+		case gason::JsonTag::JSON_NUMBER:
 			pyValue = PyLong_FromLongLong(value.toNumber()); // new ref
 			break;
-		case gason::JSON_DOUBLE:
+		case gason::JsonTag::JSON_DOUBLE:
 			pyValue = PyFloat_FromDouble(value.toDouble()); // new ref
 			break;
-		case gason::JSON_STRING: {
+		case gason::JsonTag::JSON_STRING: {
 			auto sv = value.toString();
 			pyValue = PyUnicode_FromStringAndSize(sv.data(), sv.size()); // new ref
 			break;
 		}
-		case gason::JSON_NULL:
+		case gason::JsonTag::JSON_NULL:
 			pyValue = Py_None;
 			Py_INCREF(pyValue); // new ref
 			break;
-		case gason::JSON_TRUE:
+		case gason::JsonTag::JSON_TRUE:
 			pyValue = Py_True;
 			Py_INCREF(pyValue); // new ref
 			break;
-		case gason::JSON_FALSE:
+		case gason::JsonTag::JSON_FALSE:
 			pyValue = Py_False;
 			Py_INCREF(pyValue); // new ref
 			break;
-		case gason::JSON_ARRAY:
+		case gason::JsonTag::JSON_ARRAY:
 			pyValue = PyList_New(0); // new ref
 			for (const auto& v : value) {
 				PyObject* dictFromJson = pyValueFromJsonValue(v.value); // stolen ref
@@ -220,7 +220,7 @@ PyObject* pyValueFromJsonValue(const gason::JsonValue& value) {
 				Py_XDECREF(dictFromJson);
 			}
 			break;
-		case gason::JSON_OBJECT:
+		case gason::JsonTag::JSON_OBJECT:
 			pyValue = PyDict_New(); // new ref
 			for (const auto& v : value) {
 				PyObject* dictFromJson = pyValueFromJsonValue(v.value); // stolen ref
@@ -230,7 +230,7 @@ PyObject* pyValueFromJsonValue(const gason::JsonValue& value) {
 				Py_XDECREF(dictFromJson);
 			}
 			break;
-		case gason::JSON_EMPTY:
+		case gason::JsonTag::JSON_EMPTY:
 			throw gason::Exception("Unexpected `JSON_EMPTY` tag");
 			break;
 	}
