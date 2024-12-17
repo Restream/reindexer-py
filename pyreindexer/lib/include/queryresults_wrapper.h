@@ -36,7 +36,7 @@ public:
 
 	Error Status() {
 		assert(qres_.has_value());
-		return it_.Status();
+		return (it_ == qres_->end()) ? Error() : it_.Status();
 	}
 
 	size_t Count() const noexcept {
