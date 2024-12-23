@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import timedelta
 from typing import Dict, List
 
 from pyreindexer.query import Query
@@ -418,18 +419,19 @@ class RxConnector(RaiserMixin):
         self.err_code, self.err_msg, query_wrapper_ptr = self.api.create_query(self.rx, namespace)
         return Query(self.api, query_wrapper_ptr)
 
-    def with_timeout(self, timeout: int) -> RxConnector:
+    def with_timeout(self, timeout: timedelta) -> RxConnector:
         """Add execution timeout to the next query
 
         #### Arguments:
-            timeout (int): Optional server-side execution timeout for each subquery [milliseconds]
+            timeout (datetime.timedelta): Optional server-side execution timeout for first actual subquery
 
         #### Returns:
             (:obj:`RxConnector`): RxConnector object for further customizations
 
         """
 
-        self.api.with_timeout(self.rx, timeout)
+        milliseconds: int = int(timeout / timedelta(milliseconds=1))
+        self.api.with_timeout(self.rx, milliseconds)
         return self
 
     def _api_import(self, dsn: str) -> None:

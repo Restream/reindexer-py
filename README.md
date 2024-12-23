@@ -497,13 +497,13 @@ Creates a new query and return the query object to processing
 ### RxConnector.with\_timeout
 
 ```python
-def with_timeout(timeout: int) -> RxConnector
+def with_timeout(timeout: datetime.timedelta) -> RxConnector
 ```
 
 Add execution timeout to the next query
 
 #### Arguments:
-    timeout (int): Optional server-side execution timeout for each subquery [milliseconds]
+    timeout (datetime.timedelta): Optional server-side execution timeout for first actual subquery
 
 #### Returns:
     (:obj:`RxConnector`): RxConnector object for further customizations
