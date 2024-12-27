@@ -33,8 +33,8 @@ public:
 		transaction_ = std::move(transaction);
 	}
 
-	Error Start(std::string_view ns) {
-		return db_->StartTransaction(ns, *this);
+	Error Start(std::string_view ns, std::chrono::milliseconds timeout) {
+		return db_->StartTransaction(ns, *this, timeout);
 	}
 
 	ItemT NewItem() {
@@ -47,14 +47,14 @@ public:
 		return db_->Modify(*transaction_, std::move(item), mode);
 	}
 
-	Error Commit(size_t& count) {
+	Error Commit(size_t& count, std::chrono::milliseconds timeout) {
 		assert(transaction_.has_value());
-		return db_->CommitTransaction(*transaction_, count);
+		return db_->CommitTransaction(*transaction_, count, timeout);
 	}
 
-	Error Rollback() {
+	Error Rollback(std::chrono::milliseconds timeout) {
 		assert(transaction_.has_value());
-		return db_->RollbackTransaction(*transaction_);
+		return db_->RollbackTransaction(*transaction_, timeout);
 	}
 
 private:

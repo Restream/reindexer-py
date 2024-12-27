@@ -24,7 +24,7 @@ def create_index_example(db, namespace):
     try:
         db.index_add(namespace, index_definition)
     except ApiError:
-        db.index_drop(namespace, 'id')
+        db.index_drop(namespace, 'id', timedelta(milliseconds = 1000))
         db.index_add(namespace, index_definition)
 
 
@@ -57,11 +57,10 @@ def create_items_example(db, namespace):
 def select_item_query_example(db, namespace):
     item_name_for_lookup = 'item_0'
 
-    return (db.with_timeout(timedelta(milliseconds = 1000))
-                .select("SELECT * FROM " + namespace + " WHERE name='" + item_name_for_lookup + "'"))
+    return (db.select("SELECT * FROM " + namespace + " WHERE name='" + item_name_for_lookup + "'", timedelta(milliseconds = 1000)))
 
 def select_all_item_query_example(db, namespace):
-    return db.with_timeout(timedelta(milliseconds = 1000)).select("SELECT * FROM " + namespace)
+    return db.select("SELECT * FROM " + namespace, timedelta(milliseconds = 1000))
 
 def print_all_records_from_namespace(db, namespace, message):
     selected_items_tr = select_all_item_query_example(db, namespace)
@@ -88,7 +87,7 @@ def transaction_example(db, namespace, items_in_base):
     transaction.update(item)
 
     # stop transaction and commit changes to namespace
-    transaction.commit()
+    transaction.commit(timedelta(milliseconds = 1000))
 
     print_all_records_from_namespace(db, namespace, 'Transaction results count: ')
 
@@ -107,7 +106,7 @@ def query_example(db, namespace):
                       .where('value', CondType.CondEq, 'check')
                       .sort('id')
                       .limit(4)
-                      .execute())
+                      .execute(timedelta(milliseconds = 1000)))
     print(f'Query results count (limited): {selected_items.count()}')
     for item in selected_items:
         print('Item: ', item)
@@ -115,7 +114,7 @@ def query_example(db, namespace):
     # delete some items
     del_count = (db.new_query(namespace)
                  .where('name', CondType.CondEq, 'item_1')
-                 .delete())
+                 .delete(timedelta(milliseconds = 1000)))
     print(f'Deleted count: {del_count}')
 
     # query all actual items

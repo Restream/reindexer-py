@@ -54,9 +54,9 @@ public:
 
 	void Modifier(QueryItemType type);
 
-	reindexer::Error SelectQuery(std::unique_ptr<QueryResultsWrapper>& qr);
-	reindexer::Error UpdateQuery(std::unique_ptr<QueryResultsWrapper>& qr);
-	reindexer::Error DeleteQuery(size_t& count);
+	reindexer::Error SelectQuery(std::unique_ptr<QueryResultsWrapper>& qr, std::chrono::milliseconds timeout);
+	reindexer::Error UpdateQuery(std::unique_ptr<QueryResultsWrapper>& qr, std::chrono::milliseconds timeout);
+	reindexer::Error DeleteQuery(size_t& count, std::chrono::milliseconds timeout);
 
 	enum class IsExpression { Yes, No };
 	void Set(std::string_view field, const reindexer::VariantArray& values, IsExpression isExpression);

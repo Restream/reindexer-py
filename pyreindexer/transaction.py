@@ -1,3 +1,4 @@
+from datetime import timedelta
 from typing import Dict, List
 
 from pyreindexer.exceptions import ApiError, TransactionError
@@ -135,8 +136,11 @@ class Transaction:
         self.err_code, self.err_msg = self.api.item_delete_transaction(self.transaction_wrapper_ptr, item_def)
 
     @raise_if_error
-    def commit(self) -> None:
+    def commit(self, timeout: timedelta = timedelta(milliseconds=0)) -> None:
         """Applies changes
+
+        #### Arguments:
+            timeout (`datetime.timedelta`): Optional server-side execution timeout for first actual subquery
 
         #### Raises:
             TransactionError: Raises with an error message of API return if Transaction is over
@@ -144,12 +148,16 @@ class Transaction:
 
         """
 
-        self.err_code, self.err_msg, _ = self.api.commit_transaction(self.transaction_wrapper_ptr)
+        milliseconds: int = int(timeout / timedelta(milliseconds=1))
+        self.err_code, self.err_msg, _ = self.api.commit_transaction(self.transaction_wrapper_ptr, milliseconds)
         self.transaction_wrapper_ptr = 0
 
     @raise_if_error
-    def commit_with_count(self) -> int:
+    def commit_with_count(self, timeout: timedelta = timedelta(milliseconds=0)) -> int:
         """Applies changes and return the number of count of changed items
+
+        #### Arguments:
+            timeout (`datetime.timedelta`): Optional server-side execution timeout for first actual subquery
 
         #### Raises:
             TransactionError: Raises with an error message of API return if Transaction is over
@@ -157,13 +165,17 @@ class Transaction:
 
         """
 
-        self.err_code, self.err_msg, count = self.api.commit_transaction(self.transaction_wrapper_ptr)
+        milliseconds: int = int(timeout / timedelta(milliseconds=1))
+        self.err_code, self.err_msg, count = self.api.commit_transaction(self.transaction_wrapper_ptr, milliseconds)
         self.transaction_wrapper_ptr = 0
         return count
 
     @raise_if_error
-    def rollback(self) -> None:
+    def rollback(self, timeout: timedelta = timedelta(milliseconds=0)) -> None:
         """Rollbacks changes
+
+        #### Arguments:
+            timeout (`datetime.timedelta`): Optional server-side execution timeout for first actual subquery
 
         #### Raises:
             TransactionError: Raises with an error message of API return if Transaction is over
@@ -171,5 +183,6 @@ class Transaction:
 
         """
 
-        self.err_code, self.err_msg = self.api.rollback_transaction(self.transaction_wrapper_ptr)
+        milliseconds: int = int(timeout / timedelta(milliseconds=1))
+        self.err_code, self.err_msg = self.api.rollback_transaction(self.transaction_wrapper_ptr, milliseconds)
         self.transaction_wrapper_ptr = 0
