@@ -422,7 +422,8 @@ class RxConnector(RaiserMixin):
 
     @raise_if_error
     def new_transaction(self, namespace: str, timeout: timedelta = timedelta(milliseconds=0)) -> Transaction:
-        """Starts a new transaction and return the transaction object to processing
+        """Starts a new transaction and return the transaction object to processing.
+            Warning: once a timeout is set, it will apply to all subsequent steps in the transaction
 
         #### Arguments:
             namespace (string): A name of a namespace

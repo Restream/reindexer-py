@@ -517,7 +517,8 @@ def new_transaction(
     timeout: timedelta = timedelta(milliseconds=0)) -> Transaction
 ```
 
-Starts a new transaction and return the transaction object to processing
+Starts a new transaction and return the transaction object to processing.
+    Warning: once a timeout is set, it will apply to all subsequent steps in the transaction
 
 #### Arguments:
     namespace (string): A name of a namespace
@@ -672,6 +673,7 @@ def insert(item_def: Dict, precepts: List[str] = None) -> None
 ```
 
 Inserts an item with its precepts to the transaction
+    Warning: the timeout set when the transaction was created is used
 
 #### Arguments:
     item_def (dict): A dictionary of item definition
@@ -690,6 +692,7 @@ def update(item_def: Dict, precepts: List[str] = None) -> None
 ```
 
 Updates an item with its precepts to the transaction
+    Warning: the timeout set when the transaction was created is used
 
 #### Arguments:
     item_def (dict): A dictionary of item definition
@@ -708,6 +711,7 @@ def upsert(item_def: Dict, precepts: List[str] = None) -> None
 ```
 
 Updates an item with its precepts to the transaction. Creates the item if it not exists
+    Warning: the timeout set when the transaction was created is used
 
 #### Arguments:
     item_def (dict): A dictionary of item definition
@@ -726,6 +730,7 @@ def delete(item_def: Dict) -> None
 ```
 
 Deletes an item from the transaction
+    Warning: the timeout set when the transaction was created is used
 
 #### Arguments:
     item_def (dict): A dictionary of item definition

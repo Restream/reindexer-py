@@ -72,6 +72,7 @@ class Transaction:
     @raise_if_error
     def insert(self, item_def: Dict, precepts: List[str] = None) -> None:
         """Inserts an item with its precepts to the transaction
+            Warning: the timeout set when the transaction was created is used
 
         #### Arguments:
             item_def (dict): A dictionary of item definition
@@ -89,6 +90,7 @@ class Transaction:
     @raise_if_error
     def update(self, item_def: Dict, precepts: List[str] = None) -> None:
         """Updates an item with its precepts to the transaction
+            Warning: the timeout set when the transaction was created is used
 
         #### Arguments:
             item_def (dict): A dictionary of item definition
@@ -106,6 +108,7 @@ class Transaction:
     @raise_if_error
     def upsert(self, item_def: Dict, precepts: List[str] = None) -> None:
         """Updates an item with its precepts to the transaction. Creates the item if it not exists
+            Warning: the timeout set when the transaction was created is used
 
         #### Arguments:
             item_def (dict): A dictionary of item definition
@@ -123,6 +126,7 @@ class Transaction:
     @raise_if_error
     def delete(self, item_def: Dict) -> None:
         """Deletes an item from the transaction
+            Warning: the timeout set when the transaction was created is used
 
         #### Arguments:
             item_def (dict): A dictionary of item definition
