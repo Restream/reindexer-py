@@ -831,7 +831,7 @@ class TestQueryTimeouts:
 
     def test_query_select_join_timeout_small(self, db, namespace, index):
         # Given("Create namespace with items")
-        items = [{"id": i, "val": f"testval{i}"} for i in range(2000)]
+        items = [{"id": i, "val": f"testval{i}"} for i in range(20000)]
         for item in items:
             db.item.insert("new_ns", item)
         # Given ("Create new query with join")
