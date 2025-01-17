@@ -115,7 +115,9 @@ class RxConnector(RaiserMixin):
 
         #### Arguments:
             namespace (string): A name of a namespace
-            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                A value of 0 disables the timeout (default value)
 
         #### Raises:
             ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
@@ -132,7 +134,9 @@ class RxConnector(RaiserMixin):
 
         #### Arguments:
             namespace (string): A name of a namespace
-            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                A value of 0 disables the timeout (default value)
 
         #### Raises:
             ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
@@ -149,7 +153,9 @@ class RxConnector(RaiserMixin):
 
         #### Arguments:
             namespace (string): A name of a namespace
-            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                A value of 0 disables the timeout (default value)
 
         #### Raises:
             Exception: Raises with an error message when Reindexer instance is not initialized yet
@@ -168,7 +174,9 @@ class RxConnector(RaiserMixin):
         #### Arguments:
             enum_not_opened (bool, optional): An enumeration mode flag. If it is
                 set then closed namespaces are in result list too. Defaults to False
-            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                A value of 0 disables the timeout (default value)
 
         #### Returns:
             (:obj:`list` of :obj:`dict`): A list of dictionaries which describe each namespace
@@ -190,7 +198,9 @@ class RxConnector(RaiserMixin):
         #### Arguments:
             namespace (string): A name of a namespace
             index_def (dict): A dictionary of index definition
-            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                A value of 0 disables the timeout (default value)
 
         #### Raises:
             ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
@@ -208,7 +218,9 @@ class RxConnector(RaiserMixin):
         #### Arguments:
             namespace (string): A name of a namespace
             index_def (dict): A dictionary of index definition
-            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                A value of 0 disables the timeout (default value)
 
         #### Raises:
             ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
@@ -226,7 +238,9 @@ class RxConnector(RaiserMixin):
         #### Arguments:
             namespace (string): A name of a namespace
             index_name (string): A name of an index
-            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                A value of 0 disables the timeout (default value)
 
         #### Raises:
             ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
@@ -246,7 +260,9 @@ class RxConnector(RaiserMixin):
             namespace (string): A name of a namespace
             item_def (dict): A dictionary of item definition
             precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
-            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                A value of 0 disables the timeout (default value)
 
         #### Raises:
             ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
@@ -267,7 +283,9 @@ class RxConnector(RaiserMixin):
             namespace (string): A name of a namespace
             item_def (dict): A dictionary of item definition
             precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
-            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                A value of 0 disables the timeout (default value)
 
         #### Raises:
             ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
@@ -288,7 +306,9 @@ class RxConnector(RaiserMixin):
             namespace (string): A name of a namespace
             item_def (dict): A dictionary of item definition
             precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
-            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                A value of 0 disables the timeout (default value)
 
         #### Raises:
             ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
@@ -307,7 +327,9 @@ class RxConnector(RaiserMixin):
         #### Arguments:
             namespace (string): A name of a namespace
             item_def (dict): A dictionary of item definition
-            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                A value of 0 disables the timeout (default value)
 
         #### Raises:
             ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
@@ -326,7 +348,9 @@ class RxConnector(RaiserMixin):
             namespace (string): A name of a namespace
             key (string): A key in a storage of Reindexer for metadata keeping
             value (string): A metadata for storage
-            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                A value of 0 disables the timeout (default value)
 
         #### Raises:
             ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
@@ -344,7 +368,9 @@ class RxConnector(RaiserMixin):
         #### Arguments:
             namespace (string): A name of a namespace
             key (string): A key in a storage of Reindexer where metadata is kept
-            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                A value of 0 disables the timeout (default value)
 
         #### Returns:
             string: A metadata value
@@ -366,7 +392,9 @@ class RxConnector(RaiserMixin):
         #### Arguments:
             namespace (string): A name of a namespace
             key (string): A key in a storage of Reindexer where metadata is kept
-            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                A value of 0 disables the timeout (default value)
 
         #### Raises:
             ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
@@ -383,7 +411,9 @@ class RxConnector(RaiserMixin):
 
         #### Arguments:
             namespace (string): A name of a namespace
-            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                A value of 0 disables the timeout (default value)
 
         #### Returns:
             (:obj:`list` of :obj:`str`): A list of all metadata keys
@@ -404,7 +434,9 @@ class RxConnector(RaiserMixin):
 
         #### Arguments:
             query (string): An SQL query
-            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                A value of 0 disables the timeout (default value)
 
         #### Returns:
             (:obj:`QueryResults`): A QueryResults iterator
@@ -427,7 +459,9 @@ class RxConnector(RaiserMixin):
 
         #### Arguments:
             namespace (string): A name of a namespace
-            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                A value of 0 disables the timeout (default value)
 
         #### Returns:
             (:obj:`Transaction`): A new transaction
@@ -484,7 +518,9 @@ class RxConnector(RaiserMixin):
 
         #### Arguments:
             dsn (string): The connection string which contains a protocol
-            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                A value of 0 disables the timeout (default value)
 
         #### Raises:
             ConnectionError: Raises with an error message when Reindexer instance is not initialized yet

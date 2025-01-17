@@ -738,7 +738,9 @@ class Query:
         """Executes a select query
 
         #### Arguments:
-            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                A value of 0 disables the timeout (default value)
 
         #### Returns:
             (:obj:`QueryResults`): A QueryResults iterator
@@ -762,7 +764,9 @@ class Query:
         """Executes a query, and delete items, matches query
 
         #### Arguments:
-            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                A value of 0 disables the timeout (default value)
 
         #### Returns:
             (int): Number of deleted elements
@@ -858,7 +862,9 @@ class Query:
         """Executes update query, and update fields in items, which matches query
 
         #### Arguments:
-            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                A value of 0 disables the timeout (default value)
 
         #### Returns:
             (:obj:`QueryResults`): A QueryResults iterator
@@ -882,7 +888,9 @@ class Query:
         """Executes a query, and update fields in items, which matches query, with status check
 
         #### Arguments:
-            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                A value of 0 disables the timeout (default value)
 
         #### Returns:
             (:obj:`QueryResults`): A QueryResults iterator
@@ -901,7 +909,9 @@ class Query:
         """Executes a query, and return 1 JSON item
 
         #### Arguments:
-            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                A value of 0 disables the timeout (default value)
 
         #### Returns:
             (:tuple:string,bool): 1st string item and found flag

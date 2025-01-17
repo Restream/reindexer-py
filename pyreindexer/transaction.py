@@ -144,7 +144,9 @@ class Transaction:
         """Applies changes
 
         #### Arguments:
-            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                A value of 0 disables the timeout (default value)
 
         #### Raises:
             TransactionError: Raises with an error message of API return if Transaction is over
@@ -161,7 +163,9 @@ class Transaction:
         """Applies changes and return the number of count of changed items
 
         #### Arguments:
-            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                A value of 0 disables the timeout (default value)
 
         #### Raises:
             TransactionError: Raises with an error message of API return if Transaction is over
@@ -179,7 +183,9 @@ class Transaction:
         """Rollbacks changes
 
         #### Arguments:
-            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                A value of 0 disables the timeout (default value)
 
         #### Raises:
             TransactionError: Raises with an error message of API return if Transaction is over
