@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from hamcrest import *
 
 
@@ -52,6 +54,27 @@ class TestCrudMetadata:
         db.meta.delete(namespace, meta_key)
         # Then ("Check that metadata was removed")
         read_value = db.meta.get(namespace, meta_key)
+        assert_that(read_value, equal_to(''), "Can't delete metadata")
+        # When ("Get list of metadata keys")
+        meta_list = db.meta.enumerate(namespace)
+        # Then ("Check that list of metadata is empty")
+        assert_that(meta_list, empty(), "Metadata is not empty")
+
+
+class TestMetadataTimeouts:
+    def test_metadata_put_and_delete_timeouts(self, db, namespace):
+        # Given("Create namespace")
+        # When ("Put metadata to namespace with big timeout")
+        key, value = "key", "value"
+        db.meta.put(namespace, key, value, timeout=timedelta(milliseconds=1000))
+        # Then ("Check that metadata was added")
+        meta_list = db.meta.enumerate(namespace, timeout=timedelta(milliseconds=1000))
+        assert_that(meta_list, has_length(1), "Metadata is not created")
+        assert_that(meta_list, has_item(key), "Metadata is not created")
+        # When ("Delete metadata with big timeout")
+        db.meta.delete(namespace, key, timeout=timedelta(milliseconds=1000))
+        # Then ("Check that metadata was removed")
+        read_value = db.meta.get(namespace, key)
         assert_that(read_value, equal_to(''), "Can't delete metadata")
         # When ("Get list of metadata keys")
         meta_list = db.meta.enumerate(namespace)

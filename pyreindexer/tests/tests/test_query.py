@@ -2,12 +2,13 @@ import copy
 import json
 import random
 import uuid
+from datetime import timedelta
 
 import pytest
 from hamcrest import *
 
-from pyreindexer.exceptions import ApiError
 from point import Point
+from pyreindexer.exceptions import ApiError
 from query import CondType, LogLevel, StrictMode
 from tests.helpers.base_helper import calculate_distance, get_ns_items
 from tests.test_data.constants import AGGREGATE_FUNCTIONS_MATH
@@ -772,3 +773,70 @@ class TestQueryDelete:
         assert_that(query_result, equal_to(10), "Wrong delete items count")
         items_after_delete = get_ns_items(db, namespace)
         assert_that(items_after_delete, empty(), "Wrong items count after delete")
+
+
+class TestQueryTimeouts:
+    def test_query_select_timeout(self, db, namespace, index, items):
+        # Given("Create namespace with index and items")
+        # Given ("Create new query")
+        query = db.query.new(namespace)
+        # When ("Make select query with big timeout")
+        query_result = list(query.where("id", CondType.CondEq, 3).execute(timeout=timedelta(seconds=1)))
+        # Then ("Check that selected item is in result")
+        assert_that(query_result, equal_to([items[3]]), "Wrong query results")
+
+    def test_query_update_timeout(self, db, namespace, index, item):
+        # Given("Create namespace with indexes and items")
+        # Given ("Create new query")
+        query = db.query.new(namespace)
+        # When ("Make update set query with big timeout")
+        modified_item = copy.deepcopy(item)
+        modified_item["val"] = "modified"
+        query_result = query.set("val", ["modified"]).update(timeout=timedelta(milliseconds=1000))
+        # Then ("Check that item is updated")
+        assert_that(list(query_result), equal_to([modified_item]), "Wrong update query results after set")
+        # Then ("Check that items contain modified and do not contain original item")
+        items_after_update = get_ns_items(db, namespace)
+        assert_that(items_after_update, has_length(1), "Wrong items count")
+        assert_that(items_after_update, has_item(modified_item), "New updated item not is in namespace")
+        assert_that(items_after_update, not_(has_item(item)), "Old updated item is in namespace")
+
+    def test_query_delete_timeout(self, db, namespace, index, items):
+        # Given("Create namespace with index and items")
+        # Given ("Create new query")
+        query = db.query.new(namespace)
+        # When ("Make delete query with big timeout")
+        item = random.choice(items)
+        query_result = query.where("id", CondType.CondEq, item["id"]).delete(timeout=timedelta(milliseconds=1000))
+        # Then ("Check that chosen item was deleted")
+        assert_that(query_result, equal_to(1), "Wrong delete items count")
+        items_after_delete = get_ns_items(db, namespace)
+        assert_that(items_after_delete, has_length(len(items) - 1), "Wrong items count after delete")
+        assert_that(items_after_delete, not_(has_item(item)), "Deleted item is in namespace")
+
+    def test_query_select_timeout_small(self, db, namespace, index):
+        # Given("Create namespace with items")
+        items = [{"id": i, "val": f"testval{i}"} for i in range(15000)]
+        for item in items:
+            db.item.insert("new_ns", item)
+        # Given ("Create new query")
+        query = (db.query.new(namespace).explain().where("id", CondType.CondGt, 0)
+                 .where("val", CondType.CondLt, "testval10000")
+                 .equal_position("id", "val"))
+        # When ("Try to make select query with small timeout")
+        assert_that(calling(query.execute).with_args(timeout=timedelta(milliseconds=1)),
+                    raises(ApiError, pattern="Context timeout"))
+
+    def test_query_update_timeout_small(self, db, namespace, index):
+        # Given("Create namespace with items")
+        items = [{"id": i, "val": f"testval{i}"} for i in range(15000)]
+        for item in items:
+            db.item.insert("new_ns", item)
+        # Given ("Create new query")
+        query = db.query.new(namespace).set("val", ["modified"])
+        # When ("Try to make update set query with small timeout")
+        assert_that(calling(query.update).with_args(timeout=timedelta(milliseconds=1)),
+                    raises(ApiError, pattern="Context timeout|Read lock (.*) was canceled on condition"))
+        # Then ("Check that items were not updated")
+        items_after_update = get_ns_items(db, namespace)
+        assert_that(items_after_update, equal_to(items), "Items were updated")

@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from hamcrest import *
 
 from pyreindexer.exceptions import ApiError
@@ -66,3 +68,27 @@ class TestCrudIndexes:
         assert_that(calling(db.index.drop).with_args(namespace, index_name),
                     raises(ApiError, pattern=f"Cannot remove index {index_name}: doesn't exist"),
                     "Not existing index was deleted")
+
+
+class TestIndexTimeouts:
+    def test_index_create_and_drop_timeouts(self, db, namespace):
+        # When ("Create index with big timeout")
+        db.index.create(namespace, index_definition, timeout=timedelta(milliseconds=1000))
+        # Then ("Check that index was created")
+        ns_entry = get_ns_description(db, namespace)
+        assert_that(ns_entry, has_item(has_entry("indexes", has_item(index_definition))), "Index wasn't created")
+        # When ("Delete index with big timeout")
+        db.index.drop(namespace, "id", timeout=timedelta(milliseconds=1000))
+        # Then ("Check that index is deleted")
+        ns_entry = get_ns_description(db, namespace)
+        assert_that(ns_entry, has_item(has_entry("indexes", empty())), "Index wasn't deleted")
+
+    def test_index_update_timeout(self, db, namespace):
+        # Given("Create index")
+        db.index.create(namespace, index_definition)
+        # When ("Update index with big timeout")
+        db.index.update(namespace, updated_index_definition, timeout=timedelta(milliseconds=1000))
+        # Then ("Check that index is updated")
+        ns_entry = get_ns_description(db, namespace)
+        assert_that(ns_entry, has_item(has_entry("indexes", has_item(updated_index_definition))),
+                    "Index wasn't updated")
