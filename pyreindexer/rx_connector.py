@@ -64,7 +64,7 @@ class RxConnector(RaiserMixin):
                 Examples: 'builtin:///tmp/pyrx', 'cproto://127.0.0.1:6534/pyrx'
 
             cproto options:
-                 fetch_amount (int): The number of items that will be fetched by one operation
+                 fetch_amount (int): The number of items that will be fetched by one operation (must be > 0)
                  reconnect_attempts (int): Number of reconnection attempts when connection is lost
                  net_timeout (`datetime.timedelta`): Connection and database login timeout value [milliseconds]
                  enable_compression (bool): Flag enable/disable traffic compression
@@ -79,7 +79,13 @@ class RxConnector(RaiserMixin):
                 allocator_cache_part (float): Recommended maximum free cache size of tcmalloc memory allocator in
                     relation to total Reindexer allocated memory size, in units
 
+        #### Raises:
+            ValueError: Raises with an error message when input value is invalid
+
         """
+
+        if fetch_amount <= 0:
+            raise ValueError("'fetch_amount' must be greater than zero")
 
         self.err_code: int = 0
         self.err_msg: str = ''
