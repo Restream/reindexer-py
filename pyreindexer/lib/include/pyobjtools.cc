@@ -239,6 +239,12 @@ PyObject* pyValueFromJsonValue(const gason::JsonValue& value) {
 }
 
 PyObject* PyObjectFromJson(reindexer::span<char> json) {
+	if (json.empty()) {
+		PyObject* pyValue = Py_None;
+		Py_INCREF(pyValue); // new ref
+		return pyValue;
+	}
+
 	try {
 		gason::JsonParser parser;
 		auto root = parser.Parse(json);
