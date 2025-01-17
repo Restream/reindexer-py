@@ -60,8 +60,6 @@ class TestCrudMetadata:
         # Then ("Check that list of metadata is empty")
         assert_that(meta_list, empty(), "Metadata is not empty")
 
-
-class TestMetadataTimeouts:
     def test_metadata_put_and_delete_timeouts(self, db, namespace):
         # Given("Create namespace")
         # When ("Put metadata to namespace with big timeout")

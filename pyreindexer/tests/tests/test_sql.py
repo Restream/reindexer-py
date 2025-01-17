@@ -10,7 +10,7 @@ class TestSqlQueries:
         # Given("Create namespace with item")
         # When ("Execute SQL query SELECT")
         query = f"SELECT * FROM {namespace}"
-        items_list = list(db.query.sql(query))
+        items_list = list(db.query.sql(query, timeout=timedelta(milliseconds=1000)))
         # Then ("Check that selected item is in result")
         assert_that(items_list, equal_to([item]), "Can't SQL select data")
 
@@ -75,16 +75,6 @@ class TestSqlQueries:
         for agg in select_result:
             assert_that(agg['value'], equal_to(expected_values[agg['type']]),
                         f"Incorrect aggregation result for {agg['type']}")
-
-
-class TestSqlQueryTimeouts:
-    def test_sql_select_timeout(self, db, namespace, index, item):
-        # Given("Create namespace with item")
-        # When ("Execute SQL query SELECT with big timeout")
-        query = f"SELECT * FROM {namespace}"
-        items_list = list(db.query.sql(query, timeout=timedelta(milliseconds=1000)))
-        # Then ("Check that selected item is in result")
-        assert_that(items_list, equal_to([item]), "Can't SQL select data")
 
     def test_sql_select_timeout_small(self, db, namespace, index):
         # Given("Create namespace with items")

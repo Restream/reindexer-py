@@ -113,7 +113,9 @@ class TestCrudTransaction:
     def test_create_item_insert(self, db, namespace, index):
         # Given("Create namespace with index")
         # When ("Insert item into namespace")
-        insert_item_transaction(db, namespace, item_definition)
+        transaction = db.tx.begin(namespace, timeout=timedelta(milliseconds=1000))
+        transaction.insert_item(item_definition)
+        transaction.commit(timeout=timedelta(milliseconds=1000))
         # Then ("Check that item is added")
         select_result = get_ns_items(db, namespace)
         assert_that(select_result, has_length(1), "Transaction: item wasn't created")
@@ -181,36 +183,11 @@ class TestCrudTransaction:
         for i in range(number_items):
             transaction.insert_item({"id": i, "field": "value"})
         # Then ("Rollback transaction")
-        transaction.rollback()
+        transaction.rollback(timeout=timedelta(milliseconds=1000))
         # When ("Get namespace information")
         select_result = get_ns_items(db, namespace)
         # Then ("Check that list of items in namespace is empty")
         assert_that(select_result, empty(), "Transaction: item list is not empty")
-
-
-class TestTransactionTimeouts:
-    def test_commit_tx_timeout(self, db, namespace, index):
-        # Given("Create namespace with index")
-        # When ("Begin tx with big timeout, insert item")
-        transaction = db.tx.begin(namespace, timeout=timedelta(milliseconds=1000))
-        transaction.insert_item(item_definition)
-        # When ("Commit tx with big timeout")
-        transaction.commit(timeout=timedelta(milliseconds=1000))
-        # Then ("Check that item was added")
-        select_result = get_ns_items(db, namespace)
-        assert_that(select_result, has_length(1), "Transaction: item wasn't created")
-        assert_that(select_result, has_item(item_definition), "Transaction: item wasn't created")
-
-    def test_rollback_tx_timeout(self, db, namespace, index):
-        # Given("Create namespace with index")
-        # When ("Begin tx with big timeout, insert item")
-        transaction = db.tx.begin(namespace, timeout=timedelta(milliseconds=1000))
-        transaction.insert_item(item_definition)
-        # When ("Rollback tx with big timeout")
-        transaction.rollback(timeout=timedelta(milliseconds=1000))
-        # Then ("Check that item was not added")
-        select_result = get_ns_items(db, namespace)
-        assert_that(select_result, empty(), "Transaction: item was created")
 
     def test_commit_tx_timeout_small(self, db, namespace, index):
         """ Check that timeout is only for tx begin/commit methods, and not for the whole tx """

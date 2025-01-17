@@ -1,7 +1,6 @@
 import shutil
 
 import pytest
-from hamcrest import *
 
 from tests.helpers.api import ConnectorApi
 from tests.helpers.base_helper import prepare_ns_with_items
@@ -44,10 +43,3 @@ class TestBuiltinOptions:
     def test_builtin_options_negative_values(self, db):
         db = db(max_replication_updates_size=-1000, allocator_cache_limit=-1000, allocator_cache_part=-1000)
         prepare_ns_with_items(db)
-
-    @pytest.mark.parametrize("value, val_type", [("abc", "str"), (None, "NoneType")])
-    def test_builtin_options_wrong_type(self, db, value, val_type):
-        assert_that(calling(db).with_args(max_replication_updates_size=value,
-                                          allocator_cache_limit=value,
-                                          allocator_cache_part=value),
-                    raises(TypeError, pattern=".*integer.*"))

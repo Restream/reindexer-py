@@ -18,12 +18,12 @@ class TestCrudIndexes:
     def test_create_index(self, db, namespace):
         # Given("Create namespace")
         # When ("Add index")
-        db.index.create(namespace, index_definition)
+        db.index.create(namespace, index_definition, timeout=timedelta(milliseconds=1000))
         # Then ("Check that index is added")
         ns_entry = get_ns_description(db, namespace)
         assert_that(ns_entry, has_item(has_entry("indexes", has_item(index_definition))),
                     "Index wasn't created")
-        db.index.drop(namespace, 'id')
+        db.index.drop(namespace, 'id', timeout=timedelta(milliseconds=1000))
 
     def test_update_index(self, db, namespace, index):
         # Given("Create namespace with index")
@@ -69,23 +69,9 @@ class TestCrudIndexes:
                     raises(ApiError, pattern=f"Cannot remove index {index_name}: doesn't exist"),
                     "Not existing index was deleted")
 
-
-class TestIndexTimeouts:
-    def test_index_create_and_drop_timeouts(self, db, namespace):
-        # When ("Create index with big timeout")
-        db.index.create(namespace, index_definition, timeout=timedelta(milliseconds=1000))
-        # Then ("Check that index was created")
-        ns_entry = get_ns_description(db, namespace)
-        assert_that(ns_entry, has_item(has_entry("indexes", has_item(index_definition))), "Index wasn't created")
-        # When ("Delete index with big timeout")
-        db.index.drop(namespace, "id", timeout=timedelta(milliseconds=1000))
-        # Then ("Check that index is deleted")
-        ns_entry = get_ns_description(db, namespace)
-        assert_that(ns_entry, has_item(has_entry("indexes", empty())), "Index wasn't deleted")
-
     def test_index_update_timeout(self, db, namespace):
         # Given("Create index")
-        db.index.create(namespace, index_definition)
+        db.index.create(namespace, index_definition, timeout=timedelta(milliseconds=1000))
         # When ("Update index with big timeout")
         db.index.update(namespace, updated_index_definition, timeout=timedelta(milliseconds=1000))
         # Then ("Check that index is updated")
