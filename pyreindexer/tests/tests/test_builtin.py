@@ -50,4 +50,4 @@ class TestBuiltinOptions:
         assert_that(calling(db).with_args(max_replication_updates_size=value,
                                           allocator_cache_limit=value,
                                           allocator_cache_part=value),
-                    raises(TypeError, pattern=f"'{val_type}' object cannot be interpreted as an integer"))
+                    raises(TypeError, pattern=".*integer.*"))

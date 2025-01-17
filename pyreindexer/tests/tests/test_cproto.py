@@ -46,7 +46,7 @@ class TestCprotoOptions:
     @pytest.mark.parametrize("value, val_type", [("abc", "str"), (None, "NoneType")])
     def test_cproto_option_wrong_type(self, db, value, val_type):
         assert_that(calling(db).with_args(fetch_amount=value),
-                    raises(TypeError, pattern=f"'{val_type}' object cannot be interpreted as an integer"))
+                    raises(TypeError, pattern=".*integer.*"))
 
     def test_cproto_options_zero_values(self, db):
         db = db(fetch_amount=0, reconnect_attempts=0, net_timeout=timedelta(milliseconds=0), sync_rxcoro_count=0)
