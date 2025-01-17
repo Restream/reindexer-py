@@ -738,7 +738,7 @@ class Query:
         """Executes a select query
 
         #### Arguments:
-            timeout (`datetime.timedelta`): Optional server-side execution timeout for first actual subquery
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
 
         #### Returns:
             (:obj:`QueryResults`): A QueryResults iterator
@@ -762,7 +762,7 @@ class Query:
         """Executes a query, and delete items, matches query
 
         #### Arguments:
-            timeout (`datetime.timedelta`): Optional server-side execution timeout for first actual subquery
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
 
         #### Returns:
             (int): Number of deleted elements
@@ -858,7 +858,7 @@ class Query:
         """Executes update query, and update fields in items, which matches query
 
         #### Arguments:
-            timeout (`datetime.timedelta`): Optional server-side execution timeout for first actual subquery
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
 
         #### Returns:
             (:obj:`QueryResults`): A QueryResults iterator
@@ -882,7 +882,7 @@ class Query:
         """Executes a query, and update fields in items, which matches query, with status check
 
         #### Arguments:
-            timeout (`datetime.timedelta`): Optional server-side execution timeout for first actual subquery
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
 
         #### Returns:
             (:obj:`QueryResults`): A QueryResults iterator
@@ -901,7 +901,7 @@ class Query:
         """Executes a query, and return 1 JSON item
 
         #### Arguments:
-            timeout (`datetime.timedelta`): Optional server-side execution timeout for first actual subquery
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
 
         #### Returns:
             (:tuple:string,bool): 1st string item and found flag

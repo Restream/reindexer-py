@@ -160,7 +160,7 @@ Opens a namespace specified or creates a namespace if it does not exist
 
 #### Arguments:
     namespace (string): A name of a namespace
-    timeout (`datetime.timedelta`): Optional server-side execution timeout for first actual subquery
+    timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
 
 #### Raises:
     ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
@@ -179,7 +179,7 @@ Closes a namespace specified
 
 #### Arguments:
     namespace (string): A name of a namespace
-    timeout (`datetime.timedelta`): Optional server-side execution timeout for first actual subquery
+    timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
 
 #### Raises:
     ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
@@ -198,7 +198,7 @@ Drops a namespace specified
 
 #### Arguments:
     namespace (string): A name of a namespace
-    timeout (`datetime.timedelta`): Optional server-side execution timeout for first actual subquery
+    timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
 
 #### Raises:
     Exception: Raises with an error message when Reindexer instance is not initialized yet
@@ -220,7 +220,7 @@ Gets a list of namespaces available
 #### Arguments:
     enum_not_opened (bool, optional): An enumeration mode flag. If it is
         set then closed namespaces are in result list too. Defaults to False
-    timeout (`datetime.timedelta`): Optional server-side execution timeout for first actual subquery
+    timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
 
 #### Returns:
     (:obj:`list` of :obj:`dict`): A list of dictionaries which describe each namespace
@@ -245,7 +245,7 @@ Adds an index to the namespace specified
 #### Arguments:
     namespace (string): A name of a namespace
     index_def (dict): A dictionary of index definition
-    timeout (`datetime.timedelta`): Optional server-side execution timeout for first actual subquery
+    timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
 
 #### Raises:
     ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
@@ -267,7 +267,7 @@ Updates an index in the namespace specified
 #### Arguments:
     namespace (string): A name of a namespace
     index_def (dict): A dictionary of index definition
-    timeout (`datetime.timedelta`): Optional server-side execution timeout for first actual subquery
+    timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
 
 #### Raises:
     ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
@@ -289,7 +289,7 @@ Drops an index from the namespace specified
 #### Arguments:
     namespace (string): A name of a namespace
     index_name (string): A name of an index
-    timeout (`datetime.timedelta`): Optional server-side execution timeout for first actual subquery
+    timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
 
 #### Raises:
     ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
@@ -314,7 +314,7 @@ Inserts an item with its precepts to the namespace specified
     namespace (string): A name of a namespace
     item_def (dict): A dictionary of item definition
     precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
-    timeout (`datetime.timedelta`): Optional server-side execution timeout for first actual subquery
+    timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
 
 #### Raises:
     ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
@@ -339,7 +339,7 @@ Updates an item with its precepts in the namespace specified
     namespace (string): A name of a namespace
     item_def (dict): A dictionary of item definition
     precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
-    timeout (`datetime.timedelta`): Optional server-side execution timeout for first actual subquery
+    timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
 
 #### Raises:
     ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
@@ -364,7 +364,7 @@ Updates an item with its precepts in the namespace specified. Creates the item i
     namespace (string): A name of a namespace
     item_def (dict): A dictionary of item definition
     precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
-    timeout (`datetime.timedelta`): Optional server-side execution timeout for first actual subquery
+    timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
 
 #### Raises:
     ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
@@ -386,7 +386,7 @@ Deletes an item from the namespace specified
 #### Arguments:
     namespace (string): A name of a namespace
     item_def (dict): A dictionary of item definition
-    timeout (`datetime.timedelta`): Optional server-side execution timeout for first actual subquery
+    timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
 
 #### Raises:
     ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
@@ -410,7 +410,7 @@ Puts metadata to a storage of Reindexer by key
     namespace (string): A name of a namespace
     key (string): A key in a storage of Reindexer for metadata keeping
     value (string): A metadata for storage
-    timeout (`datetime.timedelta`): Optional server-side execution timeout for first actual subquery
+    timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
 
 #### Raises:
     ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
@@ -431,7 +431,7 @@ Gets metadata from a storage of Reindexer by key specified
 #### Arguments:
     namespace (string): A name of a namespace
     key (string): A key in a storage of Reindexer where metadata is kept
-    timeout (`datetime.timedelta`): Optional server-side execution timeout for first actual subquery
+    timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
 
 #### Returns:
     string: A metadata value
@@ -455,7 +455,7 @@ Deletes metadata from a storage of Reindexer by key specified
 #### Arguments:
     namespace (string): A name of a namespace
     key (string): A key in a storage of Reindexer where metadata is kept
-    timeout (`datetime.timedelta`): Optional server-side execution timeout for first actual subquery
+    timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
 
 #### Raises:
     ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
@@ -475,7 +475,7 @@ Gets a list of metadata keys from a storage of Reindexer
 
 #### Arguments:
     namespace (string): A name of a namespace
-    timeout (`datetime.timedelta`): Optional server-side execution timeout for first actual subquery
+    timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
 
 #### Returns:
     (:obj:`list` of :obj:`str`): A list of all metadata keys
@@ -498,7 +498,7 @@ Executes an SQL query and returns query results
 
 #### Arguments:
     query (string): An SQL query
-    timeout (`datetime.timedelta`): Optional server-side execution timeout for first actual subquery
+    timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
 
 #### Returns:
     (:obj:`QueryResults`): A QueryResults iterator
@@ -522,7 +522,7 @@ Starts a new transaction and return the transaction object to processing.
 
 #### Arguments:
     namespace (string): A name of a namespace
-    timeout (`datetime.timedelta`): Optional server-side execution timeout for first actual subquery
+    timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
 
 #### Returns:
     (:obj:`Transaction`): A new transaction
@@ -750,7 +750,7 @@ def commit(timeout: timedelta = timedelta(milliseconds=0)) -> None
 Applies changes
 
 #### Arguments:
-    timeout (`datetime.timedelta`): Optional server-side execution timeout for first actual subquery
+    timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
 
 #### Raises:
     TransactionError: Raises with an error message of API return if Transaction is over
@@ -767,7 +767,7 @@ def commit_with_count(timeout: timedelta = timedelta(milliseconds=0)) -> int
 Applies changes and return the number of count of changed items
 
 #### Arguments:
-    timeout (`datetime.timedelta`): Optional server-side execution timeout for first actual subquery
+    timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
 
 #### Raises:
     TransactionError: Raises with an error message of API return if Transaction is over
@@ -784,7 +784,7 @@ def rollback(timeout: timedelta = timedelta(milliseconds=0)) -> None
 Rollbacks changes
 
 #### Arguments:
-    timeout (`datetime.timedelta`): Optional server-side execution timeout for first actual subquery
+    timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
 
 #### Raises:
     TransactionError: Raises with an error message of API return if Transaction is over
@@ -1391,7 +1391,7 @@ def execute(timeout: timedelta = timedelta(milliseconds=0)) -> QueryResults
 Executes a select query
 
 #### Arguments:
-    timeout (`datetime.timedelta`): Optional server-side execution timeout for first actual subquery
+    timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
 
 #### Returns:
     (:obj:`QueryResults`): A QueryResults iterator
@@ -1411,7 +1411,7 @@ def delete(timeout: timedelta = timedelta(milliseconds=0)) -> int
 Executes a query, and delete items, matches query
 
 #### Arguments:
-    timeout (`datetime.timedelta`): Optional server-side execution timeout for first actual subquery
+    timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
 
 #### Returns:
     (int): Number of deleted elements
@@ -1505,7 +1505,7 @@ def update(timeout: timedelta = timedelta(milliseconds=0)) -> QueryResults
 Executes update query, and update fields in items, which matches query
 
 #### Arguments:
-    timeout (`datetime.timedelta`): Optional server-side execution timeout for first actual subquery
+    timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
 
 #### Returns:
     (:obj:`QueryResults`): A QueryResults iterator
@@ -1526,7 +1526,7 @@ def must_execute(timeout: timedelta = timedelta(
 Executes a query, and update fields in items, which matches query, with status check
 
 #### Arguments:
-    timeout (`datetime.timedelta`): Optional server-side execution timeout for first actual subquery
+    timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
 
 #### Returns:
     (:obj:`QueryResults`): A QueryResults iterator
@@ -1546,7 +1546,7 @@ def get(timeout: timedelta = timedelta(milliseconds=0)) -> (str, bool)
 Executes a query, and return 1 JSON item
 
 #### Arguments:
-    timeout (`datetime.timedelta`): Optional server-side execution timeout for first actual subquery
+    timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
 
 #### Returns:
     (:tuple:string,bool): 1st string item and found flag

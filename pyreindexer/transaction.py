@@ -144,7 +144,7 @@ class Transaction:
         """Applies changes
 
         #### Arguments:
-            timeout (`datetime.timedelta`): Optional server-side execution timeout for first actual subquery
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
 
         #### Raises:
             TransactionError: Raises with an error message of API return if Transaction is over
@@ -161,7 +161,7 @@ class Transaction:
         """Applies changes and return the number of count of changed items
 
         #### Arguments:
-            timeout (`datetime.timedelta`): Optional server-side execution timeout for first actual subquery
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
 
         #### Raises:
             TransactionError: Raises with an error message of API return if Transaction is over
@@ -179,7 +179,7 @@ class Transaction:
         """Rollbacks changes
 
         #### Arguments:
-            timeout (`datetime.timedelta`): Optional server-side execution timeout for first actual subquery
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation
 
         #### Raises:
             TransactionError: Raises with an error message of API return if Transaction is over
