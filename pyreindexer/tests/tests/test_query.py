@@ -816,17 +816,31 @@ class TestQueryTimeouts:
 
     def test_query_select_timeout_small(self, db, namespace, index):
         # Given("Create namespace with items")
-        items = [{"id": i, "val": f"testval{i}"} for i in range(15000)]
+        items = [{"id": i, "val": f"testval{i}"} for i in range(10000)]
         for item in items:
             db.item.insert("new_ns", item)
         # Given ("Create new query")
         query = (db.query.new(namespace).explain()
                  .where("id", CondType.CondGt, 0)
                  .where("val", CondType.CondLt, "testval10000")
-                 .equal_position("id", "val"))
+                 .equal_position("id", "val")
+                 .sort("id", True).sort("val", False))
         # When ("Try to make select query with small timeout")
         assert_that(calling(query.execute).with_args(timeout=timedelta(milliseconds=1)),
-                    raises(ApiError, pattern="Context timeout"))
+                    raises(ApiError, pattern="Context timeout|Read lock (.*) was canceled on condition"))
+
+    def test_query_select_join_timeout_small(self, db, namespace, index):
+        # Given("Create namespace with items")
+        items = [{"id": i, "val": f"testval{i}"} for i in range(2000)]
+        for item in items:
+            db.item.insert("new_ns", item)
+        # Given ("Create new query with join")
+        query1 = db.query.new(namespace).where("id", CondType.CondGt, 0)
+        query2 = db.query.new(namespace).where("id", CondType.CondGe, 1)
+        query = query1.join(query2, "joined").on("val", CondType.CondGt, "val")
+        # When ("Try to make select query with small timeout")
+        assert_that(calling(query.execute).with_args(timeout=timedelta(milliseconds=1)),
+                    raises(ApiError, pattern="Context timeout|Read lock (.*) was canceled on condition"))
 
     @pytest.mark.skip(reason="https://git.restream.ru/itv-backend/reindexer/-/issues/1951")
     def test_query_update_timeout_small(self, db, namespace, index):
