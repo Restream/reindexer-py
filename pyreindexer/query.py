@@ -752,7 +752,7 @@ class Query:
         """
 
         if self.root is not None:
-            return self.root.execute()
+            return self.root.execute(timeout)
 
         milliseconds: int = int(timeout / timedelta(milliseconds=1))
         (self.err_code, self.err_msg,
