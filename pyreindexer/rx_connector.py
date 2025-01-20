@@ -84,12 +84,13 @@ class RxConnector(RaiserMixin):
 
         """
 
+        self.err_code: int = 0
+        self.err_msg: str = ''
+        self.rx: int = 0
+
         if fetch_amount <= 0:
             raise ValueError("'fetch_amount' must be greater than zero")
 
-        self.err_code: int = 0
-        self.err_msg: str = ''
-        self.rx = 0
         self._api_import(dsn)
         milliseconds: int = int(net_timeout / timedelta(milliseconds=1))
         self.rx = self.api.init(fetch_amount, reconnect_attempts, milliseconds, enable_compression,
