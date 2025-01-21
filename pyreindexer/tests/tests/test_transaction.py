@@ -1,11 +1,13 @@
+import time
+from datetime import timedelta
+
 from hamcrest import *
 
 from pyreindexer.exceptions import TransactionError
+from pyreindexer.query import CondType
 from tests.helpers.base_helper import get_ns_items
 from tests.helpers.transaction import *
 from tests.test_data.constants import item_definition
-
-from pyreindexer.query import CondType
 
 
 class TestCrudTransaction:
@@ -112,7 +114,9 @@ class TestCrudTransaction:
     def test_create_item_insert(self, db, namespace, index):
         # Given("Create namespace with index")
         # When ("Insert item into namespace")
-        insert_item_transaction(db, namespace, item_definition)
+        transaction = db.tx.begin(namespace, timeout=timedelta(milliseconds=1000))
+        transaction.insert_item(item_definition)
+        transaction.commit(timeout=timedelta(milliseconds=1000))
         # Then ("Check that item is added")
         select_result = get_ns_items(db, namespace)
         assert_that(select_result, has_length(1), "Transaction: item wasn't created")
@@ -180,11 +184,25 @@ class TestCrudTransaction:
         for i in range(number_items):
             transaction.insert_item({"id": i, "field": "value"})
         # Then ("Rollback transaction")
-        transaction.rollback()
+        transaction.rollback(timeout=timedelta(milliseconds=1000))
         # When ("Get namespace information")
         select_result = get_ns_items(db, namespace)
         # Then ("Check that list of items in namespace is empty")
         assert_that(select_result, empty(), "Transaction: item list is not empty")
+
+    def test_commit_tx_timeout_small(self, db, namespace, index):
+        """ Check that timeout is only for tx begin/commit methods, and not for the whole tx """
+        # Given("Create namespace with index")
+        # When ("Begin tx with small timeout, insert item")
+        transaction = db.tx.begin(namespace, timeout=timedelta(milliseconds=20))
+        time.sleep(0.1)
+        transaction.insert_item(item_definition)
+        # When ("Commit tx with small timeout")
+        transaction.commit(timeout=timedelta(milliseconds=20))
+        # Then ("Check that item was added")
+        select_result = get_ns_items(db, namespace)
+        assert_that(select_result, has_length(1), "Transaction: item wasn't created")
+        assert_that(select_result, has_item(item_definition), "Transaction: item wasn't created")
 
     def test_transaction_query_delete(self, db, namespace, index, items):
         # Given("Create namespace with items")
@@ -193,7 +211,7 @@ class TestCrudTransaction:
         query = db.query.new(namespace)
         query.where('id', CondType.CondGe, 0)
         transaction.delete_query(query)
-        transaction.commit()
+        transaction.commit(timeout=timedelta(milliseconds=1000))
         # Then ("Check that items is deleted")
         select_result = get_ns_items(db, namespace)
         assert_that(select_result, empty(), "Transaction: item wasn't deleted")
@@ -206,7 +224,7 @@ class TestCrudTransaction:
         query = db.query.new(namespace)
         query.where('id', CondType.CondEq, 100).set('val', ['new_value'])
         transaction.update_query(query)
-        transaction.commit()
+        transaction.commit(timeout=timedelta(milliseconds=1000))
         # Then ("Check that item is updated")
         select_result = get_ns_items(db, namespace)
         assert_that(select_result, has_length(1), "Transaction: item wasn't updated")

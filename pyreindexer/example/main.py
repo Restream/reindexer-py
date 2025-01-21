@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from pyreindexer import RxConnector
 from pyreindexer.exceptions import ApiError
 from pyreindexer.query import CondType
@@ -22,7 +24,7 @@ def create_index_example(db, namespace):
     try:
         db.index_add(namespace, index_definition)
     except ApiError:
-        db.index_drop(namespace, 'id')
+        db.index_drop(namespace, 'id', timedelta(milliseconds = 1000))
         db.index_add(namespace, index_definition)
 
 
@@ -55,11 +57,10 @@ def create_items_example(db, namespace):
 def select_item_query_example(db, namespace):
     item_name_for_lookup = 'item_0'
 
-    return (db.with_timeout(1000)
-                .select("SELECT * FROM " + namespace + " WHERE name='" + item_name_for_lookup + "'"))
+    return db.select(f"SELECT * FROM {namespace} WHERE name='{item_name_for_lookup}'", timedelta(milliseconds = 1000))
 
 def select_all_item_query_example(db, namespace):
-    return db.with_timeout(1000).select("SELECT * FROM " + namespace)
+    return db.select(f"SELECT * FROM {namespace}", timedelta(milliseconds = 1000))
 
 def print_all_records_from_namespace(db, namespace, message):
     selected_items_tr = select_all_item_query_example(db, namespace)
@@ -86,7 +87,7 @@ def transaction_example(db, namespace, items_in_base):
     transaction.update(item)
 
     # stop transaction and commit changes to namespace
-    transaction.commit()
+    transaction.commit(timedelta(milliseconds = 1000))
 
     print_all_records_from_namespace(db, namespace, 'Transaction results count: ')
 
@@ -105,7 +106,7 @@ def query_example(db, namespace):
                       .where('value', CondType.CondEq, 'check')
                       .sort('id')
                       .limit(4)
-                      .execute())
+                      .execute(timedelta(milliseconds = 1000)))
     print(f'Query results count (limited): {selected_items.count()}')
     for item in selected_items:
         print('Item: ', item)
@@ -113,7 +114,7 @@ def query_example(db, namespace):
     # delete some items
     del_count = (db.new_query(namespace)
                  .where('name', CondType.CondEq, 'item_1')
-                 .delete())
+                 .delete(timedelta(milliseconds = 1000)))
     print(f'Deleted count: {del_count}')
 
     # query all actual items
@@ -129,11 +130,11 @@ def modify_query_transaction(db, namespace):
     transaction = db.new_transaction(namespace)
 
     # create an update query and set it for the transaction
-    query_upd = db.new_query(namespace).where("id", CondType.CondGe, 4).set("name", ["update_with_query_tx"])
+    query_upd = db.new_query(namespace).where("id", CondType.CondLe, 5).set("name", ["update_with_query_tx"])
     transaction.update_query(query_upd)
 
     # create a delete query and set it for the transaction
-    query_del = db.new_query(namespace).where("id", CondType.CondLt, 3)
+    query_del = db.new_query(namespace).where("id", CondType.CondGe, 6)
     transaction.delete_query(query_del)
 
     # stop transaction and commit changes to namespace
@@ -153,6 +154,7 @@ def rx_example():
     update_index_example(db, namespace)
 
     create_items_example(db, namespace)
+    print_all_records_from_namespace(db, namespace, 'All items: ')
 
     selected_items = select_item_query_example(db, namespace)
 

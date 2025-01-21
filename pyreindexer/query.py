@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
+from datetime import timedelta
 from enum import Enum
 from typing import Optional, Union
 from uuid import UUID
@@ -733,8 +734,13 @@ class Query:
         self.api.with_rank(self.query_wrapper_ptr)
         return self
 
-    def execute(self) -> QueryResults:
+    def execute(self, timeout: timedelta = timedelta(milliseconds=0)) -> QueryResults:
         """Executes a select query
+
+        #### Arguments:
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                A value of 0 disables the timeout (default value)
 
         #### Returns:
             (:obj:`QueryResults`): A QueryResults iterator
@@ -746,15 +752,21 @@ class Query:
         """
 
         if self.root is not None:
-            return self.root.execute()
+            return self.root.execute(timeout)
 
+        milliseconds: int = int(timeout / timedelta(milliseconds=1))
         (self.err_code, self.err_msg,
-         wrapper_ptr, iter_count, total_count) = self.api.select_query(self.query_wrapper_ptr)
+         wrapper_ptr, iter_count, total_count) = self.api.select_query(self.query_wrapper_ptr, milliseconds)
         self.__raise_on_error()
         return QueryResults(self.api, wrapper_ptr, iter_count, total_count)
 
-    def delete(self) -> int:
+    def delete(self, timeout: timedelta = timedelta(milliseconds=0)) -> int:
         """Executes a query, and delete items, matches query
+
+        #### Arguments:
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                A value of 0 disables the timeout (default value)
 
         #### Returns:
             (int): Number of deleted elements
@@ -768,7 +780,8 @@ class Query:
         if (self.root is not None) or (len(self.join_queries) > 0):
             raise QueryError("Delete does not support joined queries")
 
-        self.err_code, self.err_msg, number = self.api.delete_query(self.query_wrapper_ptr)
+        milliseconds: int = int(timeout / timedelta(milliseconds=1))
+        self.err_code, self.err_msg, number = self.api.delete_query(self.query_wrapper_ptr, milliseconds)
         self.__raise_on_error()
         return number
 
@@ -845,8 +858,13 @@ class Query:
         self.api.expression(self.query_wrapper_ptr, field, value)
         return self
 
-    def update(self) -> QueryResults:
+    def update(self, timeout: timedelta = timedelta(milliseconds=0)) -> QueryResults:
         """Executes update query, and update fields in items, which matches query
+
+        #### Arguments:
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                A value of 0 disables the timeout (default value)
 
         #### Returns:
             (:obj:`QueryResults`): A QueryResults iterator
@@ -860,13 +878,19 @@ class Query:
         if (self.root is not None) or (len(self.join_queries) > 0):
             raise QueryError("Update does not support joined queries")
 
+        milliseconds: int = int(timeout / timedelta(milliseconds=1))
         (self.err_code, self.err_msg,
-         wrapper_ptr, iter_count, total_count) = self.api.update_query(self.query_wrapper_ptr)
+         wrapper_ptr, iter_count, total_count) = self.api.update_query(self.query_wrapper_ptr, milliseconds)
         self.__raise_on_error()
         return QueryResults(self.api, wrapper_ptr, iter_count, total_count)
 
-    def must_execute(self) -> QueryResults:
+    def must_execute(self, timeout: timedelta = timedelta(milliseconds=0)) -> QueryResults:
         """Executes a query, and update fields in items, which matches query, with status check
+
+        #### Arguments:
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                A value of 0 disables the timeout (default value)
 
         #### Returns:
             (:obj:`QueryResults`): A QueryResults iterator
@@ -877,12 +901,17 @@ class Query:
 
         """
 
-        result = self.execute()
+        result = self.execute(timeout)
         result.status()
         return result
 
-    def get(self) -> (str, bool):
+    def get(self, timeout: timedelta = timedelta(milliseconds=0)) -> (str, bool):
         """Executes a query, and return 1 JSON item
+
+        #### Arguments:
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                A value of 0 disables the timeout (default value)
 
         #### Returns:
             (:tuple:string,bool): 1st string item and found flag
@@ -896,7 +925,7 @@ class Query:
         if self.root is not None:
             return self.get()
 
-        selected_items = self.limit(1).must_execute()
+        selected_items = self.limit(1).must_execute(timeout)
         for item in selected_items:
             return item, True
 

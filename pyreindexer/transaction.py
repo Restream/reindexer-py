@@ -1,3 +1,4 @@
+from datetime import timedelta
 from typing import Dict, List
 
 from pyreindexer.exceptions import ApiError, TransactionError
@@ -72,6 +73,7 @@ class Transaction:
     @raise_if_error
     def insert(self, item_def: Dict, precepts: List[str] = None) -> None:
         """Inserts an item with its precepts to the transaction
+            Warning: the timeout set when the transaction was created is used
 
         #### Arguments:
             item_def (dict): A dictionary of item definition
@@ -89,6 +91,7 @@ class Transaction:
     @raise_if_error
     def update(self, item_def: Dict, precepts: List[str] = None) -> None:
         """Updates an item with its precepts to the transaction
+            Warning: the timeout set when the transaction was created is used
 
         #### Arguments:
             item_def (dict): A dictionary of item definition
@@ -123,6 +126,7 @@ class Transaction:
     @raise_if_error
     def upsert(self, item_def: Dict, precepts: List[str] = None) -> None:
         """Updates an item with its precepts to the transaction. Creates the item if it not exists
+            Warning: the timeout set when the transaction was created is used
 
         #### Arguments:
             item_def (dict): A dictionary of item definition
@@ -140,6 +144,7 @@ class Transaction:
     @raise_if_error
     def delete(self, item_def: Dict) -> None:
         """Deletes an item from the transaction
+            Warning: the timeout set when the transaction was created is used
 
         #### Arguments:
             item_def (dict): A dictionary of item definition
@@ -170,8 +175,13 @@ class Transaction:
         self.err_code, self.err_msg = self.api.delete_transaction(self.transaction_wrapper_ptr, query.query_wrapper_ptr)
 
     @raise_if_error
-    def commit(self) -> None:
+    def commit(self, timeout: timedelta = timedelta(milliseconds=0)) -> None:
         """Applies changes
+
+        #### Arguments:
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                A value of 0 disables the timeout (default value)
 
         #### Raises:
             TransactionError: Raises with an error message of API return if Transaction is over
@@ -179,12 +189,18 @@ class Transaction:
 
         """
 
-        self.err_code, self.err_msg, _ = self.api.commit_transaction(self.transaction_wrapper_ptr)
+        milliseconds: int = int(timeout / timedelta(milliseconds=1))
+        self.err_code, self.err_msg, _ = self.api.commit_transaction(self.transaction_wrapper_ptr, milliseconds)
         self.transaction_wrapper_ptr = 0
 
     @raise_if_error
-    def commit_with_count(self) -> int:
+    def commit_with_count(self, timeout: timedelta = timedelta(milliseconds=0)) -> int:
         """Applies changes and return the number of count of changed items
+
+        #### Arguments:
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                A value of 0 disables the timeout (default value)
 
         #### Raises:
             TransactionError: Raises with an error message of API return if Transaction is over
@@ -192,13 +208,19 @@ class Transaction:
 
         """
 
-        self.err_code, self.err_msg, count = self.api.commit_transaction(self.transaction_wrapper_ptr)
+        milliseconds: int = int(timeout / timedelta(milliseconds=1))
+        self.err_code, self.err_msg, count = self.api.commit_transaction(self.transaction_wrapper_ptr, milliseconds)
         self.transaction_wrapper_ptr = 0
         return count
 
     @raise_if_error
-    def rollback(self) -> None:
+    def rollback(self, timeout: timedelta = timedelta(milliseconds=0)) -> None:
         """Rollbacks changes
+
+        #### Arguments:
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                A value of 0 disables the timeout (default value)
 
         #### Raises:
             TransactionError: Raises with an error message of API return if Transaction is over
@@ -206,5 +228,6 @@ class Transaction:
 
         """
 
-        self.err_code, self.err_msg = self.api.rollback_transaction(self.transaction_wrapper_ptr)
+        milliseconds: int = int(timeout / timedelta(milliseconds=1))
+        self.err_code, self.err_msg = self.api.rollback_transaction(self.transaction_wrapper_ptr, milliseconds)
         self.transaction_wrapper_ptr = 0

@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 import pytest
 from hamcrest import *
 
@@ -78,6 +80,27 @@ class TestCrudItems:
         # Given("Create namespace with item")
         # When ("Delete item")
         db.item.delete(namespace, item_definition)
+        # Then ("Check that item is deleted")
+        select_result = get_ns_items(db, namespace)
+        assert_that(select_result, empty(), "Item wasn't deleted")
+
+    def test_item_timeouts(self, db, namespace, index):
+        # Given("Create namespace with index")
+        # When ("Insert item into namespace with big timeout")
+        db.item.insert(namespace, item_definition, timeout=timedelta(milliseconds=1000))
+        # Then ("Check that item is added")
+        select_result = get_ns_items(db, namespace)
+        assert_that(select_result, has_length(1), "Item wasn't created")
+        assert_that(select_result, has_item(item_definition), "Item wasn't created")
+        # When ("Update item with big timeout")
+        item_definition_updated = {'id': 100, 'val': "new_value"}
+        db.item.update(namespace, item_definition_updated, timeout=timedelta(milliseconds=1000))
+        # Then ("Check that item is updated")
+        select_result = get_ns_items(db, namespace)
+        assert_that(select_result, has_length(1), "Item wasn't updated")
+        assert_that(select_result, has_item(item_definition_updated), "Item wasn't updated")
+        # When ("Delete item with big timeout")
+        db.item.delete(namespace, item_definition_updated, timeout=timedelta(milliseconds=1000))
         # Then ("Check that item is deleted")
         select_result = get_ns_items(db, namespace)
         assert_that(select_result, empty(), "Item wasn't deleted")

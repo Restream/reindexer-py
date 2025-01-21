@@ -30,8 +30,8 @@ public:
 		it_ = qres_->begin();
 	}
 
-	Error Select(std::string_view query) {
-		return db_->Select(query, *this);
+	Error Select(std::string_view query, std::chrono::milliseconds timeout) {
+		return db_->Select(query, *this, timeout);
 	}
 
 	Error Status() {
