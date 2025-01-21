@@ -220,7 +220,8 @@ reindexer::Error QueryWrapper::buildQuery(reindexer::Query& query) {
 	return error;
 }
 
-reindexer::Error QueryWrapper::SelectQuery(std::unique_ptr<QueryResultsWrapper>& qr) {
+reindexer::Error QueryWrapper::SelectQuery(std::unique_ptr<QueryResultsWrapper>& qr,
+										   std::chrono::milliseconds timeout) {
 	reindexer::Query query;
 	auto err = buildQuery(query);
 	if (!err.ok()) {
@@ -232,26 +233,27 @@ reindexer::Error QueryWrapper::SelectQuery(std::unique_ptr<QueryResultsWrapper>&
 	}
 
 	qr = std::make_unique<QueryResultsWrapper>(db_);
-	return db_->SelectQuery(query, *qr);
+	return db_->SelectQuery(query, *qr, timeout);
 }
 
-reindexer::Error QueryWrapper::UpdateQuery(std::unique_ptr<QueryResultsWrapper>& qr) {
+reindexer::Error QueryWrapper::UpdateQuery(std::unique_ptr<QueryResultsWrapper>& qr,
+										   std::chrono::milliseconds timeout) {
 	reindexer::Query query;
 	auto err = buildQuery(query);
 	if (!err.ok()) {
 		return err;
 	}
 	qr = std::make_unique<QueryResultsWrapper>(db_);
-	return db_->UpdateQuery(query, *qr);
+	return db_->UpdateQuery(query, *qr, timeout);
 }
 
-reindexer::Error QueryWrapper::DeleteQuery(size_t& count) {
+reindexer::Error QueryWrapper::DeleteQuery(size_t& count, std::chrono::milliseconds timeout) {
 	reindexer::Query query;
 	auto err = buildQuery(query);
 	if (!err.ok()) {
 		return err;
 	}
-	return db_->DeleteQuery(query, count);
+	return db_->DeleteQuery(query, count, timeout);
 }
 
 void QueryWrapper::Set(std::string_view field, const reindexer::VariantArray& values,

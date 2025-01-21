@@ -1,9 +1,10 @@
 #include "rawpyreindexer.h"
 
-#include "pyobjtools.h"
-#include "query_wrapper.h"
-#include "queryresults_wrapper.h"
 #include "tools/serializer.h"
+
+#include "queryresults_wrapper.h"
+#include "query_wrapper.h"
+#include "pyobjtools.h"
 #include "transaction_wrapper.h"
 
 namespace pyreindexer {
@@ -102,24 +103,26 @@ static PyObject* Destroy(PyObject* self, PyObject* args) {
 static PyObject* Connect(PyObject* self, PyObject* args) {
 	uintptr_t rx = 0;
 	char* dsn = nullptr;
-	if (!PyArg_ParseTuple(args, "ks", &rx, &dsn)) {
+	unsigned timeout = 0;
+	if (!PyArg_ParseTuple(args, "ksI", &rx, &dsn, &timeout)) {
 		return nullptr;
 	}
 
-	auto err = getWrapper<DBInterface>(rx)->Connect(dsn);
+	auto err = getWrapper<DBInterface>(rx)->Connect(dsn, std::chrono::milliseconds(timeout));
 	return pyErr(err);
 }
 
 static PyObject* Select(PyObject* self, PyObject* args) {
 	uintptr_t rx = 0;
 	char* query = nullptr;
-	if (!PyArg_ParseTuple(args, "ks", &rx, &query)) {
+	unsigned timeout = 0;
+	if (!PyArg_ParseTuple(args, "ksI", &rx, &query, &timeout)) {
 		return nullptr;
 	}
 
 	auto db = getWrapper<DBInterface>(rx);
 	auto qresult = std::make_unique<QueryResultsWrapper>(db);
-	auto err = qresult->Select(query);
+	auto err = qresult->Select(query, std::chrono::milliseconds(timeout));
 	if (!err.ok()) {
 		return Py_BuildValue("iskII", err.code(), err.what().c_str(), 0, 0);
 	}
@@ -135,45 +138,50 @@ static PyObject* Select(PyObject* self, PyObject* args) {
 static PyObject* NamespaceOpen(PyObject* self, PyObject* args) {
 	uintptr_t rx = 0;
 	char* ns = nullptr;
-	if (!PyArg_ParseTuple(args, "ks", &rx, &ns)) {
+	unsigned timeout = 0;
+	if (!PyArg_ParseTuple(args, "ksI", &rx, &ns, &timeout)) {
 		return nullptr;
 	}
 
-	auto err = getWrapper<DBInterface>(rx)->OpenNamespace(ns);
+	auto err = getWrapper<DBInterface>(rx)->OpenNamespace(ns, std::chrono::milliseconds(timeout));
 	return pyErr(err);
 }
 
 static PyObject* NamespaceClose(PyObject* self, PyObject* args) {
 	uintptr_t rx = 0;
 	char* ns = nullptr;
-	if (!PyArg_ParseTuple(args, "ks", &rx, &ns)) {
+	unsigned timeout = 0;
+	if (!PyArg_ParseTuple(args, "ksI", &rx, &ns, &timeout)) {
 		return nullptr;
 	}
 
-	auto err = getWrapper<DBInterface>(rx)->CloseNamespace(ns);
+	auto err = getWrapper<DBInterface>(rx)->CloseNamespace(ns, std::chrono::milliseconds(timeout));
 	return pyErr(err);
 }
 
 static PyObject* NamespaceDrop(PyObject* self, PyObject* args) {
 	uintptr_t rx = 0;
 	char* ns = nullptr;
-	if (!PyArg_ParseTuple(args, "ks", &rx, &ns)) {
+	unsigned timeout = 0;
+	if (!PyArg_ParseTuple(args, "ksI", &rx, &ns, &timeout)) {
 		return nullptr;
 	}
 
-	auto err = getWrapper<DBInterface>(rx)->DropNamespace(ns);
+	auto err = getWrapper<DBInterface>(rx)->DropNamespace(ns, std::chrono::milliseconds(timeout));
 	return pyErr(err);
 }
 
 static PyObject* EnumNamespaces(PyObject* self, PyObject* args) {
 	uintptr_t rx = 0;
 	unsigned enumAll = 0;
-	if (!PyArg_ParseTuple(args, "kI", &rx, &enumAll)) {
+	unsigned timeout = 0;
+	if (!PyArg_ParseTuple(args, "kII", &rx, &enumAll, &timeout)) {
 		return nullptr;
 	}
 
 	std::vector<reindexer::NamespaceDef> nsDefs;
-	auto err = getWrapper<DBInterface>(rx)->EnumNamespaces(nsDefs, reindexer::EnumNamespacesOpts().WithClosed(enumAll));
+	auto err = getWrapper<DBInterface>(rx)->EnumNamespaces(nsDefs, reindexer::EnumNamespacesOpts().WithClosed(enumAll),
+														   std::chrono::milliseconds(timeout));
 	if (!err.ok()) {
 		return Py_BuildValue("is[]", err.code(), err.what().c_str());
 	}
@@ -215,7 +223,8 @@ static PyObject* IndexAdd(PyObject* self, PyObject* args) {
 	uintptr_t rx = 0;
 	char* ns = nullptr;
 	PyObject* indexDefDict = nullptr;  // borrowed ref after ParseTuple
-	if (!PyArg_ParseTuple(args, "ksO!", &rx, &ns, &PyDict_Type, &indexDefDict)) {
+	unsigned timeout = 0;
+	if (!PyArg_ParseTuple(args, "ksO!I", &rx, &ns, &PyDict_Type, &indexDefDict, &timeout)) {
 		return nullptr;
 	}
 
@@ -236,7 +245,7 @@ static PyObject* IndexAdd(PyObject* self, PyObject* args) {
 	IndexDef indexDef;
 	auto err = indexDef.FromJSON(reindexer::giftStr(wrSer.Slice()));
 	if (err.ok()) {
-		err = getWrapper<DBInterface>(rx)->AddIndex(ns, indexDef);
+		err = getWrapper<DBInterface>(rx)->AddIndex(ns, indexDef, std::chrono::milliseconds(timeout));
 	}
 	return pyErr(err);
 }
@@ -245,7 +254,8 @@ static PyObject* IndexUpdate(PyObject* self, PyObject* args) {
 	uintptr_t rx = 0;
 	char* ns = nullptr;
 	PyObject* indexDefDict = nullptr;  // borrowed ref after ParseTuple
-	if (!PyArg_ParseTuple(args, "ksO!", &rx, &ns, &PyDict_Type, &indexDefDict)) {
+	unsigned timeout = 0;
+	if (!PyArg_ParseTuple(args, "ksO!I", &rx, &ns, &PyDict_Type, &indexDefDict, &timeout)) {
 		return nullptr;
 	}
 
@@ -266,7 +276,7 @@ static PyObject* IndexUpdate(PyObject* self, PyObject* args) {
 	IndexDef indexDef;
 	auto err = indexDef.FromJSON(reindexer::giftStr(wrSer.Slice()));
 	if (err.ok()) {
-		err = getWrapper<DBInterface>(rx)->UpdateIndex(ns, indexDef);
+		err = getWrapper<DBInterface>(rx)->UpdateIndex(ns, indexDef, std::chrono::milliseconds(timeout));
 	}
 	return pyErr(err);
 }
@@ -274,11 +284,12 @@ static PyObject* IndexUpdate(PyObject* self, PyObject* args) {
 static PyObject* IndexDrop(PyObject* self, PyObject* args) {
 	uintptr_t rx = 0;
 	char *ns = nullptr, *indexName = nullptr;
-	if (!PyArg_ParseTuple(args, "kss", &rx, &ns, &indexName)) {
+	unsigned timeout = 0;
+	if (!PyArg_ParseTuple(args, "kssI", &rx, &ns, &indexName, &timeout)) {
 		return nullptr;
 	}
 
-	auto err = getWrapper<DBInterface>(rx)->DropIndex(ns, IndexDef(indexName));
+	auto err = getWrapper<DBInterface>(rx)->DropIndex(ns, IndexDef(indexName), std::chrono::milliseconds(timeout));
 	return pyErr(err);
 }
 
@@ -290,14 +301,16 @@ PyObject* itemModify(PyObject* self, PyObject* args, ItemModifyMode mode) {
 	char* ns = nullptr;
 	PyObject* itemDefDict = nullptr;   // borrowed ref after ParseTuple
 	PyObject* preceptsList = nullptr;  // borrowed ref after ParseTuple if passed
-	if (!PyArg_ParseTuple(args, "ksO!|O!", &rx, &ns, &PyDict_Type, &itemDefDict, &PyList_Type, &preceptsList)) {
+	unsigned timeout = 0;
+	if (!PyArg_ParseTuple(args, "ksO!|O!I", &rx, &ns, &PyDict_Type, &itemDefDict, &PyList_Type, &preceptsList,
+						  &timeout)) {
 		return nullptr;
 	}
 
 	Py_INCREF(itemDefDict);
 	Py_XINCREF(preceptsList);
 
-	auto item = getWrapper<DBInterface>(rx)->NewItem(ns);
+	auto item = getWrapper<DBInterface>(rx)->NewItem(ns, std::chrono::milliseconds(timeout));
 	auto err = item.Status();
 	if (!err.ok()) {
 		return pyErr(err);
@@ -340,16 +353,16 @@ PyObject* itemModify(PyObject* self, PyObject* args, ItemModifyMode mode) {
 
 	switch (mode) {
 		case ModeInsert:
-			err = getWrapper<DBInterface>(rx)->Insert(ns, item);
+			err = getWrapper<DBInterface>(rx)->Insert(ns, item, std::chrono::milliseconds(timeout));
 			break;
 		case ModeUpdate:
-			err = getWrapper<DBInterface>(rx)->Update(ns, item);
+			err = getWrapper<DBInterface>(rx)->Update(ns, item, std::chrono::milliseconds(timeout));
 			break;
 		case ModeUpsert:
-			err = getWrapper<DBInterface>(rx)->Upsert(ns, item);
+			err = getWrapper<DBInterface>(rx)->Upsert(ns, item, std::chrono::milliseconds(timeout));
 			break;
 		case ModeDelete:
-			err = getWrapper<DBInterface>(rx)->Delete(ns, item);
+			err = getWrapper<DBInterface>(rx)->Delete(ns, item, std::chrono::milliseconds(timeout));
 			break;
 		default:
 			err = Error(ErrorCode::errLogic, "Unknown item modify mode");
@@ -368,46 +381,50 @@ static PyObject* ItemDelete(PyObject* self, PyObject* args) { return itemModify(
 static PyObject* PutMeta(PyObject* self, PyObject* args) {
 	uintptr_t rx = 0;
 	char *ns = nullptr, *key = nullptr, *value = nullptr;
-	if (!PyArg_ParseTuple(args, "ksss", &rx, &ns, &key, &value)) {
+	unsigned timeout = 0;
+	if (!PyArg_ParseTuple(args, "ksssI", &rx, &ns, &key, &value, &timeout)) {
 		return nullptr;
 	}
 
-	auto err = getWrapper<DBInterface>(rx)->PutMeta(ns, key, value);
+	auto err = getWrapper<DBInterface>(rx)->PutMeta(ns, key, value, std::chrono::milliseconds(timeout));
 	return pyErr(err);
 }
 
 static PyObject* GetMeta(PyObject* self, PyObject* args) {
 	uintptr_t rx = 0;
 	char *ns = nullptr, *key = nullptr;
-	if (!PyArg_ParseTuple(args, "kss", &rx, &ns, &key)) {
+	unsigned timeout = 0;
+	if (!PyArg_ParseTuple(args, "kssI", &rx, &ns, &key, &timeout)) {
 		return nullptr;
 	}
 
 	std::string value;
-	auto err = getWrapper<DBInterface>(rx)->GetMeta(ns, key, value);
+	auto err = getWrapper<DBInterface>(rx)->GetMeta(ns, key, value, std::chrono::milliseconds(timeout));
 	return Py_BuildValue("iss", err.code(), err.what().c_str(), value.c_str());
 }
 
 static PyObject* DeleteMeta(PyObject* self, PyObject* args) {
 	uintptr_t rx = 0;
 	char *ns = nullptr, *key = nullptr;
-	if (!PyArg_ParseTuple(args, "kss", &rx, &ns, &key)) {
+	unsigned timeout = 0;
+	if (!PyArg_ParseTuple(args, "kssI", &rx, &ns, &key, &timeout)) {
 		return nullptr;
 	}
 
-	auto err = getWrapper<DBInterface>(rx)->DeleteMeta(ns, key);
+	auto err = getWrapper<DBInterface>(rx)->DeleteMeta(ns, key, std::chrono::milliseconds(timeout));
 	return pyErr(err);
 }
 
 static PyObject* EnumMeta(PyObject* self, PyObject* args) {
 	uintptr_t rx = 0;
 	char* ns = nullptr;
-	if (!PyArg_ParseTuple(args, "ks", &rx, &ns)) {
+	unsigned timeout = 0;
+	if (!PyArg_ParseTuple(args, "ksI", &rx, &ns, &timeout)) {
 		return nullptr;
 	}
 
 	std::vector<std::string> keys;
-	auto err = getWrapper<DBInterface>(rx)->EnumMeta(ns, keys);
+	auto err = getWrapper<DBInterface>(rx)->EnumMeta(ns, keys, std::chrono::milliseconds(timeout));
 	if (!err.ok()) {
 		return Py_BuildValue("is[]", err.code(), err.what().c_str());
 	}
@@ -511,13 +528,14 @@ static PyObject* GetExplainResults(PyObject* self, PyObject* args) {
 static PyObject* NewTransaction(PyObject* self, PyObject* args) {
 	uintptr_t rx = 0;
 	char* ns = nullptr;
-	if (!PyArg_ParseTuple(args, "ks", &rx, &ns)) {
+	unsigned timeout = 0;
+	if (!PyArg_ParseTuple(args, "ksI", &rx, &ns, &timeout)) {
 		return nullptr;
 	}
 
 	auto db = getWrapper<DBInterface>(rx);
 	auto transaction = std::make_unique<TransactionWrapper>(db);
-	auto err = transaction->Start(ns);
+	auto err = transaction->Start(ns, std::chrono::milliseconds(timeout));
 	if (!err.ok()) {
 		return Py_BuildValue("isk", err.code(), err.what().c_str(), 0);
 	}
@@ -605,12 +623,13 @@ static PyObject* DeleteTransaction(PyObject* self, PyObject* args) { return modi
 
 static PyObject* CommitTransaction(PyObject* self, PyObject* args) {
 	uintptr_t transactionWrapperAddr = 0;
-	if (!PyArg_ParseTuple(args, "k", &transactionWrapperAddr)) {
+	unsigned timeout = 0;
+	if (!PyArg_ParseTuple(args, "kI", &transactionWrapperAddr, &timeout)) {
 		return nullptr;
 	}
 
 	size_t count = 0;
-	auto err = getWrapper<TransactionWrapper>(transactionWrapperAddr)->Commit(count);
+	auto err = getWrapper<TransactionWrapper>(transactionWrapperAddr)->Commit(count, std::chrono::milliseconds(timeout));
 
 	deleteWrapper<TransactionWrapper>(transactionWrapperAddr); // free memory
 
@@ -619,11 +638,12 @@ static PyObject* CommitTransaction(PyObject* self, PyObject* args) {
 
 static PyObject* RollbackTransaction(PyObject* self, PyObject* args) {
 	uintptr_t transactionWrapperAddr = 0;
-	if (!PyArg_ParseTuple(args, "k", &transactionWrapperAddr)) {
+	unsigned timeout = 0;
+	if (!PyArg_ParseTuple(args, "kI", &transactionWrapperAddr, &timeout)) {
 		return nullptr;
 	}
 
-	auto err = getWrapper<TransactionWrapper>(transactionWrapperAddr)->Rollback();
+	auto err = getWrapper<TransactionWrapper>(transactionWrapperAddr)->Rollback(std::chrono::milliseconds(timeout));
 
 	deleteWrapper<TransactionWrapper>(transactionWrapperAddr); // free memory
 
@@ -983,12 +1003,13 @@ static PyObject* WithRank(PyObject* self, PyObject* args) { return modifier(self
 
 static PyObject* DeleteQuery(PyObject* self, PyObject* args) {
 	uintptr_t queryWrapperAddr = 0;
-	if (!PyArg_ParseTuple(args, "k", &queryWrapperAddr)) {
+	unsigned timeout = 0;
+	if (!PyArg_ParseTuple(args, "kI", &queryWrapperAddr, &timeout)) {
 		return nullptr;
 	}
 
 	size_t count = 0;
-	auto err = getWrapper<QueryWrapper>(queryWrapperAddr)->DeleteQuery(count);
+	auto err = getWrapper<QueryWrapper>(queryWrapperAddr)->DeleteQuery(count, std::chrono::milliseconds(timeout));
 
 	return Py_BuildValue("isI", err.code(), err.what().c_str(), count);
 }
@@ -997,7 +1018,8 @@ namespace {
 enum class ExecuteType { Select, Update };
 static PyObject* executeQuery(PyObject* self, PyObject* args, ExecuteType type) {
 	uintptr_t queryWrapperAddr = 0;
-	if (!PyArg_ParseTuple(args, "k", &queryWrapperAddr)) {
+	unsigned timeout = 0;
+	if (!PyArg_ParseTuple(args, "kI", &queryWrapperAddr, &timeout)) {
 		return nullptr;
 	}
 
@@ -1006,10 +1028,10 @@ static PyObject* executeQuery(PyObject* self, PyObject* args, ExecuteType type) 
 	Error err;
 	switch (type) {
 		case ExecuteType::Select:
-			err = query->SelectQuery(qresult);
+			err = query->SelectQuery(qresult, std::chrono::milliseconds(timeout));
 			break;
 		case ExecuteType::Update:
-			err = query->UpdateQuery(qresult);
+			err = query->UpdateQuery(qresult, std::chrono::milliseconds(timeout));
 			break;
 		default:
 			return pyErr(Error(ErrorCode::errLogic, "Unknown query execute mode"));

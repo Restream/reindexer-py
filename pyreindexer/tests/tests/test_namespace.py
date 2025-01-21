@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from hamcrest import *
 
 from pyreindexer.exceptions import ApiError
@@ -8,15 +10,15 @@ class TestCrudNamespace:
     def test_create_ns(self, db):
         # Given("Create namespace in empty database")
         namespace_name = 'test_ns1'
-        db.namespace.open(namespace_name)
+        db.namespace.open(namespace_name, timeout=timedelta(seconds=1))
         # When ("Get namespaces list in created database")
-        namespace_list = db.namespace.enumerate()
+        namespace_list = db.namespace.enumerate(timeout=timedelta(milliseconds=1000))
         # Then ("Check that database contains created namespace")
         assert_that(namespace_list, has_item(has_entries(name=namespace_name)),
                     "Namespace wasn't created")
-        db.namespace.drop(namespace_name)
+        db.namespace.drop(namespace_name, timeout=timedelta(milliseconds=1000))
 
-    def test_delete_ns(self, db):
+    def test_drop_ns(self, db):
         # Given("Create namespace in empty database")
         namespace_name = 'test_ns2'
         db.namespace.open(namespace_name)
