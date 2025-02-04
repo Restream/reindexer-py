@@ -2,6 +2,8 @@ from datetime import timedelta
 
 from hamcrest import *
 
+import pytest
+
 from pyreindexer.exceptions import ApiError
 
 
