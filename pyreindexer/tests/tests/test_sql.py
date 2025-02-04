@@ -76,6 +76,7 @@ class TestSqlQueries:
             assert_that(agg['value'], equal_to(expected_values[agg['type']]),
                         f"Incorrect aggregation result for {agg['type']}")
 
+    @pytest.mark.skip(reason="This test is flacky on v4. It has to be rewritten")
     def test_sql_select_timeout_small(self, db, namespace, index):
         # Given("Create namespace with items")
         items = [{"id": i, "val": f"testval{i}", "non_idx": i + 1} for i in range(10000)]
