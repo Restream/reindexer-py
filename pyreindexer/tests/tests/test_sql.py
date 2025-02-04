@@ -82,7 +82,7 @@ class TestSqlQueries:
         for item in items:
             db.item.insert("new_ns", item)
         # When ("Try to execute SQL query SELECT with small timeout")
-        query = ("SELECT * FROM new_ns WHERE id > -1 AND non_idx > 0 MERGE (SELECT * FROM new_ns WHERE val < 'testval1000' AND AND non_idx > 0) MERGE "
+        query = ("SELECT * FROM new_ns WHERE id > -1 AND non_idx > 0 MERGE (SELECT * FROM new_ns WHERE val < 'testval1000' AND non_idx > 0) MERGE "
                  "(SELECT * FROM new_ns WHERE val > 'testval1000' AND id RANGE(1,9000) AND non_idx > 100)")
         assert_that(calling(db.query.sql).with_args(query, timeout=timedelta(milliseconds=1)),
                     raises(ApiError, pattern="Context timeout"))
