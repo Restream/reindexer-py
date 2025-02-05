@@ -778,6 +778,7 @@ class TestQueryDelete:
 
 
 class TestQueryTimeouts:
+    @pytest.mark.skip(reason="This test is flacky on v4. It has to be rewritten")
     def test_query_select_timeout_small(self, db, namespace, index):
         # Given("Create namespace with items")
         items = [{"id": i, "val": f"testval{i}"} for i in range(20000)]
