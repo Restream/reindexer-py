@@ -2,8 +2,6 @@ from datetime import timedelta
 
 from hamcrest import *
 
-import pytest
-
 from pyreindexer.exceptions import ApiError
 
 
@@ -78,14 +76,15 @@ class TestSqlQueries:
             assert_that(agg['value'], equal_to(expected_values[agg['type']]),
                         f"Incorrect aggregation result for {agg['type']}")
 
-    @pytest.mark.skip(reason="This test is flacky on v4. It has to be rewritten")
     def test_sql_select_timeout_small(self, db, namespace, index):
         # Given("Create namespace with items")
         items = [{"id": i, "val": f"testval{i}", "non_idx": i + 1} for i in range(10000)]
         for item in items:
             db.item.insert("new_ns", item)
         # When ("Try to execute SQL query SELECT with small timeout")
-        query = ("SELECT * FROM new_ns WHERE id > -1 AND non_idx > 0 MERGE (SELECT * FROM new_ns WHERE val < 'testval1000' AND non_idx > 0) MERGE "
-                 "(SELECT * FROM new_ns WHERE val > 'testval1000' AND id RANGE(1,9000) AND non_idx > 100)")
+        query = ("SELECT * FROM new_ns WHERE id > -1 AND non_idx > 0 MERGE "
+                 "(SELECT * FROM new_ns WHERE val < 'testval1000' AND non_idx > 0) MERGE "
+                 "(SELECT * FROM new_ns WHERE val > 'testval1000' AND id RANGE(1,9000) AND non_idx > 100) MERGE "
+                 "(SELECT * FROM new_ns WHERE non_idx > id AND NOT (id < 100))")
         assert_that(calling(db.query.sql).with_args(query, timeout=timedelta(milliseconds=1)),
-                    raises(ApiError, pattern="Context timeout"))
+                    raises(ApiError, pattern="Context timeout|Read lock (.*) was canceled on condition"))
