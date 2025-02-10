@@ -791,9 +791,11 @@ class TestQueryTimeouts:
         q3 = (db.query.new(namespace).where("val", CondType.CondGt, "testval1000")
               .where("id", CondType.CondRange, [1, 9000])
               .where("non_idx", CondType.CondGt, 100))
-        query = q1.merge(q2).merge(q3)
+        q4 = (db.query.new(namespace).where("non_idx", CondType.CondGt, "id")
+              .where("id", CondType.CondEq, [1, 9000]).op_not().where("id", CondType.CondLt, 100))
+        query = q1.merge(q2).merge(q3).merge(q4)
         # When ("Try to make select query with small timeout")
-        assert_that(calling(query.execute).with_args(timeout=timedelta(milliseconds=1)),
+        assert_that(calling(query.execute).with_args(timeout=timedelta(milliseconds=100)),
                     raises(ApiError, pattern="Context timeout|Read lock (.*) was canceled on condition"))
 
     def test_query_select_join_timeout_small(self, db, namespace, index):
