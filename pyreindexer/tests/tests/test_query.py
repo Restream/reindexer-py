@@ -778,18 +778,20 @@ class TestQueryDelete:
 
 
 class TestQueryTimeouts:
-    @pytest.mark.skip(reason="This test is flacky on v4. It has to be rewritten")
     def test_query_select_timeout_small(self, db, namespace, index):
         # Given("Create namespace with items")
-        items = [{"id": i, "val": f"testval{i}"} for i in range(20000)]
+        items = [{"id": i, "val": f"testval{i}", "non_idx": i + 1} for i in range(10000)]
         for item in items:
             db.item.insert("new_ns", item)
         # Given ("Create new query")
-        query = (db.query.new(namespace).explain()
-                 .where("id", CondType.CondGt, 0)
-                 .where("val", CondType.CondLt, "testval10000")
-                 .equal_position("id", "val")
-                 .sort("id", True).sort("val", False))
+        q1 = (db.query.new(namespace).where("id", CondType.CondGt, -1)
+              .where("non_idx", CondType.CondGt, 0))
+        q2 = (db.query.new(namespace).where("val", CondType.CondLt, "testval1000")
+              .where("non_idx", CondType.CondGt, 0))
+        q3 = (db.query.new(namespace).where("val", CondType.CondGt, "testval1000")
+              .where("id", CondType.CondRange, [1, 9000])
+              .where("non_idx", CondType.CondGt, 100))
+        query = q1.merge(q2).merge(q3)
         # When ("Try to make select query with small timeout")
         assert_that(calling(query.execute).with_args(timeout=timedelta(milliseconds=1)),
                     raises(ApiError, pattern="Context timeout|Read lock (.*) was canceled on condition"))
