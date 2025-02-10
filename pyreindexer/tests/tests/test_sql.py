@@ -86,5 +86,5 @@ class TestSqlQueries:
                  "(SELECT * FROM new_ns WHERE val < 'testval1000' AND non_idx > 0) MERGE "
                  "(SELECT * FROM new_ns WHERE val > 'testval1000' AND id RANGE(1,9000) AND non_idx > 100) MERGE "
                  "(SELECT * FROM new_ns WHERE non_idx > id AND NOT (id < 100))")
-        assert_that(calling(db.query.sql).with_args(query, timeout=timedelta(milliseconds=100)),
+        assert_that(calling(db.query.sql).with_args(query, timeout=timedelta(milliseconds=1)),
                     raises(ApiError, pattern="Context timeout|Read lock (.*) was canceled on condition"))
