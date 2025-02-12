@@ -242,11 +242,12 @@ static PyObject* IndexAdd(PyObject* self, PyObject* args) {
 
 	Py_DECREF(indexDefDict);
 
-	IndexDef indexDef;
-	auto err = indexDef.FromJSON(reindexer::giftStr(wrSer.Slice()));
-	if (err.ok()) {
-		err = getWrapper<DBInterface>(rx)->AddIndex(ns, indexDef, std::chrono::milliseconds(timeout));
+	auto indexDef = IndexDef::FromJSON(reindexer::giftStr(wrSer.Slice()));
+	if (!indexDef) {
+		pyErr(indexDef.error());
 	}
+
+	auto err = getWrapper<DBInterface>(rx)->AddIndex(ns, *indexDef, std::chrono::milliseconds(timeout));
 	return pyErr(err);
 }
 
@@ -273,11 +274,12 @@ static PyObject* IndexUpdate(PyObject* self, PyObject* args) {
 
 	Py_DECREF(indexDefDict);
 
-	IndexDef indexDef;
-	auto err = indexDef.FromJSON(reindexer::giftStr(wrSer.Slice()));
-	if (err.ok()) {
-		err = getWrapper<DBInterface>(rx)->UpdateIndex(ns, indexDef, std::chrono::milliseconds(timeout));
+	auto indexDef = IndexDef::FromJSON(reindexer::giftStr(wrSer.Slice()));
+	if (!indexDef) {
+		return pyErr(indexDef.error());
 	}
+
+	auto err = getWrapper<DBInterface>(rx)->UpdateIndex(ns, *indexDef, std::chrono::milliseconds(timeout));
 	return pyErr(err);
 }
 
