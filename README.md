@@ -47,6 +47,7 @@
     * [where\_composite](#pyreindexer.query.Query.where_composite)
     * [where\_uuid](#pyreindexer.query.Query.where_uuid)
     * [where\_between\_fields](#pyreindexer.query.Query.where_between_fields)
+    * [where\_knn](#pyreindexer.query.Query.where_knn)
     * [open\_bracket](#pyreindexer.query.Query.open_bracket)
     * [close\_bracket](#pyreindexer.query.Query.close_bracket)
     * [match](#pyreindexer.query.Query.match)
@@ -1013,6 +1014,31 @@ Adds comparing two fields where condition to DB query
 
 #### Returns:
     (:obj:`Query`): Query object for further customizations
+
+<a id="pyreindexer.query.Query.where_knn"></a>
+
+### Query.where\_knn
+
+```python
+def where_knn(self, index: str, vec: List[float],
+              param: BaseKnnSearchParam) -> Query:
+```
+
+Adds where condition to DB query with float_vector as args.
+`index` MUST be declared as float_vector index in this case
+
+#### Arguments:
+    index (string): Field name used in condition clause (only float_vector)
+    vec (list[float]): KNN value of index to be compared with
+    param (:obj:`BaseKnnSearchParam`): KNN search parameters
+
+#### Returns:
+    (:obj:`Query`): Query object for further customizations
+
+#### Raises:
+    QueryError: Raises with an error message if no vec are specified
+    QueryError: Raises with an error message if no param are specified or have an invalid value
+    ApiError: Raises with an error message of API return on non-zero error code
 
 <a id="pyreindexer.query.Query.open_bracket"></a>
 

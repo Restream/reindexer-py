@@ -3,12 +3,14 @@ import json
 import random
 import uuid
 from datetime import timedelta
+from typing import Final, List
 
 import pytest
 from hamcrest import *
 
 from point import Point
-from pyreindexer.exceptions import ApiError
+from pyreindexer.exceptions import ApiError, QueryError
+from index_search_params import IndexBruteForceSearchParam, IndexHnswSearchParam, IndexIvfSearchParam
 from query import CondType, LogLevel, StrictMode
 from tests.helpers.base_helper import calculate_distance, get_ns_items
 from tests.test_data.constants import AGGREGATE_FUNCTIONS_MATH
@@ -825,3 +827,118 @@ class TestQueryTimeouts:
         # Then ("Check that items were not updated")
         items_after_update = get_ns_items(db, namespace)
         assert_that(items_after_update, equal_to(items), "Items were updated")
+
+
+class TestQueryKNN:
+
+    def test_query_hnsw_st(self, db, namespace, index):
+        # Given ("Create float vector index")
+        dimension: Final[int] = 512
+        db.index.create(namespace, {"name": "vec", "json_paths": ["vec"], "field_type": "float_vector",
+                                    "index_type": "hnsw", "config": {"dimension": dimension, "metric": "inner_product",
+                                                                     "start_size": 100, "m": 16, "ef_construction":
+                                                                         200}})
+        # Given ("Create namespace with items")
+        items = [{"id": i, "vec": self._rand_vect(dimension)} for i in range(1000)]
+        for item in items:
+            db.item.insert("new_ns", item)
+        param = IndexHnswSearchParam(500, 1000)
+        query = db.query.new(namespace)
+        query_result = list(query.where_knn("vec", self._rand_vect(dimension), param).execute(timeout=timedelta(
+            seconds=1)))
+        # Then ("Check that selected item is in result")
+        assert_that(query_result, not_(empty()), "Wrong query results")
+
+    def test_query_hnsw_mt(self, db, namespace, index):
+        # Given ("Create float vector index")
+        dimension: Final[int] = 512
+        db.index.create(namespace, {"name": "vec", "json_paths": ["vec"], "field_type": "float_vector",
+                                    "index_type": "hnsw", "config": {"dimension": dimension, "metric": "inner_product",
+                                                                     "start_size": 100, "m": 16, "ef_construction":
+                                                                         200, "multithreading": 1}})
+        # Given ("Create namespace with items")
+        items = [{"id": i, "vec": self._rand_vect(dimension)} for i in range(1000)]
+        for item in items:
+            db.item.insert("new_ns", item)
+        param = IndexHnswSearchParam(500, 1000)
+        # Given ("Create new query")
+        query = db.query.new(namespace)
+        # When ("Execute query")
+        query_result = list(query.where_knn("vec", self._rand_vect(dimension), param).execute(timeout=timedelta(
+            seconds=1)))
+        # Then ("Check that selected item is in result")
+        assert_that(query_result, not_(empty()), "Wrong query results")
+
+    def test_query_brute_force(self, db, namespace, index):
+        # Given ("Create float vector index")
+        dimension: Final[int] = 512
+        db.index.create(namespace, {"name": "vec", "json_paths": ["vec"], "field_type": "float_vector",
+                                    "index_type": "vec_bf", "config": {"dimension": dimension, "metric": "l2",
+                                                                       "start_size": 100}})
+        # Given("Create namespace with items")
+        items = [{"id": i, "vec": self._rand_vect(dimension)} for i in range(1000)]
+        for item in items:
+            db.item.insert("new_ns", item)
+        param = IndexBruteForceSearchParam(1000)
+        # Given ("Create new query")
+        query = db.query.new(namespace)
+        # When ("Execute query")
+        query_result = list(query.where_knn("vec", self._rand_vect(dimension), param).execute(timeout=timedelta(seconds=1)))
+        # Then ("Check that selected item is in result")
+        assert_that(query_result, not_(empty()), "Wrong query results")
+
+    def test_query_ivf(self, db, namespace, index):
+        # Given ("Create float vector index")
+        dimension: Final[int] = 512
+        db.index.create(namespace, {"name": "vec", "json_paths": ["vec"], "field_type": "float_vector",
+                                    "index_type": "ivf", "config": {"dimension": dimension, "metric": "l2",
+                                                                    "centroids_count": 100}})
+        # Given("Create namespace with items")
+        items = [{"id": i, "vec": self._rand_vect(dimension)} for i in range(1000)]
+        for item in items:
+            db.item.insert("new_ns", item)
+        param = IndexIvfSearchParam(1000, 10)
+        # Given ("Create new query")
+        query = db.query.new(namespace)
+        # When ("Execute query")
+        query_result = list(query.where_knn("vec", self._rand_vect(dimension), param).execute(timeout=timedelta(seconds=1)))
+        # Then ("Check that selected item is in result")
+        assert_that(query_result, not_(empty()), "Wrong query results")
+
+    def test_query_knn_param_negative(self, db, namespace, index):
+        # Given ("Create float vector")
+        vec = self._rand_vect(2)
+        # Given ("Create new query")
+        query = db.query.new(namespace)
+        # When ("Make query with knn")
+        assert_that(calling(query.where_knn("vec", None, None)).with_args(),
+                    raises(QueryError,
+                           matching=has_string("A required parameter is not specified. `vec` can't be None or empty")))
+        assert_that(calling(query.where_knn("vec", [], None)).with_args(),
+                    raises(QueryError,
+                           matching=has_string("A required parameter is not specified. `vec` can't be None or empty")))
+        assert_that(calling(query.where_knn("vec", vec, None)).with_args(),
+                    raises(QueryError,
+                           matching=has_string("A required parameter is not specified. `param` can't be None")))
+        param = IndexBruteForceSearchParam(0)
+        assert_that(calling(query.where_knn("vec", vec, param)).with_args(),
+                    raises(QueryError, matching=has_string("KNN limit K should not be less than 1")))
+        param = IndexHnswSearchParam(0, 1)
+        assert_that(calling(query.where_knn("vec", vec, param)).with_args(),
+                    raises(QueryError, matching=has_string("KNN limit K should not be less than 1")))
+        param = IndexHnswSearchParam(1, 0)
+        assert_that(calling(query.where_knn("vec", vec, param)).with_args(),
+                    raises(QueryError, matching=has_string("Ef should not be less than K")))
+        param = IndexIvfSearchParam(0, 1)
+        assert_that(calling(query.where_knn("vec", vec, param)).with_args(),
+                    raises(QueryError, matching=has_string("KNN limit K should not be less than 1")))
+        param = IndexIvfSearchParam(1, 0)
+        assert_that(calling(query.where_knn("vec", vec, param)).with_args(),
+                    raises(QueryError, matching=has_string("Nprobe should not be less than 1")))
+
+    @staticmethod
+    def _rand_vect(dimension: int) -> List[float]:
+        result : List[float] = []
+        for _ in range(dimension):
+            result.append(random.uniform(0.1, 25.9))
+        return result

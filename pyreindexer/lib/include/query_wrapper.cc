@@ -77,6 +77,18 @@ void QueryWrapper::WhereBetweenFields(std::string_view firstField, CondType cond
 	++queriesCount_;
 }
 
+void QueryWrapper::WhereKNN(std::string_view index, reindexer::ConstFloatVectorView vec,
+							const reindexer::KnnSearchParams& params) {
+	ser_.PutVarUint(QueryItemType::QueryKnnCondition);
+	ser_.PutVString(index);
+	ser_.PutVarUint(nextOperation_);
+	ser_.PutFloatVectorView(vec);
+	params.Serialize(ser_);
+
+	nextOperation_ = OpType::OpAnd;
+	++queriesCount_;
+}
+
 Error QueryWrapper::OpenBracket() {
 	ser_.PutVarUint(QueryItemType::QueryOpenBracket);
 	ser_.PutVarUint(nextOperation_);
