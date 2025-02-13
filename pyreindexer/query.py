@@ -8,7 +8,7 @@ from uuid import UUID
 
 from pyreindexer.exceptions import ApiError, QueryError
 from pyreindexer.query_results import QueryResults
-from pyreindexer.index_search_params import BaseKnnSearchParam, IndexBruteForceSearchParam, IndexHnswSearchParam, IndexIvfSearchParam
+from pyreindexer.index_search_params import IndexBruteForceSearchParam, IndexHnswSearchParam, IndexIvfSearchParam
 from pyreindexer.point import Point
 
 

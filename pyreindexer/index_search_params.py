@@ -1,17 +1,19 @@
-from dataclasses import dataclass
 
 # ToDo comments
 
-@dataclass(init=True)
 class IndexBruteForceSearchParam:
-    k : int = 0
 
-@dataclass(init=True)
+    def __init__(self, k: int):
+        self.k : int = k
+
 class IndexHnswSearchParam:
-    k : int = 0
-    ef: int = 0
 
-@dataclass(init=True)
+    def __init__(self, k: int, ef: int):
+        self.k : int = k
+        self.ef: int = ef
+
 class IndexIvfSearchParam:
-    k : int = 0
-    nprobe: int = 0
+
+    def __init__(self, k: int, nprobe: int):
+        self.k : int = k
+        self.nprobe: int = nprobe
