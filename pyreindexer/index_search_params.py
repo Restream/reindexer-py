@@ -1,19 +1,24 @@
 
 # ToDo comments
 
-class IndexBruteForceSearchParam:
+class IndexSearchParamBase:
 
     def __init__(self, k: int):
         self.k : int = k
 
-class IndexHnswSearchParam:
+class IndexSearchParamBruteForce(IndexSearchParamBase):
+
+    def __init__(self, k: int):
+        super().__init__(k)
+
+class IndexSearchParamHnsw(IndexSearchParamBase):
 
     def __init__(self, k: int, ef: int):
-        self.k : int = k
+        super().__init__(k)
         self.ef: int = ef
 
-class IndexIvfSearchParam:
+class IndexSearchParamIvf(IndexSearchParamBase):
 
     def __init__(self, k: int, nprobe: int):
-        self.k : int = k
+        super().__init__(k)
         self.nprobe: int = nprobe

@@ -1,4 +1,5 @@
 from datetime import timedelta
+from typing import Final
 
 from pyreindexer import RxConnector
 from query import Query
@@ -39,7 +40,7 @@ class ConnectorApi(RxConnector):
         self.meta = MetaApiMethods(self)
         self.tx = TransactionApiMethods(self)
 
-    default_timeout: timedelta = timedelta(milliseconds=0)
+    default_timeout: Final[timedelta] = timedelta(milliseconds=0)
 
 
 class NamespaceApiMethods:

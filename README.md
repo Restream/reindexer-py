@@ -1021,7 +1021,7 @@ Adds comparing two fields where condition to DB query
 
 ```python
 def where_knn(self, index: str, vec: List[float],
-              param: Union[IndexBruteForceSearchParam, IndexHnswSearchParam, IndexIvfSearchParam]) -> Query
+              param: IndexSearchParamBase) -> Query
 ```
 
 Adds where condition to DB query with float_vector as args.
@@ -1030,7 +1030,7 @@ Adds where condition to DB query with float_vector as args.
 #### Arguments:
     index (string): Field name used in condition clause (only float_vector)
     vec (list[float]): KNN value of index to be compared with
-    param (union[IndexBruteForceSearchParam, IndexHnswSearchParam, IndexIvfSearchParam]): KNN search parameters
+    param (IndexSearchParamBase): KNN search parameters
 
 #### Returns:
     (:obj:`Query`): Query object for further customizations

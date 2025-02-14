@@ -8,7 +8,8 @@ from uuid import UUID
 
 from pyreindexer.exceptions import ApiError, QueryError
 from pyreindexer.query_results import QueryResults
-from pyreindexer.index_search_params import IndexBruteForceSearchParam, IndexHnswSearchParam, IndexIvfSearchParam
+from pyreindexer.index_search_params import (IndexSearchParamBase, IndexSearchParamBruteForce, IndexSearchParamHnsw,
+                                             IndexSearchParamIvf)
 from pyreindexer.point import Point
 
 
@@ -307,14 +308,14 @@ class Query:
         self.api.where_between_fields(self.query_wrapper_ptr, first_field, condition.value, second_field)
         return self
 
-    def where_knn(self, index: str, vec: List[float], param: Union[IndexBruteForceSearchParam, IndexHnswSearchParam, IndexIvfSearchParam]) -> Query:
+    def where_knn(self, index: str, vec: List[float], param: IndexSearchParamBase) -> Query:
         """Adds where condition to DB query with float_vector as args.
             `index` MUST be declared as float_vector index in this case
 
         #### Arguments:
             index (string): Field name used in condition clause (only float_vector)
             vec (list[float]): KNN value of index to be compared with
-            param (union[IndexBruteForceSearchParam, IndexHnswSearchParam, IndexIvfSearchParam]): KNN search parameters
+            param (:obj:`IndexSearchParamBase`): KNN search parameters
 
         #### Returns:
             (:obj:`Query`): Query object for further customizations
@@ -332,26 +333,24 @@ class Query:
         if param is None:
             raise QueryError("A required parameter is not specified. `param` can't be None")
 
+        if param.k < 1:
+            raise QueryError("KNN limit K should not be less than 1")
+
         k : int = 0
         ef : int = 0
         nprobe : int = 0
-        if isinstance(param, IndexBruteForceSearchParam):
+        if isinstance(param, IndexSearchParamBruteForce):
             k = param.k
-        elif isinstance(param, IndexHnswSearchParam):
+        elif isinstance(param, IndexSearchParamHnsw):
+            if param.ef < param.k:
+                raise QueryError("Ef should not be less than K")
             k = param.k
             ef = param.ef
-            if ef < k:
-                raise QueryError("Ef should not be less than K")
-            pass
-        elif isinstance(param, IndexIvfSearchParam):
+        elif isinstance(param, IndexSearchParamIvf):
+            if param.nprobe < 1:
+                raise QueryError("Nprobe should not be less than 1")
             k = param.k
             nprobe = param.nprobe
-            if nprobe < 1:
-                raise QueryError("Nprobe should not be less than 1")
-            pass
-
-        if k < 1:
-            raise QueryError("KNN limit K should not be less than 1")
 
         self.err_code, self.err_msg = self.api.where_knn(self.query_wrapper_ptr, index, k, ef, nprobe, vec)
         self.__raise_on_error()
