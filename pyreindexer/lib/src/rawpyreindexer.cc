@@ -823,7 +823,7 @@ static PyObject* WhereKNN(PyObject* self, PyObject* args) {
 			auto vals = ParseListToVec(&valuesList);
 			auto vect = reindexer::FloatVector::CreateNotInitialized(reindexer::FloatVectorDimension(vals.size()));
 			size_t pos = 0;
-			for (const auto value : vals) {
+			for (const auto& value : vals) {
 				vect.RawData()[pos] = value.As<double>();
 				++pos;
 			}
