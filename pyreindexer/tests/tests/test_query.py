@@ -8,10 +8,10 @@ from typing import Final
 import pytest
 from hamcrest import *
 
-from index_search_params import IndexSearchParamBruteForce, IndexSearchParamHnsw, IndexSearchParamIvf
-from point import Point
+from pyreindexer.index_search_params import IndexSearchParamBruteForce, IndexSearchParamHnsw, IndexSearchParamIvf
+from pyreindexer.point import Point
 from pyreindexer.exceptions import ApiError, QueryError
-from query import CondType, LogLevel, StrictMode
+from pyreindexer.query import CondType, LogLevel, StrictMode
 from tests.helpers.base_helper import calculate_distance, get_ns_items, random_vector
 from tests.helpers.check_helper import check_response_has_close_to_ns_items
 from tests.test_data.constants import AGGREGATE_FUNCTIONS_MATH, vector_index_bf, vector_index_hnsw, vector_index_ivf
@@ -832,11 +832,37 @@ class TestQueryTimeouts:
 
 class TestQueryKNN:
 
-    def test_query_knn_param_negative(self, db, namespace, index):
+    def test_query_knn_param_negative(self, db, namespace):
         # Given ("Create test random float vector")
         vec = random_vector(2)
         # Given ("Create new query")
         query = db.query.new(namespace)
+        # When ("Check indexe search param")
+        try:
+            IndexSearchParamBruteForce(0)
+        except ValueError as e:
+            assert_that(str(e), equal_to("KNN limit 'k' should not be less than 1"))
+
+        try:
+            IndexSearchParamHnsw(0, 1)
+        except ValueError as e:
+            assert_that(str(e), equal_to("KNN limit 'k' should not be less than 1"))
+
+        try:
+            IndexSearchParamHnsw(2, 1)
+        except ValueError as e:
+            assert_that(str(e), equal_to("'ef' should not be less than 'k'"))
+
+        try:
+            IndexSearchParamIvf(0, 1)
+        except ValueError as e:
+            assert_that(str(e), equal_to("KNN limit 'k' should not be less than 1"))
+
+        try:
+            IndexSearchParamIvf(1, 0)
+        except ValueError as e:
+            assert_that(str(e), equal_to("'nprobe' should not be less than 1"))
+
         # When ("Make query with knn")
         assert_that(calling(query.where_knn).with_args("vec", None, None),
                     raises(QueryError, pattern="A required parameter is not specified. `vec` can't be None or empty"))
@@ -844,21 +870,6 @@ class TestQueryKNN:
                     raises(QueryError, pattern="A required parameter is not specified. `vec` can't be None or empty"))
         assert_that(calling(query.where_knn).with_args("vec", vec, None),
                     raises(QueryError, pattern="A required parameter is not specified. `param` can't be None"))
-        param = IndexSearchParamBruteForce(0)
-        assert_that(calling(query.where_knn).with_args("vec", vec, param),
-                    raises(QueryError, pattern="KNN limit K should not be less than 1"))
-        param = IndexSearchParamHnsw(0, 1)
-        assert_that(calling(query.where_knn).with_args("vec", vec, param),
-                    raises(QueryError, pattern="KNN limit K should not be less than 1"))
-        param = IndexSearchParamHnsw(2, 1)
-        assert_that(calling(query.where_knn).with_args("vec", vec, param),
-                    raises(QueryError, pattern="Ef should not be less than K"))
-        param = IndexSearchParamIvf(0, 1)
-        assert_that(calling(query.where_knn).with_args("vec", vec, param),
-                    raises(QueryError, pattern="KNN limit K should not be less than 1"))
-        param = IndexSearchParamIvf(1, 0)
-        assert_that(calling(query.where_knn).with_args("vec", vec, param),
-                    raises(QueryError, pattern="Nprobe should not be less than 1"))
 
     def test_query_brute_force(self, db, namespace, index):
         # Given ("Create float vector index")
@@ -873,7 +884,7 @@ class TestQueryKNN:
         # Given ("Create new query")
         query = db.query.new(namespace)
         # When ("Execute query")
-        k = 39
+        k: Final[int] = 39
         param = IndexSearchParamBruteForce(k=k)
         query_result = list(
             query.where_knn("vec", random_vector(dimension), param).execute(timeout=timedelta(seconds=1)))

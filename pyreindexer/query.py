@@ -7,8 +7,7 @@ from typing import List, Optional, Union
 from uuid import UUID
 
 from pyreindexer.exceptions import ApiError, QueryError
-from pyreindexer.index_search_params import (IndexSearchParamBase, IndexSearchParamBruteForce, IndexSearchParamHnsw,
-                                             IndexSearchParamIvf)
+from pyreindexer.index_search_params import IndexSearchParamBruteForce, IndexSearchParamHnsw, IndexSearchParamIvf
 from pyreindexer.point import Point
 from pyreindexer.query_results import QueryResults
 
@@ -308,7 +307,8 @@ class Query:
         self.api.where_between_fields(self.query_wrapper_ptr, first_field, condition.value, second_field)
         return self
 
-    def where_knn(self, index: str, vec: List[float], param: IndexSearchParamBase) -> Query:
+    def where_knn(self, index: str, vec: List[float], param: Union[IndexSearchParamBruteForce|IndexSearchParamHnsw|
+                    IndexSearchParamIvf]) -> Query:
         """Adds where condition to DB query with float_vector as args.
             `index` MUST be declared as float_vector index in this case
 

@@ -129,11 +129,8 @@ def query_example(db, namespace):
     for item in any_items:
         print('Item: ', item)
 
-def rand_vector(dimension: int) -> List[float]:
-    result : List[float] = []
-    for _ in range(dimension):
-        result.append(random.uniform(0.1, 25.9))
-    return result
+def random_vector(dimension: int) -> List[float]:
+    return [random.uniform(-10.0, 10.0) for _ in range(dimension)]
 
 def float_vector_hnsw_example(db):
     namespace = 'knn_hnsw'
@@ -171,13 +168,13 @@ def float_vector_hnsw_example(db):
     # generate items
     transaction = db.new_transaction(namespace)
     for i in range(10000):
-        transaction.insert({"id": i, fv_index_name: rand_vector(dimension)})
+        transaction.insert({"id": i, fv_index_name: random_vector(dimension)})
     transaction.commit(timedelta(seconds = 3))
 
     # do query
     param = IndexSearchParamHnsw(44, 500)
     query_result = (db.new_query(namespace)
-                        .where_knn(fv_index_name, rand_vector(dimension), param).must_execute(timedelta(seconds=1)))
+                        .where_knn(fv_index_name, random_vector(dimension), param).must_execute(timedelta(seconds=1)))
 
     # result
     print("HNSW where_knn: ", query_result.count())
