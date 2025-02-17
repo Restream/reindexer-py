@@ -1,4 +1,6 @@
 import math
+import random
+from typing import List
 
 from tests.test_data.constants import index_definition
 
@@ -30,3 +32,7 @@ def prepare_ns_with_items(db, ns_name="new_ns", items_num=5) -> list:
 
 def calculate_distance(point1, point2):
     return math.sqrt((point1[0] - point2[0]) ** 2 + (point1[1] - point2[1]) ** 2)
+
+
+def random_vector(dimension: int) -> List[float]:
+    return [random.uniform(-10.0, 10.0) for _ in range(dimension)]

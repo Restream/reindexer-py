@@ -1,8 +1,13 @@
+import copy
 from datetime import timedelta
+from typing import Final
 
 from hamcrest import *
 
 from pyreindexer.exceptions import ApiError
+from tests.helpers.base_helper import random_vector
+from tests.helpers.check_helper import check_response_has_close_to_ns_items
+from tests.test_data.constants import vector_index_bf, vector_index_hnsw, vector_index_ivf
 
 
 class TestSqlQueries:
@@ -88,3 +93,60 @@ class TestSqlQueries:
                  "(SELECT * FROM new_ns WHERE non_idx > id AND NOT (id < 100))")
         assert_that(calling(db.query.sql).with_args(query, timeout=timedelta(milliseconds=1)),
                     raises(ApiError, pattern="Context timeout|Read lock (.*) was canceled on condition"))
+
+
+class TestSqlQueriesKNN:
+
+    def test_sql_select_knn_brute_force(self, db, namespace, index):
+        # Given ("Create float vector index")
+        dimension: Final[int] = 8
+        index = copy.copy(vector_index_bf)
+        index["config"] = {"dimension": dimension, "metric": "l2", "start_size": 1000}
+        db.index.create(namespace, index)
+        # Given("Insert items")
+        items = [{"id": i, "vec": random_vector(dimension)} for i in range(100)]
+        for item in items:
+            db.item.insert("new_ns", item)
+        # When ("Execute SQL query SELECT KNN")
+        value = random_vector(dimension)
+        k = 47
+        query = f"SELECT * FROM {namespace} WHERE KNN(vec, {value}, k={k})"
+        query_result = list(db.query.sql(query, timeout=timedelta(seconds=1)))
+        # Then ("Check knn select result")
+        check_response_has_close_to_ns_items(query_result, items)
+        assert_that(query_result, has_length(k))
+
+    def test_sql_select_knn_hnsw(self, db, namespace, index):
+        # Given ("Create float vector index")
+        dimension: Final[int] = 8
+        index = copy.copy(vector_index_hnsw)
+        index["config"] = {"dimension": dimension, "metric": "inner_product", "start_size": 1000, "m": 16,
+                           "ef_construction": 200}
+        db.index.create(namespace, index)
+        # Given("Insert items")
+        items = [{"id": i, "vec": random_vector(dimension)} for i in range(100)]
+        for item in items:
+            db.item.insert("new_ns", item)
+        # When ("Execute SQL query SELECT KNN")
+        value = random_vector(dimension)
+        query = f"SELECT * FROM {namespace} WHERE KNN(vec, {value}, k=20, ef=30)"
+        query_result = list(db.query.sql(query, timeout=timedelta(seconds=1)))
+        # Then ("Check knn select result")
+        check_response_has_close_to_ns_items(query_result, items)
+
+    def test_sql_select_knn_ivf(self, db, namespace, index):
+        # Given ("Create float vector index")
+        dimension: Final[int] = 8
+        index = copy.copy(vector_index_ivf)
+        index["config"] = {"dimension": dimension, "metric": "l2", "centroids_count": 3}
+        db.index.create(namespace, index)
+        # Given("Insert items")
+        items = [{"id": i, "vec": random_vector(dimension)} for i in range(150)]
+        for item in items:
+            db.item.insert("new_ns", item)
+        # When ("Execute SQL query SELECT KNN")
+        value = random_vector(dimension)
+        query = f"SELECT * FROM {namespace} WHERE KNN(vec, {value}, k=30, nprobe=2)"
+        query_result = list(db.query.sql(query, timeout=timedelta(seconds=1)))
+        # Then ("Check knn select result")
+        check_response_has_close_to_ns_items(query_result, items)

@@ -3,17 +3,18 @@ import json
 import random
 import uuid
 from datetime import timedelta
-from typing import Final, List
+from typing import Final
 
 import pytest
 from hamcrest import *
 
+from index_search_params import IndexSearchParamBruteForce, IndexSearchParamHnsw, IndexSearchParamIvf
 from point import Point
 from pyreindexer.exceptions import ApiError, QueryError
-from index_search_params import IndexSearchParamBruteForce, IndexSearchParamHnsw, IndexSearchParamIvf
 from query import CondType, LogLevel, StrictMode
-from tests.helpers.base_helper import calculate_distance, get_ns_items
-from tests.test_data.constants import AGGREGATE_FUNCTIONS_MATH
+from tests.helpers.base_helper import calculate_distance, get_ns_items, random_vector
+from tests.helpers.check_helper import check_response_has_close_to_ns_items
+from tests.test_data.constants import AGGREGATE_FUNCTIONS_MATH, vector_index_bf, vector_index_hnsw, vector_index_ivf
 
 
 class TestQuerySelect:
@@ -833,7 +834,7 @@ class TestQueryKNN:
 
     def test_query_knn_param_negative(self, db, namespace, index):
         # Given ("Create test random float vector")
-        vec = self._rand_vect(2)
+        vec = random_vector(2)
         # Given ("Create new query")
         query = db.query.new(namespace)
         # When ("Make query with knn")
@@ -859,83 +860,85 @@ class TestQueryKNN:
         assert_that(calling(query.where_knn).with_args("vec", vec, param),
                     raises(QueryError, pattern="Nprobe should not be less than 1"))
 
-    def test_query_hnsw_st(self, db, namespace, index):
-        # Given ("Create float vector index")
-        dimension: Final[int] = 128
-        db.index.create(namespace, {"name": "vec", "json_paths": ["vec"], "field_type": "float_vector",
-                                    "index_type": "hnsw", "config": {"dimension": dimension, "metric": "inner_product",
-                                                                     "start_size": 100, "m": 16, "ef_construction":
-                                                                         200}})
-        # Given ("Create namespace with items")
-        items = [{"id": i, "vec": self._rand_vect(dimension)} for i in range(100)]
-        for item in items:
-            db.item.insert("new_ns", item)
-        param = IndexSearchParamHnsw(500, 1000)
-        query = db.query.new(namespace)
-        query_result = list(query.where_knn("vec", self._rand_vect(dimension), param).execute(timeout=timedelta(
-            seconds=1)))
-        # Then ("Check that selected item is in result")
-        assert_that(query_result, not_(empty()), "Wrong query results")
-
-    def test_query_hnsw_mt(self, db, namespace, index):
-        # Given ("Create float vector index")
-        dimension: Final[int] = 128
-        db.index.create(namespace, {"name": "vec", "json_paths": ["vec"], "field_type": "float_vector",
-                                    "index_type": "hnsw", "config": {"dimension": dimension, "metric": "inner_product",
-                                                                     "start_size": 100, "m": 16, "ef_construction":
-                                                                         200, "multithreading": 1}})
-        # Given ("Create namespace with items")
-        items = [{"id": i, "vec": self._rand_vect(dimension)} for i in range(100)]
-        for item in items:
-            db.item.insert("new_ns", item)
-        param = IndexSearchParamHnsw(500, 1000)
-        # Given ("Create new query")
-        query = db.query.new(namespace)
-        # When ("Execute query")
-        query_result = list(query.where_knn("vec", self._rand_vect(dimension), param).execute(timeout=timedelta(
-            seconds=1)))
-        # Then ("Check that selected item is in result")
-        assert_that(query_result, not_(empty()), "Wrong query results")
-
     def test_query_brute_force(self, db, namespace, index):
         # Given ("Create float vector index")
-        dimension: Final[int] = 128
-        db.index.create(namespace, {"name": "vec", "json_paths": ["vec"], "field_type": "float_vector",
-                                    "index_type": "vec_bf", "config": {"dimension": dimension, "metric": "l2",
-                                                                       "start_size": 100}})
-        # Given("Create namespace with items")
-        items = [{"id": i, "vec": self._rand_vect(dimension)} for i in range(100)]
+        dimension: Final[int] = 8
+        index = copy.copy(vector_index_bf)
+        index["config"] = {"dimension": dimension, "metric": "inner_product", "start_size": 1000}
+        db.index.create(namespace, index)
+        # Given("Insert items")
+        items = [{"id": i, "vec": random_vector(dimension)} for i in range(100)]
         for item in items:
             db.item.insert("new_ns", item)
-        param = IndexSearchParamBruteForce(1000)
         # Given ("Create new query")
         query = db.query.new(namespace)
         # When ("Execute query")
-        query_result = list(query.where_knn("vec", self._rand_vect(dimension), param).execute(timeout=timedelta(seconds=1)))
-        # Then ("Check that selected item is in result")
-        assert_that(query_result, not_(empty()), "Wrong query results")
+        k = 39
+        param = IndexSearchParamBruteForce(k=k)
+        query_result = list(
+            query.where_knn("vec", random_vector(dimension), param).execute(timeout=timedelta(seconds=1)))
+        # Then ("Check knn select result")
+        check_response_has_close_to_ns_items(query_result, items)
+        assert_that(query_result, has_length(k))
+
+    def test_query_hnsw(self, db, namespace, index):
+        # Given ("Create float vector index")
+        dimension: Final[int] = 8
+        index = copy.copy(vector_index_hnsw)
+        index["config"] = {"dimension": dimension, "metric": "inner_product", "start_size": 1000, "m": 16,
+                           "ef_construction": 200}
+        db.index.create(namespace, index)
+        # Given("Insert items")
+        items = [{"id": i, "vec": random_vector(dimension)} for i in range(100)]
+        for item in items:
+            db.item.insert("new_ns", item)
+        # Given ("Create new query")
+        query = db.query.new(namespace)
+        # When ("Execute query")
+        param = IndexSearchParamHnsw(k=30, ef=30)
+        query_result = list(
+            query.where_knn("vec", random_vector(dimension), param).execute(timeout=timedelta(seconds=1)))
+        # Then ("Check knn select result")
+        check_response_has_close_to_ns_items(query_result, items)
+
+    def test_query_hnsw_multithread(self, db, namespace, index):
+        # Given ("Create float vector index")
+        dimension: Final[int] = 8
+        index = copy.copy(vector_index_hnsw)
+        index["config"] = {"dimension": dimension, "metric": "inner_product", "start_size": 1000, "m": 16,
+                           "ef_construction": 200, "multithreading": 1}
+        db.index.create(namespace, index)
+        # Given("Insert items via transaction")
+        items = [{"id": i, "vec": random_vector(dimension)} for i in range(100)]
+        transaction = db.tx.begin(namespace)
+        for item in items:
+            transaction.insert_item(item)
+        transaction.commit()
+        # Given ("Create new query")
+        query = db.query.new(namespace)
+        # When ("Execute query")
+        param = IndexSearchParamHnsw(k=25, ef=40)
+        query_result = list(
+            query.where_knn("vec", random_vector(dimension), param).execute(timeout=timedelta(seconds=1)))
+        # Then ("Check knn select result")
+        check_response_has_close_to_ns_items(query_result, items)
 
     def test_query_ivf(self, db, namespace, index):
         # Given ("Create float vector index")
-        dimension: Final[int] = 128
-        db.index.create(namespace, {"name": "vec", "json_paths": ["vec"], "field_type": "float_vector",
-                                    "index_type": "ivf", "config": {"dimension": dimension, "metric": "l2",
-                                                                    "centroids_count": 100}})
-        # Given("Create namespace with items")
-        items = [{"id": i, "vec": self._rand_vect(dimension)} for i in range(100)]
+        # Given ("Create float vector index")
+        dimension: Final[int] = 8
+        index = copy.copy(vector_index_ivf)
+        index["config"] = {"dimension": dimension, "metric": "l2", "centroids_count": 3}
+        db.index.create(namespace, index)
+        # Given("Insert items")
+        items = [{"id": i, "vec": random_vector(dimension)} for i in range(150)]
         for item in items:
             db.item.insert("new_ns", item)
-        param = IndexSearchParamIvf(1000, 10)
         # Given ("Create new query")
         query = db.query.new(namespace)
         # When ("Execute query")
-        query_result = list(query.where_knn("vec", self._rand_vect(dimension), param).execute(timeout=timedelta(seconds=1)))
-        # Then ("Check that selected item is in result")
-        assert_that(query_result, not_(empty()), "Wrong query results")
-
-    @staticmethod
-    def _rand_vect(dimension: int) -> List[float]:
-        result : List[float] = []
-        for _ in range(dimension):
-            result.append(random.uniform(0.1, 25.9))
-        return result
+        param = IndexSearchParamIvf(k=30, nprobe=2)
+        query_result = list(
+            query.where_knn("vec", random_vector(dimension), param).execute(timeout=timedelta(seconds=1)))
+        # Then ("Check knn select result")
+        check_response_has_close_to_ns_items(query_result, items)

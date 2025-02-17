@@ -1,24 +1,21 @@
+from dataclasses import dataclass
 
-# ToDo comments
 
+@dataclass
 class IndexSearchParamBase:
+    k: int
 
-    def __init__(self, k: int):
-        self.k : int = k
 
+@dataclass
 class IndexSearchParamBruteForce(IndexSearchParamBase):
+    pass
 
-    def __init__(self, k: int):
-        super().__init__(k)
 
+@dataclass
 class IndexSearchParamHnsw(IndexSearchParamBase):
+    ef: int
 
-    def __init__(self, k: int, ef: int):
-        super().__init__(k)
-        self.ef: int = ef
 
+@dataclass
 class IndexSearchParamIvf(IndexSearchParamBase):
-
-    def __init__(self, k: int, nprobe: int):
-        super().__init__(k)
-        self.nprobe: int = nprobe
+    nprobe: int

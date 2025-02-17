@@ -3,14 +3,14 @@ from __future__ import annotations
 from collections.abc import Iterable
 from datetime import timedelta
 from enum import Enum
-from typing import Optional, Union, List
+from typing import List, Optional, Union
 from uuid import UUID
 
 from pyreindexer.exceptions import ApiError, QueryError
-from pyreindexer.query_results import QueryResults
 from pyreindexer.index_search_params import (IndexSearchParamBase, IndexSearchParamBruteForce, IndexSearchParamHnsw,
                                              IndexSearchParamIvf)
 from pyreindexer.point import Point
+from pyreindexer.query_results import QueryResults
 
 
 class ExtendedEnum(Enum):
@@ -336,9 +336,9 @@ class Query:
         if param.k < 1:
             raise QueryError("KNN limit K should not be less than 1")
 
-        k : int = 0
-        ef : int = 0
-        nprobe : int = 0
+        k: int = 0
+        ef: int = 0
+        nprobe: int = 0
         if isinstance(param, IndexSearchParamBruteForce):
             k = param.k
         elif isinstance(param, IndexSearchParamHnsw):

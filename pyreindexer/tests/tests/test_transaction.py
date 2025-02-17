@@ -1,12 +1,14 @@
 import time
 from datetime import timedelta
 
+import pytest
 from hamcrest import *
 
 from pyreindexer.exceptions import TransactionError
-from tests.helpers.base_helper import get_ns_items
+from tests.helpers.base_helper import get_ns_items, random_vector
+from tests.helpers.matchers import close_to_dict
 from tests.helpers.transaction import *
-from tests.test_data.constants import item_definition
+from tests.test_data.constants import item_definition, vector_index_bf, vector_index_hnsw, vector_index_ivf
 
 
 class TestCrudTransaction:
@@ -120,6 +122,22 @@ class TestCrudTransaction:
         select_result = get_ns_items(db, namespace)
         assert_that(select_result, has_length(1), "Transaction: item wasn't created")
         assert_that(select_result, has_item(item_definition), "Transaction: item wasn't created")
+
+    @pytest.mark.parametrize("vector_index", [vector_index_bf, vector_index_hnsw, vector_index_ivf])
+    def test_insert_item_with_vector_index(self, db, namespace, index, vector_index):
+        # Given("Create namespace")
+        # When ("Add index")
+        db.index.create(namespace, vector_index)
+        # When ("Insert item into namespace")
+        transaction = db.tx.begin(namespace)
+        dimension = vector_index["config"]["dimension"]
+        item = {"id": 0, "vec": random_vector(dimension)}
+        transaction.insert_item(item)
+        transaction.commit()
+        # Then ("Check that item is added")
+        select_result = get_ns_items(db, namespace)
+        assert_that(select_result, has_length(1), "Item wasn't created")
+        assert_that(select_result[0], close_to_dict(item))
 
     def test_create_item_insert_with_precepts(self, db, namespace, index):
         # Given("Create namespace with index")
