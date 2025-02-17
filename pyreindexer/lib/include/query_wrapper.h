@@ -2,6 +2,8 @@
 
 #include <deque>
 
+#include "core/query/knn_search_params.h"
+#include "core/keyvalue/float_vector.h"
 #include "core/type_consts.h"
 #include "estl/h_vector.h"
 #include "tools/serializer.h"
@@ -32,6 +34,7 @@ public:
 	void WhereSubQuery(QueryWrapper& query, CondType condition, const reindexer::VariantArray& keys);
 	void WhereFieldSubQuery(std::string_view index, CondType condition, QueryWrapper& query);
 	void WhereUUID(std::string_view index, CondType condition, const reindexer::h_vector<std::string, 2>& keys);
+	void WhereKNN(std::string_view index, reindexer::ConstFloatVectorView vec, const reindexer::KnnSearchParams& params);
 
 	void WhereBetweenFields(std::string_view firstField, CondType condition, std::string_view secondField);
 

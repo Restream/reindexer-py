@@ -11,8 +11,9 @@ class IndexDefinition(dict):
     #### Arguments:
         name (str): An index name.
         json_paths (:obj:`list` of :obj:`str`): A name for mapping a value to a json field.
-        field_type (str): A type of field. Possible values are: `int`, `int64`, `double`, `string`, `bool`, `composite`.
-        index_type (str): An index type. Possible values are: `hash`, `tree`, `text`, `-`.
+        field_type (str): A type of field. Possible values are: `int`, `int64`, `double`, `string`, `bool`,
+        `composite`, `float_vector`.
+        index_type (str): An index type. Possible values are: `hash`, `tree`, `text`, `-`, `hnsw`, `vec_bf`, `ivf`.
         is_pk (bool): True if a field is a primary key.
         is_array (bool): True if an index is an array.
         is_dense (bool): True if an index is dense. reduce index size. Saves 8 bytes per unique key value for 'hash'
@@ -24,8 +25,9 @@ class IndexDefinition(dict):
         collate_mode (str): Sets an order of values by collate mode. Possible values are:
             `none`, `ascii`, `utf8`, `numeric`, `custom`.
         sort_order_letters (str): Order for a sort sequence for a custom collate mode.
-        config (dict): A config for a fulltext engine.
-        [More](https://github.com/Restream/reindexer/blob/master/fulltext.md).
+        config (dict): A config for a fulltext and float_vector engine.
+        [More about `fulltext`](https://github.com/Restream/reindexer/blob/master/fulltext.md) or
+        [More about `float_vector`](https://github.com/Restream/reindexer/blob/master/cpp_src/float_vector.md).
     """
 
     def __getitem__(self, attr):
