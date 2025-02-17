@@ -167,30 +167,30 @@ def float_vector_hnsw_example(db):
 
     # generate items
     transaction = db.new_transaction(namespace)
-    for i in range(10000):
+    for i in range(100):
         transaction.insert({"id": i, fv_index_name: random_vector(dimension)})
-    transaction.commit(timedelta(seconds = 3))
+    transaction.commit(timedelta(seconds = 1))
 
     # do query
     param = IndexSearchParamHnsw(44, 500)
     query_result = (db.new_query(namespace)
-                        .where_knn(fv_index_name, random_vector(dimension), param).must_execute(timedelta(seconds=1)))
+                        .where_knn(fv_index_name, random_vector(dimension), param).must_execute(timedelta(seconds = 1)))
 
     # result
     print("HNSW where_knn: ", query_result.count())
     for item in query_result:
-        print('Item: ', item, end='\n')
+        print('Item vec: ', item, end='\n')
 
     # drop index
-    db.index_drop(namespace, fv_index_name, timedelta(milliseconds = 1000))
+    db.index_drop(namespace, fv_index_name, timedelta(milliseconds = 300))
 
-def float_vector_ivf_example(db):
-    namespace = 'knn_ivf'
+def float_vector_brute_force_sql_example(db):
+    namespace = 'knn_bf'
     db.namespace_open(namespace)
 
     # create index
-    fv_index_name = 'ivf_idx'
-    dimension: Final[int] = 4
+    fv_index_name = 'bf_idx'
+    dimension: Final[int] = 8
     index_definitions = [{'name': 'id',
                           'json_paths': ['id'],
                           'field_type': 'int',
@@ -206,11 +206,11 @@ def float_vector_ivf_example(db):
                          {"name": fv_index_name,
                           "json_paths": [fv_index_name],
                           "field_type": "float_vector",
-                          "index_type": "ivf",
+                          "index_type": "vec_bf",
                           "config": {
-                              "dimension": 2,
+                              "dimension": 4,
                               "metric": "inner_product",
-                              "centroids_count": 5}}]
+                              "start_size": 10000}}]
     for index in index_definitions:
         db.index_add(namespace, index)
 
@@ -218,20 +218,35 @@ def float_vector_ivf_example(db):
     index_definition_modified = {"name": fv_index_name,
                                  "json_paths": [fv_index_name],
                                  "field_type": "float_vector",
-                                 "index_type": "ivf",
+                                 "index_type": "vec_bf",
                                  "config": {
                                      "dimension": dimension,
                                      "metric": "l2",
-                                     "centroids_count": 10}}
+                                     "start_size": 1000}}
     db.index_update(namespace, index_definition_modified)
 
+    # generate items
+    transaction = db.new_transaction(namespace)
+    for i in range(100):
+        transaction.insert({"id": i, fv_index_name: random_vector(dimension)})
+    transaction.commit(timedelta(seconds = 1))
+
+    # execute SQL query SELECT KNN
+    value = random_vector(dimension)
+    k: Final[int] = 47
+    query = f"SELECT * FROM {namespace} WHERE KNN({fv_index_name}, {value}, k={k})"
+    query_result = db.select(query, timedelta(seconds = 1))
+    print("Select where KNN: ", query_result.count())
+    for item in query_result:
+        print('Item vec: ', item, end='\n')
+
     # drop index
-    db.index_drop(namespace, fv_index_name)
+    db.index_drop(namespace, fv_index_name, timedelta(milliseconds = 300))
 
 
 def rx_example():
     db = RxConnector('builtin:///tmp/pyrx', max_replication_updates_size = 10 * 1024 * 1024)
-    #    db = RxConnector('cproto://127.0.0.1:6534/pyrx', enable_compression = True, fetch_amount = 500)
+    #   db = RxConnector('cproto://127.0.0.1:6534/pyrx', enable_compression = True, fetch_amount = 500)
 
     namespace = 'test_table'
 
@@ -262,7 +277,7 @@ def rx_example():
     query_example(db, namespace)
 
     float_vector_hnsw_example(db)
-    float_vector_ivf_example(db)
+    float_vector_brute_force_sql_example(db)
 
     db.close()
 
