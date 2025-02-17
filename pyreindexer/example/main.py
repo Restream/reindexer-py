@@ -1,6 +1,10 @@
+import random
+
 from datetime import timedelta
+from typing import Final, List
 
 from pyreindexer import RxConnector
+from pyreindexer.index_search_params import IndexSearchParamHnsw
 from pyreindexer.exceptions import ApiError
 from pyreindexer.query import CondType
 
@@ -125,6 +129,109 @@ def query_example(db, namespace):
     for item in any_items:
         print('Item: ', item)
 
+def rand_vector(dimension: int) -> List[float]:
+    result : List[float] = []
+    for _ in range(dimension):
+        result.append(random.uniform(0.1, 25.9))
+    return result
+
+def float_vector_hnsw_example(db):
+    namespace = 'knn_hnsw'
+    db.namespace_open(namespace)
+
+    # create index
+    fv_index_name = 'hnsw_idx'
+    dimension: Final[int] = 8
+    index_definitions = [{'name': 'id',
+                          'json_paths': ['id'],
+                          'field_type': 'int',
+                          'index_type': 'hash',
+                          'is_pk': True,
+                          'is_array': False,
+                          'is_dense': False,
+                          'is_sparse': False,
+                          'collate_mode': 'none',
+                          'sort_order_letters': '',
+                          'expire_after': 0,
+                          'config': {}},
+                         {"name": fv_index_name,
+                          "json_paths": [fv_index_name],
+                          "field_type": "float_vector",
+                          "index_type": "hnsw",
+                          "config": {
+                              "dimension": dimension,
+                              "metric": "inner_product",
+                              "start_size": 100,
+                              "m": 16,
+                              "ef_construction": 200,
+                              "multithreading": 1}}]
+    for index in index_definitions:
+        db.index_add(namespace, index)
+
+    # generate items
+    transaction = db.new_transaction(namespace)
+    for i in range(10000):
+        transaction.insert({"id": i, fv_index_name: rand_vector(dimension)})
+    transaction.commit(timedelta(seconds = 3))
+
+    # do query
+    param = IndexSearchParamHnsw(44, 500)
+    query_result = (db.new_query(namespace)
+                        .where_knn(fv_index_name, rand_vector(dimension), param).must_execute(timedelta(seconds=1)))
+
+    # result
+    print("HNSW where_knn: ", query_result.count())
+    for item in query_result:
+        print('Item: ', item, end='\n')
+
+    # drop index
+    db.index_drop(namespace, fv_index_name, timedelta(milliseconds = 1000))
+
+def float_vector_ivf_example(db):
+    namespace = 'knn_ivf'
+    db.namespace_open(namespace)
+
+    # create index
+    fv_index_name = 'ivf_idx'
+    dimension: Final[int] = 4
+    index_definitions = [{'name': 'id',
+                          'json_paths': ['id'],
+                          'field_type': 'int',
+                          'index_type': 'hash',
+                          'is_pk': True,
+                          'is_array': False,
+                          'is_dense': False,
+                          'is_sparse': False,
+                          'collate_mode': 'none',
+                          'sort_order_letters': '',
+                          'expire_after': 0,
+                          'config': {}},
+                         {"name": fv_index_name,
+                          "json_paths": [fv_index_name],
+                          "field_type": "float_vector",
+                          "index_type": "ivf",
+                          "config": {
+                              "dimension": 2,
+                              "metric": "inner_product",
+                              "centroids_count": 5}}]
+    for index in index_definitions:
+        db.index_add(namespace, index)
+
+    # update index
+    index_definition_modified = {"name": fv_index_name,
+                                 "json_paths": [fv_index_name],
+                                 "field_type": "float_vector",
+                                 "index_type": "ivf",
+                                 "config": {
+                                     "dimension": dimension,
+                                     "metric": "l2",
+                                     "centroids_count": 10}}
+    db.index_update(namespace, index_definition_modified)
+
+    # drop index
+    db.index_drop(namespace, fv_index_name)
+
+
 def rx_example():
     db = RxConnector('builtin:///tmp/pyrx', max_replication_updates_size = 10 * 1024 * 1024)
     #    db = RxConnector('cproto://127.0.0.1:6534/pyrx', enable_compression = True, fetch_amount = 500)
@@ -156,6 +263,9 @@ def rx_example():
     transaction_example(db, namespace, items_copy)
 
     query_example(db, namespace)
+
+    float_vector_hnsw_example(db)
+    float_vector_ivf_example(db)
 
     db.close()
 
