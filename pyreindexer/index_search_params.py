@@ -2,7 +2,7 @@ class IndexSearchParamBruteForce:
     """Index search param for brute force index. Equal to basic parameters
 
     #### Attributes:
-        k (int): should not be less than 1
+        k (int): Expected size of KNN index results. Should not be less than 1
 
     """
 
@@ -16,8 +16,8 @@ class IndexSearchParamHnsw:
     """Index search param for HNSW index.
 
     #### Attributes:
-        k (int): should not be less than 1
-        ef (int): should not be less than 'k'
+        k (int): Expected size of KNN index results. Should not be less than 1
+        ef (int): Size of nearest neighbor buffer that will be filled during fetching. Should not be less than 'k'
 
     """
 
@@ -31,11 +31,11 @@ class IndexSearchParamHnsw:
 
 
 class IndexSearchParamIvf:
-    """Index search param for HNSW index.
+    """Index search param for IVF index.
 
     #### Attributes:
-        k (int): should not be less than 1
-        nprobe (int): should not be less than 1
+        k (int): Expected size of KNN index results. Should not be less than 1
+        nprobe (int): Number of centroids that will be scanned in where. Should not be less than 1
 
     """
 

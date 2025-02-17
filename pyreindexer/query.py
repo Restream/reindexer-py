@@ -333,9 +333,6 @@ class Query:
         if param is None:
             raise QueryError("A required parameter is not specified. `param` can't be None")
 
-        if param.k < 1:
-            raise QueryError("KNN limit K should not be less than 1")
-
         k: int = 0
         ef: int = 0
         nprobe: int = 0
@@ -351,6 +348,9 @@ class Query:
                 raise QueryError("Nprobe should not be less than 1")
             k = param.k
             nprobe = param.nprobe
+        else:
+            raise QueryError("Unexpected parameter type. `param` must be IndexSearchParamBruteForce, "
+                             "IndexSearchParamHnsw or IndexSearchParamIvf")
 
         self.err_code, self.err_msg = self.api.where_knn(self.query_wrapper_ptr, index, k, ef, nprobe, vec)
         self.__raise_on_error()
