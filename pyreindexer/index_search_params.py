@@ -17,7 +17,8 @@ class IndexSearchParamHnsw:
 
     #### Attributes:
         k (int): Expected size of KNN index results. Should not be less than 1
-        ef (int): Size of nearest neighbor buffer that will be filled during fetching. Should not be less than 'k'
+        ef (int): Size of nearest neighbor buffer that will be filled during fetching. Should not be less than 'k',
+        good story when `ef` ~= 1.5 * `k`
 
     """
 

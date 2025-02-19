@@ -800,7 +800,7 @@ reindexer::KnnSearchParams GetParams(unsigned k, unsigned ef, unsigned nprobe) {
 		return reindexer::KnnSearchParams::Hnsw(k, ef);
 	}
 	if (nprobe > 0) {
-		return  reindexer::KnnSearchParams::Ivf(k, nprobe);
+		return reindexer::KnnSearchParams::Ivf(k, nprobe);
 	}
 	return reindexer::KnnSearchParams::BruteForce(k);
 }
@@ -822,9 +822,10 @@ static PyObject* WhereKNN(PyObject* self, PyObject* args) {
 		try {
 			auto vals = ParseListToVec(&valuesList);
 			auto vect = reindexer::FloatVector::CreateNotInitialized(reindexer::FloatVectorDimension(vals.size()));
+			auto data = vect.RawData();
 			size_t pos = 0;
 			for (const auto& value : vals) {
-				vect.RawData()[pos] = value.As<double>();
+				data[pos] = value.As<double>();
 				++pos;
 			}
 			var = std::move(vect);
