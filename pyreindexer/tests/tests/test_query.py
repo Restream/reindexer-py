@@ -837,41 +837,17 @@ class TestQueryKNN:
         vec = random_vector(2)
         # Given ("Create new query")
         query = db.query.new(namespace)
-        # When ("Check indexe search param")
-        try:
-            IndexSearchParamBruteForce(0)
-        except ValueError as e:
-            assert_that(str(e), equal_to("KNN limit 'k' should not be less than 1"))
-        else:
-            assert_that('', equal_to("KNN limit 'k' should not be less than 1"))
-
-        try:
-            IndexSearchParamHnsw(0, 1)
-        except ValueError as e:
-            assert_that(str(e), equal_to("KNN limit 'k' should not be less than 1"))
-        else:
-            assert_that('', equal_to("KNN limit 'k' should not be less than 1"))
-
-        try:
-            IndexSearchParamHnsw(2, 1)
-        except ValueError as e:
-            assert_that(str(e), equal_to("'ef' should not be less than 'k'"))
-        else:
-            assert_that('', equal_to("'ef' should not be less than 'k'"))
-
-        try:
-            IndexSearchParamIvf(0, 1)
-        except ValueError as e:
-            assert_that(str(e), equal_to("KNN limit 'k' should not be less than 1"))
-        else:
-            assert_that('', equal_to("KNN limit 'k' should not be less than 1"))
-
-        try:
-            IndexSearchParamIvf(1, 0)
-        except ValueError as e:
-            assert_that(str(e), equal_to("'nprobe' should not be less than 1"))
-        else:
-            assert_that('', equal_to("'nprobe' should not be less than 1"))
+        # When ("Check indexes search param")
+        assert_that(calling(IndexSearchParamBruteForce).with_args(0),
+                    raises(ValueError, pattern="KNN limit 'k' should not be less than 1"))
+        assert_that(calling(IndexSearchParamHnsw).with_args(0, 1),
+                    raises(ValueError, pattern="KNN limit 'k' should not be less than 1"))
+        assert_that(calling(IndexSearchParamHnsw).with_args(2, 1),
+                    raises(ValueError, pattern="'ef' should not be less than 'k'"))
+        assert_that(calling(IndexSearchParamIvf).with_args(0, 1),
+                    raises(ValueError, pattern="KNN limit 'k' should not be less than 1"))
+        assert_that(calling(IndexSearchParamIvf).with_args(1, 0),
+                    raises(ValueError, pattern="'nprobe' should not be less than 1"))
 
         # When ("Make query with knn")
         assert_that(calling(query.where_knn).with_args("vec", None, None),
