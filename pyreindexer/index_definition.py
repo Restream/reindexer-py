@@ -27,7 +27,7 @@ class IndexDefinition(dict):
         sort_order_letters (str): Order for a sort sequence for a custom collate mode.
         config (dict): A config for a fulltext and float_vector engine.
         [More about `fulltext`](https://github.com/Restream/reindexer/blob/master/fulltext.md) or
-        [More about `float_vector`](https://github.com/Restream/reindexer/blob/master/cpp_src/float_vector.md).
+        [More about `float_vector`](https://github.com/Restream/reindexer/blob/master/float_vector.md).
     """
 
     def __getitem__(self, attr):
