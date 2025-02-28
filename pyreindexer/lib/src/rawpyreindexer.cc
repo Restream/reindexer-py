@@ -348,7 +348,7 @@ PyObject* itemModify(PyObject* self, PyObject* args, ItemModifyMode mode) {
 			return pyErr(err);
 		}
 
-		item.SetPrecepts(precepts); // ToDo after migrate on v.4, do std::move
+		item.SetPrecepts(std::move(precepts));
 	}
 
 	Py_XDECREF(preceptsList);
@@ -599,7 +599,7 @@ PyObject* modifyTransaction(PyObject* self, PyObject* args, ItemModifyMode mode)
 			return pyErr(err);
 		}
 
-		item.SetPrecepts(precepts); // ToDo after migrate on v.4, do std::move
+		item.SetPrecepts(std::move(precepts));
 	}
 
 	Py_XDECREF(preceptsList);

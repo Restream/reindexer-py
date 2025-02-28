@@ -43,11 +43,11 @@ reindexer::client::ReindexerConfig makeClientConfig(const ReindexerConfig& cfg) 
 	reindexer::client::ReindexerConfig config;
 	config.FetchAmount = cfg.fetchAmount;
 	config.ReconnectAttempts = cfg.reconnectAttempts;
-	// config.NetTimeout = cfg.netTimeout; // ToDo after migrate on v.4
+	config.NetTimeout = cfg.netTimeout;
 	config.EnableCompression = cfg.enableCompression;
 	config.RequestDedicatedThread = cfg.requestDedicatedThread;
 	config.AppName = cfg.appName;
-	//config.SyncRxCoroCount = cfg.syncRxCoroCount; // ToDo after migrate on v.4
+	config.SyncRxCoroCount = cfg.syncRxCoroCount;
 	return config;
 }
 } // namespace
