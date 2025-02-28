@@ -39,6 +39,52 @@ composite_index_definition = {
     "json_paths": ["id", "val"]
 }
 
+vector_index_bf = {
+    "name": "vec",
+    "field_type": "float_vector",
+    "index_type": "vec_bf",
+    "is_pk": False,
+    "is_array": False,
+    "is_dense": False,
+    "is_sparse": False,
+    "collate_mode": "none",
+    "sort_order_letters": "",
+    "expire_after": 0,
+    "config": {"dimension": 4, "metric": "l2", "start_size": 1000},
+    "json_paths": ["vec"]
+}
+
+vector_index_hnsw = {
+    "name": "vec",
+    "field_type": "float_vector",
+    "index_type": "hnsw",
+    "is_pk": False,
+    "is_array": False,
+    "is_dense": False,
+    "is_sparse": False,
+    "collate_mode": "none",
+    "sort_order_letters": "",
+    "expire_after": 0,
+    "config": {"dimension": 4, "metric": "inner_product", "start_size": 1000,
+               "ef_construction": 20, "m": 4, "multithreading": 1},
+    "json_paths": ["vec"]
+}
+
+vector_index_ivf = {
+    "name": "vec",
+    "field_type": "float_vector",
+    "index_type": "ivf",
+    "is_pk": False,
+    "is_array": False,
+    "is_dense": False,
+    "is_sparse": False,
+    "collate_mode": "none",
+    "sort_order_letters": "",
+    "expire_after": 0,
+    "config": {"dimension": 4, "metric": "cosine", "centroids_count": 10},
+    "json_paths": ["vec"]
+}
+
 special_namespaces = [{"name": "#namespaces"},
                       {"name": "#memstats"},
                       {"name": "#perfstats"},
@@ -56,7 +102,7 @@ special_namespaces_cluster = [{"name": "#namespaces"},
                               {"name": "#clientsstats"},
                               {"name": "#replicationstats"}]
 
-item_definition = {'id': 100, 'val': "testval"}
+item_definition = {"id": 100, "val": "testval"}
 
 AGGREGATE_FUNCTIONS_MATH = [(lambda x: max(x), "aggregate_max"),
                             (lambda x: min(x), "aggregate_min"),

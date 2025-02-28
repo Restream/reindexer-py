@@ -242,11 +242,12 @@ static PyObject* IndexAdd(PyObject* self, PyObject* args) {
 
 	Py_DECREF(indexDefDict);
 
-	IndexDef indexDef;
-	auto err = indexDef.FromJSON(reindexer::giftStr(wrSer.Slice()));
-	if (err.ok()) {
-		err = getWrapper<DBInterface>(rx)->AddIndex(ns, indexDef, std::chrono::milliseconds(timeout));
+	auto indexDef = IndexDef::FromJSON(reindexer::giftStr(wrSer.Slice()));
+	if (!indexDef) {
+		pyErr(indexDef.error());
 	}
+
+	auto err = getWrapper<DBInterface>(rx)->AddIndex(ns, *indexDef, std::chrono::milliseconds(timeout));
 	return pyErr(err);
 }
 
@@ -273,11 +274,12 @@ static PyObject* IndexUpdate(PyObject* self, PyObject* args) {
 
 	Py_DECREF(indexDefDict);
 
-	IndexDef indexDef;
-	auto err = indexDef.FromJSON(reindexer::giftStr(wrSer.Slice()));
-	if (err.ok()) {
-		err = getWrapper<DBInterface>(rx)->UpdateIndex(ns, indexDef, std::chrono::milliseconds(timeout));
+	auto indexDef = IndexDef::FromJSON(reindexer::giftStr(wrSer.Slice()));
+	if (!indexDef) {
+		return pyErr(indexDef.error());
 	}
+
+	auto err = getWrapper<DBInterface>(rx)->UpdateIndex(ns, *indexDef, std::chrono::milliseconds(timeout));
 	return pyErr(err);
 }
 
@@ -346,7 +348,7 @@ PyObject* itemModify(PyObject* self, PyObject* args, ItemModifyMode mode) {
 			return pyErr(err);
 		}
 
-		item.SetPrecepts(precepts); // ToDo after migrate on v.4, do std::move
+		item.SetPrecepts(std::move(precepts));
 	}
 
 	Py_XDECREF(preceptsList);
@@ -597,7 +599,7 @@ PyObject* modifyTransaction(PyObject* self, PyObject* args, ItemModifyMode mode)
 			return pyErr(err);
 		}
 
-		item.SetPrecepts(precepts); // ToDo after migrate on v.4, do std::move
+		item.SetPrecepts(std::move(precepts));
 	}
 
 	Py_XDECREF(preceptsList);
@@ -723,9 +725,8 @@ static PyObject* Where(PyObject* self, PyObject* args) {
 
 			return pyErr(err);
 		}
+		Py_DECREF(keysList);
 	}
-
-	Py_XDECREF(keysList);
 
 	getWrapper<QueryWrapper>(queryWrapperAddr)->Where(index, CondType(condition), keys);
 
@@ -752,9 +753,8 @@ static PyObject* WhereSubQuery(PyObject* self, PyObject* args) {
 
 			return pyErr(err);
 		}
+		Py_DECREF(keysList);
 	}
-
-	Py_XDECREF(keysList);
 
 	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
 	auto subQuery = getWrapper<QueryWrapper>(subQueryWrapperAddr);
@@ -800,9 +800,8 @@ static PyObject* WhereUUID(PyObject* self, PyObject* args) {
 
 			return pyErr(err);
 		}
+		Py_DECREF(keysList);
 	}
-
-	Py_XDECREF(keysList);
 
 	getWrapper<QueryWrapper>(queryWrapperAddr)->WhereUUID(index, CondType(condition), keys);
 
@@ -821,6 +820,55 @@ static PyObject* WhereBetweenFields(PyObject* self, PyObject* args) {
 	getWrapper<QueryWrapper>(queryWrapperAddr)->WhereBetweenFields(first_field, CondType(condition), second_field);
 
 	Py_RETURN_NONE;
+}
+
+namespace {
+reindexer::KnnSearchParams GetParams(unsigned k, unsigned ef, unsigned nprobe) {
+	if (ef > 0) {
+		return reindexer::KnnSearchParams::Hnsw(k, ef);
+	}
+	if (nprobe > 0) {
+		return reindexer::KnnSearchParams::Ivf(k, nprobe);
+	}
+	return reindexer::KnnSearchParams::BruteForce(k);
+}
+}
+
+static PyObject* WhereKNN(PyObject* self, PyObject* args) {
+	uintptr_t queryWrapperAddr = 0;
+	char* index = nullptr;
+	unsigned k = 0, ef = 0, nprobe = 0;
+	PyObject* valuesList = nullptr;  // borrowed ref after ParseTuple if passed
+	if (!PyArg_ParseTuple(args, "ksIIIO!", &queryWrapperAddr, &index, &k, &ef, &nprobe, &PyList_Type, &valuesList)) {
+		return nullptr;
+	}
+
+	Py_XINCREF(valuesList);
+
+	reindexer::Variant var;
+	if (valuesList != nullptr) {
+		try {
+			auto vals = ParseListToVec(&valuesList);
+			auto vect = reindexer::FloatVector::CreateNotInitialized(reindexer::FloatVectorDimension(vals.size()));
+			auto data = vect.RawData();
+			size_t pos = 0;
+			for (const auto& value : vals) {
+				data[pos] = value.As<double>();
+				++pos;
+			}
+			var = std::move(vect);
+		} catch (const Error& err) {
+			Py_DECREF(valuesList);
+
+			return pyErr(err);
+		}
+		Py_DECREF(valuesList);
+	}
+
+	auto params = GetParams(k, ef, nprobe);
+	getWrapper<QueryWrapper>(queryWrapperAddr)->WhereKNN(index, reindexer::ConstFloatVectorView(var), params);
+
+	return pyErr({});
 }
 
 namespace {
@@ -925,9 +973,8 @@ static PyObject* Aggregation(PyObject* self, PyObject* args) {
 
 			return pyErr(err);
 		}
+		Py_DECREF(fieldsList);
 	}
-
-	Py_XDECREF(fieldsList);
 
 	getWrapper<QueryWrapper>(queryWrapperAddr)->Aggregation(fields);
 
@@ -954,9 +1001,8 @@ static PyObject* Sort(PyObject* self, PyObject* args) {
 
 			return pyErr(err);
 		}
+		Py_DECREF(sortValuesList);
 	}
-
-	Py_XDECREF(sortValuesList);
 
 	getWrapper<QueryWrapper>(queryWrapperAddr)->Sort(index, (desc != 0), sortValues);
 
@@ -1097,9 +1143,8 @@ static PyObject* SetObject(PyObject* self, PyObject* args) {
 
 			return pyErr(err);
 		}
+		Py_DECREF(valuesList);
 	}
-
-	Py_DECREF(valuesList);
 
 	getWrapper<QueryWrapper>(queryWrapperAddr)->SetObject(field, values);
 
@@ -1125,9 +1170,8 @@ static PyObject* Set(PyObject* self, PyObject* args) {
 
 			return pyErr(err);
 		}
+		Py_DECREF(valuesList);
 	}
-
-	Py_DECREF(valuesList);
 
 	getWrapper<QueryWrapper>(queryWrapperAddr)->Set(field, values, QueryWrapper::IsExpression::No);
 
@@ -1223,9 +1267,8 @@ static PyObject* SelectFilter(PyObject* self, PyObject* args) {
 
 			return pyErr(err);
 		}
+		Py_DECREF(fieldsList);
 	}
-
-	Py_XDECREF(fieldsList);
 
 	getWrapper<QueryWrapper>(queryWrapperAddr)->SelectFilter(fields);
 
@@ -1250,9 +1293,8 @@ static PyObject* AddFunctions(PyObject* self, PyObject* args) {
 
 			return pyErr(err);
 		}
+		Py_DECREF(functionsList);
 	}
-
-	Py_XDECREF(functionsList);
 
 	getWrapper<QueryWrapper>(queryWrapperAddr)->AddFunctions(functions);
 
@@ -1277,9 +1319,8 @@ static PyObject* AddEqualPosition(PyObject* self, PyObject* args) {
 
 			return pyErr(err);
 		}
+		Py_DECREF(equalPosesList);
 	}
-
-	Py_XDECREF(equalPosesList);
 
 	getWrapper<QueryWrapper>(queryWrapperAddr)->AddEqualPosition(equalPoses);
 

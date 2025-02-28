@@ -1,10 +1,12 @@
 from datetime import timedelta
 
+import pytest
 from hamcrest import *
 
 from pyreindexer.exceptions import ApiError
 from tests.helpers.base_helper import get_ns_description
-from tests.test_data.constants import index_definition, updated_index_definition
+from tests.test_data.constants import (index_definition, updated_index_definition, vector_index_bf, vector_index_hnsw,
+                                       vector_index_ivf)
 
 
 class TestCrudIndexes:
@@ -23,7 +25,16 @@ class TestCrudIndexes:
         ns_entry = get_ns_description(db, namespace)
         assert_that(ns_entry, has_item(has_entry("indexes", has_item(index_definition))),
                     "Index wasn't created")
-        db.index.drop(namespace, 'id', timeout=timedelta(milliseconds=1000))
+
+    @pytest.mark.parametrize("vector_index", [vector_index_bf, vector_index_hnsw, vector_index_ivf])
+    def test_create_vector_index(self, db, namespace, vector_index):
+        # Given("Create namespace")
+        # When ("Add index")
+        db.index.create(namespace, vector_index)
+        # Then ("Check that index is added")
+        ns_entry = get_ns_description(db, namespace)
+        assert_that(ns_entry, has_item(has_entry("indexes", has_item(vector_index))),
+                    "Index wasn't created")
 
     def test_update_index(self, db, namespace, index):
         # Given("Create namespace with index")
@@ -66,7 +77,7 @@ class TestCrudIndexes:
         # Then ("Check that we can't delete index that was not created")
         index_name = 'id'
         assert_that(calling(db.index.drop).with_args(namespace, index_name),
-                    raises(ApiError, pattern=f"Cannot remove index {index_name}: doesn't exist"),
+                    raises(ApiError, pattern=f"Cannot remove index '{index_name}': doesn't exist"),
                     "Not existing index was deleted")
 
     def test_index_update_timeout(self, db, namespace):

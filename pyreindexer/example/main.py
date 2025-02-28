@@ -1,6 +1,10 @@
+import random
+
 from datetime import timedelta
+from typing import Final, List
 
 from pyreindexer import RxConnector
+from pyreindexer.index_search_params import IndexSearchParamHnsw
 from pyreindexer.exceptions import ApiError
 from pyreindexer.query import CondType
 
@@ -142,9 +146,124 @@ def modify_query_transaction(db, namespace):
 
     print_all_records_from_namespace(db, namespace, 'Transaction with Query results count: ')
 
+def random_vector(dimension: int) -> List[float]:
+    return [random.uniform(-10.0, 10.0) for _ in range(dimension)]
+
+def float_vector_hnsw_example(db):
+    namespace = 'knn_hnsw'
+    db.namespace_open(namespace)
+
+    # create index
+    fv_index_name = 'hnsw_idx'
+    dimension: Final[int] = 8
+    index_definitions = [{'name': 'id',
+                          'json_paths': ['id'],
+                          'field_type': 'int',
+                          'index_type': 'hash',
+                          'is_pk': True,
+                          'is_array': False,
+                          'is_dense': False,
+                          'is_sparse': False,
+                          'collate_mode': 'none',
+                          'sort_order_letters': '',
+                          'expire_after': 0,
+                          'config': {}},
+                         {"name": fv_index_name,
+                          "json_paths": [fv_index_name],
+                          "field_type": "float_vector",
+                          "index_type": "hnsw",
+                          "config": {
+                              "dimension": dimension,
+                              "metric": "inner_product",
+                              "start_size": 100,
+                              "m": 16,
+                              "ef_construction": 200,
+                              "multithreading": 1}}]
+    for index in index_definitions:
+        db.index_add(namespace, index)
+
+    # generate items
+    transaction = db.new_transaction(namespace)
+    for i in range(100):
+        transaction.insert({"id": i, fv_index_name: random_vector(dimension)})
+    transaction.commit(timedelta(seconds = 1))
+
+    # do query
+    param = IndexSearchParamHnsw(k=20, ef=30)
+    query_result = (db.new_query(namespace)
+                        .where_knn(fv_index_name, random_vector(dimension), param).must_execute(timedelta(seconds = 1)))
+
+    # result
+    print("HNSW where_knn: ", query_result.count())
+    for item in query_result:
+        print('Item vec: ', item, end='\n')
+
+    # drop index
+    db.index_drop(namespace, fv_index_name, timedelta(milliseconds = 300))
+
+def float_vector_brute_force_sql_example(db):
+    namespace = 'knn_bf'
+    db.namespace_open(namespace)
+
+    # create index
+    fv_index_name = 'bf_idx'
+    dimension: Final[int] = 8
+    index_definitions = [{'name': 'id',
+                          'json_paths': ['id'],
+                          'field_type': 'int',
+                          'index_type': 'hash',
+                          'is_pk': True,
+                          'is_array': False,
+                          'is_dense': False,
+                          'is_sparse': False,
+                          'collate_mode': 'none',
+                          'sort_order_letters': '',
+                          'expire_after': 0,
+                          'config': {}},
+                         {"name": fv_index_name,
+                          "json_paths": [fv_index_name],
+                          "field_type": "float_vector",
+                          "index_type": "vec_bf",
+                          "config": {
+                              "dimension": 4,
+                              "metric": "inner_product",
+                              "start_size": 10000}}]
+    for index in index_definitions:
+        db.index_add(namespace, index)
+
+    # update index
+    index_definition_modified = {"name": fv_index_name,
+                                 "json_paths": [fv_index_name],
+                                 "field_type": "float_vector",
+                                 "index_type": "vec_bf",
+                                 "config": {
+                                     "dimension": dimension,
+                                     "metric": "l2",
+                                     "start_size": 1000}}
+    db.index_update(namespace, index_definition_modified)
+
+    # generate items
+    transaction = db.new_transaction(namespace)
+    for i in range(100):
+        transaction.insert({"id": i, fv_index_name: random_vector(dimension)})
+    transaction.commit(timedelta(seconds = 1))
+
+    # execute SQL query SELECT KNN
+    value = random_vector(dimension)
+    k: Final[int] = 47
+    query = f"SELECT * FROM {namespace} WHERE KNN({fv_index_name}, {value}, k={k})"
+    query_result = db.select(query, timedelta(seconds = 1))
+    print("Select where KNN: ", query_result.count())
+    for item in query_result:
+        print('Item vec: ', item, end='\n')
+
+    # drop index
+    db.index_drop(namespace, fv_index_name, timedelta(milliseconds = 300))
+
+
 def rx_example():
     db = RxConnector('builtin:///tmp/pyrx', max_replication_updates_size = 10 * 1024 * 1024)
-    #    db = RxConnector('cproto://127.0.0.1:6534/pyrx', enable_compression = True, fetch_amount = 500)
+    #   db = RxConnector('cproto://127.0.0.1:6534/pyrx', enable_compression = True, fetch_amount = 500)
 
     namespace = 'test_table'
 
@@ -176,6 +295,9 @@ def rx_example():
     query_example(db, namespace)
 
     modify_query_transaction(db, namespace)
+
+    float_vector_hnsw_example(db)
+    float_vector_brute_force_sql_example(db)
 
     db.close()
 

@@ -49,6 +49,7 @@
     * [where\_composite](#pyreindexer.query.Query.where_composite)
     * [where\_uuid](#pyreindexer.query.Query.where_uuid)
     * [where\_between\_fields](#pyreindexer.query.Query.where_between_fields)
+    * [where\_knn](#pyreindexer.query.Query.where_knn)
     * [open\_bracket](#pyreindexer.query.Query.open_bracket)
     * [close\_bracket](#pyreindexer.query.Query.close_bracket)
     * [match](#pyreindexer.query.Query.match)
@@ -90,6 +91,10 @@
     * [select](#pyreindexer.query.Query.select)
     * [functions](#pyreindexer.query.Query.functions)
     * [equal\_position](#pyreindexer.query.Query.equal_position)
+* [pyreindexer.index\_search\_params](#pyreindexer.index_search_params)
+  * [IndexSearchParamBruteForce](#pyreindexer.index_search_params.IndexSearchParamBruteForce)
+  * [IndexSearchParamHnsw](#pyreindexer.index_search_params.IndexSearchParamHnsw)
+  * [IndexSearchParamIvf](#pyreindexer.index_search_params.IndexSearchParamIvf)
 * [pyreindexer.index\_definition](#pyreindexer.index_definition)
   * [IndexDefinition](#pyreindexer.index_definition.IndexDefinition)
 
@@ -1019,9 +1024,8 @@ Adds where condition to DB query with interface args for composite indexes
 def where_uuid(index: str, condition: CondType, *uuids: UUID) -> Query
 ```
 
-Adds where condition to DB query with UUID as string args.
-    This function applies binary encoding to the UUID value.
-    `index` MUST be declared as uuid index in this case
+Adds where condition to DB query with UUID.
+    `index` MUST be declared as uuid-string index in this case
 
 #### Arguments:
     index (string): Field name used in condition clause
@@ -1053,6 +1057,34 @@ Adds comparing two fields where condition to DB query
 
 #### Returns:
     (:obj:`Query`): Query object for further customizations
+
+<a id="pyreindexer.query.Query.where_knn"></a>
+
+### Query.where\_knn
+
+```python
+def where_knn(
+    index: str, vec: List[float],
+    param: Union[IndexSearchParamBruteForce | IndexSearchParamHnsw
+                 | IndexSearchParamIvf]
+) -> Query
+```
+
+Adds where condition to DB query with float_vector as args.
+    `index` MUST be declared as float_vector index in this case
+
+#### Arguments:
+    index (string): Field name used in condition clause (only float_vector)
+    vec (list[float]): KNN value of index to be compared with
+    param (:obj:`IndexSearchParamBase`): KNN search parameters
+
+#### Returns:
+    (:obj:`Query`): Query object for further customizations
+
+#### Raises:
+    QueryError: Raises with an error message if no vec are specified
+    QueryError: Raises with an error message if no param are specified or have an invalid value
+    ApiError: Raises with an error message of API return on non-zero error code
 
 <a id="pyreindexer.query.Query.open_bracket"></a>
 
@@ -1800,6 +1832,52 @@ Adds equal position fields to arrays queries
 #### Raises:
     ApiError: Raises with an error message of API return on non-zero error code
 
+<a id="pyreindexer.index_search_params"></a>
+
+# pyreindexer.index\_search\_params
+
+<a id="pyreindexer.index_search_params.IndexSearchParamBruteForce"></a>
+
+## IndexSearchParamBruteForce Objects
+
+```python
+class IndexSearchParamBruteForce()
+```
+
+Index search param for brute force index. Equal to basic parameters
+
+#### Attributes:
+    k (int): Expected size of KNN index results. Should not be less than 1
+
+<a id="pyreindexer.index_search_params.IndexSearchParamHnsw"></a>
+
+## IndexSearchParamHnsw Objects
+
+```python
+class IndexSearchParamHnsw()
+```
+
+Index search param for HNSW index.
+
+#### Attributes:
+    k (int): Expected size of KNN index results. Should not be less than 1
+    ef (int): Size of nearest neighbor buffer that will be filled during fetching. Should not be less than 'k',
+    good story when `ef` ~= 1.5 * `k`
+
+<a id="pyreindexer.index_search_params.IndexSearchParamIvf"></a>
+
+## IndexSearchParamIvf Objects
+
+```python
+class IndexSearchParamIvf()
+```
+
+Index search param for IVF index.
+
+#### Attributes:
+    k (int): Expected size of KNN index results. Should not be less than 1
+    nprobe (int): Number of centroids that will be scanned in where. Should not be less than 1
+
 <a id="pyreindexer.index_definition"></a>
 
 # pyreindexer.index\_definition
@@ -1818,8 +1896,9 @@ NOT IMPLEMENTED YET. USE FIELDS DESCRIPTION ONLY.
 #### Arguments:
     name (str): An index name.
     json_paths (:obj:`list` of :obj:`str`): A name for mapping a value to a json field.
-    field_type (str): A type of field. Possible values are: `int`, `int64`, `double`, `string`, `bool`, `composite`.
-    index_type (str): An index type. Possible values are: `hash`, `tree`, `text`, `-`.
+    field_type (str): A type of field. Possible values are: `int`, `int64`, `double`, `string`, `bool`,
+    `composite`, `float_vector`.
+    index_type (str): An index type. Possible values are: `hash`, `tree`, `text`, `-`, `hnsw`, `vec_bf`, `ivf`.
     is_pk (bool): True if a field is a primary key.
     is_array (bool): True if an index is an array.
     is_dense (bool): True if an index is dense. reduce index size. Saves 8 bytes per unique key value for 'hash'
@@ -1831,6 +1910,7 @@ NOT IMPLEMENTED YET. USE FIELDS DESCRIPTION ONLY.
     collate_mode (str): Sets an order of values by collate mode. Possible values are:
         `none`, `ascii`, `utf8`, `numeric`, `custom`.
     sort_order_letters (str): Order for a sort sequence for a custom collate mode.
-    config (dict): A config for a fulltext engine.
-    [More](https://github.com/Restream/reindexer/blob/master/fulltext.md).
+    config (dict): A config for a fulltext and float_vector engine.
+    [More about `fulltext`](https://github.com/Restream/reindexer/blob/master/fulltext.md) or
+    [More about `float_vector`](https://github.com/Restream/reindexer/blob/master/cpp_src/float_vector.md).
 
