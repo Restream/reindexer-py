@@ -238,7 +238,7 @@ PyObject* pyValueFromJsonValue(const gason::JsonValue& value) {
 	return pyValue;
 }
 
-PyObject* PyObjectFromJson(reindexer::span<char> json) {
+PyObject* PyObjectFromJson(std::string_view json) {
 	if (json.empty()) {
 		PyObject* pyValue = Py_None;
 		Py_INCREF(pyValue); // new ref

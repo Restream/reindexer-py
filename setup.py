@@ -43,7 +43,8 @@ class BuildExt(build_ext_orig):
 
         self.spawn(['cmake', source_dir,
                     '-DCMAKE_BUILD_TYPE=RelWithDebInfo',
-                    '-DCMAKE_CXX_STANDARD=17',
+                    '-DCMAKE_CXX_STANDARD=20',
+                    '-DCMAKE_CXX_STANDARD_REQUIRED=ON',
                     '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + lib_dir,
                     '-DCMAKE_OSX_DEPLOYMENT_TARGET=11'])
         if not self.dry_run:
@@ -51,6 +52,8 @@ class BuildExt(build_ext_orig):
 
         os.chdir(cwd)
 
+with open('README.md', encoding='utf-8') as f:
+    long_description = f.read()
 
 setup(name=PACKAGE_NAME,
       version='0.3.11',
@@ -65,7 +68,7 @@ setup(name=PACKAGE_NAME,
           'Tracker': 'https://github.com/Restream/reindexer-py/issues',
           'Telegram chat': 'https://t.me/reindexer',
       },
-      long_description=open("README.md", encoding="utf-8").read(),
+      long_description = long_description,
       long_description_content_type="text/markdown",
       license='Apache License 2.0',
       packages=[PACKAGE_NAME],
@@ -80,7 +83,6 @@ setup(name=PACKAGE_NAME,
           'tests/**/*.py'
       ]},
       python_requires=">=3.6",
-      test_suite='tests',
       install_requires=['envoy==0.0.3', 'delegator==0.0.3', 'pyhamcrest==2.0.2', 'pytest==6.2.5'],
       classifiers=[
           _c2('Development Status', '3 - Alpha'),
@@ -109,5 +111,5 @@ setup(name=PACKAGE_NAME,
           _c2('Topic', 'Software Development', 'Libraries', 'Python Modules'),
           _c2('Topic', 'Software Development', 'Libraries', 'Application Frameworks'),
       ],
-      platforms=['ALT Linux', 'RED OS', 'Astra Linux'],
+      platforms=['ALT Linux', 'RED OS', 'Astra Linux', 'Ubuntu', 'MacOS'],
       )

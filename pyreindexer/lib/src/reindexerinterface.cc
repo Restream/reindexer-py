@@ -97,9 +97,19 @@ ReindexerInterface<reindexer::client::CoroReindexer>::ReindexerInterface(const R
 template <typename DBT>
 ReindexerInterface<DBT>::~ReindexerInterface() {
 	if (executionThr_.joinable()) {
-		execute([this] { return stop(); });
+		auto error = execute([this] { stop(); return Error(); });
+		(void)error;
 		executionThr_.join();
 	}
+}
+
+template <typename DBT>
+Error ReindexerInterface<DBT>::NewItem(std::string_view ns, typename DBT::ItemT& item,
+									   std::chrono::milliseconds timeout) {
+	return execute([this, ns, &item, timeout] {
+			item = newItem(ns, timeout);
+			return item.Status();
+		});
 }
 
 template <typename DBT>
@@ -134,12 +144,12 @@ Error ReindexerInterface<DBT>::StartTransaction(std::string_view ns, Transaction
 
 template <typename DBT>
 Error ReindexerInterface<DBT>::openNamespace(std::string_view ns, std::chrono::milliseconds timeout) {
-	return db_.WithTimeout(timeout).OpenNamespace({ns.data(), ns.size()});
+	return db_.WithTimeout(timeout).OpenNamespace(ns);
 }
 
 template <typename DBT>
 Error ReindexerInterface<DBT>::closeNamespace(std::string_view ns, std::chrono::milliseconds timeout) {
-	return db_.WithTimeout(timeout).CloseNamespace({ns.data(), ns.size()});
+	return db_.WithTimeout(timeout).CloseNamespace(ns);
 }
 
 template <typename DBT>
@@ -160,37 +170,37 @@ Error ReindexerInterface<DBT>::updateIndex(std::string_view ns, const IndexDef& 
 
 template <typename DBT>
 Error ReindexerInterface<DBT>::dropIndex(std::string_view ns, const IndexDef& idx, std::chrono::milliseconds timeout) {
-	return db_.WithTimeout(timeout).DropIndex({ns.data(), ns.size()}, idx);
+	return db_.WithTimeout(timeout).DropIndex(ns, idx);
 }
 
 template <typename DBT>
 typename DBT::ItemT ReindexerInterface<DBT>::newItem(std::string_view ns, std::chrono::milliseconds timeout) {
-	return db_.WithTimeout(timeout).NewItem({ns.data(), ns.size()});
+	return db_.WithTimeout(timeout).NewItem(ns);
 }
 
 template <typename DBT>
 Error ReindexerInterface<DBT>::insert(std::string_view ns, typename DBT::ItemT& item,
 									  std::chrono::milliseconds timeout) {
-	return db_.WithTimeout(timeout).Insert({ns.data(), ns.size()}, item);
+	return db_.WithTimeout(timeout).Insert(ns, item);
 }
 
 template <typename DBT>
 Error ReindexerInterface<DBT>::upsert(std::string_view ns, typename DBT::ItemT& item,
 									  std::chrono::milliseconds timeout) {
-	return db_.WithTimeout(timeout).Upsert({ns.data(), ns.size()}, item);
+	return db_.WithTimeout(timeout).Upsert(ns, item);
 }
 
 template <typename DBT>
 Error ReindexerInterface<DBT>::update(std::string_view ns, typename DBT::ItemT& item,
 									  std::chrono::milliseconds timeout)
  {
-	return db_.WithTimeout(timeout).Update({ns.data(), ns.size()}, item);
+	return db_.WithTimeout(timeout).Update(ns, item);
 }
 
 template <typename DBT>
 Error ReindexerInterface<DBT>::deleteItem(std::string_view ns, typename DBT::ItemT& item,
 										  std::chrono::milliseconds timeout) {
-	return db_.WithTimeout(timeout).Delete({ns.data(), ns.size()}, item);
+	return db_.WithTimeout(timeout).Delete(ns, item);
 }
 
 template <typename DBT>
@@ -227,24 +237,6 @@ template <typename DBT>
 Error ReindexerInterface<DBT>::enumNamespaces(std::vector<NamespaceDef>& defs, EnumNamespacesOpts opts,
 											  std::chrono::milliseconds timeout) {
 	return db_.WithTimeout(timeout).EnumNamespaces(defs, opts);
-}
-
-template <>
-Error ReindexerInterface<reindexer::Reindexer>::modify(reindexer::Transaction& transaction,
-			reindexer::Item&& item, ItemModifyMode mode) {
-	transaction.Modify(std::move(item), mode);
-	return {};
-}
-template <>
-Error ReindexerInterface<reindexer::client::CoroReindexer>::modify(reindexer::client::CoroTransaction& transaction,
-			reindexer::client::Item&& item, ItemModifyMode mode) {
-	return transaction.Modify(std::move(item), mode);
-}
-
-template <typename DBT>
-Error ReindexerInterface<DBT>::modify(typename DBT::TransactionT& transaction, Query&& query) {
-	transaction.Modify(std::move(query));
-	return errOK;
 }
 
 template <typename DBT>
@@ -322,15 +314,13 @@ Error ReindexerInterface<reindexer::client::CoroReindexer>::connect(
 }
 
 template <>
-Error ReindexerInterface<reindexer::Reindexer>::stop() {
-	return {};
+void ReindexerInterface<reindexer::Reindexer>::stop() {
 }
 
 template <>
-Error ReindexerInterface<reindexer::client::CoroReindexer>::stop() {
+void ReindexerInterface<reindexer::client::CoroReindexer>::stop() {
 	db_.Stop();
 	stopCh_.close();
-	return {};
 }
 
 #ifdef PYREINDEXER_CPROTO

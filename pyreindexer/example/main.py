@@ -1,4 +1,6 @@
+import os
 import random
+import shutil
 
 from datetime import timedelta
 from typing import Final, List
@@ -64,7 +66,7 @@ def select_item_query_example(db, namespace):
     return db.select(f"SELECT * FROM {namespace} WHERE name='{item_name_for_lookup}'", timedelta(milliseconds = 1000))
 
 def select_all_item_query_example(db, namespace):
-    return db.select(f"SELECT * FROM {namespace}", timedelta(milliseconds = 1000))
+    return db.select(f'SELECT * FROM {namespace}', timedelta(milliseconds = 1000))
 
 def print_all_records_from_namespace(db, namespace, message):
     selected_items_tr = select_all_item_query_example(db, namespace)
@@ -73,7 +75,7 @@ def print_all_records_from_namespace(db, namespace, message):
     print(message, res_count)
 
     for item in selected_items_tr:
-        print('Item: ', item)
+        print(f'item: {item}')
 
 def transaction_example(db, namespace, items_in_base):
     # start transaction
@@ -91,7 +93,8 @@ def transaction_example(db, namespace, items_in_base):
     transaction.update(item)
 
     # stop transaction and commit changes to namespace
-    transaction.commit(timedelta(milliseconds = 1000))
+    count = transaction.commit_with_count(timedelta(milliseconds = 1000))
+    print(f'Transaction updated count: {count}')
 
     print_all_records_from_namespace(db, namespace, 'Transaction results count: ')
 
@@ -103,7 +106,7 @@ def query_example(db, namespace):
                  .execute())
     print(f'Query results count (Any): {any_items.count()}')
     for item in any_items:
-        print('Item: ', item)
+        print(f'item: {item}')
 
     # query some items
     selected_items = (db.new_query(namespace)
@@ -113,7 +116,7 @@ def query_example(db, namespace):
                       .execute(timedelta(milliseconds = 1000)))
     print(f'Query results count (limited): {selected_items.count()}')
     for item in selected_items:
-        print('Item: ', item)
+        print(f'item: {item}')
 
     # delete some items
     del_count = (db.new_query(namespace)
@@ -127,7 +130,7 @@ def query_example(db, namespace):
                  .must_execute())
     print(f'Query results count (Any after delete): {any_items.count()}')
     for item in any_items:
-        print('Item: ', item)
+        print(f'item: {item}')
 
 def modify_query_transaction(db, namespace):
     # start transaction
@@ -142,7 +145,7 @@ def modify_query_transaction(db, namespace):
     transaction.delete_query(query_del)
 
     # stop transaction and commit changes to namespace
-    transaction.commit() # ToDo count
+    transaction.commit(timedelta(milliseconds = 1000))
 
     print_all_records_from_namespace(db, namespace, 'Transaction with Query results count: ')
 
@@ -186,7 +189,7 @@ def float_vector_hnsw_example(db):
     transaction = db.new_transaction(namespace)
     for i in range(100):
         transaction.insert({"id": i, fv_index_name: random_vector(dimension)})
-    transaction.commit(timedelta(seconds = 1))
+    transaction.commit(timedelta(seconds = 3))
 
     # do query
     param = IndexSearchParamHnsw(k=20, ef=30)
@@ -196,7 +199,7 @@ def float_vector_hnsw_example(db):
     # result
     print("HNSW where_knn: ", query_result.count())
     for item in query_result:
-        print('Item vec: ', item, end='\n')
+        print('item vec: ', item, end='\n')
 
     # drop index
     db.index_drop(namespace, fv_index_name, timedelta(milliseconds = 300))
@@ -246,27 +249,30 @@ def float_vector_brute_force_sql_example(db):
     transaction = db.new_transaction(namespace)
     for i in range(100):
         transaction.insert({"id": i, fv_index_name: random_vector(dimension)})
-    transaction.commit(timedelta(seconds = 1))
+    transaction.commit(timedelta(seconds = 3))
 
     # execute SQL query SELECT KNN
     value = random_vector(dimension)
     k: Final[int] = 47
-    query = f"SELECT * FROM {namespace} WHERE KNN({fv_index_name}, {value}, k={k})"
+    query = f'SELECT * FROM {namespace} WHERE KNN({fv_index_name}, {value}, k={k})'
     query_result = db.select(query, timedelta(seconds = 1))
     print("Select where KNN: ", query_result.count())
     for item in query_result:
-        print('Item vec: ', item, end='\n')
+        print('item vec: ', item, end='\n')
 
     # drop index
     db.index_drop(namespace, fv_index_name, timedelta(milliseconds = 300))
 
 
 def rx_example():
-    db = RxConnector('builtin:///tmp/pyrx', max_replication_updates_size = 10 * 1024 * 1024)
+    location : Final[str] = '/tmp/pyrx'
+    if os.path.isdir(location):
+        shutil.rmtree(location)
+
+    db = RxConnector(f'builtin://{location}', max_replication_updates_size = 10 * 1024 * 1024)
     #   db = RxConnector('cproto://127.0.0.1:6534/pyrx', enable_compression = True, fetch_amount = 500)
 
     namespace = 'test_table'
-
     db.namespace_open(namespace)
 
     create_index_example(db, namespace)
@@ -278,17 +284,17 @@ def rx_example():
     selected_items = select_item_query_example(db, namespace)
 
     res_count = selected_items.count()
-    print('Results count: ', res_count)
+    print(f'Results count: {res_count}')
 
     # disposable QueryResults iterator
     items_copy = []
     for item in selected_items:
         items_copy.append(item)
-        print('Item: ', item)
+        print(f'item: {item}')
 
     # won't be iterated again
     for item in selected_items:
-        print('Item: ', item)
+        print(f'item: {item}')
 
     transaction_example(db, namespace, items_copy)
 

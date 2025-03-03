@@ -1,5 +1,6 @@
 #include "rawpyreindexer.h"
 
+#include "core/keyvalue/float_vector.h"
 #include "tools/serializer.h"
 
 #include "queryresults_wrapper.h"
@@ -12,6 +13,13 @@ namespace pyreindexer {
 using reindexer::Error;
 using reindexer::IndexDef;
 using reindexer::WrSerializer;
+
+#ifdef PYREINDEXER_CPROTO
+using ItemT = reindexer::client::Item;
+#else
+using ItemT = reindexer::Item;
+#endif
+
 
 namespace {
 uintptr_t initReindexer(const ReindexerConfig& cfg) {
@@ -30,23 +38,30 @@ void deleteWrapper(uintptr_t wrapperAddr) {
 	delete queryWrapperPtr;
 }
 
-PyObject* pyErr(const Error& err) { return Py_BuildValue("is", err.code(), err.what().c_str()); }
+PyObject* pyErr(const Error& err) { return Py_BuildValue("is", err.code(), err.what()); }
 
 PyObject* queryResultsWrapperIterate(uintptr_t qresWrapperAddr) {
 	QueryResultsWrapper* qresWrapper = getWrapper<QueryResultsWrapper>(qresWrapperAddr);
 
 	WrSerializer wrSer;
-	static const bool withHeaderLen = false;
-	qresWrapper->GetItemJSON(wrSer, withHeaderLen);
-	qresWrapper->Next();
+	static constexpr bool withHeaderLen = false;
+	auto err = qresWrapper->GetItemJSON(wrSer, withHeaderLen);
+	if (!err.ok()) {
+		return Py_BuildValue("is{}", err.code(), err.what());
+	}
+
+	err = qresWrapper->Next();
+	if (!err.ok()) {
+		return Py_BuildValue("is{}", err.code(), err.what());
+	}
 
 	PyObject* dictFromJson = nullptr;
 	try {
-		dictFromJson = PyObjectFromJson(reindexer::giftStr(wrSer.Slice()));  // stolen ref
+		dictFromJson = PyObjectFromJson(wrSer.Slice());  // stolen ref
 	} catch (const Error& err) {
 		Py_XDECREF(dictFromJson);
 
-		return Py_BuildValue("is{}", err.code(), err.what().c_str());
+		return Py_BuildValue("is{}", err.code(), err.what());
 	}
 
 	PyObject* res = Py_BuildValue("isO", errOK, "", dictFromJson);  // new ref
@@ -124,12 +139,12 @@ static PyObject* Select(PyObject* self, PyObject* args) {
 	auto qresult = std::make_unique<QueryResultsWrapper>(db);
 	auto err = qresult->Select(query, std::chrono::milliseconds(timeout));
 	if (!err.ok()) {
-		return Py_BuildValue("iskII", err.code(), err.what().c_str(), 0, 0);
+		return Py_BuildValue("iskII", err.code(), err.what(), 0, 0, 0);
 	}
 
 	const auto count = qresult->Count();
 	const auto totalCount = qresult->TotalCount();
-	return Py_BuildValue("iskII", err.code(), err.what().c_str(),
+	return Py_BuildValue("iskII", err.code(), err.what(),
 						 reinterpret_cast<uintptr_t>(qresult.release()), count, totalCount);
 }
 
@@ -183,7 +198,7 @@ static PyObject* EnumNamespaces(PyObject* self, PyObject* args) {
 	auto err = getWrapper<DBInterface>(rx)->EnumNamespaces(nsDefs, reindexer::EnumNamespacesOpts().WithClosed(enumAll),
 														   std::chrono::milliseconds(timeout));
 	if (!err.ok()) {
-		return Py_BuildValue("is[]", err.code(), err.what().c_str());
+		return Py_BuildValue("is[]", err.code(), err.what());
 	}
 
 	PyObject* list = PyList_New(nsDefs.size());	 // new ref
@@ -195,23 +210,23 @@ static PyObject* EnumNamespaces(PyObject* self, PyObject* args) {
 	Py_ssize_t pos = 0;
 	for (const auto& ns : nsDefs) {
 		wrSer.Reset();
-		ns.GetJSON(wrSer, false);
+		ns.GetJSON(wrSer);
 
 		PyObject* dictFromJson = nullptr;
 		try {
-			dictFromJson = PyObjectFromJson(reindexer::giftStr(wrSer.Slice()));  // stolen ref
+			dictFromJson = PyObjectFromJson(wrSer.Slice());  // stolen ref
 		} catch (const Error& err) {
 			Py_XDECREF(dictFromJson);
 			Py_DECREF(list);
 
-			return Py_BuildValue("is{}", err.code(), err.what().c_str());
+			return Py_BuildValue("is[]", err.code(), err.what());
 		}
 
 		PyList_SetItem(list, pos, dictFromJson);  // stolen ref
 		++pos;
 	}
 
-	PyObject* res = Py_BuildValue("isO", err.code(), err.what().c_str(), list);
+	PyObject* res = Py_BuildValue("isO", err.code(), err.what(), list);
 	Py_DECREF(list);
 
 	return res;
@@ -242,7 +257,7 @@ static PyObject* IndexAdd(PyObject* self, PyObject* args) {
 
 	Py_DECREF(indexDefDict);
 
-	auto indexDef = IndexDef::FromJSON(reindexer::giftStr(wrSer.Slice()));
+	auto indexDef = IndexDef::FromJSON(wrSer.Slice());
 	if (!indexDef) {
 		pyErr(indexDef.error());
 	}
@@ -274,7 +289,7 @@ static PyObject* IndexUpdate(PyObject* self, PyObject* args) {
 
 	Py_DECREF(indexDefDict);
 
-	auto indexDef = IndexDef::FromJSON(reindexer::giftStr(wrSer.Slice()));
+	auto indexDef = IndexDef::FromJSON(wrSer.Slice());
 	if (!indexDef) {
 		return pyErr(indexDef.error());
 	}
@@ -312,8 +327,8 @@ PyObject* itemModify(PyObject* self, PyObject* args, ItemModifyMode mode) {
 	Py_INCREF(itemDefDict);
 	Py_XINCREF(preceptsList);
 
-	auto item = getWrapper<DBInterface>(rx)->NewItem(ns, std::chrono::milliseconds(timeout));
-	auto err = item.Status();
+	ItemT item;
+	auto err = getWrapper<DBInterface>(rx)->NewItem(ns, item, std::chrono::milliseconds(timeout));
 	if (!err.ok()) {
 		return pyErr(err);
 	}
@@ -402,7 +417,7 @@ static PyObject* GetMeta(PyObject* self, PyObject* args) {
 
 	std::string value;
 	auto err = getWrapper<DBInterface>(rx)->GetMeta(ns, key, value, std::chrono::milliseconds(timeout));
-	return Py_BuildValue("iss", err.code(), err.what().c_str(), value.c_str());
+	return Py_BuildValue("iss", err.code(), err.what(), value.c_str());
 }
 
 static PyObject* DeleteMeta(PyObject* self, PyObject* args) {
@@ -428,7 +443,7 @@ static PyObject* EnumMeta(PyObject* self, PyObject* args) {
 	std::vector<std::string> keys;
 	auto err = getWrapper<DBInterface>(rx)->EnumMeta(ns, keys, std::chrono::milliseconds(timeout));
 	if (!err.ok()) {
-		return Py_BuildValue("is[]", err.code(), err.what().c_str());
+		return Py_BuildValue("is[]", err.code(), err.what());
 	}
 
 	PyObject* list = PyList_New(keys.size());  // new ref
@@ -443,7 +458,7 @@ static PyObject* EnumMeta(PyObject* self, PyObject* args) {
 		++pos;
 	}
 
-	PyObject* res = Py_BuildValue("isO", err.code(), err.what().c_str(), list);
+	PyObject* res = Py_BuildValue("isO", err.code(), err.what(), list);
 	Py_DECREF(list);
 
 	return res;
@@ -501,11 +516,11 @@ static PyObject* GetAggregationResults(PyObject* self, PyObject* args) {
 
 	PyObject* dictFromJson = nullptr;
 	try {
-		dictFromJson = PyObjectFromJson(reindexer::giftStr(wrSer.Slice()));  // stolen ref
+		dictFromJson = PyObjectFromJson(wrSer.Slice());  // stolen ref
 	} catch (const Error& err) {
 		Py_XDECREF(dictFromJson);
 
-		return Py_BuildValue("is{}", err.code(), err.what().c_str());
+		return Py_BuildValue("is{}", err.code(), err.what());
 	}
 
 	PyObject* res = Py_BuildValue("isO", errOK, "", dictFromJson);  // new ref
@@ -539,10 +554,10 @@ static PyObject* NewTransaction(PyObject* self, PyObject* args) {
 	auto transaction = std::make_unique<TransactionWrapper>(db);
 	auto err = transaction->Start(ns, std::chrono::milliseconds(timeout));
 	if (!err.ok()) {
-		return Py_BuildValue("isk", err.code(), err.what().c_str(), 0);
+		return Py_BuildValue("isk", err.code(), err.what(), 0);
 	}
 
-	return Py_BuildValue("isk", err.code(), err.what().c_str(), reinterpret_cast<uintptr_t>(transaction.release()));
+	return Py_BuildValue("isk", errOK, "", reinterpret_cast<uintptr_t>(transaction.release()));
 }
 
 namespace {
@@ -663,7 +678,7 @@ static PyObject* CommitTransaction(PyObject* self, PyObject* args) {
 
 	deleteWrapper<TransactionWrapper>(transactionWrapperAddr); // free memory
 
-	return Py_BuildValue("isI", err.code(), err.what().c_str(), count);
+	return Py_BuildValue("isI", err.code(), err.what(), count);
 }
 
 static PyObject* RollbackTransaction(PyObject* self, PyObject* args) {
@@ -851,10 +866,8 @@ static PyObject* WhereKNN(PyObject* self, PyObject* args) {
 			auto vals = ParseListToVec(&valuesList);
 			auto vect = reindexer::FloatVector::CreateNotInitialized(reindexer::FloatVectorDimension(vals.size()));
 			auto data = vect.RawData();
-			size_t pos = 0;
-			for (const auto& value : vals) {
-				data[pos] = value.As<double>();
-				++pos;
+			for (size_t i = 0, s = vals.size(); i != s; ++i) {
+				data[i] = vals[i].As<double>();
 			}
 			var = std::move(vect);
 		} catch (const Error& err) {
@@ -1085,7 +1098,7 @@ static PyObject* DeleteQuery(PyObject* self, PyObject* args) {
 	size_t count = 0;
 	auto err = getWrapper<QueryWrapper>(queryWrapperAddr)->DeleteQuery(count, std::chrono::milliseconds(timeout));
 
-	return Py_BuildValue("isI", err.code(), err.what().c_str(), count);
+	return Py_BuildValue("isI", err.code(), err.what(), count);
 }
 
 namespace {
@@ -1112,12 +1125,12 @@ static PyObject* executeQuery(PyObject* self, PyObject* args, ExecuteType type) 
 	}
 
 	if (!err.ok()) {
-		return Py_BuildValue("iskII", err.code(), err.what().c_str(), 0, 0, 0);
+		return Py_BuildValue("iskII", err.code(), err.what(), 0, 0, 0);
 	}
 
 	const auto count = qresult->Count();
 	const auto totalCount = qresult->TotalCount();
-	return Py_BuildValue("iskII", err.code(), err.what().c_str(),
+	return Py_BuildValue("iskII", err.code(), err.what(),
 						 reinterpret_cast<uintptr_t>(qresult.release()), count, totalCount);
 }
 } // namespace

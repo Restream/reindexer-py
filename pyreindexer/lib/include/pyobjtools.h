@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Python.h>
+#include <span>
 #include "core/keyvalue/variant.h"
 #include "estl/h_vector.h"
 
@@ -33,6 +34,6 @@ reindexer::VariantArray ParseListToVec(PyObject** list);
 
 void PyObjectToJson(PyObject** obj, reindexer::WrSerializer& wrSer);
 reindexer::h_vector<std::string, 2> PyObjectToJson(PyObject** obj);
-PyObject* PyObjectFromJson(reindexer::span<char> json);
+PyObject* PyObjectFromJson(std::string_view json);
 
 }  // namespace pyreindexer

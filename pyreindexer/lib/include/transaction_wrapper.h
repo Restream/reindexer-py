@@ -39,17 +39,17 @@ public:
 
 	ItemT NewItem() {
 		assert(transaction_.has_value());
-		return db_->NewItem(*transaction_);
+		return transaction_->NewItem();
 	}
 
 	Error Modify(ItemT&& item, ItemModifyMode mode) {
 		assert(transaction_.has_value());
-		return db_->Modify(*transaction_, std::move(item), mode);
+		return transaction_->Modify(std::move(item), mode);
 	}
 
 	Error Modify(reindexer::Query&& query) {
 		assert(transaction_.has_value());
-		return db_->Modify(*transaction_, std::move(query));
+		return transaction_->Modify(std::move(query));
 	}
 
 	Error Commit(size_t& count, std::chrono::milliseconds timeout) {
