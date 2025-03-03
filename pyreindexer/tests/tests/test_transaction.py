@@ -5,6 +5,7 @@ import pytest
 from hamcrest import *
 
 from pyreindexer.exceptions import TransactionError
+from pyreindexer.query import CondType
 from tests.helpers.base_helper import get_ns_items, random_vector
 from tests.helpers.matchers import close_to_dict
 from tests.helpers.transaction import *
