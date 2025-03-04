@@ -55,7 +55,7 @@ with open('README.md', encoding='utf-8') as f:
     long_description = f.read()
 
 setup(name=PACKAGE_NAME,
-      version='0.4.0',
+      version='0.3.12',
       description='A connector that allows to interact with Reindexer',
       author='Igor Tulmentyev',
       maintainer='Reindexer Team',
