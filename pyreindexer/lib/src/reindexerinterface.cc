@@ -107,9 +107,9 @@ template <typename DBT>
 Error ReindexerInterface<DBT>::NewItem(std::string_view ns, typename DBT::ItemT& item,
 									   std::chrono::milliseconds timeout) {
 	return execute([this, ns, &item, timeout] {
-			item = newItem(ns, timeout);
-			return item.Status();
-		});
+		item = newItem(ns, timeout);
+		return item.Status();
+	});
 }
 
 template <typename DBT>
@@ -139,6 +139,14 @@ Error ReindexerInterface<DBT>::StartTransaction(std::string_view ns, Transaction
 		auto error = transaction.Status();
 		transactionWrapper.Wrap(std::move(transaction));
 		return error;
+	});
+}
+
+template <typename DBT>
+Error ReindexerInterface<DBT>::NewItem(typename DBT::TransactionT& transaction, typename DBT::ItemT& item) {
+	return execute([this, &transaction, &item] {
+		item = newItem(transaction);
+		return item.Status();
 	});
 }
 
@@ -243,6 +251,17 @@ template <typename DBT>
 typename DBT::TransactionT ReindexerInterface<DBT>::startTransaction(std::string_view ns,
 																	 std::chrono::milliseconds timeout) {
 	return db_.WithTimeout(timeout).NewTransaction(ns);
+}
+
+template <typename DBT>
+Error ReindexerInterface<DBT>::modify(typename DBT::TransactionT& transaction, typename DBT::ItemT&& item,
+									  ItemModifyMode mode) {
+	return transaction.Modify(std::move(item), mode);
+}
+
+template <typename DBT>
+Error ReindexerInterface<DBT>::modify(typename DBT::TransactionT& transaction, reindexer::Query&& query) {
+	return transaction.Modify(std::move(query));
 }
 
 template <typename DBT>

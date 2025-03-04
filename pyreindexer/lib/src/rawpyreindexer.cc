@@ -47,12 +47,12 @@ PyObject* queryResultsWrapperIterate(uintptr_t qresWrapperAddr) {
 	static constexpr bool withHeaderLen = false;
 	auto err = qresWrapper->GetItemJSON(wrSer, withHeaderLen);
 	if (!err.ok()) {
-		return Py_BuildValue("is{}", err.code(), err.what());
+		return Py_BuildValue("isO", err.code(), err.what(), NULL);
 	}
 
 	err = qresWrapper->Next();
 	if (!err.ok()) {
-		return Py_BuildValue("is{}", err.code(), err.what());
+		return Py_BuildValue("isO", err.code(), err.what(), NULL);
 	}
 
 	PyObject* dictFromJson = nullptr;
@@ -61,7 +61,7 @@ PyObject* queryResultsWrapperIterate(uintptr_t qresWrapperAddr) {
 	} catch (const Error& err) {
 		Py_XDECREF(dictFromJson);
 
-		return Py_BuildValue("is{}", err.code(), err.what());
+		return Py_BuildValue("isO", err.code(), err.what(), NULL);
 	}
 
 	PyObject* res = Py_BuildValue("isO", errOK, "", dictFromJson);  // new ref
@@ -198,7 +198,7 @@ static PyObject* EnumNamespaces(PyObject* self, PyObject* args) {
 	auto err = getWrapper<DBInterface>(rx)->EnumNamespaces(nsDefs, reindexer::EnumNamespacesOpts().WithClosed(enumAll),
 														   std::chrono::milliseconds(timeout));
 	if (!err.ok()) {
-		return Py_BuildValue("is[]", err.code(), err.what());
+		return Py_BuildValue("isO", err.code(), err.what(), NULL);
 	}
 
 	PyObject* list = PyList_New(nsDefs.size());	 // new ref
@@ -219,7 +219,7 @@ static PyObject* EnumNamespaces(PyObject* self, PyObject* args) {
 			Py_XDECREF(dictFromJson);
 			Py_DECREF(list);
 
-			return Py_BuildValue("is[]", err.code(), err.what());
+			return Py_BuildValue("isO", err.code(), err.what(), NULL);
 		}
 
 		PyList_SetItem(list, pos, dictFromJson);  // stolen ref
@@ -443,7 +443,7 @@ static PyObject* EnumMeta(PyObject* self, PyObject* args) {
 	std::vector<std::string> keys;
 	auto err = getWrapper<DBInterface>(rx)->EnumMeta(ns, keys, std::chrono::milliseconds(timeout));
 	if (!err.ok()) {
-		return Py_BuildValue("is[]", err.code(), err.what());
+		return Py_BuildValue("isO", err.code(), err.what(), NULL);
 	}
 
 	PyObject* list = PyList_New(keys.size());  // new ref
@@ -520,7 +520,7 @@ static PyObject* GetAggregationResults(PyObject* self, PyObject* args) {
 	} catch (const Error& err) {
 		Py_XDECREF(dictFromJson);
 
-		return Py_BuildValue("is{}", err.code(), err.what());
+		return Py_BuildValue("isO", err.code(), err.what(), NULL);
 	}
 
 	PyObject* res = Py_BuildValue("isO", errOK, "", dictFromJson);  // new ref
@@ -574,8 +574,8 @@ PyObject* modifyTransaction(PyObject* self, PyObject* args, ItemModifyMode mode)
 
 	auto transaction = getWrapper<TransactionWrapper>(transactionWrapperAddr);
 
-	auto item = transaction->NewItem();
-	auto err = item.Status();
+	ItemT item;
+	auto err = transaction->NewItem(item);
 	if (!err.ok()) {
 		Py_DECREF(defDict);
 		Py_XDECREF(preceptsList);

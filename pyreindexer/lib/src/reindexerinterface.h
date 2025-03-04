@@ -96,6 +96,13 @@ public:
 	Error FetchResults(QueryResultsWrapper& result);
 	Error StartTransaction(std::string_view ns, TransactionWrapper& transactionWrapper,
 						   std::chrono::milliseconds timeout);
+	Error NewItem(typename DBT::TransactionT& transaction, typename DBT::ItemT& item);
+	Error Modify(typename DBT::TransactionT& transaction, typename DBT::ItemT&& item, ItemModifyMode mode) {
+		return execute([this, &transaction, &item, mode] { return modify(transaction, std::move(item), mode); });
+	}
+	Error Modify(typename DBT::TransactionT& transaction, Query&& query) {
+		return execute([this, &transaction, &query] { return modify(transaction, std::move(query)); });
+	}
 	Error CommitTransaction(typename DBT::TransactionT& transaction, size_t& count, std::chrono::milliseconds timeout) {
 		return execute([this, &transaction, &count, timeout] { return commitTransaction(transaction, count, timeout); });
 	}
@@ -134,6 +141,9 @@ private:
 	Error select(std::string_view query, typename DBT::QueryResultsT& result, std::chrono::milliseconds timeout);
 	Error enumNamespaces(std::vector<NamespaceDef>& defs, EnumNamespacesOpts opts, std::chrono::milliseconds timeout);
 	typename DBT::TransactionT startTransaction(std::string_view ns, std::chrono::milliseconds timeout);
+	typename DBT::ItemT newItem(typename DBT::TransactionT& transaction) { return transaction.NewItem(); }
+	Error modify(typename DBT::TransactionT& transaction, typename DBT::ItemT&& item, ItemModifyMode mode);
+	Error modify(typename DBT::TransactionT& transaction, reindexer::Query&& query);
 	Error commitTransaction(typename DBT::TransactionT& transaction, size_t& count, std::chrono::milliseconds timeout);
 	Error rollbackTransaction(typename DBT::TransactionT& transaction, std::chrono::milliseconds timeout);
 	Error selectQuery(const Query& query, QueryResultsWrapper& result, std::chrono::milliseconds timeout);
