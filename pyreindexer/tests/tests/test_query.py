@@ -873,7 +873,9 @@ class TestQueryKNN:
         k: Final[int] = 39
         param = IndexSearchParamBruteForce(k=k)
         query_result = list(
-            query.where_knn("vec", random_vector(dimension), param).execute(timeout=timedelta(seconds=1)))
+            query.where_knn("vec", random_vector(dimension), param)
+                    .select("vectors()")
+                    .execute(timeout=timedelta(seconds=1)))
         # Then ("Check knn select result")
         check_response_has_close_to_ns_items(query_result, items)
         assert_that(query_result, has_length(k))
@@ -894,7 +896,9 @@ class TestQueryKNN:
         # When ("Execute query")
         param = IndexSearchParamHnsw(k=30, ef=30)
         query_result = list(
-            query.where_knn("vec", random_vector(dimension), param).execute(timeout=timedelta(seconds=1)))
+            query.where_knn("vec", random_vector(dimension), param)
+                    .select("vectors()")
+                    .execute(timeout=timedelta(seconds=1)))
         # Then ("Check knn select result")
         check_response_has_close_to_ns_items(query_result, items)
 
@@ -916,7 +920,9 @@ class TestQueryKNN:
         # When ("Execute query")
         param = IndexSearchParamHnsw(k=25, ef=40)
         query_result = list(
-            query.where_knn("vec", random_vector(dimension), param).execute(timeout=timedelta(seconds=1)))
+            query.where_knn("vec", random_vector(dimension), param)
+                    .select("vectors()")
+                    .execute(timeout=timedelta(seconds=1)))
         # Then ("Check knn select result")
         check_response_has_close_to_ns_items(query_result, items)
 
@@ -936,6 +942,8 @@ class TestQueryKNN:
         # When ("Execute query")
         param = IndexSearchParamIvf(k=30, nprobe=2)
         query_result = list(
-            query.where_knn("vec", random_vector(dimension), param).execute(timeout=timedelta(seconds=1)))
+            query.where_knn("vec", random_vector(dimension), param)
+                    .select("vectors()")
+                    .execute(timeout=timedelta(seconds=1)))
         # Then ("Check knn select result")
         check_response_has_close_to_ns_items(query_result, items)

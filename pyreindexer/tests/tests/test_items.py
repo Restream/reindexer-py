@@ -3,7 +3,7 @@ from datetime import timedelta
 import pytest
 from hamcrest import *
 
-from tests.helpers.base_helper import get_ns_items, random_vector
+from tests.helpers.base_helper import get_ns_items, get_ns_vect_items, random_vector
 from tests.helpers.matchers import close_to_dict
 from tests.test_data.constants import item_definition, vector_index_bf, vector_index_hnsw, vector_index_ivf
 
@@ -46,7 +46,7 @@ class TestCrudItems:
         item = {"id": 0, "vec": random_vector(dimension)}
         db.item.insert(namespace, item)
         # Then ("Check that item is added")
-        select_result = get_ns_items(db, namespace)
+        select_result = get_ns_vect_items(db, namespace)
         assert_that(select_result, has_length(1), "Item wasn't created")
         assert_that(select_result[0], close_to_dict(item))
 

@@ -158,7 +158,7 @@ def float_vector_hnsw_example(db):
 
     # create index
     fv_index_name = 'hnsw_idx'
-    dimension: Final[int] = 8
+    dimension: Final[int] = 4
     index_definitions = [{'name': 'id',
                           'json_paths': ['id'],
                           'field_type': 'int',
@@ -194,7 +194,9 @@ def float_vector_hnsw_example(db):
     # do query
     param = IndexSearchParamHnsw(k=20, ef=30)
     query_result = (db.new_query(namespace)
-                        .where_knn(fv_index_name, random_vector(dimension), param).must_execute(timedelta(seconds = 1)))
+                        .where_knn(fv_index_name, random_vector(dimension), param)
+                        .select("vectors()")
+                        .must_execute(timedelta(seconds = 1)))
 
     # result
     print("HNSW where_knn: ", query_result.count())
@@ -210,7 +212,7 @@ def float_vector_brute_force_sql_example(db):
 
     # create index
     fv_index_name = 'bf_idx'
-    dimension: Final[int] = 8
+    dimension: Final[int] = 4
     index_definitions = [{'name': 'id',
                           'json_paths': ['id'],
                           'field_type': 'int',
@@ -228,7 +230,7 @@ def float_vector_brute_force_sql_example(db):
                           "field_type": "float_vector",
                           "index_type": "vec_bf",
                           "config": {
-                              "dimension": 4,
+                              "dimension": 3,
                               "metric": "inner_product",
                               "start_size": 10000}}]
     for index in index_definitions:
@@ -253,8 +255,8 @@ def float_vector_brute_force_sql_example(db):
 
     # execute SQL query SELECT KNN
     value = random_vector(dimension)
-    k: Final[int] = 47
-    query = f'SELECT * FROM {namespace} WHERE KNN({fv_index_name}, {value}, k={k})'
+    k: Final[int] = 27
+    query = f'SELECT *, vectors() FROM {namespace} WHERE KNN({fv_index_name}, {value}, k={k})'
     query_result = db.select(query, timedelta(seconds = 1))
     print("Select where KNN: ", query_result.count())
     for item in query_result:
@@ -270,7 +272,7 @@ def rx_example():
         shutil.rmtree(location)
 
     db = RxConnector(f'builtin://{location}', max_replication_updates_size = 10 * 1024 * 1024)
-    #   db = RxConnector('cproto://127.0.0.1:6534/pyrx', enable_compression = True, fetch_amount = 500)
+    #db = RxConnector('cproto://127.0.0.1:6534/pyrx', enable_compression = True, fetch_amount = 500)
 
     namespace = 'test_table'
     db.namespace_open(namespace)

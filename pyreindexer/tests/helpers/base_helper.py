@@ -10,6 +10,10 @@ def get_ns_items(db, ns_name):
     """
     return list(db.query.sql(f"SELECT * FROM {ns_name}"))
 
+def get_ns_vect_items(db, ns_name):
+    """ Get all items via sql query
+    """
+    return list(db.query.sql(f"SELECT *, vectors() FROM {ns_name}"))
 
 def get_ns_description(db, ns_name):
     """ Get information about namespace in database

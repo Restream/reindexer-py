@@ -110,7 +110,7 @@ class TestSqlQueriesKNN:
         # When ("Execute SQL query SELECT KNN")
         value = random_vector(dimension)
         k = 47
-        query = f"SELECT * FROM {namespace} WHERE KNN(vec, {value}, k={k})"
+        query = f"SELECT *, vectors() FROM {namespace} WHERE KNN(vec, {value}, k={k})"
         query_result = list(db.query.sql(query, timeout=timedelta(seconds=1)))
         # Then ("Check knn select result")
         check_response_has_close_to_ns_items(query_result, items)
@@ -129,7 +129,7 @@ class TestSqlQueriesKNN:
             db.item.insert("new_ns", item)
         # When ("Execute SQL query SELECT KNN")
         value = random_vector(dimension)
-        query = f"SELECT * FROM {namespace} WHERE KNN(vec, {value}, k=20, ef=30)"
+        query = f"SELECT *, vectors() FROM {namespace} WHERE KNN(vec, {value}, k=20, ef=30)"
         query_result = list(db.query.sql(query, timeout=timedelta(seconds=1)))
         # Then ("Check knn select result")
         check_response_has_close_to_ns_items(query_result, items)
@@ -146,7 +146,7 @@ class TestSqlQueriesKNN:
             db.item.insert("new_ns", item)
         # When ("Execute SQL query SELECT KNN")
         value = random_vector(dimension)
-        query = f"SELECT * FROM {namespace} WHERE KNN(vec, {value}, k=30, nprobe=2)"
+        query = f"SELECT *, vectors() FROM {namespace} WHERE KNN(vec, {value}, k=30, nprobe=2)"
         query_result = list(db.query.sql(query, timeout=timedelta(seconds=1)))
         # Then ("Check knn select result")
         check_response_has_close_to_ns_items(query_result, items)
