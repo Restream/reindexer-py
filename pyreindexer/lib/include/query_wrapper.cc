@@ -77,6 +77,18 @@ void QueryWrapper::WhereBetweenFields(std::string_view firstField, CondType cond
 	++queriesCount_;
 }
 
+void QueryWrapper::WhereKNN(std::string_view index, reindexer::ConstFloatVectorView vec,
+							const reindexer::KnnSearchParams& params) {
+	ser_.PutVarUint(QueryItemType::QueryKnnCondition);
+	ser_.PutVString(index);
+	ser_.PutVarUint(nextOperation_);
+	ser_.PutFloatVectorView(vec);
+	params.Serialize(ser_);
+
+	nextOperation_ = OpType::OpAnd;
+	++queriesCount_;
+}
+
 Error QueryWrapper::OpenBracket() {
 	ser_.PutVarUint(QueryItemType::QueryOpenBracket);
 	ser_.PutVarUint(nextOperation_);
@@ -192,7 +204,7 @@ void QueryWrapper::addJoinQueries(const reindexer::h_vector<QueryWrapper*, 1>& q
 	}
 }
 
-reindexer::Error QueryWrapper::buildQuery(reindexer::Query& query) {
+reindexer::Error QueryWrapper::BuildQuery(reindexer::Query& query) {
 	reindexer::Error error = errOK;
 	try {
 		// current query (root)
@@ -223,7 +235,7 @@ reindexer::Error QueryWrapper::buildQuery(reindexer::Query& query) {
 reindexer::Error QueryWrapper::SelectQuery(std::unique_ptr<QueryResultsWrapper>& qr,
 										   std::chrono::milliseconds timeout) {
 	reindexer::Query query;
-	auto err = buildQuery(query);
+	auto err = BuildQuery(query);
 	if (!err.ok()) {
 		return err;
 	}
@@ -239,7 +251,7 @@ reindexer::Error QueryWrapper::SelectQuery(std::unique_ptr<QueryResultsWrapper>&
 reindexer::Error QueryWrapper::UpdateQuery(std::unique_ptr<QueryResultsWrapper>& qr,
 										   std::chrono::milliseconds timeout) {
 	reindexer::Query query;
-	auto err = buildQuery(query);
+	auto err = BuildQuery(query);
 	if (!err.ok()) {
 		return err;
 	}
@@ -249,7 +261,7 @@ reindexer::Error QueryWrapper::UpdateQuery(std::unique_ptr<QueryResultsWrapper>&
 
 reindexer::Error QueryWrapper::DeleteQuery(size_t& count, std::chrono::milliseconds timeout) {
 	reindexer::Query query;
-	auto err = buildQuery(query);
+	auto err = BuildQuery(query);
 	if (!err.ok()) {
 		return err;
 	}

@@ -3,15 +3,18 @@ import json
 import random
 import uuid
 from datetime import timedelta
+from typing import Final
 
 import pytest
 from hamcrest import *
 
-from point import Point
-from pyreindexer.exceptions import ApiError
-from query import CondType, LogLevel, StrictMode
-from tests.helpers.base_helper import calculate_distance, get_ns_items
-from tests.test_data.constants import AGGREGATE_FUNCTIONS_MATH
+from pyreindexer.index_search_params import IndexSearchParamBruteForce, IndexSearchParamHnsw, IndexSearchParamIvf
+from pyreindexer.point import Point
+from pyreindexer.exceptions import ApiError, QueryError
+from pyreindexer.query import CondType, LogLevel, StrictMode
+from tests.helpers.base_helper import calculate_distance, get_ns_items, random_vector
+from tests.helpers.check_helper import check_response_has_close_to_ns_items
+from tests.test_data.constants import AGGREGATE_FUNCTIONS_MATH, vector_index_bf, vector_index_hnsw, vector_index_ivf
 
 
 class TestQuerySelect:
@@ -825,3 +828,122 @@ class TestQueryTimeouts:
         # Then ("Check that items were not updated")
         items_after_update = get_ns_items(db, namespace)
         assert_that(items_after_update, equal_to(items), "Items were updated")
+
+
+class TestQueryKNN:
+
+    def test_query_knn_param_negative(self, db, namespace):
+        # Given ("Create test random float vector")
+        vec = random_vector(2)
+        # Given ("Create new query")
+        query = db.query.new(namespace)
+        # When ("Check indexes search param")
+        assert_that(calling(IndexSearchParamBruteForce).with_args(0),
+                    raises(ValueError, pattern="KNN limit 'k' should not be less than 1"))
+        assert_that(calling(IndexSearchParamHnsw).with_args(0, 1),
+                    raises(ValueError, pattern="KNN limit 'k' should not be less than 1"))
+        assert_that(calling(IndexSearchParamHnsw).with_args(2, 1),
+                    raises(ValueError, pattern="'ef' should not be less than 'k'"))
+        assert_that(calling(IndexSearchParamIvf).with_args(0, 1),
+                    raises(ValueError, pattern="KNN limit 'k' should not be less than 1"))
+        assert_that(calling(IndexSearchParamIvf).with_args(1, 0),
+                    raises(ValueError, pattern="'nprobe' should not be less than 1"))
+
+        # When ("Make query with knn")
+        assert_that(calling(query.where_knn).with_args("vec", None, None),
+                    raises(QueryError, pattern="A required parameter is not specified. `vec` can't be None or empty"))
+        assert_that(calling(query.where_knn).with_args("vec", [], None),
+                    raises(QueryError, pattern="A required parameter is not specified. `vec` can't be None or empty"))
+        assert_that(calling(query.where_knn).with_args("vec", vec, None),
+                    raises(QueryError, pattern="A required parameter is not specified. `param` can't be None"))
+
+    def test_query_brute_force(self, db, namespace, index):
+        # Given ("Create float vector index")
+        dimension: Final[int] = 8
+        index = copy.copy(vector_index_bf)
+        index["config"] = {"dimension": dimension, "metric": "inner_product", "start_size": 1000}
+        db.index.create(namespace, index)
+        # Given("Insert items")
+        items = [{"id": i, "vec": random_vector(dimension)} for i in range(100)]
+        for item in items:
+            db.item.insert("new_ns", item)
+        # Given ("Create new query")
+        query = db.query.new(namespace)
+        # When ("Execute query")
+        k: Final[int] = 39
+        param = IndexSearchParamBruteForce(k=k)
+        query_result = list(
+            query.where_knn("vec", random_vector(dimension), param)
+                    .select("vectors()")
+                    .execute(timeout=timedelta(seconds=1)))
+        # Then ("Check knn select result")
+        check_response_has_close_to_ns_items(query_result, items)
+        assert_that(query_result, has_length(k))
+
+    def test_query_hnsw(self, db, namespace, index):
+        # Given ("Create float vector index")
+        dimension: Final[int] = 8
+        index = copy.copy(vector_index_hnsw)
+        index["config"] = {"dimension": dimension, "metric": "inner_product", "start_size": 1000, "m": 16,
+                           "ef_construction": 200}
+        db.index.create(namespace, index)
+        # Given("Insert items")
+        items = [{"id": i, "vec": random_vector(dimension)} for i in range(100)]
+        for item in items:
+            db.item.insert("new_ns", item)
+        # Given ("Create new query")
+        query = db.query.new(namespace)
+        # When ("Execute query")
+        param = IndexSearchParamHnsw(k=30, ef=30)
+        query_result = list(
+            query.where_knn("vec", random_vector(dimension), param)
+                    .select("vectors()")
+                    .execute(timeout=timedelta(seconds=1)))
+        # Then ("Check knn select result")
+        check_response_has_close_to_ns_items(query_result, items)
+
+    def test_query_hnsw_multithread(self, db, namespace, index):
+        # Given ("Create float vector index")
+        dimension: Final[int] = 8
+        index = copy.copy(vector_index_hnsw)
+        index["config"] = {"dimension": dimension, "metric": "inner_product", "start_size": 1000, "m": 16,
+                           "ef_construction": 200, "multithreading": 1}
+        db.index.create(namespace, index)
+        # Given("Insert items via transaction")
+        items = [{"id": i, "vec": random_vector(dimension)} for i in range(100)]
+        transaction = db.tx.begin(namespace)
+        for item in items:
+            transaction.insert_item(item)
+        transaction.commit()
+        # Given ("Create new query")
+        query = db.query.new(namespace)
+        # When ("Execute query")
+        param = IndexSearchParamHnsw(k=25, ef=40)
+        query_result = list(
+            query.where_knn("vec", random_vector(dimension), param)
+                    .select("vectors()")
+                    .execute(timeout=timedelta(seconds=1)))
+        # Then ("Check knn select result")
+        check_response_has_close_to_ns_items(query_result, items)
+
+    def test_query_ivf(self, db, namespace, index):
+        # Given ("Create float vector index")
+        # Given ("Create float vector index")
+        dimension: Final[int] = 8
+        index = copy.copy(vector_index_ivf)
+        index["config"] = {"dimension": dimension, "metric": "l2", "centroids_count": 3}
+        db.index.create(namespace, index)
+        # Given("Insert items")
+        items = [{"id": i, "vec": random_vector(dimension)} for i in range(150)]
+        for item in items:
+            db.item.insert("new_ns", item)
+        # Given ("Create new query")
+        query = db.query.new(namespace)
+        # When ("Execute query")
+        param = IndexSearchParamIvf(k=30, nprobe=2)
+        query_result = list(
+            query.where_knn("vec", random_vector(dimension), param)
+                    .select("vectors()")
+                    .execute(timeout=timedelta(seconds=1)))
+        # Then ("Check knn select result")
+        check_response_has_close_to_ns_items(query_result, items)

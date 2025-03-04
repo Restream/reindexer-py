@@ -189,13 +189,13 @@ PyObject* pyValueFromJsonValue(const gason::JsonValue& value) {
 	PyObject* pyValue = nullptr;
 
 	switch (value.getTag()) {
-		case gason::JsonTag::JSON_NUMBER:
+		case gason::JsonTag::NUMBER:
 			pyValue = PyLong_FromLongLong(value.toNumber()); // new ref
 			break;
-		case gason::JsonTag::JSON_DOUBLE:
+		case gason::JsonTag::DOUBLE:
 			pyValue = PyFloat_FromDouble(value.toDouble()); // new ref
 			break;
-		case gason::JsonTag::JSON_STRING: {
+		case gason::JsonTag::STRING: {
 			auto sv = value.toString();
 			pyValue = PyUnicode_FromStringAndSize(sv.data(), sv.size()); // new ref
 			break;
@@ -204,15 +204,15 @@ PyObject* pyValueFromJsonValue(const gason::JsonValue& value) {
 			pyValue = Py_None;
 			Py_INCREF(pyValue); // new ref
 			break;
-		case gason::JsonTag::JSON_TRUE:
+		case gason::JsonTag::JTRUE:
 			pyValue = Py_True;
 			Py_INCREF(pyValue); // new ref
 			break;
-		case gason::JsonTag::JSON_FALSE:
+		case gason::JsonTag::JFALSE:
 			pyValue = Py_False;
 			Py_INCREF(pyValue); // new ref
 			break;
-		case gason::JsonTag::JSON_ARRAY:
+		case gason::JsonTag::ARRAY:
 			pyValue = PyList_New(0); // new ref
 			for (const auto& v : value) {
 				PyObject* dictFromJson = pyValueFromJsonValue(v.value); // stolen ref
@@ -220,7 +220,7 @@ PyObject* pyValueFromJsonValue(const gason::JsonValue& value) {
 				Py_XDECREF(dictFromJson);
 			}
 			break;
-		case gason::JsonTag::JSON_OBJECT:
+		case gason::JsonTag::OBJECT:
 			pyValue = PyDict_New(); // new ref
 			for (const auto& v : value) {
 				PyObject* dictFromJson = pyValueFromJsonValue(v.value); // stolen ref
@@ -230,7 +230,7 @@ PyObject* pyValueFromJsonValue(const gason::JsonValue& value) {
 				Py_XDECREF(dictFromJson);
 			}
 			break;
-		case gason::JsonTag::JSON_EMPTY:
+		case gason::JsonTag::EMPTY:
 			throw gason::Exception("Unexpected `JSON_EMPTY` tag");
 			break;
 	}
@@ -238,7 +238,7 @@ PyObject* pyValueFromJsonValue(const gason::JsonValue& value) {
 	return pyValue;
 }
 
-PyObject* PyObjectFromJson(reindexer::span<char> json) {
+PyObject* PyObjectFromJson(std::span<char> json) {
 	if (json.empty()) {
 		PyObject* pyValue = Py_None;
 		Py_INCREF(pyValue); // new ref

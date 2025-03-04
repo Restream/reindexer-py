@@ -63,14 +63,7 @@ public:
 	Error DropIndex(std::string_view ns, const IndexDef& idx, std::chrono::milliseconds timeout) {
 		return execute([this, ns, &idx, timeout] { return dropIndex(ns, idx, timeout); });
 	}
-	typename DBT::ItemT NewItem(std::string_view ns, std::chrono::milliseconds timeout) {
-		typename DBT::ItemT item;
-		execute([this, ns, &item, timeout] {
-			item = newItem(ns, timeout);
-			return item.Status();
-		});
-		return item;
-	}
+	Error NewItem(std::string_view ns, typename DBT::ItemT& item, std::chrono::milliseconds timeout);
 	Error Insert(std::string_view ns, typename DBT::ItemT& item, std::chrono::milliseconds timeout) {
 		return execute([this, ns, &item, timeout] { return insert(ns, item, timeout); });
 	}
@@ -103,16 +96,12 @@ public:
 	Error FetchResults(QueryResultsWrapper& result);
 	Error StartTransaction(std::string_view ns, TransactionWrapper& transactionWrapper,
 						   std::chrono::milliseconds timeout);
-	typename DBT::ItemT NewItem(typename DBT::TransactionT& transaction) {
-		typename DBT::ItemT item;
-		execute([this, &transaction, &item] {
-			item = newItem(transaction);
-			return item.Status();
-		});
-		return item;
-	}
+	Error NewItem(typename DBT::TransactionT& transaction, typename DBT::ItemT& item);
 	Error Modify(typename DBT::TransactionT& transaction, typename DBT::ItemT&& item, ItemModifyMode mode) {
 		return execute([this, &transaction, &item, mode] { return modify(transaction, std::move(item), mode); });
+	}
+	Error Modify(typename DBT::TransactionT& transaction, Query&& query) {
+		return execute([this, &transaction, &query] { return modify(transaction, std::move(query)); });
 	}
 	Error CommitTransaction(typename DBT::TransactionT& transaction, size_t& count, std::chrono::milliseconds timeout) {
 		return execute([this, &transaction, &count, timeout] { return commitTransaction(transaction, count, timeout); });
@@ -154,12 +143,13 @@ private:
 	typename DBT::TransactionT startTransaction(std::string_view ns, std::chrono::milliseconds timeout);
 	typename DBT::ItemT newItem(typename DBT::TransactionT& transaction) { return transaction.NewItem(); }
 	Error modify(typename DBT::TransactionT& transaction, typename DBT::ItemT&& item, ItemModifyMode mode);
+	Error modify(typename DBT::TransactionT& transaction, reindexer::Query&& query);
 	Error commitTransaction(typename DBT::TransactionT& transaction, size_t& count, std::chrono::milliseconds timeout);
 	Error rollbackTransaction(typename DBT::TransactionT& transaction, std::chrono::milliseconds timeout);
 	Error selectQuery(const Query& query, QueryResultsWrapper& result, std::chrono::milliseconds timeout);
 	Error deleteQuery(const Query& query, size_t& count, std::chrono::milliseconds timeout);
 	Error updateQuery(const Query& query, QueryResultsWrapper& result, std::chrono::milliseconds timeout);
-	Error stop();
+	void stop();
 
 	DBT db_;
 	std::thread executionThr_;
@@ -169,6 +159,7 @@ private:
 	std::mutex mtx_;
 	std::condition_variable condVar_;
 	reindexer::coroutine::channel<bool> stopCh_;
+	std::chrono::milliseconds timeout_{0};
 };
 
 }  // namespace pyreindexer

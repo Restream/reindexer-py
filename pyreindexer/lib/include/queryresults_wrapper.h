@@ -49,14 +49,14 @@ public:
 		return qres_->TotalCount();
 	}
 
-	void GetItemJSON(reindexer::WrSerializer& wrser, bool withHdrLen) {
+	Error GetItemJSON(reindexer::WrSerializer& wrser, bool withHdrLen) {
 		assert(qres_.has_value());
-		it_.GetJSON(wrser, withHdrLen);
+		return it_.GetJSON(wrser, withHdrLen);
 	}
 
-	void Next() {
+	Error Next() {
 		assert(qres_.has_value());
-		db_->FetchResults(*this);
+		return db_->FetchResults(*this);
 	}
 
 	void FetchResults() {
