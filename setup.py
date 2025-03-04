@@ -44,7 +44,6 @@ class BuildExt(build_ext_orig):
         self.spawn(['cmake', source_dir,
                     '-DCMAKE_BUILD_TYPE=RelWithDebInfo',
                     '-DCMAKE_CXX_STANDARD=20',
-                    '-DCMAKE_CXX_STANDARD_REQUIRED=ON',
                     '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + lib_dir,
                     '-DCMAKE_OSX_DEPLOYMENT_TARGET=11'])
         if not self.dry_run:
