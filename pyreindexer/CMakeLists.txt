@@ -10,7 +10,7 @@ endif()
 
 enable_testing()
 
-set(PY_MIN_VERSION 3.6)
+set(PY_MIN_VERSION 3.7)
 set(RX_MIN_VERSION 4.20.0)
 find_package(PythonInterp ${PY_MIN_VERSION})
 find_package(PythonLibs ${PY_MIN_VERSION})
