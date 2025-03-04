@@ -14,21 +14,6 @@ jobs:
         - ubuntu-22.04
         - ubuntu-24.04
         - macos-14
-        include:
-        - python: "3.10"
-          platform: ubuntu-latest
-        - python: "3.11"
-          platform: ubuntu-latest
-        - python: "3.12"
-          platform: ubuntu-latest
-        - python: "3.14"
-          platform: ubuntu-latest
-        - python: pypy3.10
-          platform: ubuntu-latest
-          distutils: stdlib
-        - platform: ubuntu-latest
-          python: "3.10"
-          distutils: stdlib
     runs-on: ${{ matrix.platform }}
     continue-on-error: ${{ matrix.python == '3.14' }}
     env:
