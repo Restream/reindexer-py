@@ -1,6 +1,7 @@
 #include "rawpyreindexer.h"
 
 #include "core/keyvalue/float_vector.h"
+#include "estl/gift_str.h"
 #include "tools/serializer.h"
 
 #include "queryresults_wrapper.h"
@@ -57,7 +58,7 @@ PyObject* queryResultsWrapperIterate(uintptr_t qresWrapperAddr) {
 
 	PyObject* dictFromJson = nullptr;
 	try {
-		dictFromJson = PyObjectFromJson(wrSer.Slice());  // stolen ref
+		dictFromJson = PyObjectFromJson(reindexer::giftStr(wrSer.Slice()));  // stolen ref
 	} catch (const Error& err) {
 		Py_XDECREF(dictFromJson);
 
@@ -214,7 +215,7 @@ static PyObject* EnumNamespaces(PyObject* self, PyObject* args) {
 
 		PyObject* dictFromJson = nullptr;
 		try {
-			dictFromJson = PyObjectFromJson(wrSer.Slice());  // stolen ref
+			dictFromJson = PyObjectFromJson(reindexer::giftStr(wrSer.Slice()));  // stolen ref
 		} catch (const Error& err) {
 			Py_XDECREF(dictFromJson);
 			Py_DECREF(list);
@@ -257,7 +258,7 @@ static PyObject* IndexAdd(PyObject* self, PyObject* args) {
 
 	Py_DECREF(indexDefDict);
 
-	auto indexDef = IndexDef::FromJSON(wrSer.Slice());
+	auto indexDef = IndexDef::FromJSON(reindexer::giftStr(wrSer.Slice()));
 	if (!indexDef) {
 		pyErr(indexDef.error());
 	}
@@ -289,7 +290,7 @@ static PyObject* IndexUpdate(PyObject* self, PyObject* args) {
 
 	Py_DECREF(indexDefDict);
 
-	auto indexDef = IndexDef::FromJSON(wrSer.Slice());
+	auto indexDef = IndexDef::FromJSON(reindexer::giftStr(wrSer.Slice()));
 	if (!indexDef) {
 		return pyErr(indexDef.error());
 	}
@@ -516,7 +517,7 @@ static PyObject* GetAggregationResults(PyObject* self, PyObject* args) {
 
 	PyObject* dictFromJson = nullptr;
 	try {
-		dictFromJson = PyObjectFromJson(wrSer.Slice());  // stolen ref
+		dictFromJson = PyObjectFromJson(reindexer::giftStr(wrSer.Slice()));  // stolen ref
 	} catch (const Error& err) {
 		Py_XDECREF(dictFromJson);
 

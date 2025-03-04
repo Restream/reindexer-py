@@ -34,6 +34,6 @@ reindexer::VariantArray ParseListToVec(PyObject** list);
 
 void PyObjectToJson(PyObject** obj, reindexer::WrSerializer& wrSer);
 reindexer::h_vector<std::string, 2> PyObjectToJson(PyObject** obj);
-PyObject* PyObjectFromJson(std::string_view json);
+PyObject* PyObjectFromJson(std::span<char> json);
 
 }  // namespace pyreindexer
