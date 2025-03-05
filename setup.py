@@ -5,8 +5,8 @@ from setuptools import Extension, setup
 from setuptools.command.build_ext import build_ext as build_ext_orig
 
 
-if sys.version_info < (3, 6):
-    raise RuntimeError('Require Python 3.6 or greater')
+if sys.version_info < (3, 7):
+    raise RuntimeError('Require Python 3.7 or greater')
 
 PACKAGE_NAME = 'pyreindexer'
 
@@ -81,7 +81,7 @@ setup(name=PACKAGE_NAME,
           'example/main.py',
           'tests/**/*.py'
       ]},
-      python_requires=">=3.6",
+      python_requires=">=3.7",
       install_requires=['envoy==0.0.3', 'delegator==0.0.3', 'pyhamcrest==2.0.2', 'pytest==6.2.5'],
       classifiers=[
           _c2('Development Status', '3 - Alpha'),
@@ -93,13 +93,13 @@ setup(name=PACKAGE_NAME,
           _c2('Operating System', 'MacOS'),
           _c2('Operating System', 'POSIX', 'Linux'),
           _c2('Programming Language', 'Python'),
-          _c2('Programming Language', 'Python', '3.6'),
           _c2('Programming Language', 'Python', '3.7'),
           _c2('Programming Language', 'Python', '3.8'),
           _c2('Programming Language', 'Python', '3.9'),
           _c2('Programming Language', 'Python', '3.10'),
           _c2('Programming Language', 'Python', '3.11'),
           _c2('Programming Language', 'Python', '3.12'),
+          _c2('Programming Language', 'Python', '3.13'),
           _c2('Programming Language', 'Python', 'Implementation'),
           _c2('Programming Language', 'Python', 'Implementation', 'CPython'),
           _c2('Programming Language', 'Python', 'Implementation', 'PyPy'),
