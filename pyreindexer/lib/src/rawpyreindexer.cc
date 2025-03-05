@@ -1,5 +1,7 @@
 #include "rawpyreindexer.h"
 
+#include "core/keyvalue/float_vector.h"
+#include "estl/gift_str.h"
 #include "tools/serializer.h"
 
 #include "queryresults_wrapper.h"
@@ -12,6 +14,13 @@ namespace pyreindexer {
 using reindexer::Error;
 using reindexer::IndexDef;
 using reindexer::WrSerializer;
+
+#ifdef PYREINDEXER_CPROTO
+using ItemT = reindexer::client::Item;
+#else
+using ItemT = reindexer::Item;
+#endif
+
 
 namespace {
 uintptr_t initReindexer(const ReindexerConfig& cfg) {
@@ -30,15 +39,22 @@ void deleteWrapper(uintptr_t wrapperAddr) {
 	delete queryWrapperPtr;
 }
 
-PyObject* pyErr(const Error& err) { return Py_BuildValue("is", err.code(), err.what().c_str()); }
+PyObject* pyErr(const Error& err) { return Py_BuildValue("is", err.code(), err.what()); }
 
 PyObject* queryResultsWrapperIterate(uintptr_t qresWrapperAddr) {
 	QueryResultsWrapper* qresWrapper = getWrapper<QueryResultsWrapper>(qresWrapperAddr);
 
 	WrSerializer wrSer;
-	static const bool withHeaderLen = false;
-	qresWrapper->GetItemJSON(wrSer, withHeaderLen);
-	qresWrapper->Next();
+	static constexpr bool withHeaderLen = false;
+	auto err = qresWrapper->GetItemJSON(wrSer, withHeaderLen);
+	if (!err.ok()) {
+		return Py_BuildValue("isO", err.code(), err.what(), NULL);
+	}
+
+	err = qresWrapper->Next();
+	if (!err.ok()) {
+		return Py_BuildValue("isO", err.code(), err.what(), NULL);
+	}
 
 	PyObject* dictFromJson = nullptr;
 	try {
@@ -46,7 +62,7 @@ PyObject* queryResultsWrapperIterate(uintptr_t qresWrapperAddr) {
 	} catch (const Error& err) {
 		Py_XDECREF(dictFromJson);
 
-		return Py_BuildValue("is{}", err.code(), err.what().c_str());
+		return Py_BuildValue("isO", err.code(), err.what(), NULL);
 	}
 
 	PyObject* res = Py_BuildValue("isO", errOK, "", dictFromJson);  // new ref
@@ -124,12 +140,12 @@ static PyObject* Select(PyObject* self, PyObject* args) {
 	auto qresult = std::make_unique<QueryResultsWrapper>(db);
 	auto err = qresult->Select(query, std::chrono::milliseconds(timeout));
 	if (!err.ok()) {
-		return Py_BuildValue("iskII", err.code(), err.what().c_str(), 0, 0);
+		return Py_BuildValue("iskII", err.code(), err.what(), 0, 0, 0);
 	}
 
 	const auto count = qresult->Count();
 	const auto totalCount = qresult->TotalCount();
-	return Py_BuildValue("iskII", err.code(), err.what().c_str(),
+	return Py_BuildValue("iskII", err.code(), err.what(),
 						 reinterpret_cast<uintptr_t>(qresult.release()), count, totalCount);
 }
 
@@ -183,7 +199,7 @@ static PyObject* EnumNamespaces(PyObject* self, PyObject* args) {
 	auto err = getWrapper<DBInterface>(rx)->EnumNamespaces(nsDefs, reindexer::EnumNamespacesOpts().WithClosed(enumAll),
 														   std::chrono::milliseconds(timeout));
 	if (!err.ok()) {
-		return Py_BuildValue("is[]", err.code(), err.what().c_str());
+		return Py_BuildValue("isO", err.code(), err.what(), NULL);
 	}
 
 	PyObject* list = PyList_New(nsDefs.size());	 // new ref
@@ -195,7 +211,7 @@ static PyObject* EnumNamespaces(PyObject* self, PyObject* args) {
 	Py_ssize_t pos = 0;
 	for (const auto& ns : nsDefs) {
 		wrSer.Reset();
-		ns.GetJSON(wrSer, false);
+		ns.GetJSON(wrSer);
 
 		PyObject* dictFromJson = nullptr;
 		try {
@@ -204,14 +220,14 @@ static PyObject* EnumNamespaces(PyObject* self, PyObject* args) {
 			Py_XDECREF(dictFromJson);
 			Py_DECREF(list);
 
-			return Py_BuildValue("is{}", err.code(), err.what().c_str());
+			return Py_BuildValue("isO", err.code(), err.what(), NULL);
 		}
 
 		PyList_SetItem(list, pos, dictFromJson);  // stolen ref
 		++pos;
 	}
 
-	PyObject* res = Py_BuildValue("isO", err.code(), err.what().c_str(), list);
+	PyObject* res = Py_BuildValue("isO", err.code(), err.what(), list);
 	Py_DECREF(list);
 
 	return res;
@@ -242,11 +258,12 @@ static PyObject* IndexAdd(PyObject* self, PyObject* args) {
 
 	Py_DECREF(indexDefDict);
 
-	IndexDef indexDef;
-	auto err = indexDef.FromJSON(reindexer::giftStr(wrSer.Slice()));
-	if (err.ok()) {
-		err = getWrapper<DBInterface>(rx)->AddIndex(ns, indexDef, std::chrono::milliseconds(timeout));
+	auto indexDef = IndexDef::FromJSON(reindexer::giftStr(wrSer.Slice()));
+	if (!indexDef) {
+		pyErr(indexDef.error());
 	}
+
+	auto err = getWrapper<DBInterface>(rx)->AddIndex(ns, *indexDef, std::chrono::milliseconds(timeout));
 	return pyErr(err);
 }
 
@@ -273,11 +290,12 @@ static PyObject* IndexUpdate(PyObject* self, PyObject* args) {
 
 	Py_DECREF(indexDefDict);
 
-	IndexDef indexDef;
-	auto err = indexDef.FromJSON(reindexer::giftStr(wrSer.Slice()));
-	if (err.ok()) {
-		err = getWrapper<DBInterface>(rx)->UpdateIndex(ns, indexDef, std::chrono::milliseconds(timeout));
+	auto indexDef = IndexDef::FromJSON(reindexer::giftStr(wrSer.Slice()));
+	if (!indexDef) {
+		return pyErr(indexDef.error());
 	}
+
+	auto err = getWrapper<DBInterface>(rx)->UpdateIndex(ns, *indexDef, std::chrono::milliseconds(timeout));
 	return pyErr(err);
 }
 
@@ -310,8 +328,8 @@ PyObject* itemModify(PyObject* self, PyObject* args, ItemModifyMode mode) {
 	Py_INCREF(itemDefDict);
 	Py_XINCREF(preceptsList);
 
-	auto item = getWrapper<DBInterface>(rx)->NewItem(ns, std::chrono::milliseconds(timeout));
-	auto err = item.Status();
+	ItemT item;
+	auto err = getWrapper<DBInterface>(rx)->NewItem(ns, item, std::chrono::milliseconds(timeout));
 	if (!err.ok()) {
 		return pyErr(err);
 	}
@@ -346,7 +364,7 @@ PyObject* itemModify(PyObject* self, PyObject* args, ItemModifyMode mode) {
 			return pyErr(err);
 		}
 
-		item.SetPrecepts(precepts); // ToDo after migrate on v.4, do std::move
+		item.SetPrecepts(std::move(precepts));
 	}
 
 	Py_XDECREF(preceptsList);
@@ -400,7 +418,7 @@ static PyObject* GetMeta(PyObject* self, PyObject* args) {
 
 	std::string value;
 	auto err = getWrapper<DBInterface>(rx)->GetMeta(ns, key, value, std::chrono::milliseconds(timeout));
-	return Py_BuildValue("iss", err.code(), err.what().c_str(), value.c_str());
+	return Py_BuildValue("iss", err.code(), err.what(), value.c_str());
 }
 
 static PyObject* DeleteMeta(PyObject* self, PyObject* args) {
@@ -426,7 +444,7 @@ static PyObject* EnumMeta(PyObject* self, PyObject* args) {
 	std::vector<std::string> keys;
 	auto err = getWrapper<DBInterface>(rx)->EnumMeta(ns, keys, std::chrono::milliseconds(timeout));
 	if (!err.ok()) {
-		return Py_BuildValue("is[]", err.code(), err.what().c_str());
+		return Py_BuildValue("isO", err.code(), err.what(), NULL);
 	}
 
 	PyObject* list = PyList_New(keys.size());  // new ref
@@ -441,7 +459,7 @@ static PyObject* EnumMeta(PyObject* self, PyObject* args) {
 		++pos;
 	}
 
-	PyObject* res = Py_BuildValue("isO", err.code(), err.what().c_str(), list);
+	PyObject* res = Py_BuildValue("isO", err.code(), err.what(), list);
 	Py_DECREF(list);
 
 	return res;
@@ -503,7 +521,7 @@ static PyObject* GetAggregationResults(PyObject* self, PyObject* args) {
 	} catch (const Error& err) {
 		Py_XDECREF(dictFromJson);
 
-		return Py_BuildValue("is{}", err.code(), err.what().c_str());
+		return Py_BuildValue("isO", err.code(), err.what(), NULL);
 	}
 
 	PyObject* res = Py_BuildValue("isO", errOK, "", dictFromJson);  // new ref
@@ -537,10 +555,10 @@ static PyObject* NewTransaction(PyObject* self, PyObject* args) {
 	auto transaction = std::make_unique<TransactionWrapper>(db);
 	auto err = transaction->Start(ns, std::chrono::milliseconds(timeout));
 	if (!err.ok()) {
-		return Py_BuildValue("isk", err.code(), err.what().c_str(), 0);
+		return Py_BuildValue("isk", err.code(), err.what(), 0);
 	}
 
-	return Py_BuildValue("isk", err.code(), err.what().c_str(), reinterpret_cast<uintptr_t>(transaction.release()));
+	return Py_BuildValue("isk", errOK, "", reinterpret_cast<uintptr_t>(transaction.release()));
 }
 
 namespace {
@@ -557,8 +575,8 @@ PyObject* modifyTransaction(PyObject* self, PyObject* args, ItemModifyMode mode)
 
 	auto transaction = getWrapper<TransactionWrapper>(transactionWrapperAddr);
 
-	auto item = transaction->NewItem();
-	auto err = item.Status();
+	ItemT item;
+	auto err = transaction->NewItem(item);
 	if (!err.ok()) {
 		Py_DECREF(defDict);
 		Py_XDECREF(preceptsList);
@@ -597,7 +615,7 @@ PyObject* modifyTransaction(PyObject* self, PyObject* args, ItemModifyMode mode)
 			return pyErr(err);
 		}
 
-		item.SetPrecepts(precepts); // ToDo after migrate on v.4, do std::move
+		item.SetPrecepts(std::move(precepts));
 	}
 
 	Py_XDECREF(preceptsList);
@@ -621,6 +639,34 @@ static PyObject* UpdateTransaction(PyObject* self, PyObject* args) { return modi
 static PyObject* UpsertTransaction(PyObject* self, PyObject* args) { return modifyTransaction(self, args, ModeUpsert); }
 static PyObject* DeleteTransaction(PyObject* self, PyObject* args) { return modifyTransaction(self, args, ModeDelete); }
 
+namespace {
+PyObject* modifyQueryTransaction(PyObject* self, PyObject* args, QueryType type) {
+	uintptr_t transactionWrapperAddr = 0;
+	uintptr_t queryWrapperAddr = 0;
+	if (!PyArg_ParseTuple(args, "kk", &transactionWrapperAddr, &queryWrapperAddr)) {
+		return nullptr;
+	}
+
+	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
+
+	reindexer::Query rxQuery;
+	auto err = query->BuildQuery(rxQuery);
+	if (!err.ok()) {
+		return pyErr(err);
+	}
+	rxQuery.type_ = type;
+
+	err = getWrapper<TransactionWrapper>(transactionWrapperAddr)->Modify(std::move(rxQuery));
+	return pyErr(err);
+}
+} // namespace
+static PyObject* UpdateQueryTransaction(PyObject* self, PyObject* args) {
+	return modifyQueryTransaction(self, args, QueryType::QueryUpdate);
+}
+static PyObject* DeleteQueryTransaction(PyObject* self, PyObject* args) {
+	return modifyQueryTransaction(self, args, QueryType::QueryDelete);
+}
+
 static PyObject* CommitTransaction(PyObject* self, PyObject* args) {
 	uintptr_t transactionWrapperAddr = 0;
 	unsigned timeout = 0;
@@ -633,7 +679,7 @@ static PyObject* CommitTransaction(PyObject* self, PyObject* args) {
 
 	deleteWrapper<TransactionWrapper>(transactionWrapperAddr); // free memory
 
-	return Py_BuildValue("isI", err.code(), err.what().c_str(), count);
+	return Py_BuildValue("isI", err.code(), err.what(), count);
 }
 
 static PyObject* RollbackTransaction(PyObject* self, PyObject* args) {
@@ -695,9 +741,8 @@ static PyObject* Where(PyObject* self, PyObject* args) {
 
 			return pyErr(err);
 		}
+		Py_DECREF(keysList);
 	}
-
-	Py_XDECREF(keysList);
 
 	getWrapper<QueryWrapper>(queryWrapperAddr)->Where(index, CondType(condition), keys);
 
@@ -724,9 +769,8 @@ static PyObject* WhereSubQuery(PyObject* self, PyObject* args) {
 
 			return pyErr(err);
 		}
+		Py_DECREF(keysList);
 	}
-
-	Py_XDECREF(keysList);
 
 	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
 	auto subQuery = getWrapper<QueryWrapper>(subQueryWrapperAddr);
@@ -772,9 +816,8 @@ static PyObject* WhereUUID(PyObject* self, PyObject* args) {
 
 			return pyErr(err);
 		}
+		Py_DECREF(keysList);
 	}
-
-	Py_XDECREF(keysList);
 
 	getWrapper<QueryWrapper>(queryWrapperAddr)->WhereUUID(index, CondType(condition), keys);
 
@@ -793,6 +836,53 @@ static PyObject* WhereBetweenFields(PyObject* self, PyObject* args) {
 	getWrapper<QueryWrapper>(queryWrapperAddr)->WhereBetweenFields(first_field, CondType(condition), second_field);
 
 	Py_RETURN_NONE;
+}
+
+namespace {
+reindexer::KnnSearchParams GetParams(unsigned k, unsigned ef, unsigned nprobe) {
+	if (ef > 0) {
+		return reindexer::KnnSearchParams::Hnsw(k, ef);
+	}
+	if (nprobe > 0) {
+		return reindexer::KnnSearchParams::Ivf(k, nprobe);
+	}
+	return reindexer::KnnSearchParams::BruteForce(k);
+}
+}
+
+static PyObject* WhereKNN(PyObject* self, PyObject* args) {
+	uintptr_t queryWrapperAddr = 0;
+	char* index = nullptr;
+	unsigned k = 0, ef = 0, nprobe = 0;
+	PyObject* valuesList = nullptr;  // borrowed ref after ParseTuple if passed
+	if (!PyArg_ParseTuple(args, "ksIIIO!", &queryWrapperAddr, &index, &k, &ef, &nprobe, &PyList_Type, &valuesList)) {
+		return nullptr;
+	}
+
+	Py_XINCREF(valuesList);
+
+	reindexer::Variant var;
+	if (valuesList != nullptr) {
+		try {
+			auto vals = ParseListToVec(&valuesList);
+			auto vect = reindexer::FloatVector::CreateNotInitialized(reindexer::FloatVectorDimension(vals.size()));
+			auto data = vect.RawData();
+			for (size_t i = 0, s = vals.size(); i != s; ++i) {
+				data[i] = vals[i].As<double>();
+			}
+			var = std::move(vect);
+		} catch (const Error& err) {
+			Py_DECREF(valuesList);
+
+			return pyErr(err);
+		}
+		Py_DECREF(valuesList);
+	}
+
+	auto params = GetParams(k, ef, nprobe);
+	getWrapper<QueryWrapper>(queryWrapperAddr)->WhereKNN(index, reindexer::ConstFloatVectorView(var), params);
+
+	return pyErr({});
 }
 
 namespace {
@@ -897,9 +987,8 @@ static PyObject* Aggregation(PyObject* self, PyObject* args) {
 
 			return pyErr(err);
 		}
+		Py_DECREF(fieldsList);
 	}
-
-	Py_XDECREF(fieldsList);
 
 	getWrapper<QueryWrapper>(queryWrapperAddr)->Aggregation(fields);
 
@@ -926,9 +1015,8 @@ static PyObject* Sort(PyObject* self, PyObject* args) {
 
 			return pyErr(err);
 		}
+		Py_DECREF(sortValuesList);
 	}
-
-	Py_XDECREF(sortValuesList);
 
 	getWrapper<QueryWrapper>(queryWrapperAddr)->Sort(index, (desc != 0), sortValues);
 
@@ -1011,7 +1099,7 @@ static PyObject* DeleteQuery(PyObject* self, PyObject* args) {
 	size_t count = 0;
 	auto err = getWrapper<QueryWrapper>(queryWrapperAddr)->DeleteQuery(count, std::chrono::milliseconds(timeout));
 
-	return Py_BuildValue("isI", err.code(), err.what().c_str(), count);
+	return Py_BuildValue("isI", err.code(), err.what(), count);
 }
 
 namespace {
@@ -1038,12 +1126,12 @@ static PyObject* executeQuery(PyObject* self, PyObject* args, ExecuteType type) 
 	}
 
 	if (!err.ok()) {
-		return Py_BuildValue("iskII", err.code(), err.what().c_str(), 0, 0, 0);
+		return Py_BuildValue("iskII", err.code(), err.what(), 0, 0, 0);
 	}
 
 	const auto count = qresult->Count();
 	const auto totalCount = qresult->TotalCount();
-	return Py_BuildValue("iskII", err.code(), err.what().c_str(),
+	return Py_BuildValue("iskII", err.code(), err.what(),
 						 reinterpret_cast<uintptr_t>(qresult.release()), count, totalCount);
 }
 } // namespace
@@ -1069,9 +1157,8 @@ static PyObject* SetObject(PyObject* self, PyObject* args) {
 
 			return pyErr(err);
 		}
+		Py_DECREF(valuesList);
 	}
-
-	Py_DECREF(valuesList);
 
 	getWrapper<QueryWrapper>(queryWrapperAddr)->SetObject(field, values);
 
@@ -1097,9 +1184,8 @@ static PyObject* Set(PyObject* self, PyObject* args) {
 
 			return pyErr(err);
 		}
+		Py_DECREF(valuesList);
 	}
-
-	Py_DECREF(valuesList);
 
 	getWrapper<QueryWrapper>(queryWrapperAddr)->Set(field, values, QueryWrapper::IsExpression::No);
 
@@ -1195,9 +1281,8 @@ static PyObject* SelectFilter(PyObject* self, PyObject* args) {
 
 			return pyErr(err);
 		}
+		Py_DECREF(fieldsList);
 	}
-
-	Py_XDECREF(fieldsList);
 
 	getWrapper<QueryWrapper>(queryWrapperAddr)->SelectFilter(fields);
 
@@ -1222,9 +1307,8 @@ static PyObject* AddFunctions(PyObject* self, PyObject* args) {
 
 			return pyErr(err);
 		}
+		Py_DECREF(functionsList);
 	}
-
-	Py_XDECREF(functionsList);
 
 	getWrapper<QueryWrapper>(queryWrapperAddr)->AddFunctions(functions);
 
@@ -1249,9 +1333,8 @@ static PyObject* AddEqualPosition(PyObject* self, PyObject* args) {
 
 			return pyErr(err);
 		}
+		Py_DECREF(equalPosesList);
 	}
-
-	Py_XDECREF(equalPosesList);
 
 	getWrapper<QueryWrapper>(queryWrapperAddr)->AddEqualPosition(equalPoses);
 

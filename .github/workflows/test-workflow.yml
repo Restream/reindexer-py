@@ -8,7 +8,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04,ubuntu-24.04,macos-14]
+        os:
+        - ubuntu-22.04
+        - ubuntu-24.04
+        #- macos-14
     runs-on: ${{matrix.os}}
     env:
       # Python 3.12 issue found on MasOS arm64 (darwin) runners, actions/setup-python@v5 incorrect venv setup

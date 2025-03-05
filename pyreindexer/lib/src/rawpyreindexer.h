@@ -50,6 +50,8 @@ static PyObject* InsertTransaction(PyObject* self, PyObject* args);
 static PyObject* UpdateTransaction(PyObject* self, PyObject* args);
 static PyObject* UpsertTransaction(PyObject* self, PyObject* args);
 static PyObject* DeleteTransaction(PyObject* self, PyObject* args);
+static PyObject* UpdateQueryTransaction(PyObject* self, PyObject* args);
+static PyObject* DeleteQueryTransaction(PyObject* self, PyObject* args);
 static PyObject* CommitTransaction(PyObject* self, PyObject* args);
 static PyObject* RollbackTransaction(PyObject* self, PyObject* args);
 // query
@@ -60,6 +62,7 @@ static PyObject* WhereSubQuery(PyObject* self, PyObject* args);
 static PyObject* WhereFieldSubQuery(PyObject* self, PyObject* args);
 static PyObject* WhereUUID(PyObject* self, PyObject* args);
 static PyObject* WhereBetweenFields(PyObject* self, PyObject* args);
+static PyObject* WhereKNN(PyObject* self, PyObject* args);
 static PyObject* OpenBracket(PyObject* self, PyObject* args);
 static PyObject* CloseBracket(PyObject* self, PyObject* args);
 static PyObject* DWithin(PyObject* self, PyObject* args);
@@ -135,6 +138,8 @@ static PyMethodDef module_methods[] = {
 	{"item_update_transaction", UpdateTransaction, METH_VARARGS, "item update transaction"},
 	{"item_upsert_transaction", UpsertTransaction, METH_VARARGS, "item upsert transaction"},
 	{"item_delete_transaction", DeleteTransaction, METH_VARARGS, "item delete transaction"},
+	{"modify_transaction", UpdateQueryTransaction, METH_VARARGS, "update query transaction"},
+	{"delete_transaction", DeleteQueryTransaction, METH_VARARGS, "delete query transaction"},
 	{"commit_transaction", CommitTransaction, METH_VARARGS, "apply changes. Free transaction object memory"},
 	{"rollback_transaction", RollbackTransaction, METH_VARARGS, "rollback changes. Free transaction object memory"},
 	// query
@@ -145,6 +150,7 @@ static PyMethodDef module_methods[] = {
 	{"where_field_subquery", WhereFieldSubQuery, METH_VARARGS, "add where condition for sub-query"},
 	{"where_uuid", WhereUUID, METH_VARARGS, "add where condition with UUIDs"},
 	{"where_between_fields", WhereBetweenFields, METH_VARARGS, "add comparing two fields where condition"},
+	{"where_knn", WhereKNN, METH_VARARGS, "add where condition with KNN"},
 	{"open_bracket", OpenBracket, METH_VARARGS, "open bracket for where condition"},
 	{"close_bracket", CloseBracket, METH_VARARGS, "close bracket for where condition"},
 	{"dwithin", DWithin, METH_VARARGS, "add dwithin condition"},

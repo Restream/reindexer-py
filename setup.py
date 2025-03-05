@@ -5,8 +5,8 @@ from setuptools import Extension, setup
 from setuptools.command.build_ext import build_ext as build_ext_orig
 
 
-if sys.version_info < (3, 6):
-    raise RuntimeError('Require Python 3.6 or greater')
+if sys.version_info < (3, 7):
+    raise RuntimeError('Require Python 3.7 or greater')
 
 PACKAGE_NAME = 'pyreindexer'
 
@@ -43,7 +43,7 @@ class BuildExt(build_ext_orig):
 
         self.spawn(['cmake', source_dir,
                     '-DCMAKE_BUILD_TYPE=RelWithDebInfo',
-                    '-DCMAKE_CXX_STANDARD=17',
+                    '-DCMAKE_CXX_STANDARD=20',
                     '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + lib_dir,
                     '-DCMAKE_OSX_DEPLOYMENT_TARGET=11'])
         if not self.dry_run:
@@ -51,9 +51,11 @@ class BuildExt(build_ext_orig):
 
         os.chdir(cwd)
 
+with open('README.md', encoding='utf-8') as f:
+    long_description = f.read()
 
 setup(name=PACKAGE_NAME,
-      version='0.3.11',
+      version='0.4.0',
       description='A connector that allows to interact with Reindexer',
       author='Igor Tulmentyev',
       maintainer='Reindexer Team',
@@ -65,7 +67,7 @@ setup(name=PACKAGE_NAME,
           'Tracker': 'https://github.com/Restream/reindexer-py/issues',
           'Telegram chat': 'https://t.me/reindexer',
       },
-      long_description=open("README.md", encoding="utf-8").read(),
+      long_description = long_description,
       long_description_content_type="text/markdown",
       license='Apache License 2.0',
       packages=[PACKAGE_NAME],
@@ -79,8 +81,7 @@ setup(name=PACKAGE_NAME,
           'example/main.py',
           'tests/**/*.py'
       ]},
-      python_requires=">=3.6",
-      test_suite='tests',
+      python_requires=">=3.7",
       install_requires=['envoy==0.0.3', 'delegator==0.0.3', 'pyhamcrest==2.0.2', 'pytest==6.2.5'],
       classifiers=[
           _c2('Development Status', '3 - Alpha'),
@@ -92,13 +93,13 @@ setup(name=PACKAGE_NAME,
           _c2('Operating System', 'MacOS'),
           _c2('Operating System', 'POSIX', 'Linux'),
           _c2('Programming Language', 'Python'),
-          _c2('Programming Language', 'Python', '3.6'),
           _c2('Programming Language', 'Python', '3.7'),
           _c2('Programming Language', 'Python', '3.8'),
           _c2('Programming Language', 'Python', '3.9'),
           _c2('Programming Language', 'Python', '3.10'),
           _c2('Programming Language', 'Python', '3.11'),
           _c2('Programming Language', 'Python', '3.12'),
+          _c2('Programming Language', 'Python', '3.13'),
           _c2('Programming Language', 'Python', 'Implementation'),
           _c2('Programming Language', 'Python', 'Implementation', 'CPython'),
           _c2('Programming Language', 'Python', 'Implementation', 'PyPy'),
@@ -109,5 +110,5 @@ setup(name=PACKAGE_NAME,
           _c2('Topic', 'Software Development', 'Libraries', 'Python Modules'),
           _c2('Topic', 'Software Development', 'Libraries', 'Application Frameworks'),
       ],
-      platforms=['ALT Linux', 'RED OS', 'Astra Linux'],
+      platforms=['ALT Linux', 'RED OS', 'Astra Linux', 'Ubuntu', 'MacOS'],
       )

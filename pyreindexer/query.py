@@ -3,12 +3,13 @@ from __future__ import annotations
 from collections.abc import Iterable
 from datetime import timedelta
 from enum import Enum
-from typing import Optional, Union
+from typing import List, Optional, Union
 from uuid import UUID
 
 from pyreindexer.exceptions import ApiError, QueryError
-from pyreindexer.query_results import QueryResults
+from pyreindexer.index_search_params import IndexSearchParamBruteForce, IndexSearchParamHnsw, IndexSearchParamIvf
 from pyreindexer.point import Point
+from pyreindexer.query_results import QueryResults
 
 
 class ExtendedEnum(Enum):
@@ -265,9 +266,8 @@ class Query:
         return self.__where(index, condition, keys)
 
     def where_uuid(self, index: str, condition: CondType, *uuids: UUID) -> Query:
-        """Adds where condition to DB query with UUID as string args.
-            This function applies binary encoding to the UUID value.
-            `index` MUST be declared as uuid index in this case
+        """Adds where condition to DB query with UUID.
+            `index` MUST be declared as uuid-string index in this case
 
         #### Arguments:
             index (string): Field name used in condition clause
@@ -305,6 +305,55 @@ class Query:
         """
 
         self.api.where_between_fields(self.query_wrapper_ptr, first_field, condition.value, second_field)
+        return self
+
+    def where_knn(self, index: str, vec: List[float], param: Union[IndexSearchParamBruteForce|IndexSearchParamHnsw|
+                    IndexSearchParamIvf]) -> Query:
+        """Adds where condition to DB query with float_vector as args.
+            `index` MUST be declared as float_vector index in this case
+
+        #### Arguments:
+            index (string): Field name used in condition clause (only float_vector)
+            vec (list[float]): KNN value of index to be compared with
+            param (:obj:`IndexSearchParamBase`): KNN search parameters
+
+        #### Returns:
+            (:obj:`Query`): Query object for further customizations
+
+        #### Raises:
+            QueryError: Raises with an error message if no vec are specified
+            QueryError: Raises with an error message if no param are specified or have an invalid value
+            ApiError: Raises with an error message of API return on non-zero error code
+
+        """
+
+        if vec is None or len(vec) == 0:
+            raise QueryError("A required parameter is not specified. `vec` can't be None or empty")
+
+        if param is None:
+            raise QueryError("A required parameter is not specified. `param` can't be None")
+
+        k: int = 0
+        ef: int = 0
+        nprobe: int = 0
+        if isinstance(param, IndexSearchParamBruteForce):
+            k = param.k
+        elif isinstance(param, IndexSearchParamHnsw):
+            if param.ef < param.k:
+                raise QueryError("Ef should not be less than K")
+            k = param.k
+            ef = param.ef
+        elif isinstance(param, IndexSearchParamIvf):
+            if param.nprobe < 1:
+                raise QueryError("Nprobe should not be less than 1")
+            k = param.k
+            nprobe = param.nprobe
+        else:
+            raise QueryError("Unexpected parameter type. `param` must be IndexSearchParamBruteForce, "
+                             "IndexSearchParamHnsw or IndexSearchParamIvf")
+
+        self.err_code, self.err_msg = self.api.where_knn(self.query_wrapper_ptr, index, k, ef, nprobe, vec)
+        self.__raise_on_error()
         return self
 
     def open_bracket(self) -> Query:

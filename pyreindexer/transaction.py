@@ -2,6 +2,7 @@ from datetime import timedelta
 from typing import Dict, List
 
 from pyreindexer.exceptions import ApiError, TransactionError
+from pyreindexer.query import Query
 
 
 def raise_if_error(func):
@@ -106,6 +107,23 @@ class Transaction:
         self.err_code, self.err_msg = self.api.item_update_transaction(self.transaction_wrapper_ptr, item_def, precepts)
 
     @raise_if_error
+    def update_query(self, query: Query) -> None:
+        """Updates items with the transaction
+            Read-committed isolation is available for read operations.
+            Changes made in active transaction is invisible to current and another transactions.
+
+        #### Arguments:
+            query (:obj:`Query`): A query object to modify
+
+        #### Raises:
+            TransactionError: Raises with an error message of API return if Transaction is over
+            ApiError: Raises with an error message of API return on non-zero error code
+
+        """
+
+        self.err_code, self.err_msg = self.api.modify_transaction(self.transaction_wrapper_ptr, query.query_wrapper_ptr)
+
+    @raise_if_error
     def upsert(self, item_def: Dict, precepts: List[str] = None) -> None:
         """Updates an item with its precepts to the transaction. Creates the item if it not exists
             Warning: the timeout set when the transaction was created is used
@@ -138,6 +156,23 @@ class Transaction:
         """
 
         self.err_code, self.err_msg = self.api.item_delete_transaction(self.transaction_wrapper_ptr, item_def)
+
+    @raise_if_error
+    def delete_query(self, query: Query):
+        """Deletes items with the transaction
+            Read-committed isolation is available for read operations.
+            Changes made in active transaction is invisible to current and another transactions.
+
+        #### Arguments:
+            query (:obj:`Query`): A query object to modify
+
+        #### Raises:
+            TransactionError: Raises with an error message of API return if Transaction is over
+            ApiError: Raises with an error message of API return on non-zero error code
+
+        """
+
+        self.err_code, self.err_msg = self.api.delete_transaction(self.transaction_wrapper_ptr, query.query_wrapper_ptr)
 
     @raise_if_error
     def commit(self, timeout: timedelta = timedelta(milliseconds=0)) -> None:

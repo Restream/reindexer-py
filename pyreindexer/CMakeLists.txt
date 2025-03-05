@@ -1,8 +1,8 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.18)
 
 project(pyreindexer)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "RelWithDebInfo")
@@ -10,8 +10,8 @@ endif()
 
 enable_testing()
 
-set(PY_MIN_VERSION 3.6)
-set(RX_MIN_VERSION 3.30.0)
+set(PY_MIN_VERSION 3.7)
+set(RX_MIN_VERSION 5.0.0)
 find_package(PythonInterp ${PY_MIN_VERSION})
 find_package(PythonLibs ${PY_MIN_VERSION})
 find_package(reindexer CONFIG ${RX_MIN_VERSION})
@@ -25,9 +25,9 @@ set(LIBS_EXT ".so")
 set(LIBSRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/src)
 set(RESOURCES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/include)
 
-set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror -Wswitch-enum")
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -Wall -Wextra -Werror -Wswitch-enum -Wno-unused-parameter -fexceptions")
-string (REPLACE "-O2" "-O3" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror -Wswitch-enum")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20 -Wall -Wextra -Werror -Wswitch-enum -Wno-unused-parameter -fexceptions")
+string(REPLACE "-O2" "-O3" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
 
 file(GLOB_RECURSE SRCS ${RESOURCES_DIR}/*.cc ${LIBSRC_DIR}/*.cc)
 
