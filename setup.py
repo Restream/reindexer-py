@@ -56,9 +56,6 @@ class BuildExt(build_ext_orig):
 with open('README.md', encoding='utf-8') as f:
     LONG_DESCRIPTION = f.read()
 
-with open(os.path.join(os.path.dirname(__file__), "requirements.txt")) as f:
-    REQUIREMENTS = [i.strip() for i in f.readlines()]
-
 with pathlib.Path('requirements.txt').open() as requirements:
     REQUIREMENTS = [str(requirement) for requirement in pkg_resources.parse_requirements(requirements)]
 
