@@ -54,8 +54,9 @@ class BuildExt(build_ext_orig):
 with open('README.md', encoding='utf-8') as f:
     LONG_DESCRIPTION = f.read()
 
-with open('requirements.txt', encoding='utf-8') as f:
-    REQUIREMENTS = [i.strip() for i in f.readlines()]
+def list_reqs():
+    with open(os.path.join(os.path.dirname(__file__), "requirements.txt")) as f:
+        return f.read().splitlines()
 
 setup(name=PACKAGE_NAME,
       version='0.4.0',
@@ -87,7 +88,7 @@ setup(name=PACKAGE_NAME,
           'tests/**/*.py'
       ]},
       python_requires=">=3.8",
-      install_requires=REQUIREMENTS,
+      install_requires=list_reqs,
       classifiers=[
           _c2('Development Status', '4 - Beta'),
           _c2('Environment', 'Console'),
