@@ -85,7 +85,7 @@ setup(name=PACKAGE_NAME,
       ]},
       python_requires=">=3.8",
       install_requires=REQUIREMENTS,
-      setup_requires=['reindexer-dev.5.x.x'],
+      setup_requires=['reindexer-dev=latest'],
       classifiers=[
           _c2('Development Status', '4 - Beta'),
           _c2('Environment', 'Console'),
