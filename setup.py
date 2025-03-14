@@ -52,7 +52,9 @@ class BuildExt(build_ext_orig):
         os.chdir(cwd)
 
 with open('README.md', encoding='utf-8') as f:
-    long_description = f.read()
+    LONG_DESCRIPTION = f.read()
+
+REQUIREMENTS = [i.strip() for i in open("requirements.txt").readlines()]
 
 setup(name=PACKAGE_NAME,
       version='0.4.0',
@@ -60,14 +62,14 @@ setup(name=PACKAGE_NAME,
       author='Igor Tulmentyev',
       maintainer='Reindexer Team',
       maintainer_email='contactus@reindexer.io',
-      url='https://github.com/Restream/reindexer-py',
+      download_url='https://github.com/Restream/reindexer-py',
       project_urls={
           'Documentation': 'https://reindexer.io/',
           'Releases': 'https://github.com/Restream/reindexer-py/releases',
           'Tracker': 'https://github.com/Restream/reindexer-py/issues',
           'Telegram chat': 'https://t.me/reindexer',
       },
-      long_description = long_description,
+      long_description = LONG_DESCRIPTION,
       long_description_content_type="text/markdown",
       license='Apache License 2.0',
       packages=[PACKAGE_NAME],
@@ -82,9 +84,10 @@ setup(name=PACKAGE_NAME,
           'tests/**/*.py'
       ]},
       python_requires=">=3.8",
-      install_requires=['envoy==0.0.3', 'delegator==0.0.3', 'pyhamcrest==2.0.2', 'pytest==6.2.5'],
+      install_requires=REQUIREMENTS,
+      setup_requires=['reindexer-dev.5.x.x'],
       classifiers=[
-          _c2('Development Status', '3 - Alpha'),
+          _c2('Development Status', '4 - Beta'),
           _c2('Environment', 'Console'),
           _c2('Intended Audience', 'End Users/Desktop'),
           _c2('Intended Audience', 'Developers'),
@@ -93,6 +96,7 @@ setup(name=PACKAGE_NAME,
           _c2('Operating System', 'MacOS'),
           _c2('Operating System', 'POSIX', 'Linux'),
           _c2('Programming Language', 'Python'),
+          _c2('Programming Language', 'Python', '3', 'Only'),
           _c2('Programming Language', 'Python', '3.8'),
           _c2('Programming Language', 'Python', '3.9'),
           _c2('Programming Language', 'Python', '3.10'),
