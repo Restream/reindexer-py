@@ -1,6 +1,5 @@
 import os
 import sys
-import pathlib
 import pkg_resources
 
 from setuptools import Extension, setup
@@ -56,8 +55,9 @@ class BuildExt(build_ext_orig):
 with open('README.md', encoding='utf-8') as f:
     LONG_DESCRIPTION = f.read()
 
-with pathlib.Path('requirements.txt').open() as requirements:
-    REQUIREMENTS = [str(requirement) for requirement in pkg_resources.parse_requirements(requirements)]
+requirements = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'requirements.txt')
+with open(requirements) as file:
+    REQUIREMENTS = [str(requirement) for requirement in pkg_resources.parse_requirements(file)]
 
 setup(name=PACKAGE_NAME,
       version='0.4.0',
