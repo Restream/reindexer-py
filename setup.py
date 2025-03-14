@@ -1,6 +1,5 @@
 import os
 import sys
-import pkg_resources
 
 from setuptools import Extension, setup
 from setuptools.command.build_ext import build_ext as build_ext_orig
@@ -55,10 +54,6 @@ class BuildExt(build_ext_orig):
 with open('README.md', encoding='utf-8') as f:
     LONG_DESCRIPTION = f.read()
 
-requirements = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'requirements.txt')
-with open(requirements) as file:
-    REQUIREMENTS = [str(requirement) for requirement in pkg_resources.parse_requirements(file)]
-
 setup(name=PACKAGE_NAME,
       version='0.4.0',
       description='A connector that allows to interact with Reindexer (reindexer-dev required)',
@@ -80,7 +75,7 @@ setup(name=PACKAGE_NAME,
       packages=[PACKAGE_NAME],
       ext_modules=[CMakeExtension('rawpyreindexer')],
       cmdclass={'build_ext': BuildExt},
-      keywords=["reindexer", "reindexer-py", "in-memory-database", "database", "python", "connector"],
+      keywords=['reindexer', 'reindexer-py', 'in-memory-database', 'database', 'python', 'connector'],
       package_data={'pyreindexer': [
           'CMakeLists.txt',
           'lib/**/*.h',
@@ -88,8 +83,8 @@ setup(name=PACKAGE_NAME,
           'example/main.py',
           'tests/**/*.py'
       ]},
-      python_requires=">=3.8",
-      install_requires=REQUIREMENTS,
+      python_requires='>=3.8',
+      install_requires=['envoy==0.0.3', 'delegator==0.0.3', 'pyhamcrest==2.0.2', 'pytest==6.2.5'],
       classifiers=[
           _c2('Development Status', '4 - Beta'),
           _c2('Environment', 'Console'),
