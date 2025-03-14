@@ -54,7 +54,8 @@ class BuildExt(build_ext_orig):
 with open('README.md', encoding='utf-8') as f:
     LONG_DESCRIPTION = f.read()
 
-REQUIREMENTS = [i.strip() for i in open("requirements.txt").readlines()]
+with open('requirements.txt', encoding='utf-8') as f:
+    REQUIREMENTS = [i.strip() for i in f.readlines()]
 
 setup(name=PACKAGE_NAME,
       version='0.4.0',
