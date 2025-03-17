@@ -54,12 +54,6 @@ class BuildExt(build_ext_orig):
 with open('README.md', 'r', encoding='utf-8') as file:
     LONG_DESCRIPTION = file.read()
 
-def parse_requirements():
-    with open('requirements.txt', 'r', encoding='utf-8') as file:
-        requirements = [i.strip() for i in file.readlines()]
-        requirements = [r for r in requirements if len(r) > 0 and not r.startswith('#')]
-        return requirements
-
 setup(name=PACKAGE_NAME,
       version='0.4.0',
       description='A connector that allows to interact with Reindexer (reindexer-dev required)',
@@ -87,10 +81,10 @@ setup(name=PACKAGE_NAME,
           'lib/**/*.h',
           'lib/**/*.cc',
           'example/main.py',
-          'tests/**/*.py',
+          'tests/**/*.py'
       ]},
       python_requires='>=3.8',
-      install_requires=parse_requirements(),
+      install_requires=['envoy==0.0.3', 'delegator==0.0.3', 'pyhamcrest==2.0.2', 'pytest==6.2.5'],
       classifiers=[
           _c2('Development Status', '4 - Beta'),
           _c2('Environment', 'Console'),
