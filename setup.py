@@ -51,14 +51,12 @@ class BuildExt(build_ext_orig):
 
         os.chdir(cwd)
 
-with open('README.md', encoding='utf-8') as f:
-    LONG_DESCRIPTION = f.read()
+with open('README.md', 'r', encoding='utf-8') as file:
+    LONG_DESCRIPTION = file.read()
 
-def parse_requirements(requirements_file):
-    filepath = os.path.join(os.path.dirname(__file__), requirements_file)
-    with open(filepath) as file:
-        requirements = file.read().split('\n')
-        requirements = [r.strip() for r in requirements]
+def parse_requirements():
+    with open('requirements.txt', 'r', encoding='utf-8') as file:
+        requirements = [i.strip() for i in file.readlines()]
         requirements = [r for r in requirements if len(r) > 0 and not r.startswith('#')]
         return requirements
 
@@ -89,10 +87,10 @@ setup(name=PACKAGE_NAME,
           'lib/**/*.h',
           'lib/**/*.cc',
           'example/main.py',
-          'tests/**/*.py'
+          'tests/**/*.py',
       ]},
       python_requires='>=3.8',
-      install_requires=parse_requirements('requirements.txt'),
+      install_requires=parse_requirements(),
       classifiers=[
           _c2('Development Status', '4 - Beta'),
           _c2('Environment', 'Console'),
