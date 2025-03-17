@@ -78,7 +78,7 @@ jobs:
         platform:
         - ubuntu-22.04
         - ubuntu-24.04
-        #- macos-14
+        - macos-14
     runs-on: ${{ matrix.platform }}
     needs: deploy
     defaults:
