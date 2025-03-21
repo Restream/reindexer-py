@@ -814,7 +814,6 @@ class TestQueryTimeouts:
         assert_that(calling(query.execute).with_args(timeout=timedelta(milliseconds=1)),
                     raises(ApiError, pattern="Context timeout|Read lock (.*) was canceled on condition"))
 
-    @pytest.mark.skip(reason="1951")
     def test_query_update_timeout_small(self, db, namespace, index):
         # Given("Create namespace with items")
         items = [{"id": i, "val": f"testval{i}"} for i in range(15000)]
