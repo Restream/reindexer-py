@@ -40,17 +40,17 @@ void pyDictSerialize(PyObject** dict, reindexer::WrSerializer& wrSer) {
 	if (sz) {
 		PyObject *key = nullptr, *value = nullptr;
 		Py_ssize_t pos = 0;
-
+		bool needSeparator = false;
 		while (PyDict_Next(*dict, &pos, &key, &value)) {
-			if (pos > 1) {
-				wrSer << ',';
-			}
-
 			const char* k = PyUnicode_AsUTF8(key);
 			wrSer.PrintJsonString(k);
 			wrSer << ':';
-
 			pyValueSerialize(&value, wrSer);
+			if (needSeparator) {
+				wrSer << ',';
+			} else {
+				needSeparator = true;
+			}
 		}
 	}
 
