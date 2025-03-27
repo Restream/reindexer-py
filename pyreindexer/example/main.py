@@ -1,6 +1,4 @@
-import os
 import random
-import shutil
 
 from datetime import timedelta
 from typing import Final, List
@@ -271,11 +269,8 @@ def float_vector_brute_force_sql_example(db):
 
 
 def rx_example():
-    location : Final[str] = '/tmp/pyrx'
-    if os.path.isdir(location):
-        shutil.rmtree(location)
 
-    db = RxConnector(f'builtin://{location}', max_replication_updates_size = 10 * 1024 * 1024)
+    db = RxConnector(f'builtin:///tmp/pyrx', max_replication_updates_size = 10 * 1024 * 1024)
     #db = RxConnector('cproto://127.0.0.1:6534/pyrx', enable_compression = True, fetch_amount = 500)
 
     namespace = 'test_table'

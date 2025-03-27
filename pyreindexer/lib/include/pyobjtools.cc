@@ -38,19 +38,19 @@ void pyDictSerialize(PyObject** dict, reindexer::WrSerializer& wrSer) {
 
 	Py_ssize_t sz = PyDict_Size(*dict);
 	if (sz) {
+		bool needSeparator = false;
 		PyObject *key = nullptr, *value = nullptr;
 		Py_ssize_t pos = 0;
-		bool needSeparator = false;
 		while (PyDict_Next(*dict, &pos, &key, &value)) {
-			const char* k = PyUnicode_AsUTF8(key);
-			wrSer.PrintJsonString(k);
-			wrSer << ':';
-			pyValueSerialize(&value, wrSer);
 			if (needSeparator) {
 				wrSer << ',';
 			} else {
 				needSeparator = true;
 			}
+			const char* k = PyUnicode_AsUTF8(key);
+			wrSer.PrintJsonString(k);
+			wrSer << ':';
+			pyValueSerialize(&value, wrSer);
 		}
 	}
 
