@@ -1,6 +1,4 @@
-import os
 import random
-import shutil
 
 from datetime import timedelta
 from typing import Final, List
@@ -56,8 +54,8 @@ def create_items_example(db, namespace):
     items_count = 10
 
     for i in range(0, items_count):
-        item = {'id': i + 1, 'name': 'item_' + str(i % 2), 'value': 'check'}
-        db.item_upsert(namespace, item)
+        item = {'id': 1, 'name': 'item_' + str(i % 2), 'value': 'check'}
+        db.item_upsert(namespace, item, ["id=serial()"])
 
 
 def select_item_query_example(db, namespace):
@@ -188,7 +186,7 @@ def float_vector_hnsw_example(db):
     # generate items
     transaction = db.new_transaction(namespace)
     for i in range(100):
-        transaction.insert({"id": i, fv_index_name: random_vector(dimension)})
+        transaction.insert({"id": 0, fv_index_name: random_vector(dimension)}, ["id=serial()"])
     transaction.commit(timedelta(seconds = 3))
 
     # do query
@@ -267,11 +265,8 @@ def float_vector_brute_force_sql_example(db):
 
 
 def rx_example():
-    location : Final[str] = '/tmp/pyrx'
-    if os.path.isdir(location):
-        shutil.rmtree(location)
 
-    db = RxConnector(f'builtin://{location}', max_replication_updates_size = 10 * 1024 * 1024)
+    db = RxConnector(f'builtin:///tmp/pyrx', max_replication_updates_size = 10 * 1024 * 1024)
     #db = RxConnector('cproto://127.0.0.1:6534/pyrx', enable_compression = True, fetch_amount = 500)
 
     namespace = 'test_table'

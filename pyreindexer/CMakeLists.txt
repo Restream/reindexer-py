@@ -10,11 +10,11 @@ endif()
 
 enable_testing()
 
-set(PY_MIN_VERSION 3.7)
-set(RX_MIN_VERSION 5.0.0)
-find_package(PythonInterp ${PY_MIN_VERSION})
-find_package(PythonLibs ${PY_MIN_VERSION})
-find_package(reindexer CONFIG ${RX_MIN_VERSION})
+set(PY_MIN_VERSION 3.8)
+set(RX_MIN_VERSION 5.0.1)
+find_package(PythonInterp ${PY_MIN_VERSION} REQUIRED)
+find_package(PythonLibs ${PY_MIN_VERSION} REQUIRED)
+find_package(reindexer CONFIG ${RX_MIN_VERSION} REQUIRED)
 
 option(WITH_GCOV "Enable instrumented code coverage build" OFF)
 
