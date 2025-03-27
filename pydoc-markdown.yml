@@ -20,7 +20,7 @@ renderer:
   classdef_with_decorators: false
   signature_with_decorators: false
   render_toc: true
-  render_toc_title: The PyReindexer module provides a connector and its auxiliary tools for interaction with Reindexer
+  render_toc_title: The PyReindexer module provides a connector and its auxiliary tools for interaction with Reindexer (reindexer-dev required)
   header_level_by_type:
      Module: 1
      Class: 2

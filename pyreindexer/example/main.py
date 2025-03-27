@@ -56,8 +56,8 @@ def create_items_example(db, namespace):
     items_count = 10
 
     for i in range(0, items_count):
-        item = {'id': i + 1, 'name': 'item_' + str(i % 2), 'value': 'check'}
-        db.item_upsert(namespace, item)
+        item = {'id': 1, 'name': 'item_' + str(i % 2), 'value': 'check'}
+        db.item_upsert(namespace, item, ["id=serial()"])
 
 
 def select_item_query_example(db, namespace):
@@ -188,7 +188,7 @@ def float_vector_hnsw_example(db):
     # generate items
     transaction = db.new_transaction(namespace)
     for i in range(100):
-        transaction.insert({"id": i, fv_index_name: random_vector(dimension)})
+        transaction.insert({"id": 0, fv_index_name: random_vector(dimension)}, ["id=serial()"])
     transaction.commit(timedelta(seconds = 3))
 
     # do query

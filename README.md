@@ -1,4 +1,4 @@
-# The PyReindexer module provides a connector and its auxiliary tools for interaction with Reindexer
+# The PyReindexer module provides a connector and its auxiliary tools for interaction with Reindexer (reindexer-dev required)
 
 * [pyreindexer.rx\_connector](#pyreindexer.rx_connector)
   * [RxConnector](#pyreindexer.rx_connector.RxConnector)
