@@ -56,7 +56,7 @@ with open('README.md', 'r', encoding='utf-8') as file:
 
 setup(name=PACKAGE_NAME,
       version='0.4.1',
-      description='A connector that allows to interact with Reindexer (reindexer-dev required)',
+      description='A connector that allows to interact with Reindexer. Reindexer static library or reindexer-dev package must be installed',
       author='Igor Tulmentyev',
       maintainer='Reindexer Team',
       maintainer_email='contactus@reindexer.io',
