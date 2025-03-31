@@ -174,7 +174,7 @@ static PyMethodDef module_methods[] = {
 	{"debug", Debug, METH_VARARGS, "request cached total items calculation"},
 	{"strict", Strict, METH_VARARGS, "request cached total items calculation"},
 	{"explain", Explain, METH_VARARGS, "enable explain query"},
-	{"with_rank", WithRank, METH_VARARGS, "enable fulltext rank"},
+	{"with_rank", WithRank, METH_VARARGS, "enable fulltext/float_vector rank"},
 	{"select_query", SelectQuery, METH_VARARGS, "execute select query"},
 	{"delete_query", DeleteQuery, METH_VARARGS, "execute delete query"},
 	{"update_query", UpdateQuery, METH_VARARGS, "execute update query"},
