@@ -1487,7 +1487,7 @@ Enables explain query
 def with_rank() -> Query
 ```
 
-Outputs fulltext rank. Allowed only with fulltext query
+Outputs fulltext/float_vector rank. Allowed only with fulltext and KNN query
 
 #### Returns:
     (:obj:`Query`): Query object for further customizations

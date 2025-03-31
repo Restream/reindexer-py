@@ -65,12 +65,7 @@ void pyValueSerialize(PyObject** value, reindexer::WrSerializer& wrSer) {
 		wrSer << v;
 	} else if (PyFloat_Check(*value)) {
 		double v = PyFloat_AsDouble(*value);
-		double intpart;
-		if (std::modf(v, &intpart) == 0.0) {
-			wrSer << int64_t(v);
-		} else {
-			wrSer << v;
-		}
+		wrSer << v;
 	} else if (PyLong_Check(*value)) {
 		long v = PyLong_AsLong(*value);
 		wrSer << v;
