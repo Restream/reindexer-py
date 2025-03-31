@@ -773,7 +773,7 @@ class Query:
         return self
 
     def with_rank(self) -> Query:
-        """Outputs fulltext rank. Allowed only with fulltext query
+        """Outputs fulltext/float_vector rank. Allowed only with fulltext and KNN query
 
         #### Returns:
             (:obj:`Query`): Query object for further customizations
