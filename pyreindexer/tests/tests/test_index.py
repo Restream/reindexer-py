@@ -77,7 +77,7 @@ class TestCrudIndexes:
         # Then ("Check that we can't delete index that was not created")
         index_name = 'id'
         assert_that(calling(db.index.drop).with_args(namespace, index_name),
-                    raises(ApiError, pattern=f"Cannot remove index {index_name}: doesn't exist"),
+                    raises(ApiError, pattern=f"Cannot remove index '{index_name}': doesn't exist"),
                     "Not existing index was deleted")
 
     def test_index_update_timeout(self, db, namespace):
