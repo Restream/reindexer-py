@@ -16,11 +16,14 @@ class IndexDefinition(dict):
         index_type (str): An index type. Possible values are: `hash`, `tree`, `text`, `-`, `hnsw`, `vec_bf`, `ivf`.
         is_pk (bool): True if a field is a primary key.
         is_array (bool): True if an index is an array.
-        is_dense (bool): True if an index is dense. reduce index size. Saves 8 bytes per unique key value for 'hash'
-            and 'tree' index types.
-            For '-' index type saves 4-8 bytes per each element. Useful for indexes with high selectivity,
-            but for tree and hash indexes with low selectivity could
-            significantly decrease update performance.
+        is_dense (bool): True if an index is dense. Reduce the index size. Saves 8 bytes per unique key value for 'hash'
+            and 'tree' index types. For '-' index type saves 4-8 bytes per each element. Useful for indexes with
+            high selectivity, but for tree and hash indexes with low selectivity can seriously decrease update
+            performance.
+        is_no_column (bool): True if allows to disable column subindex. Reduces the index size.
+            Allows to save ~(`stored_type_size` * `namespace_items_count`) bytes, where `stored_type_size` is the size
+            of the type stored in the index, and `namespace_items_count` is the number of items in the namespace.
+            May reduce performance.
         is_sparse (bool): True if a value of an index may be not presented.
         collate_mode (str): Sets an order of values by collate mode. Possible values are:
             `none`, `ascii`, `utf8`, `numeric`, `custom`.

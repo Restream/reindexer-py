@@ -11,7 +11,7 @@ endif()
 enable_testing()
 
 set(PY_MIN_VERSION 3.8)
-set(RX_MIN_VERSION 5.0.1)
+set(RX_MIN_VERSION 5.1.0)
 find_package(PythonInterp ${PY_MIN_VERSION} REQUIRED)
 find_package(PythonLibs ${PY_MIN_VERSION} REQUIRED)
 find_package(reindexer CONFIG ${RX_MIN_VERSION} REQUIRED)
