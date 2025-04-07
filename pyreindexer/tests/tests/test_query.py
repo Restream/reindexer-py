@@ -829,6 +829,7 @@ class TestQueryTimeouts:
         items_after_update = get_ns_items(db, namespace)
         assert_that(items_after_update, equal_to(items), "Items were updated")
 
+
 class TestQueryKNN:
 
     def test_query_knn_param_negative(self, db, namespace):
