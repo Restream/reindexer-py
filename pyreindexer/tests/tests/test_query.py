@@ -799,7 +799,7 @@ class TestQueryTimeouts:
         query = q1.merge(q2).merge(q3).merge(q4)
         # When ("Try to make select query with small timeout")
         assert_that(calling(query.execute).with_args(timeout=timedelta(milliseconds=1)),
-                    raises(ApiError, pattern="Context timeout|Read lock (.*) was canceled on condition"))
+                    raises(ApiError, pattern="Context timeout|Read lock (.*) was canceled or timed out (mutex)"))
 
     def test_query_select_join_timeout_small(self, db, namespace, index):
         # Given("Create namespace with items")
@@ -812,21 +812,21 @@ class TestQueryTimeouts:
         query = query1.join(query2, "joined").on("val", CondType.CondGt, "val")
         # When ("Try to make select query with small timeout")
         assert_that(calling(query.execute).with_args(timeout=timedelta(milliseconds=1)),
-                    raises(ApiError, pattern="Context timeout|Read lock (.*) was canceled on condition"))
+                    raises(ApiError, pattern="Context timeout|Read lock (.*) was canceled or timed out (mutex)"))
 
-#    def test_query_update_timeout_small(self, db, namespace, index):
-#        # Given("Create namespace with items")
-#        items = [{"id": i, "val": f"testval{i}"} for i in range(15000)]
-#        for item in items:
-#            db.item.insert("new_ns", item)
-#        # Given ("Create new query")
-#        query = db.query.new(namespace).set("val", ["modified"])
-#        # When ("Try to make update set query with small timeout")
-#        assert_that(calling(query.update).with_args(timeout=timedelta(milliseconds=1)),
-#                    raises(ApiError, pattern="Context timeout|Read lock (.*) was canceled on condition"))
-#        # Then ("Check that items were not updated")
-#        items_after_update = get_ns_items(db, namespace)
-#        assert_that(items_after_update, equal_to(items), "Items were updated")
+    def test_query_update_timeout_small(self, db, namespace, index):
+        # Given("Create namespace with items")
+        items = [{"id": i, "val": f"testval{i}"} for i in range(15000)]
+        for item in items:
+            db.item.insert("new_ns", item)
+        # Given ("Create new query")
+        query = db.query.new(namespace).set("val", ["modified"])
+        # When ("Try to make update set query with small timeout")
+        assert_that(calling(query.update).with_args(timeout=timedelta(milliseconds=1)),
+                    raises(ApiError, pattern="Context timeout|Read lock (.*) was canceled or timed out (mutex)"))
+        # Then ("Check that items were not updated")
+        items_after_update = get_ns_items(db, namespace)
+        assert_that(items_after_update, equal_to(items), "Items were updated")
 
 
 class TestQueryKNN:
