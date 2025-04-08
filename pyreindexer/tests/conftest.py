@@ -5,11 +5,12 @@ import pytest
 
 from tests.helpers.api import ConnectorApi
 from tests.helpers.log_helper import log_fixture
+from tests.helpers.server_helper import ReindexerServer
 from tests.test_data.constants import composite_index_definition, index_definition, item_definition
 
 
 def pytest_addoption(parser):
-    parser.addoption("--mode", choices=["builtin", "cproto"], default="builtin", help="Connection mode")
+    parser.addoption("--mode", choices=["builtin", "cproto"], default="cproto", help="Connection mode")
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -22,13 +23,20 @@ def db(request):
     """
     Create a database
     """
-    mode = request.config.getoption('--mode')
+    mode = request.config.getoption("--mode")
+    if mode == "builtin":
+        prefix = "builtin://tmp/"
+    else:
+        prefix = "cproto://127.0.0.1:6534/"
+        server = ReindexerServer(http_port=9088, rpc_port=6534, storage="/tmp/reindex_test")
+        server.run()
     db_name = 'test_db'
-    prefix = "builtin://tmp/" if mode == "builtin" else "cproto://127.0.0.1:6534/"
     db = ConnectorApi(f"{prefix}{db_name}")
     yield db
     db.close()
-    shutil.rmtree('tmp/', ignore_errors=True)
+    if mode != "builtin":
+        server.terminate()
+    shutil.rmtree("tmp/", ignore_errors=True)
 
 
 @pytest.fixture
