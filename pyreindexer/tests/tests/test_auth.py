@@ -17,7 +17,7 @@ from tests.test_data.constants import item_definition
 @pytest.fixture(scope="module", autouse=True)
 def rx_server(request):
     if request.config.getoption("--mode") == "builtin":
-        return
+        pytest.skip("auth tests are only for cproto mode")
     else:
         storage = f"/tmp/reindex_test_auth"
         if os.path.exists(storage):

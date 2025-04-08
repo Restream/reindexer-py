@@ -10,7 +10,7 @@ from tests.test_data.constants import composite_index_definition, index_definiti
 
 
 def pytest_addoption(parser):
-    parser.addoption("--mode", choices=["builtin", "cproto"], default="cproto", help="Connection mode")
+    parser.addoption("--mode", choices=["builtin", "cproto"], default="builtin", help="Connection mode")
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -24,7 +24,7 @@ def rx_server(request):
     Start reindexer server for cproto mode
     """
     if request.config.getoption("--mode") == "builtin":
-        return
+        yield
     else:
         server = ReindexerServer(http_port=9088, rpc_port=6534, storage="/tmp/reindex_test")
         server.run()
