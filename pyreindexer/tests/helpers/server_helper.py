@@ -4,6 +4,8 @@ import subprocess
 import requests
 from requests.adapters import HTTPAdapter, Retry
 
+from tests.helpers.log_helper import log_fixture
+
 
 session = requests.Session()
 Retry.DEFAULT_BACKOFF_MAX = 0.03
@@ -51,6 +53,7 @@ class ReindexerServer:
         self.proc = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                      universal_newlines=True, bufsize=1)
         self.is_running()
+        log_fixture.info(f"Reindexer server started at {self.http_port} http port")
 
     def is_running(self):
         try:
@@ -69,6 +72,6 @@ class ReindexerServer:
     def terminate(self):
         try:
             self.proc.terminate()
-            self.proc.wait(timeout=1)
+            self.proc.wait()
         except subprocess.TimeoutExpired:
             self.proc.kill()
