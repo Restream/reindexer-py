@@ -72,6 +72,6 @@ class ReindexerServer:
     def terminate(self):
         try:
             self.proc.terminate()
-            self.proc.wait()
+            self.proc.wait(timeout=1)
         except subprocess.TimeoutExpired:
             self.proc.kill()
