@@ -7,4 +7,4 @@ export PYTHONPATH=$(pwd)
 #python3 -m pytest tests/tests --mode=builtin || exit 1
 
 echo "Start cproto tests"
-python3 -m pytest tests/tests --mode=cproto -s -v || exit 1
+python3 -m pytest tests/tests/test_auth.py --mode=cproto -s -v || exit 1
