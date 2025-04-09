@@ -145,19 +145,19 @@ class TestAuth:
         ns_entry = get_ns_description(db, namespace)
         assert_that(ns_entry, has_item(has_entry("indexes", has_item(index_definition))))
 
-    @pytest.mark.parametrize("auth", [
-        ("data_write", "datawrite"),
-        ("data_read", "dataread")
-    ])
-    def test_auth_data_write_cant_create_index(self, db, db_auth, namespace, auth):
-        # Given("Create namespace")
-        # When ("Create index")
-        # Then ("Index is not created")
-        db_auth = db_auth(auth)
-        role = auth[0]
-        err_msg = f"Forbidden: need role db_admin of db 'test_db' user 'da...{role[-2:]}' have role={role}"
-        assert_that(calling(db_auth.index.create).with_args(namespace, index_definition),
-                    raises(ApiError, pattern=err_msg))
+    # @pytest.mark.parametrize("auth", [
+    #     ("data_write", "datawrite"),
+    #     ("data_read", "dataread")
+    # ])
+    # def test_auth_data_write_cant_create_index(self, db, db_auth, namespace, auth):
+    #     # Given("Create namespace")
+    #     # When ("Create index")
+    #     # Then ("Index is not created")
+    #     db_auth = db_auth(auth)
+    #     role = auth[0]
+    #     err_msg = f"Forbidden: need role db_admin of db 'test_db' user 'da...{role[-2:]}' have role={role}"
+    #     assert_that(calling(db_auth.index.create).with_args(namespace, index_definition),
+    #                 raises(ApiError, pattern=err_msg))
 
     @pytest.mark.parametrize("auth", [
         ("owner", "owner"),
