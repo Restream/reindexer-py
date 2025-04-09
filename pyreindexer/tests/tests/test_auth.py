@@ -42,12 +42,13 @@ def rx_server(request):
 
 @pytest.fixture(scope="module")
 def db(request):
-    print("PRINT: Connect to db")
+    print("PRINT: Connect to main auth db")
     db = ConnectorApi("cproto://owner:owner@127.0.0.1:6535/test_db")
-    print("PRINT: Connected to db")
+    print("PRINT: Connected to main auth db")
     yield db
     db.close()
     shutil.rmtree("tmp/", ignore_errors=True)
+    print("PRINT: Closed main auth connect to db")
 
 
 @pytest.fixture

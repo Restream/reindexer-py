@@ -10,7 +10,7 @@ from tests.test_data.constants import composite_index_definition, index_definiti
 
 
 def pytest_addoption(parser):
-    parser.addoption("--mode", choices=["builtin", "cproto"], default="builtin", help="Connection mode")
+    parser.addoption("--mode", choices=["builtin", "cproto"], default="cproto", help="Connection mode")
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -43,10 +43,13 @@ def db(request):
     mode = request.config.getoption("--mode")
     prefix = "builtin://tmp/" if mode == "builtin" else "cproto://127.0.0.1:6534/"
     db_name = "test_db"
+    print("PRINT: Connect to main main db")
     db = ConnectorApi(f"{prefix}{db_name}")
+    print("PRINT: Connected to main main db")
     yield db
     db.close()
     shutil.rmtree("tmp/", ignore_errors=True)
+    print("PRINT: Closed connection to main main db")
 
 
 @pytest.fixture
