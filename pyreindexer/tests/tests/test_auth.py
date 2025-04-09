@@ -56,7 +56,7 @@ def db_auth(request):
 
 
 @pytest.fixture(autouse=True)
-def clear_storage(db, db_auth):
+def close_connections(db, db_auth):
     yield
     for db_conn in CONNECTIONS:
         db_conn.close()
@@ -64,7 +64,6 @@ def clear_storage(db, db_auth):
         if not ns["name"].startswith("#"):
             db.namespace.drop(ns["name"])
     CONNECTIONS.clear()
-    shutil.rmtree("tmp/", ignore_errors=True)
 
 
 class TestAuth:
