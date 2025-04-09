@@ -23,6 +23,7 @@ def rx_server(request):
     if request.config.getoption("--mode") == "builtin":
         pytest.skip("auth tests run only for cproto mode")
     else:
+        print("PRINT: Start server auth")
         storage = f"/tmp/reindex_test_auth"
         if os.path.exists(storage):
             shutil.rmtree(storage, ignore_errors=True)
@@ -33,13 +34,17 @@ def rx_server(request):
         server = ReindexerServer(http_port=9089, rpc_port=6535, storage=storage, auth=True,
                                  user="owner", password="owner")
         server.run()
+        print("PRINT: Server started auth")
         yield
         server.terminate()
+        print("PRINT: server terminated")
 
 
 @pytest.fixture(scope="module")
 def db(request):
+    print("PRINT: Connect to db")
     db = ConnectorApi("cproto://owner:owner@127.0.0.1:6535/test_db")
+    print("PRINT: Connected to db")
     yield db
     db.close()
     shutil.rmtree("tmp/", ignore_errors=True)
@@ -48,7 +53,9 @@ def db(request):
 @pytest.fixture
 def db_auth(request):
     def _inner(auth):
+        print("PRINT: Connect to db_auth")
         db = ConnectorApi(f"cproto://{auth[0]}:{auth[1]}@127.0.0.1:6535/test_db")
+        print("PRINT: Connected to db_auth")
         CONNECTIONS.append(db)
         return db
 
@@ -58,12 +65,14 @@ def db_auth(request):
 @pytest.fixture(autouse=True)
 def close_connections(db, db_auth):
     yield
+    print("PRINT: AFTER TEST close connections")
     for db_conn in CONNECTIONS:
         db_conn.close()
     for ns in db.namespace.enumerate():
         if not ns["name"].startswith("#"):
             db.namespace.drop(ns["name"])
     CONNECTIONS.clear()
+    print("PRINT: AFTER TEST connection closed")
 
 
 class TestAuth:
@@ -77,6 +86,7 @@ class TestAuth:
     def test_auth_db_admin_can_open_namespace(self, db_auth, auth):
         # When ("Open namespace")
         # Then ("Namespace is opened")
+        print("Start test 1")
         ns_name = "new_ns_auth"
         db_auth = db_auth(auth)
         db_auth.namespace.open(ns_name)

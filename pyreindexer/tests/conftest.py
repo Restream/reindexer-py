@@ -26,10 +26,13 @@ def rx_server(request):
     if request.config.getoption("--mode") == "builtin":
         yield
     else:
+        print("PRINT: Start server obshiy")
         server = ReindexerServer(http_port=9088, rpc_port=6534, storage="/tmp/reindex_test")
         server.run()
+        print("PRINT: Started server obshiy")
         yield
         server.terminate()
+        print("PRINT: server obshiy terminated")
 
 
 @pytest.fixture(scope="session")
