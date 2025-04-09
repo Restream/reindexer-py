@@ -143,7 +143,7 @@ class TestAuth:
     #     assert_that(ns_entry, has_item(has_entry("indexes", has_item(index_definition))))
 
     @pytest.mark.parametrize("auth", [
-        # ("data_write", "datawrite"),
+        ("data_write", "datawrite"),
         ("data_read", "dataread")
     ])
     def test_auth_data_write_cant_create_index(self, db, db_auth, namespace, auth):
