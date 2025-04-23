@@ -129,13 +129,7 @@ reindexer::h_vector<std::string, 2> PyObjectToJson(PyObject** obj) {
 
 reindexer::Variant convert(PyObject** value) {
 	if (PyFloat_Check(*value)) {
-		double v = PyFloat_AsDouble(*value);
-		double intpart = 0.0;
-		if (std::modf(v, &intpart) == 0.0) {
-			return reindexer::Variant(int64_t(v));
-		} else {
-			return reindexer::Variant(v);
-		}
+		return reindexer::Variant(PyFloat_AsDouble(*value));
 	} else if (PyBool_Check(*value)) {
 		return reindexer::Variant(PyLong_AsLong(*value) != 0);
 	} else if (PyLong_Check(*value)) {
