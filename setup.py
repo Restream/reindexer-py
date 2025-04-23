@@ -45,7 +45,7 @@ class BuildExt(build_ext_orig):
                     '-DCMAKE_BUILD_TYPE=RelWithDebInfo',
                     '-DCMAKE_CXX_STANDARD=20',
                     '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + lib_dir,
-                    '-DCMAKE_OSX_DEPLOYMENT_TARGET=11'])
+                    '-DCMAKE_OSX_DEPLOYMENT_TARGET=14'])
         if not self.dry_run:
             self.spawn(['cmake', '--build', '.'])
 
@@ -55,9 +55,10 @@ with open('README.md', 'r', encoding='utf-8') as file:
     LONG_DESCRIPTION = file.read()
 
 setup(name=PACKAGE_NAME,
-      version='0.4.4',
+      version='0.4.5',
       description='A connector that allows to interact with Reindexer. Reindexer static library or reindexer-dev package must be installed',
       author='Igor Tulmentyev',
+      author_email='contactus@reindexer.io',
       maintainer='Reindexer Team',
       maintainer_email='contactus@reindexer.io',
       url='https://github.com/Restream/reindexer',
