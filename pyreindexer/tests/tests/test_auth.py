@@ -95,7 +95,8 @@ class TestAuth:
     def test_cant_open_namespace_with_invalid_pass(self, db, db_auth, namespace, index, item):
         # When ("Open namespace")
         # Then ("Namespace is not opened")
-        ns_name = "new_ns_auth"
+        ns_name = "new_ns_auth_err"
+        db_auth = db_auth(("invalid_pass", "invalid_pass"))
         err_msg = f"Errors occurred when parsing the URL to mask user credentials"
         assert_that(calling(db_auth.namespace.open).with_args(ns_name),
                     raises(ApiError, pattern=err_msg))
