@@ -92,6 +92,14 @@ class TestAuth:
         assert_that(calling(db_auth.namespace.open).with_args(ns_name),
                     raises(ApiError, pattern=err_msg))
 
+    def test_cant_open_namespace_with_invalid_pass(self, db, db_auth, namespace, index, item):
+        # When ("Open namespace")
+        # Then ("Namespace is not opened")
+        ns_name = "new_ns_auth"
+        err_msg = f"Errors occurred when parsing the URL to mask user credentials"
+        assert_that(calling(db_auth.namespace.open).with_args(ns_name),
+                    raises(ApiError, pattern=err_msg))
+
     @pytest.mark.parametrize("auth", [
         ("owner", "owner"),
         ("db_admin", "dbadmin"),
