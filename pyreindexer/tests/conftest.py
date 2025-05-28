@@ -11,6 +11,7 @@ from tests.test_data.constants import composite_index_definition, index_definiti
 
 def pytest_addoption(parser):
     parser.addoption("--mode", choices=["builtin", "cproto"], default="builtin", help="Connection mode")
+    parser.addoption("--rx_bin_path", action="store", help="path to reindexer_server", default="")
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -26,7 +27,8 @@ def rx_server(request):
     if request.config.getoption("--mode") == "builtin":
         yield
     else:
-        server = ReindexerServer(http_port=9088, rpc_port=6534, storage="/tmp/reindex_test")
+        rx_bin_path = request.config.getoption("--rx_bin_path")
+        server = ReindexerServer(rx_bin_path=rx_bin_path, http_port=9088, rpc_port=6534, storage="/tmp/reindex_test")
         server.run()
         yield
         server.terminate()

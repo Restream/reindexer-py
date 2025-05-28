@@ -20,4 +20,9 @@ owner:
     hash: owner
     roles:
         *: owner
+        
+invalid_pass:
+    hash: invalid_pass
+    roles:
+        *: owner
 '''
