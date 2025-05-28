@@ -1,3 +1,4 @@
+import os
 import shlex
 import subprocess
 
@@ -16,8 +17,9 @@ session.mount("http://", adapter)
 
 class ReindexerServer:
 
-    def __init__(self, http_port=9088, rpc_port=6534, storage="/tmp/reindex_test",
+    def __init__(self, rx_bin_path="", http_port=9088, rpc_port=6534, storage="/tmp/reindex_test",
                  auth=False, user=None, password=None):
+        self.rx_bin_path = rx_bin_path
         self.http_port = http_port
         self.rpc_port = rpc_port
         self.httpaddr = f"127.0.0.1:{http_port}"
@@ -31,7 +33,7 @@ class ReindexerServer:
 
         self.proc = None
 
-        self.__cmd = f"reindexer_server --db {self.storage} --httpaddr={self.httpaddr} --rpcaddr={self.rpcaddr}"
+        self.__cmd = f"{os.path.join(self.rx_bin_path, 'reindexer_server')} --db {self.storage} --httpaddr={self.httpaddr} --rpcaddr={self.rpcaddr}"
         if self.auth:
             self.__cmd += " --security"
 
