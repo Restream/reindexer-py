@@ -50,6 +50,7 @@
     * [where\_uuid](#pyreindexer.query.Query.where_uuid)
     * [where\_between\_fields](#pyreindexer.query.Query.where_between_fields)
     * [where\_knn](#pyreindexer.query.Query.where_knn)
+    * [where\_knn\_string](#pyreindexer.query.Query.where_knn_string)
     * [open\_bracket](#pyreindexer.query.Query.open_bracket)
     * [close\_bracket](#pyreindexer.query.Query.close_bracket)
     * [match](#pyreindexer.query.Query.match)
@@ -1065,8 +1066,7 @@ Adds comparing two fields where condition to DB query
 ```python
 def where_knn(
     index: str, vec: List[float],
-    param: Union[IndexSearchParamBruteForce | IndexSearchParamHnsw
-                 | IndexSearchParamIvf]
+    param: Union[IndexSearchParamBruteForce | IndexSearchParamHnsw | IndexSearchParamIvf]
 ) -> Query
 ```
 
@@ -1076,13 +1076,41 @@ Adds where condition to DB query with float_vector as args.
 #### Arguments:
     index (string): Field name used in condition clause (only float_vector)
     vec (list[float]): KNN value of index to be compared with
-    param (:obj:`IndexSearchParamBase`): KNN search parameters
+    param (:obj:`union[IndexSearchParamBruteForce|IndexSearchParamHnsw|IndexSearchParamIvf]`): KNN search parameters
 
 #### Returns:
     (:obj:`Query`): Query object for further customizations
 
 #### Raises:
     QueryError: Raises with an error message if no vec are specified
+    QueryError: Raises with an error message if no param are specified or have an invalid value
+    ApiError: Raises with an error message of API return on non-zero error code
+
+<a id="pyreindexer.query.Query.where_knn_string"></a>
+
+### Query.where\_knn\_string
+
+```python
+def where_knn_string(
+    index: str, value: str,
+    param: Union[IndexSearchParamBruteForce | IndexSearchParamHnsw | IndexSearchParamIvf]
+) -> Query
+```
+
+Adds where condition to DB query with string as args.
+    `index` MUST be declared as float_vector index in this case.
+    WARNING: Only relevant if automatic embedding is configured for this float_vector index
+
+#### Arguments:
+    index (string): Field name used in condition clause (only float_vector)
+    value (string): value to be generated using automatic embedding of KNN index value to be compared to
+    param (:obj:`union[IndexSearchParamBruteForce|IndexSearchParamHnsw|IndexSearchParamIvf]`): KNN search parameters
+
+#### Returns:
+    (:obj:`Query`): Query object for further customizations
+
+#### Raises:
+    QueryError: Raises with an error message if no value are specified
     QueryError: Raises with an error message if no param are specified or have an invalid value
     ApiError: Raises with an error message of API return on non-zero error code
 

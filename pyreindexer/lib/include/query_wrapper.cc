@@ -3,6 +3,7 @@
 #include <limits>
 
 #include "core/query/query.h"
+#include "core/query/queryentry.h"
 #include "core/keyvalue/uuid.h"
 #include "queryresults_wrapper.h"
 
@@ -83,6 +84,18 @@ void QueryWrapper::WhereKNN(std::string_view index, reindexer::ConstFloatVectorV
 	ser_.PutVString(index);
 	ser_.PutVarUint(nextOperation_);
 	ser_.PutFloatVectorView(vec);
+	params.Serialize(ser_);
+
+	nextOperation_ = OpType::OpAnd;
+	++queriesCount_;
+}
+
+void QueryWrapper::WhereKNN(std::string_view index, std::string_view value, const reindexer::KnnSearchParams& params) {
+	ser_.PutVarUint(QueryItemType::QueryKnnConditionExt);
+	ser_.PutVString(index);
+	ser_.PutVarUint(nextOperation_);
+	ser_.PutVarUint(reindexer::KnnQueryEntry::DataFormatType::String);
+	ser_.PutVString(value);
 	params.Serialize(ser_);
 
 	nextOperation_ = OpType::OpAnd;

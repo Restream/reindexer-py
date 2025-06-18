@@ -35,6 +35,7 @@ public:
 	void WhereFieldSubQuery(std::string_view index, CondType condition, QueryWrapper& query);
 	void WhereUUID(std::string_view index, CondType condition, const reindexer::h_vector<std::string, 2>& keys);
 	void WhereKNN(std::string_view index, reindexer::ConstFloatVectorView vec, const reindexer::KnnSearchParams& params);
+	void WhereKNN(std::string_view index, std::string_view value, const reindexer::KnnSearchParams& params);
 
 	void WhereBetweenFields(std::string_view firstField, CondType condition, std::string_view secondField);
 
