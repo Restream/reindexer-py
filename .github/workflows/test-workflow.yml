@@ -66,7 +66,7 @@ jobs:
           # Workaround for actions/setup-python#981 (env var only modified for this specific step)
           SETUPTOOLS_USE_DISTUTILS: >-
             ${{ matrix.platform == 'macos-14' && matrix.python == '3.9' && 'stdlib' || 'local' }}-
-            ${{ matrix.platform == 'ubuntu-22.04' && matrix.python == '3.8' && 'stdlib' || 'local' }}-
+            ${{ matrix.platform == 'ubuntu-22.04' && matrix.python == '3.8' && 'stdlib' || 'local' }}
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade --disable-pip-version-check pip setuptools build
