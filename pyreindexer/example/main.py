@@ -197,6 +197,8 @@ def float_vector_hnsw_example(db):
     query_result = (db.new_query(namespace)
                         .where_knn(fv_index_name, random_vector(dimension), param)
                         .select("vectors()")
+                        .with_rank()
+                        .sort(index="rank()", desc=True)
                         .must_execute(timedelta(seconds = 1)))
 
     # result

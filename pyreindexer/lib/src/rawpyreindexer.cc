@@ -885,6 +885,21 @@ static PyObject* WhereKNN(PyObject* self, PyObject* args) {
 	return pyErr({});
 }
 
+static PyObject* WhereKNNString(PyObject* self, PyObject* args) {
+	uintptr_t queryWrapperAddr = 0;
+	char* index = nullptr;
+	unsigned k = 0, ef = 0, nprobe = 0;
+	char* value = nullptr;
+	if (!PyArg_ParseTuple(args, "ksIIIs", &queryWrapperAddr, &index, &k, &ef, &nprobe, &value)) {
+		return nullptr;
+	}
+
+	auto params = GetParams(k, ef, nprobe);
+	getWrapper<QueryWrapper>(queryWrapperAddr)->WhereKNN(index, value, params);
+
+	return pyErr({});
+}
+
 namespace {
 enum class BracketType { Open, Closed };
 PyObject* addBracket(PyObject* self, PyObject* args, BracketType type) {
