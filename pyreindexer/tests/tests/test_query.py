@@ -838,15 +838,15 @@ class TestQueryKNN:
         # Given ("Create new query")
         query = db.query.new(namespace)
         # When ("Check indexes search param")
-        assert_that(calling(IndexSearchParamBruteForce).with_args(0),
+        assert_that(calling(IndexSearchParamBruteForce).with_args(0, 0.0),
                     raises(ValueError, pattern="KNN limit 'k' should not be less than 1"))
-        assert_that(calling(IndexSearchParamHnsw).with_args(0, 1),
+        assert_that(calling(IndexSearchParamHnsw).with_args(0, 0.0, 1),
                     raises(ValueError, pattern="KNN limit 'k' should not be less than 1"))
-        assert_that(calling(IndexSearchParamHnsw).with_args(2, 1),
+        assert_that(calling(IndexSearchParamHnsw).with_args(2, 0.0, 1),
                     raises(ValueError, pattern="'ef' should not be less than 'k'"))
-        assert_that(calling(IndexSearchParamIvf).with_args(0, 1),
+        assert_that(calling(IndexSearchParamIvf).with_args(0, 0.0, 1),
                     raises(ValueError, pattern="KNN limit 'k' should not be less than 1"))
-        assert_that(calling(IndexSearchParamIvf).with_args(1, 0),
+        assert_that(calling(IndexSearchParamIvf).with_args(1, 0.0, 0),
                     raises(ValueError, pattern="'nprobe' should not be less than 1"))
 
         # When ("Make query with knn")
@@ -871,7 +871,7 @@ class TestQueryKNN:
         query = db.query.new(namespace)
         # When ("Execute query")
         k: Final[int] = 39
-        param = IndexSearchParamBruteForce(k=k)
+        param = IndexSearchParamBruteForce(k=k, radius=0.0)
         query_result = list(
             query.where_knn("vec", random_vector(dimension), param)
                     .select("vectors()")
@@ -894,7 +894,7 @@ class TestQueryKNN:
         # Given ("Create new query")
         query = db.query.new(namespace)
         # When ("Execute query")
-        param = IndexSearchParamHnsw(k=30, ef=30)
+        param = IndexSearchParamHnsw(k=30, radius=0.0, ef=30)
         query_result = list(
             query.where_knn("vec", random_vector(dimension), param)
                     .select("vectors()")
@@ -918,7 +918,7 @@ class TestQueryKNN:
         # Given ("Create new query")
         query = db.query.new(namespace)
         # When ("Execute query")
-        param = IndexSearchParamHnsw(k=25, ef=40)
+        param = IndexSearchParamHnsw(k=25, radius=0.0, ef=40)
         query_result = list(
             query.where_knn("vec", random_vector(dimension), param)
                     .select("vectors()")
@@ -940,7 +940,7 @@ class TestQueryKNN:
         # Given ("Create new query")
         query = db.query.new(namespace)
         # When ("Execute query")
-        param = IndexSearchParamIvf(k=30, nprobe=2)
+        param = IndexSearchParamIvf(k=30, radius=0.0, nprobe=2)
         query_result = list(
             query.where_knn("vec", random_vector(dimension), param)
                     .select("vectors()")

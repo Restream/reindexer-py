@@ -839,23 +839,26 @@ static PyObject* WhereBetweenFields(PyObject* self, PyObject* args) {
 }
 
 namespace {
-reindexer::KnnSearchParams GetParams(unsigned k, unsigned ef, unsigned nprobe) {
+reindexer::KnnSearchParams GetParams(unsigned k, double radius, unsigned ef, unsigned nprobe) {
+	auto r = float(radius);
 	if (ef > 0) {
-		return reindexer::KnnSearchParams::Hnsw(k, ef);
+		return reindexer::HnswSearchParams{}.K(k).Radius(r).Ef(ef);
 	}
 	if (nprobe > 0) {
-		return reindexer::KnnSearchParams::Ivf(k, nprobe);
+		return reindexer::IvfSearchParams{}.K(k).Radius(r).NProbe(nprobe);
 	}
-	return reindexer::KnnSearchParams::BruteForce(k);
+	return reindexer::BruteForceSearchParams{}.K(k).Radius(r);
 }
 }
 
 static PyObject* WhereKNN(PyObject* self, PyObject* args) {
 	uintptr_t queryWrapperAddr = 0;
 	char* index = nullptr;
+	double radius = 0.0;
 	unsigned k = 0, ef = 0, nprobe = 0;
 	PyObject* valuesList = nullptr;  // borrowed ref after ParseTuple if passed
-	if (!PyArg_ParseTuple(args, "ksIIIO!", &queryWrapperAddr, &index, &k, &ef, &nprobe, &PyList_Type, &valuesList)) {
+	if (!PyArg_ParseTuple(args, "ksIdIIO!", &queryWrapperAddr, &index, &k, &radius, &ef, &nprobe,
+						  &PyList_Type, &valuesList)) {
 		return nullptr;
 	}
 
@@ -879,7 +882,7 @@ static PyObject* WhereKNN(PyObject* self, PyObject* args) {
 		Py_DECREF(valuesList);
 	}
 
-	auto params = GetParams(k, ef, nprobe);
+	auto params = GetParams(k, radius, ef, nprobe);
 	getWrapper<QueryWrapper>(queryWrapperAddr)->WhereKNN(index, reindexer::ConstFloatVectorView(var), params);
 
 	return pyErr({});
@@ -888,13 +891,14 @@ static PyObject* WhereKNN(PyObject* self, PyObject* args) {
 static PyObject* WhereKNNString(PyObject* self, PyObject* args) {
 	uintptr_t queryWrapperAddr = 0;
 	char* index = nullptr;
+	double radius = 0.0;
 	unsigned k = 0, ef = 0, nprobe = 0;
 	char* value = nullptr;
-	if (!PyArg_ParseTuple(args, "ksIIIs", &queryWrapperAddr, &index, &k, &ef, &nprobe, &value)) {
+	if (!PyArg_ParseTuple(args, "ksIdIIs", &queryWrapperAddr, &index, &k, &radius, &ef, &nprobe, &value)) {
 		return nullptr;
 	}
 
-	auto params = GetParams(k, ef, nprobe);
+	auto params = GetParams(k, radius, ef, nprobe);
 	getWrapper<QueryWrapper>(queryWrapperAddr)->WhereKNN(index, value, params);
 
 	return pyErr({});
@@ -920,7 +924,7 @@ static PyObject* CloseBracket(PyObject* self, PyObject* args) { return addBracke
 static PyObject* DWithin(PyObject* self, PyObject* args) {
 	uintptr_t queryWrapperAddr = 0;
 	char* index = nullptr;
-	double x = 0, y = 0, distance = 0;
+	double x = 0.0, y = 0.0, distance = 0.0;
 	if (!PyArg_ParseTuple(args, "ksddd", &queryWrapperAddr, &index, &x, &y, &distance)) {
 		return nullptr;
 	}

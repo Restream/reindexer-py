@@ -128,24 +128,29 @@ class Query:
             raise QueryError("A required parameter is not specified. `param` can't be None")
 
         k: int = 0
+        radius: float = 0.0
         ef: int = 0
         nprobe: int = 0
         if isinstance(param, IndexSearchParamBruteForce):
             k = param.k
+            radius = param.radius
         elif isinstance(param, IndexSearchParamHnsw):
             if param.ef < param.k:
                 raise QueryError("Ef should not be less than K")
             k = param.k
+            radius = param.radius
             ef = param.ef
         elif isinstance(param, IndexSearchParamIvf):
             if param.nprobe < 1:
                 raise QueryError("Nprobe should not be less than 1")
             k = param.k
+            radius = param.radius
             nprobe = param.nprobe
         else:
             raise QueryError("Unexpected parameter type. `param` must be IndexSearchParamBruteForce, "
                              "IndexSearchParamHnsw or IndexSearchParamIvf")
-        return k, ef, nprobe
+
+        return k, radius, ef, nprobe
 
     @staticmethod
     def __convert_to_list(param: Union[simple_types, tuple[list[simple_types], ...]]) -> list:
@@ -370,9 +375,9 @@ class Query:
         if vec is None or len(vec) == 0:
             raise QueryError("A required parameter is not specified. `vec` can't be None or empty")
 
-        k, ef, nprobe = self.__where_knn_param(param)
+        k, radius, ef, nprobe = self.__where_knn_param(param)
 
-        self.err_code, self.err_msg = self.api.where_knn(self.query_wrapper_ptr, index, k, ef, nprobe, vec)
+        self.err_code, self.err_msg = self.api.where_knn(self.query_wrapper_ptr, index, k, radius, ef, nprobe, vec)
         self.__raise_on_error()
         return self
 
@@ -401,9 +406,10 @@ class Query:
         if len(value) == 0:
             raise QueryError("A required parameter is not specified. `value` can't be None or empty")
 
-        k, ef, nprobe = self.__where_knn_param(param)
+        k, radius, ef, nprobe = self.__where_knn_param(param)
 
-        self.err_code, self.err_msg = self.api.where_knn_string(self.query_wrapper_ptr, index, k, ef, nprobe, value)
+        self.err_code, self.err_msg =\
+            self.api.where_knn_string(self.query_wrapper_ptr, index, k, radius, ef, nprobe, value)
         self.__raise_on_error()
         return self
 
