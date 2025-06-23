@@ -839,15 +839,15 @@ static PyObject* WhereBetweenFields(PyObject* self, PyObject* args) {
 }
 
 namespace {
-reindexer::KnnSearchParams GetParams(unsigned k, double radius, unsigned ef, unsigned nprobe) {
-	auto r = float(radius);
+reindexer::KnnSearchParams GetParams(unsigned k, double r, unsigned ef, unsigned nprobe) {
+	auto radius = float(r);
 	if (ef > 0) {
-		return reindexer::HnswSearchParams{}.K(k).Radius(r).Ef(ef);
+		return reindexer::HnswSearchParams{}.K(k).Radius(radius).Ef(ef);
 	}
 	if (nprobe > 0) {
-		return reindexer::IvfSearchParams{}.K(k).Radius(r).NProbe(nprobe);
+		return reindexer::IvfSearchParams{}.K(k).Radius(radius).NProbe(nprobe);
 	}
-	return reindexer::BruteForceSearchParams{}.K(k).Radius(r);
+	return reindexer::KnnSearchParamsBase{}.K(k).Radius(radius);
 }
 }
 
