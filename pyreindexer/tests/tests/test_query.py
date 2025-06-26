@@ -929,20 +929,20 @@ class TestQueryKNN:
     def test_query_ivf(self, db, namespace, index):
         # Given ("Create float vector index")
         # Given ("Create float vector index")
-        dimension: Final[int] = 8
+        dimension: Final[int] = 2
         index = copy.copy(vector_index_ivf)
         index["config"] = {"dimension": dimension, "metric": "l2", "centroids_count": 3}
         db.index.create(namespace, index)
         # Given("Insert items")
-        items = [{"id": i, "vec": random_vector(dimension)} for i in range(150)]
+        items = [{"id": i, "vec": [1, i]} for i in range(150)]
         for item in items:
             db.item.insert("new_ns", item)
         # Given ("Create new query")
         query = db.query.new(namespace)
         # When ("Execute query")
-        param = IndexSearchParamIvf(k=30, nprobe=2, radius=1.0)
+        param = IndexSearchParamIvf(k=30, nprobe=2, radius=20.0)
         query_result = list(
-            query.where_knn("vec", random_vector(dimension), param)
+            query.where_knn("vec", [3, 4], param)
                     .select("vectors()")
                     .execute(timeout=timedelta(seconds=1)))
         # Then ("Check knn select result")
