@@ -1,30 +1,29 @@
 name: Test the project
+#on:
+#  push:
+#    branches-ignore:
+#      - master # TODO uncomment
 on:
   push:
-    branches-ignore:
-      - master
+    branches:
+      - master  # TODO DELETE
 jobs:
   test:
     strategy:
       fail-fast: false
       matrix:
-        python:
-        - "3.9"
-        - "3.13"
-        platform:
-        - ubuntu-22.04
-        - ubuntu-24.04
-        - macos-14
+        python: [ "3.9", "3.13" ]
+        platform: [ ubuntu-22.04, ubuntu-24.04, macos-14 ]
         include:
-        - python: "3.8"
-          platform: ubuntu-22.04
-          distutils: stdlib
-        - python: "3.10"
-          platform: ubuntu-24.04
-        - python: "3.11"
-          platform: ubuntu-24.04
-        - python: "3.12"
-          platform: ubuntu-24.04
+          - python: "3.8"
+            platform: ubuntu-22.04
+            distutils: stdlib
+          - python: "3.10"
+            platform: ubuntu-24.04
+          - python: "3.11"
+            platform: ubuntu-24.04
+          - python: "3.12"
+            platform: ubuntu-24.04
     runs-on: ${{ matrix.platform }}
     env:
       SETUPTOOLS_USE_DISTUTILS: ${{ matrix.distutils || 'local' }}
