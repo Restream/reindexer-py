@@ -9,8 +9,10 @@ class IndexSearchParamBruteForce:
 
     """
 
-    def __init__(self, k: int, radius: float = 1.0):
-        if k < 1:
+    def __init__(self, k: int = None, radius: float = None):
+        if k is None and radius is None:
+            raise ValueError("Either 'k' or 'radius' needs to be specified")
+        if k is not None and k < 1:
             raise ValueError("KNN limit 'k' should not be less than 1")
         self.k = k
         self.radius = radius
@@ -29,11 +31,14 @@ class IndexSearchParamHnsw:
 
     """
 
-    def __init__(self, k: int, ef: int, radius: float = 1.0):
-        if k < 1:
-            raise ValueError("KNN limit 'k' should not be less than 1")
-        if ef < k:
-            raise ValueError("'ef' should not be less than 'k'")
+    def __init__(self, ef: int, k: int = None, radius: float = None):
+        if k is None and radius is None:
+            raise ValueError("Either 'k' or 'radius' needs to be specified")
+        if k is not None:
+            if k < 1:
+                raise ValueError("KNN limit 'k' should not be less than 1")
+            if ef < k:
+                raise ValueError("'ef' should not be less than 'k'")
         self.k = k
         self.radius = radius
         self.ef = ef
@@ -51,11 +56,14 @@ class IndexSearchParamIvf:
 
     """
 
-    def __init__(self, k: int, nprobe: int, radius: float = 1.0):
-        if k < 1:
-            raise ValueError("KNN limit 'k' should not be less than 1")
-        if nprobe < 1:
-            raise ValueError("'nprobe' should not be less than 1")
+    def __init__(self, nprobe: int, k: int = None, radius: float = None):
+        if k is None and radius is None:
+            raise ValueError("Either 'k' or 'radius' needs to be specified")
+        if k is not None:
+            if k < 1:
+                raise ValueError("KNN limit 'k' should not be less than 1")
+            if nprobe < 1:
+                raise ValueError("'nprobe' should not be less than 1")
+        self.nprobe = nprobe
         self.k = k
         self.radius = radius
-        self.nprobe = nprobe

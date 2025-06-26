@@ -30,7 +30,7 @@ class TestQueryWhereKNNString:
         query = db.query.new(namespace)
         # When ("Execute query")
         k: Final[int] = 5
-        param = IndexSearchParamBruteForce(k=k, radius=1.0)
+        param = IndexSearchParamBruteForce(k=k)
         query_result = list(
             query.where_knn_string("vec", "word", param)
             .select("vectors()")
@@ -55,7 +55,7 @@ class TestQueryWhereKNNString:
         # Given ("Create new query")
         query = db.query.new(namespace)
         # When ("Execute query")
-        param = IndexSearchParamHnsw(k=5, ef=5, radius=1.0)
+        param = IndexSearchParamHnsw(k=5, ef=5)
         query_result = list(
             query.where_knn_string("vec", "same same", param)
             .select("vectors()")
@@ -79,7 +79,7 @@ class TestQueryWhereKNNString:
         # Given ("Create new query")
         query = db.query.new(namespace)
         # When ("Execute query")
-        param = IndexSearchParamIvf(k=5, nprobe=2, radius=1.0)
+        param = IndexSearchParamIvf(k=5, nprobe=2)
         query_result = list(
             query.where_knn_string("vec", "a b c", param)
             .select("vectors()")
@@ -108,7 +108,7 @@ class TestQueryWhereKNNString:
         for item in items:
             db.item.insert("new_ns", item)
         # Given ("Create new query")
-        param = IndexSearchParamHnsw(k=5, ef=5, radius=1.0)
+        param = IndexSearchParamHnsw(k=5, ef=5)
         query = db.query.new(namespace).select("vectors()")
         # When ("Try to add where_knn_string to the query")
         assert_that(calling(query.where_knn_string).with_args("vec", value, param),
@@ -128,10 +128,10 @@ class TestQueryWhereKNNString:
         for item in items:
             db.item.insert("new_ns", item)
         # Given ("Create new query")
-        param = IndexSearchParamHnsw(k=5, ef=5, radius=1.0)
+        param = IndexSearchParamHnsw(k=5, ef=5)
         query = db.query.new(namespace).where_knn_string("vec", "word", param).select("vectors()")
         # When ("Try to execute query with invalid query_embedder url")
-        param = IndexSearchParamHnsw(k=5, ef=5, radius=1.0)
+        param = IndexSearchParamHnsw(k=5, ef=5)
         query = query.where_knn_string("vec", "word", param).select("vectors()")
         err_msg = "Failed to get embedding for 'vec'. Problem with client: Unexpected problem with client"
         assert_that(calling(query.execute).with_args(), raises(ApiError, pattern=err_msg))
@@ -147,10 +147,10 @@ class TestQueryWhereKNNString:
         for item in items:
             db.item.insert("new_ns", item)
         # Given ("Create new query")
-        param = IndexSearchParamHnsw(k=5, ef=5, radius=1.0)
+        param = IndexSearchParamHnsw(k=5, ef=5)
         query = db.query.new(namespace).where_knn_string("vec", "word", param).select("vectors()")
         # When ("Try to execute query without query_embedder")
-        param = IndexSearchParamHnsw(k=5, ef=5, radius=1.0)
+        param = IndexSearchParamHnsw(k=5, ef=5)
         query = query.where_knn_string("vec", "word", param).select("vectors()")
         err_msg = ("Failed to get embedding for 'vec'. Problem with client: Unexpected problem with client|"
                    "Trying to find knn by string. No Embedder configured for index 'vec'")

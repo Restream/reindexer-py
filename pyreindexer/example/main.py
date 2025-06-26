@@ -193,7 +193,7 @@ def float_vector_hnsw_example(db):
     transaction.commit(timedelta(seconds = 3))
 
     # do query
-    param = IndexSearchParamHnsw(k=20, ef=30, radius=20.0)
+    param = IndexSearchParamHnsw(k=20, ef=30)
     query_result = (db.new_query(namespace)
                         .where_knn(fv_index_name, random_vector(dimension), param)
                         .select("vectors()")
