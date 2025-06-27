@@ -1876,6 +1876,10 @@ Index search param for brute force index. Equal to basic parameters
 
 #### Attributes:
     k (int): Expected size of KNN index results. Should not be less than 1
+    radius (float): In addition to the parameter `k`, the query results can also be filtered by a `rank` -
+      value using the parameter, witch called `radius`. It's named so because, under the `L2`-metric,
+      it restricts vectors from query result to a sphere of the specified radius. [More about `radius`]
+      (https://github.com/Restream/reindexer/blob/master/float_vector.md)
 
 <a id="pyreindexer.index_search_params.IndexSearchParamHnsw"></a>
 
@@ -1891,6 +1895,10 @@ Index search param for HNSW index.
     k (int): Expected size of KNN index results. Should not be less than 1
     ef (int): Size of nearest neighbor buffer that will be filled during fetching. Should not be less than 'k',
     good story when `ef` ~= 1.5 * `k`
+    radius (float): In addition to the parameter `k`, the query results can also be filtered by a `rank` -
+      value using the parameter, witch called `radius`. It's named so because, under the `L2`-metric,
+      it restricts vectors from query result to a sphere of the specified radius. [More about `radius`]
+      (https://github.com/Restream/reindexer/blob/master/float_vector.md)
 
 <a id="pyreindexer.index_search_params.IndexSearchParamIvf"></a>
 
@@ -1905,6 +1913,10 @@ Index search param for IVF index.
 #### Attributes:
     k (int): Expected size of KNN index results. Should not be less than 1
     nprobe (int): Number of centroids that will be scanned in where. Should not be less than 1
+    radius (float): In addition to the parameter `k`, the query results can also be filtered by a `rank` -
+      value using the parameter, witch called `radius`. It's named so because, under the `L2`-metric,
+      it restricts vectors from query result to a sphere of the specified radius. [More about `radius`]
+      (https://github.com/Restream/reindexer/blob/master/float_vector.md)
 
 <a id="pyreindexer.index_definition"></a>
 
