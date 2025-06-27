@@ -854,6 +854,10 @@ class TestQueryKNN:
                     raises(ValueError, pattern="KNN limit 'k' should not be less than 1"))
         assert_that(calling(IndexSearchParamIvf).with_args(k = 1, nprobe = 0),
                     raises(ValueError, pattern="'nprobe' should not be less than 1"))
+        assert_that(calling(IndexSearchParamIvf).with_args(radius = 1, nprobe = 0),
+                    raises(ValueError, pattern="'nprobe' should not be less than 1"))
+        assert_that(calling(IndexSearchParamIvf).with_args(k = 1, radius = 2, nprobe = 0),
+                    raises(ValueError, pattern="'nprobe' should not be less than 1"))
 
         # When ("Make query with knn")
         assert_that(calling(query.where_knn).with_args("vec", None, None),

@@ -64,6 +64,9 @@ class IndexSearchParamIvf:
                 raise ValueError("KNN limit 'k' should not be less than 1")
             if nprobe < 1:
                 raise ValueError("'nprobe' should not be less than 1")
+        if k is None and radius is not None:
+            if nprobe < 1:
+                raise ValueError("'nprobe' should not be less than 1")
         self.nprobe = nprobe
         self.k = k
         self.radius = radius
