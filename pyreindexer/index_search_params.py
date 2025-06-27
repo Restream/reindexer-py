@@ -59,14 +59,10 @@ class IndexSearchParamIvf:
     def __init__(self, nprobe: int, k: int = None, radius: float = None):
         if k is None and radius is None:
             raise ValueError("Either 'k' or 'radius' needs to be specified")
-        if k is not None:
-            if k < 1:
-                raise ValueError("KNN limit 'k' should not be less than 1")
-            if nprobe < 1:
-                raise ValueError("'nprobe' should not be less than 1")
-        if k is None and radius is not None:
-            if nprobe < 1:
-                raise ValueError("'nprobe' should not be less than 1")
+        if k is not None and k < 1:
+            raise ValueError("KNN limit 'k' should not be less than 1")
+        if nprobe < 1:
+            raise ValueError("'nprobe' should not be less than 1")
         self.nprobe = nprobe
         self.k = k
         self.radius = radius
