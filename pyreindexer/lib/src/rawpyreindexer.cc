@@ -752,9 +752,9 @@ static PyObject* Where(PyObject* self, PyObject* args) {
 static PyObject* WhereSubQuery(PyObject* self, PyObject* args) {
 	uintptr_t queryWrapperAddr = 0;
 	uintptr_t subQueryWrapperAddr = 0;
-	unsigned cond = 0;
+	unsigned condition = 0;
 	PyObject* keysList = nullptr;  // borrowed ref after ParseTuple if passed
-	if (!PyArg_ParseTuple(args, "kkIO!", &queryWrapperAddr, &subQueryWrapperAddr, &cond, &PyList_Type, &keysList)) {
+	if (!PyArg_ParseTuple(args, "kkIO!", &queryWrapperAddr, &subQueryWrapperAddr, &condition, &PyList_Type, &keysList)) {
 		return nullptr;
 	}
 
@@ -774,7 +774,7 @@ static PyObject* WhereSubQuery(PyObject* self, PyObject* args) {
 
 	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
 	auto subQuery = getWrapper<QueryWrapper>(subQueryWrapperAddr);
-	query->WhereSubQuery(*subQuery, CondType(cond), keys);
+	query->WhereSubQuery(*subQuery, CondType(condition), keys);
 
 	return pyErr({});
 }
@@ -839,23 +839,51 @@ static PyObject* WhereBetweenFields(PyObject* self, PyObject* args) {
 }
 
 namespace {
-reindexer::KnnSearchParams GetParams(unsigned k, unsigned ef, unsigned nprobe) {
+reindexer::KnnSearchParams GetParams(bool is_k, unsigned k, bool is_r, double r, unsigned ef, unsigned nprobe) {
+	auto radius = float(r);
 	if (ef > 0) {
-		return reindexer::KnnSearchParams::Hnsw(k, ef);
+		reindexer::HnswSearchParams params;
+		params.Ef(ef);
+		if (is_k) {
+			params.K(k);
+		}
+		if (is_r) {
+			params.Radius(radius);
+		}
+		return params;
 	}
+
 	if (nprobe > 0) {
-		return reindexer::KnnSearchParams::Ivf(k, nprobe);
+		reindexer::IvfSearchParams params;
+		params.NProbe(nprobe);
+		if (is_k) {
+			params.K(k);
+		}
+		if (is_r) {
+			params.Radius(radius);
+		}
+		return params;
 	}
-	return reindexer::KnnSearchParams::BruteForce(k);
+
+	reindexer::KnnSearchParamsBase params;
+	if (is_k) {
+		params.K(k);
+	}
+	if (is_r) {
+		params.Radius(radius);
+	}
+	return params;
 }
 }
 
 static PyObject* WhereKNN(PyObject* self, PyObject* args) {
 	uintptr_t queryWrapperAddr = 0;
 	char* index = nullptr;
-	unsigned k = 0, ef = 0, nprobe = 0;
+	double radius = 0.0;
+	unsigned is_radius = 0, is_k = 0, k = 0, ef = 0, nprobe = 0;
 	PyObject* valuesList = nullptr;  // borrowed ref after ParseTuple if passed
-	if (!PyArg_ParseTuple(args, "ksIIIO!", &queryWrapperAddr, &index, &k, &ef, &nprobe, &PyList_Type, &valuesList)) {
+	if (!PyArg_ParseTuple(args, "ksIIIdIIO!", &queryWrapperAddr, &index, &is_k, &k, &is_radius, &radius, &ef, &nprobe,
+						  &PyList_Type, &valuesList)) {
 		return nullptr;
 	}
 
@@ -879,7 +907,7 @@ static PyObject* WhereKNN(PyObject* self, PyObject* args) {
 		Py_DECREF(valuesList);
 	}
 
-	auto params = GetParams(k, ef, nprobe);
+	auto params = GetParams((is_k != 0), k, (is_radius != 0), radius, ef, nprobe);
 	getWrapper<QueryWrapper>(queryWrapperAddr)->WhereKNN(index, reindexer::ConstFloatVectorView(var), params);
 
 	return pyErr({});
@@ -888,13 +916,15 @@ static PyObject* WhereKNN(PyObject* self, PyObject* args) {
 static PyObject* WhereKNNString(PyObject* self, PyObject* args) {
 	uintptr_t queryWrapperAddr = 0;
 	char* index = nullptr;
-	unsigned k = 0, ef = 0, nprobe = 0;
+	double radius = 0.0;
+	unsigned is_radius = 0, is_k = 0, k = 0, ef = 0, nprobe = 0;
 	char* value = nullptr;
-	if (!PyArg_ParseTuple(args, "ksIIIs", &queryWrapperAddr, &index, &k, &ef, &nprobe, &value)) {
+	if (!PyArg_ParseTuple(args, "ksIIIdIIs", &queryWrapperAddr, &index, &is_k, &k, &is_radius, &radius, &ef, &nprobe,
+						  &value)) {
 		return nullptr;
 	}
 
-	auto params = GetParams(k, ef, nprobe);
+	auto params = GetParams((is_k != 0), k, (is_radius != 0), radius, ef, nprobe);
 	getWrapper<QueryWrapper>(queryWrapperAddr)->WhereKNN(index, value, params);
 
 	return pyErr({});
@@ -920,7 +950,7 @@ static PyObject* CloseBracket(PyObject* self, PyObject* args) { return addBracke
 static PyObject* DWithin(PyObject* self, PyObject* args) {
 	uintptr_t queryWrapperAddr = 0;
 	char* index = nullptr;
-	double x = 0, y = 0, distance = 0;
+	double x = 0.0, y = 0.0, distance = 0.0;
 	if (!PyArg_ParseTuple(args, "ksddd", &queryWrapperAddr, &index, &x, &y, &distance)) {
 		return nullptr;
 	}

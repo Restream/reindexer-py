@@ -838,15 +838,25 @@ class TestQueryKNN:
         # Given ("Create new query")
         query = db.query.new(namespace)
         # When ("Check indexes search param")
-        assert_that(calling(IndexSearchParamBruteForce).with_args(0),
+        assert_that(calling(IndexSearchParamBruteForce),
+                    raises(ValueError, pattern="Either 'k' or 'radius' needs to be specified"))
+        assert_that(calling(IndexSearchParamBruteForce).with_args(k = 0, radius = 0.0),
                     raises(ValueError, pattern="KNN limit 'k' should not be less than 1"))
-        assert_that(calling(IndexSearchParamHnsw).with_args(0, 1),
+        assert_that(calling(IndexSearchParamHnsw).with_args(ef = 0),
+                    raises(ValueError, pattern="Either 'k' or 'radius' needs to be specified"))
+        assert_that(calling(IndexSearchParamHnsw).with_args(k = 0, ef = 1),
                     raises(ValueError, pattern="KNN limit 'k' should not be less than 1"))
-        assert_that(calling(IndexSearchParamHnsw).with_args(2, 1),
+        assert_that(calling(IndexSearchParamHnsw).with_args(k = 2, ef = 1),
                     raises(ValueError, pattern="'ef' should not be less than 'k'"))
-        assert_that(calling(IndexSearchParamIvf).with_args(0, 1),
+        assert_that(calling(IndexSearchParamIvf).with_args(nprobe = 0),
+                    raises(ValueError, pattern="Either 'k' or 'radius' needs to be specified"))
+        assert_that(calling(IndexSearchParamIvf).with_args(k = 0, nprobe = 1),
                     raises(ValueError, pattern="KNN limit 'k' should not be less than 1"))
-        assert_that(calling(IndexSearchParamIvf).with_args(1, 0),
+        assert_that(calling(IndexSearchParamIvf).with_args(k = 1, nprobe = 0),
+                    raises(ValueError, pattern="'nprobe' should not be less than 1"))
+        assert_that(calling(IndexSearchParamIvf).with_args(radius = 1, nprobe = 0),
+                    raises(ValueError, pattern="'nprobe' should not be less than 1"))
+        assert_that(calling(IndexSearchParamIvf).with_args(k = 1, radius = 2, nprobe = 0),
                     raises(ValueError, pattern="'nprobe' should not be less than 1"))
 
         # When ("Make query with knn")
@@ -929,20 +939,20 @@ class TestQueryKNN:
     def test_query_ivf(self, db, namespace, index):
         # Given ("Create float vector index")
         # Given ("Create float vector index")
-        dimension: Final[int] = 8
+        dimension: Final[int] = 2
         index = copy.copy(vector_index_ivf)
         index["config"] = {"dimension": dimension, "metric": "l2", "centroids_count": 3}
         db.index.create(namespace, index)
         # Given("Insert items")
-        items = [{"id": i, "vec": random_vector(dimension)} for i in range(150)]
+        items = [{"id": i, "vec": [1, i]} for i in range(150)]
         for item in items:
             db.item.insert("new_ns", item)
         # Given ("Create new query")
         query = db.query.new(namespace)
         # When ("Execute query")
-        param = IndexSearchParamIvf(k=30, nprobe=2)
+        param = IndexSearchParamIvf(k=30, nprobe=2, radius=20.0)
         query_result = list(
-            query.where_knn("vec", random_vector(dimension), param)
+            query.where_knn("vec", [3, 4], param)
                     .select("vectors()")
                     .execute(timeout=timedelta(seconds=1)))
         # Then ("Check knn select result")
