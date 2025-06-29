@@ -1,9 +1,10 @@
 [tool.cibuildwheel]
-build = ["cp38-*", "cp312-*"]
+build = ["cp312-*"]
 manylinux-x86_64-image = "manylinux2014"
 skip = ["*musllinux*"]
 
 [tool.cibuildwheel.linux]
+#environment = { REINDEXER_INCLUDE_DIR = "/usr/local/include" }
 archs = ["x86_64"]
 
 #[tool.cibuildwheel.macos]
