@@ -114,27 +114,7 @@ class TestQueryWhereKNNString:
         assert_that(calling(query.where_knn_string).with_args("vec", value, param),
                     raises(err_type, pattern=err_msg))
 
-    def test_query_where_knn_string_invalid_query_embedder_config(self, db, namespace, index):
-        # Given ("Create float vector index")
-        dimension: Final[int] = 5
-        index = copy.deepcopy(vector_index_hnsw)
-        index["config"]["dimension"] = dimension
-        index["config"]["embedding"] = {
-            "query_embedder": {"URL": "abc"}
-        }
-        db.index.create(namespace, index)
-        # Given("Insert items")
-        items = [{"id": i, "vec": random_vector(dimension)} for i in range(10)]
-        for item in items:
-            db.item.insert("new_ns", item)
-        # Given ("Create new query")
-        param = IndexSearchParamHnsw(k=5, ef=5)
-        query = db.query.new(namespace).where_knn_string("vec", "word", param).select("vectors()")
-        # When ("Try to execute query with invalid query_embedder url")
-        param = IndexSearchParamHnsw(k=5, ef=5)
-        query = query.where_knn_string("vec", "word", param).select("vectors()")
-        err_msg = "Failed to get embedding for 'vec'. Problem with client: Unexpected problem with client"
-        assert_that(calling(query.execute).with_args(), raises(ApiError, pattern=err_msg))
+
 
     def test_query_where_knn_string_no_query_embedder_config(self, db, namespace, index):
         # Given ("Create float vector index")

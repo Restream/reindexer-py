@@ -1,4 +1,6 @@
+import copy
 from datetime import timedelta
+from typing import Final
 
 import pytest
 from hamcrest import *
@@ -89,3 +91,14 @@ class TestCrudIndexes:
         ns_entry = get_ns_description(db, namespace)
         assert_that(ns_entry, has_item(has_entry("indexes", has_item(updated_index_definition))),
                     "Index wasn't updated")
+
+    def test_invalid_index_embedder_config(self, db, namespace, index):
+        # Given ("Create float vector index")
+        dimension: Final[int] = 5
+        index = copy.deepcopy(vector_index_hnsw)
+        index["config"]["dimension"] = dimension
+        index["config"]["embedding"] = {
+            "query_embedder": {"URL": "abc"}
+        }
+        err_msg = "Configuration 'embedding:query_embedder' contain field 'URL' with unexpected value: 'abc'"
+        assert_that(calling(db.index.create).with_args(namespace, index), raises(ApiError, pattern=err_msg))
