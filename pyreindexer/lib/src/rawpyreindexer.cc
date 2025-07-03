@@ -260,7 +260,7 @@ static PyObject* IndexAdd(PyObject* self, PyObject* args) {
 
 	auto indexDef = IndexDef::FromJSON(reindexer::giftStr(wrSer.Slice()));
 	if (!indexDef) {
-		pyErr(indexDef.error());
+		return pyErr(indexDef.error());
 	}
 
 	auto err = getWrapper<DBInterface>(rx)->AddIndex(ns, *indexDef, std::chrono::milliseconds(timeout));
