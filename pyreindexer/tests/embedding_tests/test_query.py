@@ -16,7 +16,7 @@ class TestQueryWhereKNNString:
     def test_query_where_knn_string_bf(self, db, namespace, index):
         # Given ("Create float vector index")
         dimension: Final[int] = 5
-        index = copy.copy(vector_index_bf)
+        index = copy.deepcopy(vector_index_bf)
         index["config"]["dimension"] = dimension
         index["config"]["embedding"] = {
             "query_embedder": {"URL": "http://127.0.0.1:8000"}
@@ -42,7 +42,7 @@ class TestQueryWhereKNNString:
     def test_query_where_knn_string_hnsw(self, db, namespace, index):
         # Given ("Create float vector index")
         dimension: Final[int] = 5
-        index = copy.copy(vector_index_hnsw)
+        index = copy.deepcopy(vector_index_hnsw)
         index["config"]["dimension"] = dimension
         index["config"]["embedding"] = {
             "query_embedder": {"URL": "http://127.0.0.1:8000"}
@@ -66,7 +66,7 @@ class TestQueryWhereKNNString:
     def test_query_where_knn_string_ivf(self, db, namespace, index):
         # Given ("Create float vector index")
         dimension: Final[int] = 5
-        index = copy.copy(vector_index_ivf)
+        index = copy.deepcopy(vector_index_ivf)
         index["config"]["dimension"] = dimension
         index["config"]["embedding"] = {
             "query_embedder": {"URL": "http://127.0.0.1:8000"}
@@ -97,7 +97,7 @@ class TestQueryWhereKNNString:
     def test_query_where_knn_string_invalid_value(self, db, namespace, index, value, err_type, err_msg):
         # Given ("Create float vector index")
         dimension: Final[int] = 5
-        index = copy.copy(vector_index_hnsw)
+        index = copy.deepcopy(vector_index_hnsw)
         index["config"]["dimension"] = dimension
         index["config"]["embedding"] = {
             "query_embedder": {"URL": "http://127.0.0.1:8000"}
@@ -117,7 +117,7 @@ class TestQueryWhereKNNString:
     def test_query_where_knn_string_invalid_query_embedder_config(self, db, namespace, index):
         # Given ("Create float vector index")
         dimension: Final[int] = 5
-        index = copy.copy(vector_index_hnsw)
+        index = copy.deepcopy(vector_index_hnsw)
         index["config"]["dimension"] = dimension
         index["config"]["embedding"] = {
             "query_embedder": {"URL": "abc"}
@@ -139,7 +139,7 @@ class TestQueryWhereKNNString:
     def test_query_where_knn_string_no_query_embedder_config(self, db, namespace, index):
         # Given ("Create float vector index")
         dimension: Final[int] = 5
-        index = copy.copy(vector_index_hnsw)
+        index = copy.deepcopy(vector_index_hnsw)
         index["config"]["dimension"] = dimension
         db.index.create(namespace, index)
         # Given("Insert items")
