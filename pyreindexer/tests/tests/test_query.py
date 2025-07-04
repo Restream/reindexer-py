@@ -870,7 +870,7 @@ class TestQueryKNN:
     def test_query_brute_force(self, db, namespace, index):
         # Given ("Create float vector index")
         dimension: Final[int] = 8
-        index = copy.copy(vector_index_bf)
+        index = copy.deepcopy(vector_index_bf)
         index["config"] = {"dimension": dimension, "metric": "inner_product", "start_size": 1000}
         db.index.create(namespace, index)
         # Given("Insert items")
@@ -893,7 +893,7 @@ class TestQueryKNN:
     def test_query_hnsw(self, db, namespace, index):
         # Given ("Create float vector index")
         dimension: Final[int] = 8
-        index = copy.copy(vector_index_hnsw)
+        index = copy.deepcopy(vector_index_hnsw)
         index["config"] = {"dimension": dimension, "metric": "inner_product", "start_size": 1000, "m": 16,
                            "ef_construction": 200}
         db.index.create(namespace, index)
@@ -915,7 +915,7 @@ class TestQueryKNN:
     def test_query_hnsw_multithread(self, db, namespace, index):
         # Given ("Create float vector index")
         dimension: Final[int] = 8
-        index = copy.copy(vector_index_hnsw)
+        index = copy.deepcopy(vector_index_hnsw)
         index["config"] = {"dimension": dimension, "metric": "inner_product", "start_size": 1000, "m": 16,
                            "ef_construction": 200, "multithreading": 1}
         db.index.create(namespace, index)
@@ -939,7 +939,7 @@ class TestQueryKNN:
     def test_query_ivf(self, db, namespace, index):
         # Given ("Create float vector index")
         dimension: Final[int] = 2
-        index = copy.copy(vector_index_ivf)
+        index = copy.deepcopy(vector_index_ivf)
         index["config"] = {"dimension": dimension, "metric": "l2", "centroids_count": 3}
         db.index.create(namespace, index)
         # Given("Insert items")
@@ -960,7 +960,7 @@ class TestQueryKNN:
     def test_query_bf_with_radius_in_index_config(self, db, namespace, index):
         # Given ("Create float vector index")
         dimension: Final[int] = 2
-        index = copy.copy(vector_index_bf)
+        index = copy.deepcopy(vector_index_bf)
         index["config"] = {"dimension": dimension, "metric": "l2", "radius": 20.0}
         db.index.create(namespace, index)
         # Given("Insert items")
@@ -981,7 +981,7 @@ class TestQueryKNN:
     def test_query_hnsw_with_radius_in_config_and_query(self, db, namespace, index):
         # Given ("Create float vector index")
         dimension: Final[int] = 2
-        index = copy.copy(vector_index_hnsw)
+        index = copy.deepcopy(vector_index_hnsw)
         index["config"]["dimension"] = dimension
         index["config"]["metric"] = "inner_product"
         index["config"]["radius"] = 21.0  # will not be applied
@@ -1004,7 +1004,7 @@ class TestQueryKNN:
     def test_query_ivf_with_k_and_radius_in_query(self, db, namespace, index):
         # Given ("Create float vector index")
         dimension: Final[int] = 2
-        index = copy.copy(vector_index_ivf)
+        index = copy.deepcopy(vector_index_ivf)
         index["config"]["dimension"] = dimension
         index["config"]["metric"] = "cosine"
         db.index.create(namespace, index)

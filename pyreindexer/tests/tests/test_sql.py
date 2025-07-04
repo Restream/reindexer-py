@@ -100,7 +100,7 @@ class TestSqlQueriesKNN:
     def test_sql_select_knn_brute_force(self, db, namespace, index):
         # Given ("Create float vector index")
         dimension: Final[int] = 8
-        index = copy.copy(vector_index_bf)
+        index = copy.deepcopy(vector_index_bf)
         index["config"] = {"dimension": dimension, "metric": "l2", "start_size": 1000}
         db.index.create(namespace, index)
         # Given("Insert items")
@@ -119,7 +119,7 @@ class TestSqlQueriesKNN:
     def test_sql_select_knn_hnsw(self, db, namespace, index):
         # Given ("Create float vector index")
         dimension: Final[int] = 8
-        index = copy.copy(vector_index_hnsw)
+        index = copy.deepcopy(vector_index_hnsw)
         index["config"] = {"dimension": dimension, "metric": "inner_product", "start_size": 1000, "m": 16,
                            "ef_construction": 200}
         db.index.create(namespace, index)
@@ -137,7 +137,7 @@ class TestSqlQueriesKNN:
     def test_sql_select_knn_ivf(self, db, namespace, index):
         # Given ("Create float vector index")
         dimension: Final[int] = 8
-        index = copy.copy(vector_index_ivf)
+        index = copy.deepcopy(vector_index_ivf)
         index["config"] = {"dimension": dimension, "metric": "l2", "centroids_count": 3}
         db.index.create(namespace, index)
         # Given("Insert items")
