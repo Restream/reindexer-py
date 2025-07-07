@@ -2,6 +2,7 @@
 build = ["cp312-*"]
 manylinux-x86_64-image = "manylinux2014"
 skip = ["*musllinux*"]
+environment = { CIBUILDWHEEL = "1" }
 before-all = """
     git clone https://github.com/Restream/reindexer.git
     cd reindexer
@@ -13,8 +14,7 @@ before-all = """
     cd ../..
     rm -rf reindexer/
 """
-environment = { CIBUILDWHEEL = "1" }
-before-build = "python -m build --sdist"
+#before-build = "python -m build --sdist"
 
 [tool.cibuildwheel.linux]
 archs = ["x86_64"]

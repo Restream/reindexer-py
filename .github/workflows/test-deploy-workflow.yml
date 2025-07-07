@@ -29,7 +29,7 @@ jobs:
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip build cibuildwheel
-      # reindexer will be built inside docker image when cibuildwheel is executed (see pyproject.toml)
+      # we build reindexer inside the docker image when cibuildwheel is executed (see pyproject.toml)
       - name: Build PyReindexer dist and wheels
         run: python -m cibuildwheel --output-dir dist
       - name: Store all build artifacts
@@ -55,9 +55,9 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           verbose: true
-          packages_dir: dist/
+          # user: __token__ ## used as default
+          password: pypi-${{ secrets.TESTPYPI_TOKEN }}
           repository-url: https://test.pypi.org/legacy/
-          token: ${{ secrets.TESTPYPI_TOKEN }}
           attestations: false
 
 #    test_dist:
@@ -116,33 +116,33 @@ jobs:
 #            cd $(python -c "import sysconfig; print(sysconfig.get_path('purelib'))")/pyreindexer
 #            $GITHUB_WORKSPACE/.github/workflows/test.sh
 #
-#  test:
-#    strategy:
-#      fail-fast: false
-#      matrix:
-#        platform: [ ubuntu-22.04, ubuntu-latest ]
-#        python: [ "3.8", "3.12" ]
-#    runs-on: ${{ matrix.platform }}
-#    needs: deploy
-#    defaults:
-#      run:
-#        shell: bash
-#    steps:
-#      - name: Checkout PyReindexer
-#        uses: actions/checkout@v4
-#      - name: Set up Python ${{ matrix.python }}
-#        uses: actions/setup-python@v5
-#        env:
-#          PIP_DISABLE_PIP_VERSION_CHECK: 1
-#        with:
-#          python-version: ${{ matrix.python }}
-#      - name: Install PyReindexer
-#        run: |
-#          python -m pip install --upgrade --disable-pip-version-check pip importlib_metadata
-#          python -m pip install -vvv --index-url https://test.pypi.org/simple/ --no-deps pyreindexer
-#      - name: Prepare Test Environment
-#        run: python -m pip install -r requirements.txt
-#      - name: Test
-#        run: |
-#          cd $(python -c "import sysconfig; print(sysconfig.get_path('purelib'))")/pyreindexer
-#          $GITHUB_WORKSPACE/.github/workflows/test.sh
+  test_wheel:
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [ ubuntu-22.04 ]
+        python: [ "3.12" ]
+    runs-on: ${{ matrix.platform }}
+    needs: deploy
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout PyReindexer
+        uses: actions/checkout@v4
+      - name: Set up Python ${{ matrix.python }}
+        uses: actions/setup-python@v5
+        env:
+          PIP_DISABLE_PIP_VERSION_CHECK: 1
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install PyReindexer
+        run: |
+          python -m pip install --upgrade --disable-pip-version-check pip importlib_metadata
+          python -m pip install -vvv --index-url https://test.pypi.org/simple/ --no-deps pyreindexer
+      - name: Prepare Test Environment
+        run: python -m pip install -r requirements.txt
+      - name: Test
+        run: |
+          cd $(python -c "import sysconfig; print(sysconfig.get_path('purelib'))")/pyreindexer
+          $GITHUB_WORKSPACE/.github/workflows/test.sh
