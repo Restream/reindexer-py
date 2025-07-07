@@ -40,6 +40,7 @@ jobs:
             exit 1
           fi
           sudo apt-get update -y
+          sudo apt-get install -y libunwind-dev
           sudo apt-get install -y reindexer-server
       - name: Set up Python ${{ env.DEPLOY_BUILD_PYTHON_VERSION }}
         uses: actions/setup-python@v5
@@ -168,6 +169,7 @@ jobs:
             exit 1
           fi
           sudo apt-get update -y
+          sudo apt-get install -y libunwind-dev
           sudo apt-get install -y reindexer-server
       - name: Set up Python ${{ matrix.python }}
         uses: actions/setup-python@v5
