@@ -10,10 +10,20 @@ endif()
 
 enable_testing()
 
+option(CIBUILDWHEEL "Is cibuildwheel environment" OFF)
+if(DEFINED ENV{CIBUILDWHEEL} AND "$ENV{CIBUILDWHEEL}" STREQUAL "1")
+  set(CIBUILDWHEEL ON)
+endif()
+
 set(PY_MIN_VERSION 3.8)
 set(RX_MIN_VERSION 5.4.0)
-find_package(PythonInterp ${PY_MIN_VERSION} REQUIRED)
-find_package(PythonLibs ${PY_MIN_VERSION} REQUIRED)
+if(CIBUILDWHEEL)
+  file(GLOB PYTHON_INCLUDE_DIRS "/opt/python/*/include/python*")
+  include_directories(SYSTEM ${PYTHON_INCLUDE_DIRS})
+else()
+  find_package(PythonInterp ${PY_MIN_VERSION} REQUIRED)
+  find_package(PythonLibs ${PY_MIN_VERSION} REQUIRED)
+endif()
 find_package(reindexer CONFIG ${RX_MIN_VERSION} REQUIRED)
 
 option(WITH_GCOV "Enable instrumented code coverage build" OFF)

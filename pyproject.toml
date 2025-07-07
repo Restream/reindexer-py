@@ -2,9 +2,21 @@
 build = ["cp312-*"]
 manylinux-x86_64-image = "manylinux2014"
 skip = ["*musllinux*"]
+before-all = """
+    git clone https://github.com/Restream/reindexer.git
+    cd reindexer
+    ./dependencies.sh
+    mkdir -p build && cd build
+    cmake ..
+    make -j4
+    make install
+    cd ../..
+    rm -rf reindexer/
+"""
+environment = { CIBUILDWHEEL = "1" }
+before-build = "python -m build --sdist"
 
 [tool.cibuildwheel.linux]
-#environment = { REINDEXER_INCLUDE_DIR = "/usr/local/include" }
 archs = ["x86_64"]
 
 #[tool.cibuildwheel.macos]
@@ -14,7 +26,8 @@ archs = ["x86_64"]
 requires = [
     "setuptools",
     "wheel",
-    "pybind11"
+    "pybind11",
+    "build"
 ]
 
 build-backend = "setuptools.build_meta"
