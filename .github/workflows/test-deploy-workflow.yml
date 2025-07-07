@@ -59,62 +59,62 @@ jobs:
           repository-url: https://test.pypi.org/legacy/
           token: ${{ secrets.TESTPYPI_TOKEN }}
           attestations: false
-#
-  #  test_dist:
-  #    strategy:
-  #      fail-fast: false
-  #      matrix:
-  #        python:
-  #        - "3.13"
-  #        platform:
-  #        - ubuntu-22.04
-  #        - ubuntu-24.04
-  #        - macos-14
-  #    runs-on: ${{ matrix.platform }}
-  #    needs: deploy
-  #    defaults:
-  #      run:
-  #        shell: bash
-  #    steps:
-  #      - name: Checkout PyReindexer
-  #        uses: actions/checkout@v4
-  #      - name: Install Reindexer (MacOS)
-  #        if: startsWith(matrix.platform, 'macos')
-  #        run: |
-  #          brew tap restream/reindexer
-  #          brew install reindexer
-  #      - name: Install Reindexer-Dev\Server (Ubuntu)
-  #        if: startsWith(matrix.platform, 'ubuntu')
-  #        run: |
-  #          curl https://repo.reindexer.io/RX-KEY.GPG | sudo apt-key add
-  #          if [[ ${{matrix.platform}} == ubuntu-22.04 ]]; then
-  #            echo 'deb https://repo.reindexer.io/ubuntu-jammy /' | sudo tee -a /etc/apt/sources.list
-  #          elif [[ ${{matrix.platform}} == ubuntu-24.04 ]]; then
-  #            echo 'deb https://repo.reindexer.io/ubuntu-noble /' | sudo tee -a /etc/apt/sources.list
-  #          else
-  #            echo "${{matrix.platform}} not supported"
-  #            exit 1
-  #          fi
-  #          sudo apt-get update -y
-  #          sudo apt-get install -y libunwind-dev
-  #          sudo apt-get install -y reindexer-dev
-  #          sudo apt-get install -y reindexer-server
-  #      - name: Set up Python ${{ matrix.python }}
-  #        uses: actions/setup-python@v5
-  #        env:
-  #          PIP_DISABLE_PIP_VERSION_CHECK: 1
-  #        with:
-  #          python-version: ${{ matrix.python }}
-  #      - name: Install PyReindexer
-  #        run: |
-  #          python -m pip install --upgrade --disable-pip-version-check pip importlib_metadata setuptools wheel
-  #          python -m pip install -vvv --index-url https://test.pypi.org/simple/ --no-deps pyreindexer
-  #      - name: Prepare Test Environment
-  #        run: python -m pip install -r requirements.txt
-  #      - name: Test
-  #        run: |
-  #          cd $(python -c "import sysconfig; print(sysconfig.get_path('purelib'))")/pyreindexer
-  #          $GITHUB_WORKSPACE/.github/workflows/test.sh
+
+#    test_dist:
+#      strategy:
+#        fail-fast: false
+#        matrix:
+#          python:
+#          - "3.12"
+#          platform:
+#          - ubuntu-22.04
+##          - ubuntu-24.04
+##          - macos-14
+#      runs-on: ${{ matrix.platform }}
+#      needs: deploy
+#      defaults:
+#        run:
+#          shell: bash
+#      steps:
+#        - name: Checkout PyReindexer
+#          uses: actions/checkout@v4
+#        - name: Install Reindexer (MacOS)
+#          if: startsWith(matrix.platform, 'macos')
+#          run: |
+#            brew tap restream/reindexer
+#            brew install reindexer
+#        - name: Install Reindexer-Dev\Server (Ubuntu)
+#          if: startsWith(matrix.platform, 'ubuntu')
+#          run: |
+#            curl https://repo.reindexer.io/RX-KEY.GPG | sudo apt-key add
+#            if [[ ${{matrix.platform}} == ubuntu-22.04 ]]; then
+#              echo 'deb https://repo.reindexer.io/ubuntu-jammy /' | sudo tee -a /etc/apt/sources.list
+#            elif [[ ${{matrix.platform}} == ubuntu-24.04 ]]; then
+#              echo 'deb https://repo.reindexer.io/ubuntu-noble /' | sudo tee -a /etc/apt/sources.list
+#            else
+#              echo "${{matrix.platform}} not supported"
+#              exit 1
+#            fi
+#            sudo apt-get update -y
+#            sudo apt-get install -y libunwind-dev
+#            sudo apt-get install -y reindexer-dev
+#            sudo apt-get install -y reindexer-server
+#        - name: Set up Python ${{ matrix.python }}
+#          uses: actions/setup-python@v5
+#          env:
+#            PIP_DISABLE_PIP_VERSION_CHECK: 1
+#          with:
+#            python-version: ${{ matrix.python }}
+#        - name: Install PyReindexer
+#          run: |
+#            python -m pip install --upgrade --disable-pip-version-check pip importlib_metadata setuptools wheel
+#            python -m pip install -vvv --index-url https://test.pypi.org/simple/ --no-deps pyreindexer
+#        - name: Prepare Test Environment
+#          run: python -m pip install -r requirements.txt
+#        - name: Test
+#          run: |
+#            cd $(python -c "import sysconfig; print(sysconfig.get_path('purelib'))")/pyreindexer
+#            $GITHUB_WORKSPACE/.github/workflows/test.sh
 #
 #  test:
 #    strategy:
