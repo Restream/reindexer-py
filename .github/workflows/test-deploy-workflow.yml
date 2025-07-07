@@ -22,6 +22,25 @@ jobs:
     steps:
       - name: Checkout PyReindexer repo
         uses: actions/checkout@v4
+      - name: Install Reindexer (MacOS)
+        if: startsWith(matrix.platform, 'macos')
+        run: |
+          brew tap restream/reindexer
+          brew install reindexer
+      - name: Install Reindexer-Dev\Server (Ubuntu)
+        if: startsWith(matrix.platform, 'ubuntu')
+        run: |
+          curl https://repo.reindexer.io/RX-KEY.GPG | sudo apt-key add
+          if [[ ${{matrix.platform}} == ubuntu-22.04 ]]; then
+            echo 'deb https://repo.reindexer.io/ubuntu-jammy /' | sudo tee -a /etc/apt/sources.list
+          elif [[ ${{matrix.platform}} == ubuntu-24.04 ]]; then
+            echo 'deb https://repo.reindexer.io/ubuntu-noble /' | sudo tee -a /etc/apt/sources.list
+          else
+            echo "${{matrix.platform}} not supported"
+            exit 1
+          fi
+          sudo apt-get update -y
+          sudo apt-get install -y reindexer-server
       - name: Set up Python ${{ env.DEPLOY_BUILD_PYTHON_VERSION }}
         uses: actions/setup-python@v5
         with:
@@ -29,9 +48,10 @@ jobs:
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip build cibuildwheel
-      # we build reindexer inside the docker image when cibuildwheel is executed (see pyproject.toml)
-      - name: Build PyReindexer dist and wheels
+      - name: Build PyReindexer wheels
         run: python -m cibuildwheel --output-dir dist
+      - name: Build PyReindexer dist
+        run: python -m build --sdist
       - name: Store all build artifacts
         uses: actions/upload-artifact@v4
         with:
