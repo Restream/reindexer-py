@@ -64,10 +64,10 @@ jobs:
 
   test_dist:
     strategy:
-    fail-fast: false
-    matrix:
-      platform: [ ubuntu-22.04, ubuntu-latest ]
-      python: "3.13"
+      fail-fast: false
+      matrix:
+        platform: [ ubuntu-22.04, ubuntu-latest ]
+        python: "3.13"
     runs-on: ${{ matrix.platform }}
     needs: deploy
     defaults:
