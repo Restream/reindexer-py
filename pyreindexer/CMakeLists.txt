@@ -59,13 +59,6 @@ link_directories(
 add_library(${LIB_BUILTIN_NAME} SHARED ${SRCS})
 add_library(${LIB_CPROTO_NAME} SHARED ${SRCS})
 
-if(CIBUILDWHEEL)
-    add_library(OpenblasLib SHARED IMPORTED)
-    set(OPENBLAS_LIBRARY "${CMAKE_CURRENT_SOURCE_DIR}/lib/vendor/libopenblas.so")
-    set_property(TARGET OpenblasLib PROPERTY IMPORTED_LOCATION "${OPENBLAS_LIBRARY}")
-    install(FILES "${OPENBLAS_LIBRARY}" DESTINATION "${CMAKE_INSTALL_PREFIX}/pyreindexer")
-endif()
-
 target_link_libraries(${LIB_BUILTIN_NAME} ${PYTHON_LIBRARIES} ${REINDEXER_LIBRARIES})
 target_link_libraries(${LIB_CPROTO_NAME} ${PYTHON_LIBRARIES} ${REINDEXER_LIBRARIES})
 target_compile_definitions(${LIB_CPROTO_NAME} PRIVATE PYREINDEXER_CPROTO=1)
@@ -76,6 +69,12 @@ set_target_properties(${LIB_CPROTO_NAME} PROPERTIES SUFFIX ${LIBS_EXT})
 # python does not allow 'lib' prefix
 set_target_properties(${LIB_BUILTIN_NAME} PROPERTIES PREFIX "")
 set_target_properties(${LIB_CPROTO_NAME} PROPERTIES PREFIX "")
+
+# openblas is installed from reindexer dependencies.sh
+if(CIBUILDWHEEL)
+    target_link_libraries(${LIB_BUILTIN_NAME} openblas)
+    target_link_libraries(${LIB_CPROTO_NAME} openblas)
+endif()
 
 if (WITH_GCOV)
     target_link_libraries(${LIB_BUILTIN_NAME} -fprofile-arcs -ftest-coverage)
