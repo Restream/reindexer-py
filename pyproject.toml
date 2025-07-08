@@ -14,6 +14,10 @@ before-all = """
     cd ../..
     rm -rf reindexer/
 """
+before-build = """
+    mkdir -p pyreindexer/lib/vendor
+    cp /usr/lib64/libopenblas.so pyreindexer/lib/vendor/libopenblas.so
+"""
 
 [build-system]
 requires = [
