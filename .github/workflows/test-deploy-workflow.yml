@@ -13,7 +13,7 @@ jobs:
     runs-on: ${{ matrix.platform }}
     strategy:
       matrix:
-        platform: [ ubuntu-22.04 ]
+        platform: [ ubuntu-latest, macos-14 ]
     env:
       DEPLOY_BUILD_PYTHON_VERSION: "3.12"
     defaults:
@@ -22,26 +22,6 @@ jobs:
     steps:
       - name: Checkout PyReindexer repo
         uses: actions/checkout@v4
-      - name: Install Reindexer (MacOS)
-        if: startsWith(matrix.platform, 'macos')
-        run: |
-          brew tap restream/reindexer
-          brew install reindexer
-      - name: Install Reindexer-Dev\Server (Ubuntu)
-        if: startsWith(matrix.platform, 'ubuntu')
-        run: |
-          curl https://repo.reindexer.io/RX-KEY.GPG | sudo apt-key add
-          if [[ ${{matrix.platform}} == ubuntu-22.04 ]]; then
-            echo 'deb https://repo.reindexer.io/ubuntu-jammy /' | sudo tee -a /etc/apt/sources.list
-          elif [[ ${{matrix.platform}} == ubuntu-24.04 ]]; then
-            echo 'deb https://repo.reindexer.io/ubuntu-noble /' | sudo tee -a /etc/apt/sources.list
-          else
-            echo "${{matrix.platform}} not supported"
-            exit 1
-          fi
-          sudo apt-get update -y
-          sudo apt-get install -y libunwind-dev
-          sudo apt-get install -y reindexer-server
       - name: Set up Python ${{ env.DEPLOY_BUILD_PYTHON_VERSION }}
         uses: actions/setup-python@v5
         with:
@@ -83,14 +63,10 @@ jobs:
 
 #    test_dist:
 #      strategy:
-#        fail-fast: false
-#        matrix:
-#          python:
-#          - "3.12"
-#          platform:
-#          - ubuntu-22.04
-##          - ubuntu-24.04
-##          - macos-14
+#      fail-fast: false
+#      matrix:
+#        platform: [ ubuntu-22.04, ubuntu-latest, macos-14 ]
+#        python: "3.13"
 #      runs-on: ${{ matrix.platform }}
 #      needs: deploy
 #      defaults:
@@ -141,8 +117,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [ ubuntu-22.04 ]
-        python: [ "3.12" ]
+        platform: [ ubuntu-22.04, ubuntu-latest, macos-14 ]
+        python: [ "3.8", "3.13" ]
     runs-on: ${{ matrix.platform }}
     needs: deploy
     defaults:
