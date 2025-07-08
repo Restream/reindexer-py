@@ -1,5 +1,5 @@
 [tool.cibuildwheel]
-build = ["cp312-*"]
+archs = ["auto64"]
 manylinux-x86_64-image = "manylinux2014"
 skip = ["*musllinux*"]
 environment = { CIBUILDWHEEL = "1" }
@@ -14,12 +14,6 @@ before-all = """
     cd ../..
     rm -rf reindexer/
 """
-
-[tool.cibuildwheel.linux]
-archs = ["auto64"]
-
-[tool.cibuildwheel.macos]
-archs = ["auto64"]
 
 [build-system]
 requires = [
