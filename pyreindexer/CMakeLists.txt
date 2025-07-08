@@ -61,7 +61,9 @@ add_library(${LIB_CPROTO_NAME} SHARED ${SRCS})
 
 if(CIBUILDWHEEL)
     add_library(OpenblasLib SHARED IMPORTED)
-    set_property(TARGET OpenblasLib PROPERTY IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/lib/vendor/libopenblas.so")
+    set(OPENBLAS_LIBRARY "${CMAKE_CURRENT_SOURCE_DIR}/lib/vendor/libopenblas.so")
+    set_property(TARGET OpenblasLib PROPERTY IMPORTED_LOCATION "${OPENBLAS_LIBRARY}")
+    install(FILES "${OPENBLAS_LIBRARY}" DESTINATION "${CMAKE_INSTALL_PREFIX}/pyreindexer")
 endif()
 
 target_link_libraries(${LIB_BUILTIN_NAME} ${PYTHON_LIBRARIES} ${REINDEXER_LIBRARIES})
