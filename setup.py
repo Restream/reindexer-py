@@ -1,4 +1,5 @@
 import os
+import shutil
 import sys
 
 from setuptools import Extension, setup
@@ -25,37 +26,39 @@ class BuildExt(build_ext_orig):
         for ext in self.extensions:
             self.build_cmake(ext)
 
+        if os.getenv("CIBUILDWHEEL"):
+            self.copy_openblas()
+
     def build_cmake(self, ext):
         cwd = os.path.abspath('')
-
         build_temp = os.path.abspath(self.build_temp)
-        if not os.path.exists(build_temp):
-            os.makedirs(build_temp)
+        os.makedirs(build_temp, exist_ok=True)
 
-        extension_dir = os.path.abspath(self.get_ext_fullpath(ext.name))
-        if not os.path.exists(extension_dir):
-            os.makedirs(extension_dir)
-
-        os.chdir(build_temp)
-
-        lib_dir = os.path.join(extension_dir, '..')
-        source_dir = os.path.join(cwd, PACKAGE_NAME)
-
-        self.spawn(['cmake', source_dir,
+        extension_dir = os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.name)))
+        self.spawn(['cmake',
+                    os.path.join(cwd, PACKAGE_NAME),
+                    f'-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extension_dir}',
                     '-DCMAKE_BUILD_TYPE=Release',
                     '-DCMAKE_CXX_STANDARD=20',
-                    '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + lib_dir,
                     '-DCMAKE_OSX_DEPLOYMENT_TARGET=11'])
+
         if not self.dry_run:
             self.spawn(['cmake', '--build', '.'])
-
         os.chdir(cwd)
+
+    def copy_openblas(self):
+        target_dir = os.path.abspath(self.build_lib)
+        openblas_src = "/usr/lib64/libopenblas.so"
+        openblas_dst = os.path.join(target_dir, "libopenblas.so")
+        if os.path.exists(openblas_src):
+            shutil.copy(openblas_src, openblas_dst)
+
 
 with open('README.md', 'r', encoding='utf-8') as file:
     LONG_DESCRIPTION = file.read()
 
 setup(name=PACKAGE_NAME,
-      version='0.5.40310',
+      version='0.5.40311',
       description='A connector that allows to interact with Reindexer. Reindexer static library or reindexer-dev package must be installed',
       author='Igor Tulmentyev',
       author_email='contactus@reindexer.io',
@@ -65,8 +68,8 @@ setup(name=PACKAGE_NAME,
       download_url='https://github.com/Restream/reindexer-py',
       project_urls={
           'Documentation': 'https://reindexer.io/',
-          #'Releases': 'https://github.com/Restream/reindexer-py/releases',
-          #'Tracker': 'https://github.com/Restream/reindexer-py/issues',
+          # 'Releases': 'https://github.com/Restream/reindexer-py/releases',
+          # 'Tracker': 'https://github.com/Restream/reindexer-py/issues',
           'Telegram chat': 'https://t.me/reindexer',
       },
       long_description=LONG_DESCRIPTION,
@@ -82,7 +85,6 @@ setup(name=PACKAGE_NAME,
           'example/main.py',
           'tests/**/*.py'
       ]},
-      include_package_data=True,
       python_requires='>=3.8',
       install_requires=['PyHamcrest==2.0.2', 'pytest==6.2.5', 'requests==2.26.0'],
       classifiers=[
