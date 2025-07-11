@@ -32,8 +32,6 @@ jobs:
           python -m pip install --upgrade pip build cibuildwheel
       - name: Build PyReindexer wheels
         run: python -m cibuildwheel --output-dir dist
-      - name: Copy libopenblas
-        run: .github/workflows/add_openblas.sh
       - name: Build PyReindexer dist
         run: python -m build --sdist
       - name: Store all build artifacts
@@ -149,8 +147,11 @@ jobs:
             exit 1
           fi
           sudo apt-get update -y
-          sudo apt-get install -y libunwind-dev
+          sudo apt-get install -y libunwind-dev libopenblas-pthread-dev
           sudo apt-get install -y reindexer-server
+      - name: Install Openblas (Ubuntu)
+        if: startsWith(matrix.platform, 'ubuntu')
+        run: sudo apt-get install -y libopenblas-pthread-dev
       - name: Set up Python ${{ matrix.python }}
         uses: actions/setup-python@v5
         env:

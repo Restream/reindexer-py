@@ -1,5 +1,4 @@
 import os
-import shutil
 import sys
 
 from setuptools import Extension, setup
@@ -26,9 +25,6 @@ class BuildExt(build_ext_orig):
         for ext in self.extensions:
             self.build_cmake(ext)
 
-        if os.getenv("CIBUILDWHEEL"):
-            self.copy_openblas()
-
     def build_cmake(self, ext):
         cwd = os.path.abspath('')
         build_temp = os.path.abspath(self.build_temp)
@@ -46,19 +42,12 @@ class BuildExt(build_ext_orig):
             self.spawn(['cmake', '--build', '.'])
         os.chdir(cwd)
 
-    def copy_openblas(self):
-        target_dir = os.path.abspath(self.build_lib)
-        openblas_src = "/usr/lib64/libopenblas.so"
-        openblas_dst = os.path.join(target_dir, "libopenblas.so")
-        if os.path.exists(openblas_src):
-            shutil.copy(openblas_src, openblas_dst)
-
 
 with open('README.md', 'r', encoding='utf-8') as file:
     LONG_DESCRIPTION = file.read()
 
 setup(name=PACKAGE_NAME,
-      version='0.5.40314',
+      version='0.5.40315',
       description='A connector that allows to interact with Reindexer. Reindexer static library or reindexer-dev package must be installed',
       author='Igor Tulmentyev',
       author_email='contactus@reindexer.io',
