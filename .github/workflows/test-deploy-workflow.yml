@@ -146,7 +146,7 @@ jobs:
           sudo apt-get install -y libunwind-dev
           sudo apt-get install -y reindexer-server
       - name: Install Openblas (Ubuntu)
-        if: startsWith(matrix.platform, 'ubuntu')
+        if: matrix.rxmode == 'builtin'
         run: sudo apt-get install -y libopenblas-pthread-dev
       - name: Set up Python ${{ matrix.python }}
         uses: actions/setup-python@v5
