@@ -1,11 +1,7 @@
 name: Upload Release package to TestPyPI
-#on:
-#  pull_request:
-#    types: [opened, reopened] # TODO uncomment
 on:
-  push:
-    branches-ignore:
-      - master
+  pull_request:
+    types: [opened, reopened]
 
 jobs:
   build:
@@ -134,11 +130,6 @@ jobs:
     steps:
       - name: Checkout PyReindexer
         uses: actions/checkout@v4
-      - name: Install Reindexer (MacOS)
-        if: startsWith(matrix.platform, 'macos') && matrix.rxtype == 'cproto'
-        run: |
-          brew tap restream/reindexer
-          brew install reindexer
       - name: Install Reindexer-Dev\Server (Ubuntu)
         if: startsWith(matrix.platform, 'ubuntu') && matrix.rxtype == 'cproto'
         run: |

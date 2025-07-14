@@ -12,7 +12,7 @@ jobs:
       matrix:
         platform: [ ubuntu-22.04 ]
     env:
-      DEPLOY_BUILD_PYTHON_VERSION: "3.12"
+      DEPLOY_BUILD_PYTHON_VERSION: "3.13"
     defaults:
       run:
         shell: bash
@@ -61,8 +61,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [ ubuntu-22.04, ubuntu-24.04 ]
-        python: [ "3.12" ] # version of python with missing wheel
+        platform: [ ubuntu-22.04, ubuntu-24.04, macos-14 ]
+        python: [ "3.13" ]
     runs-on: ${{ matrix.platform }}
     needs: deploy
     defaults:
@@ -101,7 +101,7 @@ jobs:
       - name: Install PyReindexer
         run: |
           python -m pip install --upgrade --disable-pip-version-check pip importlib_metadata setuptools wheel
-          python -m pip install -vvv pyreindexer
+          python -m pip install -vvv --no-binary pyreindexer pyreindexer
       - name: Prepare Test Environment
         run: python -m pip install -r requirements.txt
       - name: Test
@@ -114,7 +114,7 @@ jobs:
       fail-fast: false
       matrix:
         platform: [ ubuntu-22.04, ubuntu-24.04 ]
-        python: [ "3.8", "3.13" ] # both versions of python with the wheel presented
+        python: [ "3.8", "3.13" ]
         rxtype: [ builtin, cproto ]
     runs-on: ${{ matrix.platform }}
     needs: deploy
@@ -124,11 +124,6 @@ jobs:
     steps:
       - name: Checkout PyReindexer
         uses: actions/checkout@v4
-      - name: Install Reindexer (MacOS)
-        if: startsWith(matrix.platform, 'macos') && matrix.rxtype == 'cproto'
-        run: |
-          brew tap restream/reindexer
-          brew install reindexer
       - name: Install Reindexer-Dev\Server (Ubuntu)
         if: startsWith(matrix.platform, 'ubuntu') && matrix.rxtype == 'cproto'
         run: |
@@ -156,7 +151,7 @@ jobs:
       - name: Install PyReindexer
         run: |
           python -m pip install --upgrade --disable-pip-version-check pip importlib_metadata
-          python -m pip install -vvv --index-url https://test.pypi.org/simple/ --no-deps pyreindexer
+          python -m pip install -vvv pyreindexer
       - name: Prepare Test Environment
         run: python -m pip install -r requirements.txt
       - name: Test ${{ matrix.rxtype }}

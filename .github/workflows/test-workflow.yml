@@ -1,12 +1,9 @@
 name: Test the project
-#on:
-#  push:
-#    branches-ignore:
-#      - master # TODO uncomment
 on:
   push:
-    branches:
-      - master  # TODO DELETE
+    branches-ignore:
+      - master
+
 jobs:
   test:
     strategy:
