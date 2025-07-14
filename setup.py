@@ -26,10 +26,9 @@ class BuildExt(build_ext_orig):
             self.build_cmake(ext)
 
     def build_cmake(self, ext):
-        cwd = os.path.abspath('')
-        build_temp = os.path.abspath(self.build_temp)
-        os.makedirs(build_temp, exist_ok=True)
+        os.makedirs(os.path.abspath(self.build_temp), exist_ok=True)
 
+        cwd = os.path.abspath('')
         extension_dir = os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.name)))
         self.spawn(['cmake',
                     os.path.join(cwd, PACKAGE_NAME),
@@ -47,7 +46,7 @@ with open('README.md', 'r', encoding='utf-8') as file:
     LONG_DESCRIPTION = file.read()
 
 setup(name=PACKAGE_NAME,
-      version='0.5.40315',
+      version='0.5.40316',
       description='A connector that allows to interact with Reindexer. Reindexer static library or reindexer-dev package must be installed',
       author='Igor Tulmentyev',
       author_email='contactus@reindexer.io',

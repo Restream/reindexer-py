@@ -66,8 +66,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [ ubuntu-22.04, ubuntu-24.04 ]
-        python: [ "3.12" ] # version of python with missing wheel
+        platform: [ ubuntu-22.04, ubuntu-24.04, macos-14 ]
+        python: [ "3.12", "3.13" ] # versions of python with missing wheel and presented wheel
     runs-on: ${{ matrix.platform }}
     needs: deploy
     defaults:
@@ -106,7 +106,12 @@ jobs:
       - name: Install PyReindexer
         run: |
           python -m pip install --upgrade --disable-pip-version-check pip importlib_metadata setuptools wheel
-          python -m pip install -vvv --no-deps --no-build-isolation --index-url https://test.pypi.org/simple/ pyreindexer
+          if [[ ${{matrix.python}} == "3.12" || ${{matrix.platform}} == *"macos"* ]]; then
+            python -m pip install -vvv --no-deps --no-build-isolation --index-url https://test.pypi.org/simple/ pyreindexer
+          else 
+            # presented wheel needs `no-binary` for the forced sdist install
+            python -m pip install -vvv --no-deps --no-build-isolation --no-binary pyreindexer --index-url https://test.pypi.org/simple/ pyreindexer
+          fi
       - name: Prepare Test Environment
         run: python -m pip install -r requirements.txt
       - name: Test
@@ -167,8 +172,4 @@ jobs:
       - name: Test ${{ matrix.rxtype }}
         run: |
           cd $(python -c "import sysconfig; print(sysconfig.get_path('purelib'))")/pyreindexer
-          if [[ ${{matrix.rxtype}} == builtin ]]; then
-            $GITHUB_WORKSPACE/.github/workflows/testb.sh
-          else
-            $GITHUB_WORKSPACE/.github/workflows/testc.sh
-          fi
+          $GITHUB_WORKSPACE/.github/workflows/test.sh ${{matrix.rxtype}}
