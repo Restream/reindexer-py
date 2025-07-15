@@ -41,12 +41,8 @@ string(REPLACE "-O2" "-O3" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_REL
 
 if(CIBUILDWHEEL)
     if(APPLE)
-        add_custom_command(TARGET ${LIB_BUILTIN_NAME} POST_BUILD
-            COMMAND strip -x $<TARGET_FILE:${LIB_BUILTIN_NAME}>
-        )
-        add_custom_command(TARGET ${LIB_CPROTO_NAME} POST_BUILD
-            COMMAND strip -x $<TARGET_FILE:${LIB_CPROTO_NAME}>
-        )
+        set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} --strip-debug")
+        set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} --strip-debug")
     else()
         set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -s")
         set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s")
