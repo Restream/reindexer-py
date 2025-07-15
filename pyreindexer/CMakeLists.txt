@@ -47,7 +47,7 @@ if(CIBUILDWHEEL)
         add_custom_command(TARGET ${LIB_CPROTO_NAME} POST_BUILD
             COMMAND strip -x $<TARGET_FILE:${LIB_CPROTO_NAME}>
         )
-    else
+    else()
         set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -s")
         set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s")
     endif()
