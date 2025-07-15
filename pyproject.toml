@@ -18,7 +18,7 @@ manylinux-x86_64-image = "manylinux2014"
 skip = ["*musllinux*"]
 
 [tool.cibuildwheel.macos]
-environment = { CIBUILDWHEEL = "1", MACOSX_DEPLOYMENT_TARGET = "11.0", LDFLAGS = "-Wl,--strip-debug" }
+environment = { CIBUILDWHEEL = "1", MACOSX_DEPLOYMENT_TARGET = "11.0", LDFLAGS = "-Wl,-S" }
 
 [build-system]
 requires = [
