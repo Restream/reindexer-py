@@ -40,8 +40,17 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20 -Wall -Wextra -Werror -Wswitc
 string(REPLACE "-O2" "-O3" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
 
 if(CIBUILDWHEEL)
-    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -s")
-    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s")
+    if(APPLE)
+        add_custom_command(TARGET ${LIB_BUILTIN_NAME} POST_BUILD
+            COMMAND strip -x $<TARGET_FILE:${LIB_BUILTIN_NAME}>
+        )
+        add_custom_command(TARGET ${LIB_CPROTO_NAME} POST_BUILD
+            COMMAND strip -x $<TARGET_FILE:${LIB_CPROTO_NAME}>
+        )
+    else
+        set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -s")
+        set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s")
+    endif()
 endif()
 
 file(GLOB_RECURSE SRCS ${RESOURCES_DIR}/*.cc ${LIBSRC_DIR}/*.cc)
