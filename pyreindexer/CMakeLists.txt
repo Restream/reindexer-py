@@ -17,7 +17,7 @@ endif()
 
 set(PY_MIN_VERSION 3.8)
 set(RX_MIN_VERSION 5.4.0)
-if(CIBUILDWHEEL)
+if(CIBUILDWHEEL AND NOT APPLE)
     file(GLOB PYTHON_INCLUDE_DIRS "/opt/python/*/include/python*")
     include_directories(SYSTEM ${PYTHON_INCLUDE_DIRS})
 else()
