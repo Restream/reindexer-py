@@ -7,9 +7,9 @@ before-all = """
     mkdir -p build && cd build
     cmake ..
     make -j4
-    make install
+    sudo make install
     cd ../..
-    rm -rf reindexer/
+    sudo rm -rf reindexer/
 """
 
 [tool.cibuildwheel.linux]
