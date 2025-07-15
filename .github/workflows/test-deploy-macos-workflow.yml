@@ -13,11 +13,10 @@ jobs:
     runs-on: ${{ matrix.platform }}
     strategy:
       matrix:
-        #platform: [ ubuntu-22.04, macos-14, macos-14-large ]
         platform: [ macos-14, macos-14-large ]
+        python: [ "3.8", "3.13" ]
     env:
-      DEPLOY_BUILD_PYTHON_VERSION: "3.12"
-      CIBW_BUILD: "cp38-* cp313-*" # build wheel for python 3.8 and 3.13
+      DEPLOY_BUILD_PYTHON_VERSION: ${{ matrix.python }}
     defaults:
       run:
         shell: bash
@@ -29,8 +28,7 @@ jobs:
         with:
           python-version: ${{ env.DEPLOY_BUILD_PYTHON_VERSION }}
       - name: Install Python dependencies
-        run: |
-          python -m pip install --upgrade pip build cibuildwheel
+        run: python -m pip install --upgrade pip build cibuildwheel
       - name: Build PyReindexer wheels
         run: python -m cibuildwheel --output-dir dist
       - name: Build PyReindexer dist
@@ -67,7 +65,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        #platform: [ ubuntu-22.04, ubuntu-24.04, macos-14, macos-14-large ]
         platform: [ macos-14, macos-14-large ]
         python: [ "3.12", "3.13" ] # versions of python with missing wheel and presented wheel
     runs-on: ${{ matrix.platform }}
@@ -79,26 +76,9 @@ jobs:
       - name: Checkout PyReindexer
         uses: actions/checkout@v4
       - name: Install Reindexer (MacOS)
-        if: startsWith(matrix.platform, 'macos')
         run: |
           brew tap restream/reindexer
           brew install reindexer
-      - name: Install Reindexer-Dev\Server (Ubuntu)
-        if: startsWith(matrix.platform, 'ubuntu')
-        run: |
-          curl https://repo.reindexer.io/RX-KEY.GPG | sudo apt-key add
-          if [[ ${{matrix.platform}} == ubuntu-22.04 ]]; then
-            echo 'deb https://repo.reindexer.io/ubuntu-jammy /' | sudo tee -a /etc/apt/sources.list
-          elif [[ ${{matrix.platform}} == ubuntu-24.04 ]]; then
-            echo 'deb https://repo.reindexer.io/ubuntu-noble /' | sudo tee -a /etc/apt/sources.list
-          else
-            echo "${{matrix.platform}} not supported"
-            exit 1
-          fi
-          sudo apt-get update -y
-          sudo apt-get install -y libunwind-dev
-          sudo apt-get install -y reindexer-dev
-          sudo apt-get install -y reindexer-server
       - name: Set up Python ${{ matrix.python }}
         uses: actions/setup-python@v5
         env:
@@ -125,7 +105,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        #platform: [ ubuntu-22.04, ubuntu-24.04, macos-14, macos-14-large ]
         platform: [ macos-14, macos-14-large ]
         python: [ "3.8", "3.13" ] # both versions of python with the wheel presented
         rxmode: [ builtin, cproto ]
@@ -138,28 +117,13 @@ jobs:
       - name: Checkout PyReindexer
         uses: actions/checkout@v4
       - name: Install Reindexer (MacOS)
-        if: startsWith(matrix.platform, 'macos') && matrix.rxmode == 'cproto'
+        if: matrix.rxmode == 'cproto'
         run: |
           brew tap restream/reindexer
           brew install reindexer
-      - name: Install Reindexer-Dev\Server (Ubuntu)
-        if: startsWith(matrix.platform, 'ubuntu') && matrix.rxmode == 'cproto'
-        run: |
-          curl https://repo.reindexer.io/RX-KEY.GPG | sudo apt-key add
-          if [[ ${{matrix.platform}} == ubuntu-22.04 ]]; then
-            echo 'deb https://repo.reindexer.io/ubuntu-jammy /' | sudo tee -a /etc/apt/sources.list
-          elif [[ ${{matrix.platform}} == ubuntu-24.04 ]]; then
-            echo 'deb https://repo.reindexer.io/ubuntu-noble /' | sudo tee -a /etc/apt/sources.list
-          else
-            echo "${{matrix.platform}} not supported"
-            exit 1
-          fi
-          sudo apt-get update -y
-          sudo apt-get install -y libunwind-dev
-          sudo apt-get install -y reindexer-server
-      - name: Install Openblas (Ubuntu)
+      - name: Install Openblas (MacOS)
         if: matrix.rxmode == 'builtin'
-        run: sudo apt-get install -y libopenblas-pthread-dev
+        run: brew install libomp
       - name: Set up Python ${{ matrix.python }}
         uses: actions/setup-python@v5
         env:
