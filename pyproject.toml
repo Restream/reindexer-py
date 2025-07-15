@@ -19,6 +19,7 @@ skip = ["*musllinux*"]
 
 [tool.cibuildwheel.macos]
 environment = { CIBUILDWHEEL = "1", MACOSX_DEPLOYMENT_TARGET = "11.0", LDFLAGS = "-Wl,-S" }
+archs = ["universal2"]
 
 [build-system]
 requires = [
