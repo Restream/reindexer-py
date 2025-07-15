@@ -1,6 +1,5 @@
 [tool.cibuildwheel]
 archs = ["auto64"]
-environment = { CIBUILDWHEEL = "1" }
 before-all = """
     git clone https://github.com/Restream/reindexer.git
     cd reindexer
@@ -14,8 +13,12 @@ before-all = """
 """
 
 [tool.cibuildwheel.linux]
+environment = { CIBUILDWHEEL = "1" }
 manylinux-x86_64-image = "manylinux2014"
 skip = ["*musllinux*"]
+
+[tool.cibuildwheel.macos]
+environment = { CIBUILDWHEEL = "1", MACOSX_DEPLOYMENT_TARGET = "11.0" }
 
 [build-system]
 requires = [
