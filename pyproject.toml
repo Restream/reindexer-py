@@ -1,7 +1,5 @@
 [tool.cibuildwheel]
 archs = ["auto64"]
-manylinux-x86_64-image = "manylinux2014"
-skip = ["*musllinux*"]
 environment = { CIBUILDWHEEL = "1" }
 before-all = """
     git clone https://github.com/Restream/reindexer.git
@@ -15,6 +13,10 @@ before-all = """
     rm -rf reindexer/
 """
 
+[tool.cibuildwheel.linux]
+manylinux-x86_64-image = "manylinux2014"
+skip = ["*musllinux*"]
+
 [build-system]
 requires = [
     "setuptools",
@@ -22,5 +24,4 @@ requires = [
     "pybind11",
     "build"
 ]
-
 build-backend = "setuptools.build_meta"

@@ -1,7 +1,11 @@
 name: Upload Release package to TestPyPI
+#on:
+#  pull_request:
+#    types: [opened, reopened]
 on:
-  pull_request:
-    types: [opened, reopened]
+  push:
+    branches-ignore:
+      - master
 
 jobs:
   build:
@@ -9,7 +13,8 @@ jobs:
     runs-on: ${{ matrix.platform }}
     strategy:
       matrix:
-        platform: [ ubuntu-22.04 ]
+        #platform: [ ubuntu-22.04, macos-14, macos-14-large ]
+        platform: [ macos-14, macos-14-large ]
     env:
       DEPLOY_BUILD_PYTHON_VERSION: "3.12"
       CIBW_BUILD: "cp38-* cp313-*" # build wheel for python 3.8 and 3.13
@@ -62,7 +67,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [ ubuntu-22.04, ubuntu-24.04, macos-14 ]
+        #platform: [ ubuntu-22.04, ubuntu-24.04, macos-14, macos-14-large ]
+        platform: [ macos-14, macos-14-large ]
         python: [ "3.12", "3.13" ] # versions of python with missing wheel and presented wheel
     runs-on: ${{ matrix.platform }}
     needs: deploy
@@ -102,7 +108,7 @@ jobs:
       - name: Install PyReindexer
         run: |
           python -m pip install --upgrade --disable-pip-version-check pip importlib_metadata setuptools wheel
-          if [[ ${{matrix.python}} == "3.12" || ${{matrix.platform}} == *"macos"* ]]; then
+          if [[ ${{matrix.python}} == "3.12" ]]; then
             python -m pip install -vvv --no-deps --no-build-isolation --index-url https://test.pypi.org/simple/ pyreindexer
           else 
             # presented wheel needs `no-binary` for the forced sdist install
@@ -119,7 +125,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [ ubuntu-22.04, ubuntu-24.04 ]
+        #platform: [ ubuntu-22.04, ubuntu-24.04, macos-14, macos-14-large ]
+        platform: [ macos-14, macos-14-large ]
         python: [ "3.8", "3.13" ] # both versions of python with the wheel presented
         rxmode: [ builtin, cproto ]
     runs-on: ${{ matrix.platform }}
@@ -130,6 +137,11 @@ jobs:
     steps:
       - name: Checkout PyReindexer
         uses: actions/checkout@v4
+      - name: Install Reindexer (MacOS)
+        if: startsWith(matrix.platform, 'macos') && matrix.rxmode == 'cproto'
+        run: |
+          brew tap restream/reindexer
+          brew install reindexer
       - name: Install Reindexer-Dev\Server (Ubuntu)
         if: startsWith(matrix.platform, 'ubuntu') && matrix.rxmode == 'cproto'
         run: |
