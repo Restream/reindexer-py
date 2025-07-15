@@ -13,7 +13,7 @@ jobs:
     runs-on: ${{ matrix.platform }}
     strategy:
       matrix:
-        platform: [ macos-14, macos-14-large ]
+        platform: [ macos-13, macos-14 ]
         python: [ "3.8", "3.13" ]
     env:
       DEPLOY_BUILD_PYTHON_VERSION: ${{ matrix.python }}
@@ -65,7 +65,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [ macos-14, macos-14-large ]
+        platform: [ macos-13, macos-14 ]
         python: [ "3.12", "3.13" ] # versions of python with missing wheel and presented wheel
     runs-on: ${{ matrix.platform }}
     needs: deploy
@@ -105,7 +105,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [ macos-14, macos-14-large ]
+        platform: [ macos-13, macos-14 ]
         python: [ "3.8", "3.13" ] # both versions of python with the wheel presented
         rxmode: [ builtin, cproto ]
     runs-on: ${{ matrix.platform }}
