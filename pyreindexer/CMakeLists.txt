@@ -10,10 +10,20 @@ endif()
 
 enable_testing()
 
+option(CIBUILDWHEEL "Is cibuildwheel environment" OFF)
+if(DEFINED ENV{CIBUILDWHEEL} AND "$ENV{CIBUILDWHEEL}" STREQUAL "1")
+    set(CIBUILDWHEEL ON)
+endif()
+
 set(PY_MIN_VERSION 3.8)
 set(RX_MIN_VERSION 5.4.0)
-find_package(PythonInterp ${PY_MIN_VERSION} REQUIRED)
-find_package(PythonLibs ${PY_MIN_VERSION} REQUIRED)
+if(CIBUILDWHEEL)
+    file(GLOB PYTHON_INCLUDE_DIRS "/opt/python/*/include/python*")
+    include_directories(SYSTEM ${PYTHON_INCLUDE_DIRS})
+else()
+    find_package(PythonInterp ${PY_MIN_VERSION} REQUIRED)
+    find_package(PythonLibs ${PY_MIN_VERSION} REQUIRED)
+endif()
 find_package(reindexer CONFIG ${RX_MIN_VERSION} REQUIRED)
 
 option(WITH_GCOV "Enable instrumented code coverage build" OFF)
@@ -28,6 +38,11 @@ set(RESOURCES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/include)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror -Wswitch-enum")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20 -Wall -Wextra -Werror -Wswitch-enum -Wno-unused-parameter -fexceptions")
 string(REPLACE "-O2" "-O3" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
+
+if(CIBUILDWHEEL)
+    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -s")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s")
+endif()
 
 file(GLOB_RECURSE SRCS ${RESOURCES_DIR}/*.cc ${LIBSRC_DIR}/*.cc)
 
