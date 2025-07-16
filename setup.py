@@ -35,7 +35,7 @@ class BuildExt(build_ext_orig):
                     f'-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extension_dir}',
                     '-DCMAKE_BUILD_TYPE=Release',
                     '-DCMAKE_CXX_STANDARD=20',
-                    '-DCMAKE_OSX_DEPLOYMENT_TARGET=11'])
+                    f'-DCMAKE_OSX_DEPLOYMENT_TARGET={os.getenv("MACOSX_DEPLOYMENT_TARGET", "11")}'])
 
         if not self.dry_run:
             self.spawn(['cmake', '--build', '.'])

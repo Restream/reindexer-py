@@ -16,7 +16,7 @@ jobs:
         platform: [ macos-13 ]
     env:
       DEPLOY_BUILD_PYTHON_VERSION: "3.12"
-      MACOSX_DEPLOYMENT_TARGET: "11.0"
+      MACOSX_DEPLOYMENT_TARGET: "13.0"
       CIBW_BUILD: "cp38-* cp313-*" # build wheel for python 3.8 and 3.13
     defaults:
       run:
