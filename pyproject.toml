@@ -4,6 +4,7 @@ before-all = """
     git clone https://github.com/Restream/reindexer.git
     cd reindexer
     ./dependencies.sh
+    brew reinstall --build-from-source leveldb libomp snappy
     mkdir -p build && cd build
     cmake ..
     make -j4
