@@ -41,8 +41,8 @@ jobs:
           path: dist/*
 
   deploy:
-    name: Upload to TestPyPI (macos)
-    runs-on: macos-14
+    name: Upload to TestPyPI (ubuntu)
+    runs-on: ubuntu-22.04
     needs: build
     environment:
       name: testpypi
