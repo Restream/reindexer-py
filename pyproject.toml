@@ -18,7 +18,7 @@ manylinux-x86_64-image = "manylinux2014"
 skip = ["*musllinux*"]
 
 [tool.cibuildwheel.macos]
-repair-wheel-command = "delocate-wheel --require-archs arm64 --exclude 'Python.framework' -w {dest_dir} -v {wheel}"
+repair-wheel-command = "delocate-wheel --require-archs arm64  --ignore-missing-dependencies --exclude 'Python.framework' -w {dest_dir} -v {wheel}"
 
 [build-system]
 requires = [

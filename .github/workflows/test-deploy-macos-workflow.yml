@@ -59,13 +59,12 @@ jobs:
         platform: [ macos-14 ]
     env:
       DEPLOY_BUILD_PYTHON_VERSION: "3.8"
-      MACOSX_DEPLOYMENT_TARGET: "14.0"
+      MACOSX_DEPLOYMENT_TARGET: "14"
       CIBW_BUILD: "cp38-* cp313-*" # build wheel for python 3.8 and 3.13
     defaults:
       run:
         shell: bash
     steps:
-      - uses: conda-incubator/setup-miniconda@v3
       - name: Checkout PyReindexer repo
         uses: actions/checkout@v4
       - name: Set up Python ${{ env.DEPLOY_BUILD_PYTHON_VERSION }}
