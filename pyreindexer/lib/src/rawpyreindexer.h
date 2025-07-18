@@ -10,13 +10,7 @@
 #define MODULE_EXPORT_FUNCTION PyInit_rawpyreindexerb
 #endif
 
-#if defined(_DEBUG)
-#undef _DEBUG
 #include <Python.h>
-#define _DEBUG 1
-#else
-#include <Python.h>
-#endif
 
 namespace pyreindexer {
 
