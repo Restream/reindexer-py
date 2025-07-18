@@ -56,11 +56,17 @@ jobs:
     runs-on: ${{ matrix.platform }}
     strategy:
       matrix:
-        platform: [ macos-14 ]
+        include:
+          - platform: macos-14
+            python: "3.9"
+            py_cp: 39
+          - platform: macos-14
+            python: "3.13"
+            py_cp: 313
     env:
-      DEPLOY_BUILD_PYTHON_VERSION: "3.12"
+      DEPLOY_BUILD_PYTHON_VERSION: ${{ matrix.python }}
       MACOSX_DEPLOYMENT_TARGET: "14"
-      CIBW_BUILD: "cp39-* cp313-*" # build wheel for python 3.8 and 3.13
+      CIBW_BUILD: "cp${{ matrix.py_cp }}-*" # build wheel for python 3.9 and 3.13
     defaults:
       run:
         shell: bash
