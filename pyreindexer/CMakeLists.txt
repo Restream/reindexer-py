@@ -70,11 +70,6 @@ set_target_properties(${LIB_CPROTO_NAME} PROPERTIES SUFFIX ${LIBS_EXT})
 set_target_properties(${LIB_BUILTIN_NAME} PROPERTIES PREFIX "")
 set_target_properties(${LIB_CPROTO_NAME} PROPERTIES PREFIX "")
 
-if(APPLE)
-    set_target_properties(${LIB_BUILTIN_NAME} PROPERTIES LINK_FLAGS "-undefined dynamic_lookup")
-    set_target_properties(${LIB_CPROTO_NAME} PROPERTIES LINK_FLAGS "-undefined dynamic_lookup")
-endif()
-
 if (WITH_GCOV)
     target_link_libraries(${LIB_BUILTIN_NAME} -fprofile-arcs -ftest-coverage)
     target_link_libraries(${LIB_CPROTO_NAME} -fprofile-arcs -ftest-coverage)
