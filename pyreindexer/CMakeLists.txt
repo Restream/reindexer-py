@@ -20,6 +20,8 @@ set(RX_MIN_VERSION 5.4.0)
 if(CIBUILDWHEEL AND NOT APPLE)
     file(GLOB PYTHON_INCLUDE_DIRS "/opt/python/*/include/python*")
     include_directories(SYSTEM ${PYTHON_INCLUDE_DIRS})
+elseif(CIBUILDWHEEL AND APPLE)
+    find_package(Python3 COMPONENTS Development REQUIRED)
 else()
     find_package(PythonInterp ${PY_MIN_VERSION} REQUIRED)
     find_package(PythonLibs ${PY_MIN_VERSION} REQUIRED)
@@ -59,8 +61,14 @@ link_directories(
 add_library(${LIB_BUILTIN_NAME} SHARED ${SRCS})
 add_library(${LIB_CPROTO_NAME} SHARED ${SRCS})
 
-target_link_libraries(${LIB_BUILTIN_NAME} ${PYTHON_LIBRARIES} ${REINDEXER_LIBRARIES})
-target_link_libraries(${LIB_CPROTO_NAME} ${PYTHON_LIBRARIES} ${REINDEXER_LIBRARIES})
+if(APPLE)
+    target_link_libraries(${LIB_BUILTIN_NAME} ${Python3_LIBRARIES} ${REINDEXER_LIBRARIES})
+    target_link_libraries(${LIB_CPROTO_NAME} ${Python3_LIBRARIES} ${REINDEXER_LIBRARIES})
+else()
+    target_link_libraries(${LIB_BUILTIN_NAME} ${PYTHON_LIBRARIES} ${REINDEXER_LIBRARIES})
+    target_link_libraries(${LIB_CPROTO_NAME} ${PYTHON_LIBRARIES} ${REINDEXER_LIBRARIES})
+endif()
+
 target_compile_definitions(${LIB_CPROTO_NAME} PRIVATE PYREINDEXER_CPROTO=1)
 
 set_target_properties(${LIB_BUILTIN_NAME} PROPERTIES SUFFIX ${LIBS_EXT})
@@ -69,6 +77,11 @@ set_target_properties(${LIB_CPROTO_NAME} PROPERTIES SUFFIX ${LIBS_EXT})
 # python does not allow 'lib' prefix
 set_target_properties(${LIB_BUILTIN_NAME} PROPERTIES PREFIX "")
 set_target_properties(${LIB_CPROTO_NAME} PROPERTIES PREFIX "")
+
+if(APPLE)
+    target_link_libraries(${LIB_BUILTIN_NAME} PROPERTIES LINK_FLAGS "-undefined dynamic_lookup")
+    target_link_libraries(${LIB_CPROTO_NAME} PROPERTIES LINK_FLAGS "-undefined dynamic_lookup")
+endif()
 
 if (WITH_GCOV)
     target_link_libraries(${LIB_BUILTIN_NAME} -fprofile-arcs -ftest-coverage)
