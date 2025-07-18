@@ -87,8 +87,8 @@ set_target_properties(${LIB_BUILTIN_NAME} PROPERTIES PREFIX "")
 set_target_properties(${LIB_CPROTO_NAME} PROPERTIES PREFIX "")
 
 if(CIBUILDWHEEL AND APPLE)
-    target_link_libraries(${LIB_BUILTIN_NAME} PROPERTIES LINK_FLAGS "-undefined dynamic_lookup")
-    target_link_libraries(${LIB_CPROTO_NAME} PROPERTIES LINK_FLAGS "-undefined dynamic_lookup")
+    set_target_properties(${LIB_BUILTIN_NAME} PROPERTIES LINK_FLAGS "-undefined dynamic_lookup")
+    set_target_properties(${LIB_CPROTO_NAME} PROPERTIES LINK_FLAGS "-undefined dynamic_lookup")
 endif()
 
 if (WITH_GCOV)
