@@ -26,29 +26,19 @@ class BuildExt(build_ext_orig):
             self.build_cmake(ext)
 
     def build_cmake(self, ext):
+        os.makedirs(os.path.abspath(self.build_temp), exist_ok=True)
+
         cwd = os.path.abspath('')
-
-        build_temp = os.path.abspath(self.build_temp)
-        if not os.path.exists(build_temp):
-            os.makedirs(build_temp)
-
-        extension_dir = os.path.abspath(self.get_ext_fullpath(ext.name))
-        if not os.path.exists(extension_dir):
-            os.makedirs(extension_dir)
-
-        os.chdir(build_temp)
-
-        lib_dir = os.path.join(extension_dir, '..')
-        source_dir = os.path.join(cwd, PACKAGE_NAME)
-
-        self.spawn(['cmake', source_dir,
+        extension_dir = os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.name)))
+        self.spawn(['cmake',
+                    os.path.join(cwd, PACKAGE_NAME),
+                    f'-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extension_dir}',
                     '-DCMAKE_BUILD_TYPE=Release',
                     '-DCMAKE_CXX_STANDARD=20',
-                    '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + lib_dir,
-                    '-DCMAKE_OSX_DEPLOYMENT_TARGET=14'])
+                    f'-DCMAKE_OSX_DEPLOYMENT_TARGET={os.getenv("MACOSX_DEPLOYMENT_TARGET", "11")}'])
+
         if not self.dry_run:
             self.spawn(['cmake', '--build', '.'])
-
         os.chdir(cwd)
 
 
