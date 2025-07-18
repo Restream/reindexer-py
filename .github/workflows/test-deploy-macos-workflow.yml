@@ -22,7 +22,7 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: conda-incubator/setup-miniconda@v3
+#      - uses: conda-incubator/setup-miniconda@v3
       - name: Checkout PyReindexer repo
         uses: actions/checkout@v4
       - name: Set up Python ${{ env.DEPLOY_BUILD_PYTHON_VERSION }}
