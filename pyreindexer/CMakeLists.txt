@@ -48,11 +48,19 @@ endif()
 
 file(GLOB_RECURSE SRCS ${RESOURCES_DIR}/*.cc ${LIBSRC_DIR}/*.cc)
 
-include_directories(
-    ${LIBSRC_DIR}
-    ${RESOURCES_DIR}
-    ${PYTHON_INCLUDE_DIRS}
-    ${REINDEXER_INCLUDE_DIRS})
+if(CIBUILDWHEEL AND APPLE)
+    include_directories(
+        ${LIBSRC_DIR}
+        ${RESOURCES_DIR}
+        ${Python3_INCLUDE_DIRS}
+        ${REINDEXER_INCLUDE_DIRS})
+else()
+    include_directories(
+        ${LIBSRC_DIR}
+        ${RESOURCES_DIR}
+        ${PYTHON_INCLUDE_DIRS}
+        ${REINDEXER_INCLUDE_DIRS})
+endif()
 
 link_directories(
     ${REINDEXER_LIB_DIR}
@@ -78,7 +86,7 @@ set_target_properties(${LIB_CPROTO_NAME} PROPERTIES SUFFIX ${LIBS_EXT})
 set_target_properties(${LIB_BUILTIN_NAME} PROPERTIES PREFIX "")
 set_target_properties(${LIB_CPROTO_NAME} PROPERTIES PREFIX "")
 
-if(APPLE)
+if(CIBUILDWHEEL AND APPLE)
     target_link_libraries(${LIB_BUILTIN_NAME} PROPERTIES LINK_FLAGS "-undefined dynamic_lookup")
     target_link_libraries(${LIB_CPROTO_NAME} PROPERTIES LINK_FLAGS "-undefined dynamic_lookup")
 endif()
