@@ -16,16 +16,15 @@ if(DEFINED ENV{CIBUILDWHEEL} AND "$ENV{CIBUILDWHEEL}" STREQUAL "1")
 endif()
 
 set(PY_MIN_VERSION 3.8)
-set(RX_MIN_VERSION 5.4.0)
 if(CIBUILDWHEEL AND NOT APPLE)
     file(GLOB PYTHON_INCLUDE_DIRS "/opt/python/*/include/python*")
     include_directories(SYSTEM ${PYTHON_INCLUDE_DIRS})
-elseif(CIBUILDWHEEL AND APPLE)
-    find_package(Python3 COMPONENTS Development REQUIRED)
 else()
     find_package(PythonInterp ${PY_MIN_VERSION} REQUIRED)
     find_package(PythonLibs ${PY_MIN_VERSION} REQUIRED)
 endif()
+
+set(RX_MIN_VERSION 5.4.0)
 find_package(reindexer CONFIG ${RX_MIN_VERSION} REQUIRED)
 
 option(WITH_GCOV "Enable instrumented code coverage build" OFF)
@@ -48,19 +47,11 @@ endif()
 
 file(GLOB_RECURSE SRCS ${RESOURCES_DIR}/*.cc ${LIBSRC_DIR}/*.cc)
 
-if(CIBUILDWHEEL AND APPLE)
-    include_directories(
-        ${LIBSRC_DIR}
-        ${RESOURCES_DIR}
-        ${Python3_INCLUDE_DIRS}
-        ${REINDEXER_INCLUDE_DIRS})
-else()
-    include_directories(
+include_directories(
         ${LIBSRC_DIR}
         ${RESOURCES_DIR}
         ${PYTHON_INCLUDE_DIRS}
         ${REINDEXER_INCLUDE_DIRS})
-endif()
 
 link_directories(
     ${REINDEXER_LIB_DIR}
@@ -69,13 +60,8 @@ link_directories(
 add_library(${LIB_BUILTIN_NAME} SHARED ${SRCS})
 add_library(${LIB_CPROTO_NAME} SHARED ${SRCS})
 
-if(APPLE)
-    target_link_libraries(${LIB_BUILTIN_NAME} ${Python3_LIBRARIES} ${REINDEXER_LIBRARIES})
-    target_link_libraries(${LIB_CPROTO_NAME} ${Python3_LIBRARIES} ${REINDEXER_LIBRARIES})
-else()
-    target_link_libraries(${LIB_BUILTIN_NAME} ${PYTHON_LIBRARIES} ${REINDEXER_LIBRARIES})
-    target_link_libraries(${LIB_CPROTO_NAME} ${PYTHON_LIBRARIES} ${REINDEXER_LIBRARIES})
-endif()
+target_link_libraries(${LIB_BUILTIN_NAME} ${PYTHON_LIBRARIES} ${REINDEXER_LIBRARIES})
+target_link_libraries(${LIB_CPROTO_NAME} ${PYTHON_LIBRARIES} ${REINDEXER_LIBRARIES})
 
 target_compile_definitions(${LIB_CPROTO_NAME} PRIVATE PYREINDEXER_CPROTO=1)
 
@@ -85,11 +71,6 @@ set_target_properties(${LIB_CPROTO_NAME} PROPERTIES SUFFIX ${LIBS_EXT})
 # python does not allow 'lib' prefix
 set_target_properties(${LIB_BUILTIN_NAME} PROPERTIES PREFIX "")
 set_target_properties(${LIB_CPROTO_NAME} PROPERTIES PREFIX "")
-
-if(CIBUILDWHEEL AND APPLE)
-    set_target_properties(${LIB_BUILTIN_NAME} PROPERTIES LINK_FLAGS "-undefined dynamic_lookup")
-    set_target_properties(${LIB_CPROTO_NAME} PROPERTIES LINK_FLAGS "-undefined dynamic_lookup")
-endif()
 
 if (WITH_GCOV)
     target_link_libraries(${LIB_BUILTIN_NAME} -fprofile-arcs -ftest-coverage)

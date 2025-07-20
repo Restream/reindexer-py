@@ -52,7 +52,7 @@ on:
 
 jobs:
   build_wheels:
-    name: Build wheels on ${{ matrix.platform }}
+    name: Build wheels on ${{ matrix.platform }}-py${{ matrix.python }}
     runs-on: ${{ matrix.platform }}
     strategy:
       matrix:
@@ -84,7 +84,7 @@ jobs:
       - name: Store all build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: rx_artifacts_wheels-cp${{ matrix.python }}
+          name: rx_artifacts_wheels-${{ matrix.platform }}-cp${{ matrix.python }}
           path: dist/*
 
   build_sdist:
