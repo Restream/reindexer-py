@@ -4,8 +4,8 @@ name: Upload Release package to TestPyPI
 #    types: [opened, reopened]
 on:
   push:
-    branches-ignore:
-      #    branches:
+#    branches-ignore:
+    branches:
       - master
 
 jobs:

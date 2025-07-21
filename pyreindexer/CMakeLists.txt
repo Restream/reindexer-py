@@ -59,8 +59,8 @@ link_directories(
 add_library(${LIB_BUILTIN_NAME} SHARED ${SRCS})
 add_library(${LIB_CPROTO_NAME} SHARED ${SRCS})
 
-target_link_libraries(${LIB_BUILTIN_NAME} ${REINDEXER_LIBRARIES})
-target_link_libraries(${LIB_CPROTO_NAME} ${REINDEXER_LIBRARIES})
+target_link_libraries(${LIB_BUILTIN_NAME} ${Python3_LIBRARIES} ${REINDEXER_LIBRARIES})
+target_link_libraries(${LIB_CPROTO_NAME} ${Python3_LIBRARIES} ${REINDEXER_LIBRARIES})
 
 target_compile_definitions(${LIB_CPROTO_NAME} PRIVATE PYREINDEXER_CPROTO=1)
 
