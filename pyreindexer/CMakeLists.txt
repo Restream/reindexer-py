@@ -20,8 +20,7 @@ if(CIBUILDWHEEL AND NOT APPLE)
     file(GLOB PYTHON_INCLUDE_DIRS "/opt/python/*/include/python*")
     include_directories(SYSTEM ${PYTHON_INCLUDE_DIRS})
 else()
-    find_package(PythonInterp ${PY_MIN_VERSION} REQUIRED)
-    find_package(PythonLibs ${PY_MIN_VERSION} REQUIRED)
+    find_package(Python3 ${PY_MIN_VERSION} REQUIRED COMPONENTS Development)
 endif()
 
 set(RX_MIN_VERSION 5.4.0)
@@ -50,7 +49,7 @@ file(GLOB_RECURSE SRCS ${RESOURCES_DIR}/*.cc ${LIBSRC_DIR}/*.cc)
 include_directories(
         ${LIBSRC_DIR}
         ${RESOURCES_DIR}
-        ${PYTHON_INCLUDE_DIRS}
+        ${Python3_INCLUDE_DIRS}
         ${REINDEXER_INCLUDE_DIRS})
 
 link_directories(
@@ -60,8 +59,8 @@ link_directories(
 add_library(${LIB_BUILTIN_NAME} SHARED ${SRCS})
 add_library(${LIB_CPROTO_NAME} SHARED ${SRCS})
 
-target_link_libraries(${LIB_BUILTIN_NAME} ${PYTHON_LIBRARIES} ${REINDEXER_LIBRARIES})
-target_link_libraries(${LIB_CPROTO_NAME} ${PYTHON_LIBRARIES} ${REINDEXER_LIBRARIES})
+target_link_libraries(${LIB_BUILTIN_NAME} ${Python3_INCLUDE_DIRS} ${REINDEXER_LIBRARIES})
+target_link_libraries(${LIB_CPROTO_NAME} ${Python3_INCLUDE_DIRS} ${REINDEXER_LIBRARIES})
 
 target_compile_definitions(${LIB_CPROTO_NAME} PRIVATE PYREINDEXER_CPROTO=1)
 
