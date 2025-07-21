@@ -44,9 +44,9 @@ jobs:
 #      matrix:
 #        python: [ "3.13" ]
     env:
-      DEPLOY_BUILD_PYTHON_VERSION: "3.11"
+      DEPLOY_BUILD_PYTHON_VERSION: "3.8"
       MACOSX_DEPLOYMENT_TARGET: "14"
-      CIBW_BUILD: "cp39-* cp313-*" # build wheel for python 3.8 and 3.13
+      CIBW_BUILD: "cp38-* cp39-* cp313-*" # build wheel for python 3.8 and 3.13
     defaults:
       run:
         shell: bash
@@ -262,7 +262,7 @@ jobs:
       fail-fast: false
       matrix:
         platform: [ macos-14 ]
-        python: [ "3.9", "3.13" ] # both versions of python with the wheel presented
+        python: [ "3.8", "3.9", "3.13" ] # both versions of python with the wheel presented
         rxmode: [ builtin, cproto ]
     runs-on: ${{ matrix.platform }}
     needs: deploy
