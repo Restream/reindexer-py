@@ -17,7 +17,7 @@ endif()
 
 set(PY_MIN_VERSION 3.8)
 if(CIBUILDWHEEL AND APPLE)
-    file(GLOB PYTHON_INCLUDE_DIRS "/Library/Frameworks/Python.framework/Versions/*/bin/python*")
+    file(GLOB PYTHON_INCLUDE_DIRS "/Library/Frameworks/Python.framework/Versions/*/include/python*")
     include_directories(SYSTEM ${PYTHON_INCLUDE_DIRS})
 elseif(CIBUILDWHEEL)
     file(GLOB PYTHON_INCLUDE_DIRS "/opt/python/*/include/python*")
