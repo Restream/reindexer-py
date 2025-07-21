@@ -74,7 +74,7 @@ jobs:
   deploy:
     name: Upload to TestPyPI (ubuntu)
     runs-on: ubuntu-22.04
-    needs: [ build_wheels, build_sdist ]
+    needs: [ build_wheels ]
     environment:
       name: testpypi
       url: https://test.pypi.org/p/pyreindexer/
