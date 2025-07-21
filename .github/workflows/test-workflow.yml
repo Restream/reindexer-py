@@ -1,8 +1,7 @@
 name: Test the project
 on:
   push:
-#    branches-ignore:
-    branches:
+    branches-ignore:
       - master
 
 jobs:

@@ -5,44 +5,15 @@ on:
       - master
 
 jobs:
-  build_wheels_linux:
+  build_wheels:
     name: Build wheels on ${{ matrix.platform }}
     runs-on: ${{ matrix.platform }}
     strategy:
       matrix:
-        platform: [ ubuntu-22.04 ]
+        platform: [ ubuntu-22.04, macos-14 ]
     env:
-      DEPLOY_BUILD_PYTHON_VERSION: "3.13"
-    defaults:
-      run:
-        shell: bash
-    steps:
-      - name: Checkout PyReindexer repo
-        uses: actions/checkout@v4
-      - name: Set up Python ${{ env.DEPLOY_BUILD_PYTHON_VERSION }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.DEPLOY_BUILD_PYTHON_VERSION }}
-      - name: Install Python dependencies
-        run: python -m pip install --upgrade pip cibuildwheel
-      - name: Build PyReindexer wheels
-        run: python -m cibuildwheel --output-dir dist
-      - name: Store all build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: rx_artifacts_wheels-${{ matrix.platform }}-cp${{ matrix.python }}
-          path: dist/*
-
-  build_wheels_macos:
-    name: Build wheels on ${{ matrix.platform }}-py${{ matrix.python }}
-    runs-on: macos-14
-    strategy:
-      matrix:
-        python: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
-    env:
-      DEPLOY_BUILD_PYTHON_VERSION: ${{ matrix.python }}
+      DEPLOY_BUILD_PYTHON_VERSION: "3.8"
       MACOSX_DEPLOYMENT_TARGET: "14"
-      CIBW_BUILD: "cp${{ matrix.py_cp }}-*" # build wheel for python 3.8 and 3.13
     defaults:
       run:
         shell: bash
@@ -60,15 +31,12 @@ jobs:
       - name: Store all build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: rx_artifacts_wheels-${{ matrix.platform }}-cp${{ matrix.python }}
+          name: rx_artifacts_wheels_${{ matrix.platform }}
           path: dist/*
 
   build_sdist:
     name: Build sdist on Ubuntu
     runs-on: ubuntu-22.04
-    strategy:
-      matrix:
-        platform: [ ubuntu-22.04 ]
     env:
       DEPLOY_BUILD_PYTHON_VERSION: "3.12"
     defaults:
@@ -94,7 +62,7 @@ jobs:
   deploy:
     name: Upload to PyPI (ubuntu)
     runs-on: ubuntu-22.04
-    needs: [ build_wheels_linux, build_wheels_macos, build_sdist ]
+    needs: [ build_wheels, build_sdist ]
     environment:
       name: pypi
       url: https://pypi.org/p/pyreindexer/
