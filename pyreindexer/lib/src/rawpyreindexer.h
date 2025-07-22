@@ -199,7 +199,9 @@ static struct PyModuleDef module_definition = {
 	PyModuleDef_HEAD_INIT, MODULE_NAME, MODULE_DESCRIPTION, -1, module_methods, nullptr, nullptr, nullptr, nullptr};
 
 PyMODINIT_FUNC MODULE_EXPORT_FUNCTION(void) {
-	Py_Initialize();
+    if (!Py_IsInitialized()) {
+        Py_Initialize();
+    }
 	return PyModule_Create(&module_definition);
 }
 
