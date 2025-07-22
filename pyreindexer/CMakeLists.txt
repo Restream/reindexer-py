@@ -74,6 +74,13 @@ set_target_properties(${LIB_CPROTO_NAME} PROPERTIES SUFFIX ${LIBS_EXT})
 set_target_properties(${LIB_BUILTIN_NAME} PROPERTIES PREFIX "")
 set_target_properties(${LIB_CPROTO_NAME} PROPERTIES PREFIX "")
 
+# We do not want to strictly link to python libs,
+#   because we want to build wheels for all python versions using single machine / image / job.
+# When using linking there are unpleasant side effects, for example the wrong version of python is found or
+#   python is searched in the wrong place and is not found at all.
+# But we need Python.h during compilation and without this flag we will get "Undefined symbols" at the linking stage.
+# It's not the problem to skip this error, since the user will have his own python.
+# On Ubuntu this is the default behavior of LD.
 if(CIBUILDWHEEL AND APPLE)
     set_target_properties(${LIB_BUILTIN_NAME} PROPERTIES LINK_FLAGS "-undefined dynamic_lookup")
     set_target_properties(${LIB_CPROTO_NAME} PROPERTIES LINK_FLAGS "-undefined dynamic_lookup")
