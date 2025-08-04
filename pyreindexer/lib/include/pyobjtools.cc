@@ -64,6 +64,7 @@ void pyValueSerialize(PyObject** value, reindexer::WrSerializer& wrSer) {
 		bool v = PyLong_AsLong(*value) != 0;
 		wrSer << v;
 	} else if (PyFloat_Check(*value)) {
+		double v = PyFloat_AsDouble(*value);
 		if (std::isnan(v) || std::isinf(v)) {
 			wrSer << "null";
 		} else {
