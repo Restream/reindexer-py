@@ -24,6 +24,7 @@ jobs:
     runs-on: ${{ matrix.platform }}
     env:
       SETUPTOOLS_USE_DISTUTILS: ${{ matrix.distutils || 'local' }}
+      MACOSX_DEPLOYMENT_TARGET: "14"
     defaults:
       run:
         shell: bash
