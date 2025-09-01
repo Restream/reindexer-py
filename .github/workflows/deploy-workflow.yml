@@ -144,7 +144,7 @@ jobs:
         platform: [ ubuntu-22.04, ubuntu-24.04, macos-14 ]
         python: [ "3.8", "3.13" ]
         include:
-          - python: "3.11"
+          - python: "3.13"
             platform: macos-15
         rxmode: [ builtin, cproto ]
     runs-on: ${{ matrix.platform }}
