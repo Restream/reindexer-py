@@ -10,7 +10,7 @@ jobs:
     runs-on: ${{ matrix.platform }}
     strategy:
       matrix:
-        platform: [ ubuntu-22.04, macos-14 ]
+        platform: [ ubuntu-22.04, macos-14, macos-15 ]
     env:
       DEPLOY_BUILD_PYTHON_VERSION: "3.8"
       MACOSX_DEPLOYMENT_TARGET: "14"
@@ -85,7 +85,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [ ubuntu-22.04, ubuntu-24.04, macos-14 ]
+        platform: [ ubuntu-22.04, ubuntu-24.04, macos-14, macos-15 ]
         python: [ "3.13" ]
     runs-on: ${{ matrix.platform }}
     needs: deploy
@@ -99,6 +99,7 @@ jobs:
       - name: Install Reindexer (MacOS)
         if: startsWith(matrix.platform, 'macos')
         run: |
+          brew uninstall cmake
           brew tap restream/reindexer
           brew install reindexer
       - name: Install Reindexer-Dev\Server (Ubuntu)
@@ -139,7 +140,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [ ubuntu-22.04, ubuntu-24.04, macos-14 ]
+        platform: [ ubuntu-22.04, ubuntu-24.04, macos-14, macos-15 ]
         python: [ "3.8", "3.13" ]
         rxmode: [ builtin, cproto ]
     runs-on: ${{ matrix.platform }}
@@ -154,6 +155,7 @@ jobs:
       - name: Install Reindexer (MacOS)
         if: startsWith(matrix.platform, 'macos') && matrix.rxmode == 'cproto'
         run: |
+          brew uninstall cmake
           brew tap restream/reindexer
           brew install reindexer
       - name: Install Reindexer-Dev\Server (Ubuntu)

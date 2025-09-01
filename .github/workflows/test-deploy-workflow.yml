@@ -9,7 +9,7 @@ jobs:
     runs-on: ${{ matrix.platform }}
     strategy:
       matrix:
-        platform: [ ubuntu-22.04, macos-14 ]
+        platform: [ ubuntu-22.04, macos-14, macos-15 ]
     env:
       DEPLOY_BUILD_PYTHON_VERSION: "3.8"
       MACOSX_DEPLOYMENT_TARGET: "14"
@@ -86,7 +86,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [ ubuntu-22.04, ubuntu-24.04, macos-14 ]
+        platform: [ ubuntu-22.04, ubuntu-24.04, macos-14, macos-15 ]
         python: [ "3.12", "3.13" ] # versions of python with missing wheel and presented wheel
     runs-on: ${{ matrix.platform }}
     needs: deploy
@@ -100,6 +100,7 @@ jobs:
       - name: Install Reindexer (MacOS)
         if: startsWith(matrix.platform, 'macos')
         run: |
+          brew uninstall cmake
           brew tap restream/reindexer
           brew install reindexer
       - name: Install Reindexer-Dev\Server (Ubuntu)
@@ -145,7 +146,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [ ubuntu-22.04, ubuntu-24.04, macos-14 ]
+        platform: [ ubuntu-22.04, ubuntu-24.04, macos-14, macos-15 ]
         python: [ "3.8", "3.13" ] # both versions of python with the wheel presented
         rxmode: [ builtin, cproto ]
     runs-on: ${{ matrix.platform }}
@@ -160,6 +161,7 @@ jobs:
       - name: Install Reindexer (MacOS)
         if: startsWith(matrix.platform, 'macos') && matrix.rxmode == 'cproto'
         run: |
+          brew uninstall cmake
           brew tap restream/reindexer
           brew install reindexer
       - name: Install Reindexer-Dev\Server (Ubuntu)
