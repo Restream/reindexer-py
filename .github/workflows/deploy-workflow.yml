@@ -9,8 +9,9 @@ jobs:
     name: Build wheels on ${{ matrix.platform }}
     runs-on: ${{ matrix.platform }}
     strategy:
+      fail-fast: false
       matrix:
-        platform: [ ubuntu-22.04, macos-14, macos-15 ]
+        platform: [ ubuntu-22.04, macos-14 ]
     env:
       DEPLOY_BUILD_PYTHON_VERSION: "3.8"
       MACOSX_DEPLOYMENT_TARGET: "14"
@@ -140,8 +141,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [ ubuntu-22.04, ubuntu-24.04, macos-14, macos-15 ]
+        platform: [ ubuntu-22.04, ubuntu-24.04, macos-14 ]
         python: [ "3.8", "3.13" ]
+        include:
+          - python: "3.11"
+            platform: macos-15
         rxmode: [ builtin, cproto ]
     runs-on: ${{ matrix.platform }}
     needs: deploy
