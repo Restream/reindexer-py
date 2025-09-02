@@ -1,4 +1,5 @@
 from datetime import timedelta
+from math import nan, inf
 
 import pytest
 from hamcrest import *
@@ -29,11 +30,15 @@ class TestCrudItems:
     def test_create_item_insert_negative(self, db, namespace, index, value):
         # Given("Create namespace with index")
         # When ("Insert item into namespace")
-        item_empty = {"id": -1, "field": value, "empty_field": None}
+        item_empty = {"id": -1, "field": value, "empty_field": None, "nan_field": nan, "inf_field": inf,
+                      "ninf_field": -inf}
         db.item.insert(namespace, item_empty)
         # Then ("Check that item is added")
         select_result = get_ns_items(db, namespace)
         assert_that(select_result, has_length(1), "Item wasn't created")
+        item_empty["nan_field"] = None
+        item_empty["inf_field"] = None
+        item_empty["ninf_field"] = None
         assert_that(select_result, has_item(item_empty), "Item wasn't created")
 
     @pytest.mark.parametrize("vector_index", [vector_index_bf, vector_index_hnsw, vector_index_ivf])
