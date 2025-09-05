@@ -5,62 +5,75 @@ on:
       - master
 
 jobs:
-  build:
-    name: Build project (ubuntu)
-    runs-on: ubuntu-22.04
+  build_wheels:
+    name: Build wheels on ${{ matrix.platform }}
+    runs-on: ${{ matrix.platform }}
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [ ubuntu-22.04, macos-14 ]
     env:
-      DEPLOY_BUILD_PYTHON_VERSION: '3.13'
+      DEPLOY_BUILD_PYTHON_VERSION: "3.8"
+      MACOSX_DEPLOYMENT_TARGET: "14"
     defaults:
       run:
         shell: bash
     steps:
       - name: Checkout PyReindexer repo
         uses: actions/checkout@v4
-      - name: Checkout Reindexer repo
-        uses: actions/checkout@v4
-        with:
-          repository: Restream/reindexer
-          path: reindexer
-      - name: Install dependencies
-        run: |
-          sudo apt-get update -y
-          cd reindexer
-          sudo bash dependencies.sh
-      - name: Build Reindexer
-        run: |
-          cd reindexer
-          mkdir -p build && cd build
-          cmake ..
-          make -j4
-          sudo make install
       - name: Set up Python ${{ env.DEPLOY_BUILD_PYTHON_VERSION }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.DEPLOY_BUILD_PYTHON_VERSION }}
       - name: Install Python dependencies
-        run: |
-          python -m pip install --upgrade pip build
-      - name: Build PyReindexer
-        run: python -m build --sdist
-      - name: Store build artifacts
+        run: python -m pip install --upgrade pip cibuildwheel
+      - name: Build PyReindexer wheels
+        run: python -m cibuildwheel --output-dir dist
+      - name: Store all build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: build
+          name: rx_artifacts_wheels_${{ matrix.platform }}
+          path: dist/*
+
+  build_sdist:
+    name: Build sdist on Ubuntu
+    runs-on: ubuntu-22.04
+    env:
+      DEPLOY_BUILD_PYTHON_VERSION: "3.12"
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout PyReindexer repo
+        uses: actions/checkout@v4
+      - name: Set up Python ${{ env.DEPLOY_BUILD_PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.DEPLOY_BUILD_PYTHON_VERSION }}
+      - name: Install Python dependencies
+        run: python -m pip install --upgrade pip build
+      - name: Build PyReindexer dist
+        run: python -m build --sdist
+      - name: Store all build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: rx_artifacts_sdist
           path: dist/*
 
   deploy:
     name: Upload to PyPI (ubuntu)
     runs-on: ubuntu-22.04
-    needs: build
+    needs: [ build_wheels, build_sdist ]
     environment:
       name: pypi
       url: https://pypi.org/p/pyreindexer/
     steps:
-      - name: Fetch build artifacts
+      - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
-          name: build
-          path: dist/
+          pattern: rx_artifacts*
+          path: dist
+          merge-multiple: true
       - name: Publish package distributions to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
@@ -69,16 +82,12 @@ jobs:
           password: pypi-${{ secrets.PYPI_TOKEN }}
           attestations: false
 
-  test:
+  test_dist:
     strategy:
       fail-fast: false
       matrix:
-        python:
-        - "3.13"
-        platform:
-        - ubuntu-22.04
-        - ubuntu-24.04
-        - macos-14
+        platform: [ ubuntu-22.04, ubuntu-24.04, macos-14, macos-15 ]
+        python: [ "3.13" ]
     runs-on: ${{ matrix.platform }}
     needs: deploy
     defaults:
@@ -87,9 +96,11 @@ jobs:
     steps:
       - name: Checkout PyReindexer
         uses: actions/checkout@v4
+
       - name: Install Reindexer (MacOS)
         if: startsWith(matrix.platform, 'macos')
         run: |
+          brew uninstall cmake
           brew tap restream/reindexer
           brew install reindexer
       - name: Install Reindexer-Dev\Server (Ubuntu)
@@ -108,6 +119,7 @@ jobs:
           sudo apt-get install -y libunwind-dev
           sudo apt-get install -y reindexer-dev
           sudo apt-get install -y reindexer-server
+
       - name: Set up Python ${{ matrix.python }}
         uses: actions/setup-python@v5
         env:
@@ -117,10 +129,68 @@ jobs:
       - name: Install PyReindexer
         run: |
           python -m pip install --upgrade --disable-pip-version-check pip importlib_metadata setuptools wheel
-          python -m pip install -vvv pyreindexer
+          python -m pip install -vvv --no-binary pyreindexer pyreindexer
       - name: Prepare Test Environment
         run: python -m pip install -r requirements.txt
       - name: Test
         run: |
           cd $(python -c "import sysconfig; print(sysconfig.get_path('purelib'))")/pyreindexer
           $GITHUB_WORKSPACE/.github/workflows/test.sh
+
+  test_wheel:
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [ ubuntu-22.04, ubuntu-24.04, macos-14 ]
+        python: [ "3.8", "3.13" ]
+        rxmode: [ builtin, cproto ]
+    runs-on: ${{ matrix.platform }}
+    needs: deploy
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout PyReindexer
+        uses: actions/checkout@v4
+
+      - name: Install Reindexer (MacOS)
+        if: startsWith(matrix.platform, 'macos') && matrix.rxmode == 'cproto'
+        run: |
+          brew uninstall cmake
+          brew tap restream/reindexer
+          brew install reindexer
+      - name: Install Reindexer-Dev\Server (Ubuntu)
+        if: startsWith(matrix.platform, 'ubuntu') && matrix.rxmode == 'cproto'
+        run: |
+          curl https://repo.reindexer.io/RX-KEY.GPG | sudo apt-key add
+          if [[ ${{matrix.platform}} == ubuntu-22.04 ]]; then
+            echo 'deb https://repo.reindexer.io/ubuntu-jammy /' | sudo tee -a /etc/apt/sources.list
+          elif [[ ${{matrix.platform}} == ubuntu-24.04 ]]; then
+            echo 'deb https://repo.reindexer.io/ubuntu-noble /' | sudo tee -a /etc/apt/sources.list
+          else
+            echo "${{matrix.platform}} not supported"
+            exit 1
+          fi
+          sudo apt-get update -y
+          sudo apt-get install -y libunwind-dev
+          sudo apt-get install -y reindexer-server
+      - name: Install Openblas (Ubuntu)
+        if: startsWith(matrix.platform, 'ubuntu') && matrix.rxmode == 'builtin'
+        run: sudo apt-get install -y libopenblas-pthread-dev
+
+      - name: Set up Python ${{ matrix.python }}
+        uses: actions/setup-python@v5
+        env:
+          PIP_DISABLE_PIP_VERSION_CHECK: 1
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install PyReindexer
+        run: |
+          python -m pip install --upgrade --disable-pip-version-check pip importlib_metadata
+          python -m pip install -vvv pyreindexer
+      - name: Prepare Test Environment
+        run: python -m pip install -r requirements.txt
+      - name: Test ${{ matrix.rxmode }}
+        run: |
+          cd $(python -c "import sysconfig; print(sysconfig.get_path('purelib'))")/pyreindexer
+          $GITHUB_WORKSPACE/.github/workflows/test.sh ${{matrix.rxmode}}

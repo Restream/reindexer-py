@@ -1,0 +1,40 @@
+[tool.cibuildwheel]
+archs = ["auto64"]
+
+[tool.cibuildwheel.linux]
+before-all = """
+    git clone https://github.com/Restream/reindexer.git
+    cd reindexer
+    ./dependencies.sh
+    mkdir -p build && cd build
+    cmake ..
+    make -j4
+    make install
+    cd ../..
+    rm -rf reindexer/
+"""
+manylinux-x86_64-image = "manylinux2014"
+skip = ["*musllinux*"]
+
+[tool.cibuildwheel.macos]
+before-all = """
+    git clone https://github.com/Restream/reindexer.git
+    cd reindexer
+    ./dependencies.sh
+    mkdir -p build && cd build
+    cmake ..
+    make -j4
+    sudo make install
+    cd ../..
+    sudo rm -rf reindexer/
+"""
+repair-wheel-command = "delocate-wheel --require-archs arm64  --ignore-missing-dependencies --exclude 'Python.framework' -w {dest_dir} -v {wheel}"
+
+[build-system]
+requires = [
+    "setuptools",
+    "wheel",
+    "pybind11",
+    "build"
+]
+build-backend = "setuptools.build_meta"
