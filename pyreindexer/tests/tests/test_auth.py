@@ -1,4 +1,5 @@
 import os
+import platform
 import shutil
 from datetime import timedelta
 from pathlib import Path
@@ -23,6 +24,7 @@ def rx_server(request):
     if request.config.getoption("--mode") == "builtin":
         pytest.skip("auth tests run only for cproto mode")
     else:
+        rx_bin_path = request.config.getoption("--rx_bin_path")
         storage = f"/tmp/reindex_test_auth"
         if os.path.exists(storage):
             shutil.rmtree(storage, ignore_errors=True)
@@ -30,7 +32,7 @@ def rx_server(request):
         with open(os.path.join(storage, "users.yml"), "w") as file:
             file.write(users_yml)
 
-        server = ReindexerServer(http_port=9089, rpc_port=6535, storage=storage, auth=True,
+        server = ReindexerServer(rx_bin_path=rx_bin_path, http_port=9089, rpc_port=6535, storage=storage, auth=True,
                                  user="owner", password="owner")
         server.run()
         yield
@@ -67,6 +69,15 @@ def close_connections(db, db_auth):
 
 
 class TestAuth:
+
+    @pytest.mark.skipif(platform.system().lower() == "darwin", reason="doesn't work on Mac OS for now")
+    def test_cant_connect_to_db_with_invalid_pass(self, db_auth):
+        # When ("Connect to DB")
+        # Then ("Connection is not established")
+        auth = ("invalid_pass", "invalid_pass")
+        err_msg = f"Errors occurred when parsing the URL to mask user credentials"
+        assert_that(calling(db_auth).with_args(auth),
+                    raises(ApiError, pattern=err_msg))
 
     @pytest.mark.parametrize("auth", [
         ("owner", "owner"),
