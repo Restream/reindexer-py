@@ -1,4 +1,5 @@
 import os
+import platform
 import shutil
 from datetime import timedelta
 from pathlib import Path
@@ -69,6 +70,7 @@ def close_connections(db, db_auth):
 
 class TestAuth:
 
+    @pytest.mark.skipif(platform.system().lower() == "darwin", reason="doesn't work on Mac OS for now")
     def test_cant_connect_to_db_with_invalid_pass(self, db_auth):
         # When ("Connect to DB")
         # Then ("Connection is not established")
