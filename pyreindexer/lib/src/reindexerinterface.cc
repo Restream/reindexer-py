@@ -147,7 +147,7 @@ template <typename DBT>
 Error ReindexerInterface<DBT>::ExecSQL(std::string_view query, QueryResultsWrapper& result,
 									   std::chrono::milliseconds timeout) {
 	typename DBT::QueryResultsT qres(QRESULTS_FLAGS);
-	auto err = db_.WithTimeout(timeout).Select(query, qres);
+	auto err = db_.WithTimeout(timeout).ExecSQL(query, qres);
 	result.Wrap(std::move(qres));
 	return err;
 }
