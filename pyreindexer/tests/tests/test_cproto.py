@@ -4,6 +4,7 @@ from datetime import timedelta
 import pytest
 from hamcrest import *
 
+from pyreindexer.exceptions import ApiError
 from tests.helpers.api import ConnectorApi
 from tests.helpers.base_helper import prepare_ns_with_items
 
@@ -43,24 +44,32 @@ class TestCprotoOptions:
         prepare_ns_with_items(db)
 
     def test_cproto_options_zero_values(self, db):
-        db = db(reconnect_attempts=0, net_timeout=timedelta(milliseconds=0), sync_rxcoro_count=0)
+        db = db(reconnect_attempts=0, net_timeout=timedelta(milliseconds=0), sync_rxcoro_count=1)
         ns_name = "test_zero_val"
         items = prepare_ns_with_items(db, ns_name)
         query = f"SELECT * FROM {ns_name}"
         result = list(db.query.sql(query))
         assert_that(result, equal_to(items))
 
+    def test_cproto_options_zero_sync_rxcoro_count(self, db):
+        err_msg = "The number of synchronization coroutines must be in the range [1..10'000]. But was: 0"
+        assert_that(calling(db).with_args(sync_rxcoro_count=0), raises(ApiError, matching=has_string(err_msg)))
+
     def test_cproto_options_fetch_amount_zero_value(self, db):
         assert_that(calling(db).with_args(fetch_amount=0),
                     raises(ValueError, pattern="'fetch_amount' must be greater than zero"))
 
     def test_cproto_options_negative_values(self, db):
-        db = db(reconnect_attempts=-1, net_timeout=timedelta(milliseconds=-1), sync_rxcoro_count=-1)
+        db = db(reconnect_attempts=-1, net_timeout=timedelta(milliseconds=-1), sync_rxcoro_count=1)
         ns_name = "test_negative_val"
         items = prepare_ns_with_items(db, ns_name)
         query = f"SELECT * FROM {ns_name}"
         result = list(db.query.sql(query))
         assert_that(result, equal_to(items))
+
+    def test_cproto_options_negative_sync_rxcoro_count(self, db):
+        err_msg = "The number of synchronization coroutines must be in the range [1..10'000]. But was: 4294967295"
+        assert_that(calling(db).with_args(sync_rxcoro_count=-1), raises(ApiError, matching=has_string(err_msg)))
 
     def test_cproto_fetch_amount(self, db):
         """ Check that fetch amount doesn't affect the amount of total items returned """
@@ -70,3 +79,12 @@ class TestCprotoOptions:
         query = f"SELECT * FROM {ns_name}"
         result = list(db.query.sql(query))
         assert_that(result, equal_to(items))
+
+class TestCprotoFunc:
+    def test_cproto_query_fail(self, db):
+        # NOTE: don't do this, it's wrong - just for testing
+        db = db(fetch_amount=1)
+        ns_name = "test_query_fail_fetch"
+        items = prepare_ns_with_items(db, ns_name)
+        ct = db.new_query(ns_name).select_fields('id').execute().count()
+        assert_that(ct, not_(equal_to(0)))

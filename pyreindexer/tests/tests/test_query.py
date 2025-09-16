@@ -52,7 +52,7 @@ class TestQuerySelect:
         # Given ("Create new query")
         query = db.query.new(namespace)
         # When ("Make select query with select fields")
-        select_result = list(query.select("id").must_execute())
+        select_result = list(query.select_fields("id").must_execute())
         # Then ("Check that selected items are in result")
         ids = [{"id": i["id"]} for i in items]
         assert_that(select_result, equal_to(ids), "Wrong query results")
@@ -109,7 +109,7 @@ class TestQuerySelect:
         # Given("Create namespace with index and items")
         # Given ("Create new query")
         sub_query = (db.query.new(namespace)
-                     .select("id")
+                     .select_fields("id")
                      .where("id", CondType.CondLt, 5)
                      .where("id", CondType.CondGe, 2))
         # When ("Make select query with where_subquery")
@@ -121,7 +121,7 @@ class TestQuerySelect:
     def test_query_select_where_query_all(self, db, namespace, index, items):
         # Given("Create namespace with index and items")
         # Given ("Create new query")
-        sub_query = db.query.new(namespace).select("id").where("id", CondType.CondLt, 5)
+        sub_query = db.query.new(namespace).select_fields("id").where("id", CondType.CondLt, 5)
         # When ("Make select query with where_query and subquery")
         query_result = list(db.query.new(namespace).where_query(sub_query, CondType.CondGe, 2).execute())
         # Then ("Check that all items selected in result")
@@ -130,7 +130,7 @@ class TestQuerySelect:
     def test_query_select_where_query_empty(self, db, namespace, index, items):
         # Given("Create namespace with index and items")
         # Given ("Create new query")
-        sub_query = db.query.new(namespace).select("id").where("id", CondType.CondEq, 5)
+        sub_query = db.query.new(namespace).select_fields("id").where("id", CondType.CondEq, 5)
         # When ("Make select query with where_query and subquery")
         query_result = list(db.query.new(namespace).where_query(sub_query, CondType.CondLe, 2).execute())
         # Then ("Check that result is empty")
@@ -884,7 +884,7 @@ class TestQueryKNN:
         param = IndexSearchParamBruteForce(k=k)
         query_result = list(
             query.where_knn("vec", random_vector(dimension), param)
-            .select("vectors()")
+            .select_fields("vectors()")
             .execute(timeout=timedelta(seconds=1)))
         # Then ("Check knn select result")
         check_response_has_close_to_ns_items(query_result, items)
@@ -907,7 +907,7 @@ class TestQueryKNN:
         param = IndexSearchParamHnsw(k=30, ef=30)
         query_result = list(
             query.where_knn("vec", random_vector(dimension), param)
-            .select("vectors()")
+            .select_fields("vectors()")
             .execute(timeout=timedelta(seconds=1)))
         # Then ("Check knn select result")
         check_response_has_close_to_ns_items(query_result, items)
@@ -931,7 +931,7 @@ class TestQueryKNN:
         param = IndexSearchParamHnsw(k=25, ef=40)
         query_result = list(
             query.where_knn("vec", random_vector(dimension), param)
-            .select("vectors()")
+            .select_fields("vectors()")
             .execute(timeout=timedelta(seconds=1)))
         # Then ("Check knn select result")
         check_response_has_close_to_ns_items(query_result, items)
@@ -952,7 +952,7 @@ class TestQueryKNN:
         param = IndexSearchParamIvf(k=30, nprobe=2)
         query_result = list(
             query.where_knn("vec", random_vector(dimension), param)
-            .select("vectors()")
+            .select_fields("vectors()")
             .execute(timeout=timedelta(seconds=1)))
         # Then ("Check knn select result")
         check_response_has_close_to_ns_items(query_result, items)
@@ -973,7 +973,7 @@ class TestQueryKNN:
         param = IndexSearchParamBruteForce(k=30)
         query_result = list(
             query.where_knn("vec", [3, 4], param)
-            .select("vectors()")
+            .select_fields("vectors()")
             .execute(timeout=timedelta(seconds=1)))
         # Then ("Check knn select result")
         check_response_has_only_close_to_items(query_result, items[1:8])
@@ -996,7 +996,7 @@ class TestQueryKNN:
         param = IndexSearchParamHnsw(ef=30, radius=50)
         query_result = list(
             query.where_knn("vec", [5, 5], param)
-            .select("vectors()")
+            .select_fields("vectors()")
             .execute(timeout=timedelta(seconds=1)))
         # Then ("Check knn select result")
         check_response_has_only_close_to_items(query_result, items[10:])
@@ -1018,7 +1018,7 @@ class TestQueryKNN:
         param = IndexSearchParamIvf(k=100, nprobe=2, radius=0.87)
         query_result = list(
             query.where_knn("vec", [3, 4], param)
-            .select("vectors()")
+            .select_fields("vectors()")
             .execute(timeout=timedelta(seconds=1)))
         # Then ("Check knn select result")
         check_response_has_only_close_to_items(query_result, items[1:8])
@@ -1029,7 +1029,7 @@ class TestQueryKNN:
         param = IndexSearchParamIvf(k=3, nprobe=2, radius=0.87)
         query_result = list(
             query.where_knn("vec", [3, 4], param)
-            .select("vectors()")
+            .select_fields("vectors()")
             .execute(timeout=timedelta(seconds=1)))
         # Then ("Check knn select result")
         check_response_has_only_close_to_items(query_result, items[1:4])

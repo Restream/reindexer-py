@@ -113,6 +113,7 @@ class QueryResults:
         """
 
         self.qres_iter_count = 0
+        self.qres_total_count = 0
         self.api.query_results_delete(self.qres_wrapper_ptr)
 
     def get_agg_results(self) -> dict:

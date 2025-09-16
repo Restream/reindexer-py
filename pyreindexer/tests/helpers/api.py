@@ -120,7 +120,7 @@ class QueryApiMethods:
     @api_method
     def sql(self, q, timeout: timedelta = ConnectorApi.default_timeout):
         """ Execute SQL query """
-        return self.api.select(q, timeout)
+        return self.api.exec_sql(q, timeout)
 
     @api_method
     def new(self, ns_name) -> Query:

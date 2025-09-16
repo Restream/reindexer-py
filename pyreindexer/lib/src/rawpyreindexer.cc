@@ -128,7 +128,7 @@ static PyObject* Connect(PyObject* self, PyObject* args) {
 	return pyErr(err);
 }
 
-static PyObject* Select(PyObject* self, PyObject* args) {
+static PyObject* ExecSQL(PyObject* self, PyObject* args) {
 	uintptr_t rx = 0;
 	char* query = nullptr;
 	unsigned timeout = 0;
@@ -138,7 +138,7 @@ static PyObject* Select(PyObject* self, PyObject* args) {
 
 	auto db = getWrapper<DBInterface>(rx);
 	auto qresult = std::make_unique<QueryResultsWrapper>(db);
-	auto err = qresult->Select(query, std::chrono::milliseconds(timeout));
+	auto err = qresult->ExecSQL(query, std::chrono::milliseconds(timeout));
 	if (!err.ok()) {
 		return Py_BuildValue("iskII", err.code(), err.what(), 0, 0, 0);
 	}
@@ -383,7 +383,7 @@ PyObject* itemModify(PyObject* self, PyObject* args, ItemModifyMode mode) {
 			err = getWrapper<DBInterface>(rx)->Delete(ns, item, std::chrono::milliseconds(timeout));
 			break;
 		default:
-			err = Error(ErrorCode::errLogic, "Unknown item modify mode");
+			err = {ErrorCode::errLogic, "Unknown item modify mode"};
 	}
 
 	return pyErr(err);
@@ -628,7 +628,7 @@ PyObject* modifyTransaction(PyObject* self, PyObject* args, ItemModifyMode mode)
 			err = transaction->Modify(std::move(item), mode);
 			return pyErr(err);
 		default:
-			return pyErr(Error(ErrorCode::errLogic, "Unknown item modify transaction mode"));
+			return pyErr({ErrorCode::errLogic, "Unknown item modify transaction mode"});
 	}
 
 	return nullptr;
@@ -1167,7 +1167,7 @@ static PyObject* executeQuery(PyObject* self, PyObject* args, ExecuteType type) 
 			err = query->UpdateQuery(qresult, std::chrono::milliseconds(timeout));
 			break;
 		default:
-			return pyErr(Error(ErrorCode::errLogic, "Unknown query execute mode"));
+			return pyErr({ErrorCode::errLogic, "Unknown query execute mode"});
 	}
 
 	if (!err.ok()) {
@@ -1308,7 +1308,7 @@ static PyObject* On(PyObject* self, PyObject* args) {
 	return pyErr(err);
 }
 
-static PyObject* SelectFilter(PyObject* self, PyObject* args) {
+static PyObject* SelectFields(PyObject* self, PyObject* args) {
 	uintptr_t queryWrapperAddr = 0;
 	PyObject* fieldsList = nullptr;  // borrowed ref after ParseTuple if passed
 	if (!PyArg_ParseTuple(args, "kO!", &queryWrapperAddr, &PyList_Type, &fieldsList)) {
@@ -1329,7 +1329,7 @@ static PyObject* SelectFilter(PyObject* self, PyObject* args) {
 		Py_DECREF(fieldsList);
 	}
 
-	getWrapper<QueryWrapper>(queryWrapperAddr)->SelectFilter(fields);
+	getWrapper<QueryWrapper>(queryWrapperAddr)->SelectFields(fields);
 
 	return pyErr({});
 }

@@ -27,7 +27,7 @@ class RxConnector(RaiserMixin):
                  start_special_thread (bool): Determines whether to request a special thread of execution
                     on the server for this connection
                  client_name (string): Proper name of the application (as a client for Reindexer-server)
-                 sync_rxcoro_count (int): Client concurrency per connection
+                 sync_rxcoro_count (int): Client concurrency per connection [1..10'000], default 10
 
             built-in options:
                 max_replication_updates_size (int): Max pended replication updates size in bytes
@@ -71,7 +71,7 @@ class RxConnector(RaiserMixin):
                  start_special_thread (bool): Determines whether to request a special thread of execution
                     on the server for this connection
                  client_name (string): Proper name of the application (as a client for Reindexer-server)
-                 sync_rxcoro_count (int): Client concurrency per connection
+                 sync_rxcoro_count (int): Client concurrency per connection [1..10'000], default 10
 
             built-in options:
                 max_replication_updates_size (int): Max pended replication updates size in bytes
@@ -436,7 +436,7 @@ class RxConnector(RaiserMixin):
         return res
 
     @raise_if_error
-    def select(self, query: str, timeout: timedelta = timedelta(milliseconds=0)) -> QueryResults:
+    def exec_sql(self, query: str, timeout: timedelta = timedelta(milliseconds=0)) -> QueryResults:
         """Executes an SQL query and returns query results
 
         #### Arguments:
@@ -456,7 +456,7 @@ class RxConnector(RaiserMixin):
 
         milliseconds: int = int(timeout / timedelta(milliseconds=1))
         self.err_code, self.err_msg, wrapper_ptr, iter_count, total_count =\
-            self.api.select(self.rx, query, milliseconds)
+            self.api.exec_sql(self.rx, query, milliseconds)
         return QueryResults(self.api, wrapper_ptr, iter_count, total_count)
 
     @raise_if_error
