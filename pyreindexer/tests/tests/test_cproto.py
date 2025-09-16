@@ -52,7 +52,8 @@ class TestCprotoOptions:
         assert_that(result, equal_to(items))
 
     def test_cproto_options_zero_sync_rxcoro_count(self, db):
-        err_msg = "The number of synchronization coroutines must be in the range [1..10'000]. But was: 0"
+        err_msg = ("The number of synchronization coroutines (SyncRxCoroCount in conf) must be"
+                   " in the range [1..10'000]. But was: 0")
         assert_that(calling(db).with_args(sync_rxcoro_count=0), raises(ApiError, matching=has_string(err_msg)))
 
     def test_cproto_options_fetch_amount_zero_value(self, db):
@@ -68,7 +69,8 @@ class TestCprotoOptions:
         assert_that(result, equal_to(items))
 
     def test_cproto_options_negative_sync_rxcoro_count(self, db):
-        err_msg = "The number of synchronization coroutines must be in the range [1..10'000]. But was: 4294967295"
+        err_msg = ("The number of synchronization coroutines (SyncRxCoroCount in conf) must be in"
+                   " the range [1..10'000]. But was: 4294967295")
         assert_that(calling(db).with_args(sync_rxcoro_count=-1), raises(ApiError, matching=has_string(err_msg)))
 
     def test_cproto_fetch_amount(self, db):
