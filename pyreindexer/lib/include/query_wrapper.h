@@ -9,7 +9,7 @@
 #include "tools/serializer.h"
 #include "tools/errors.h"
 #ifdef PYREINDEXER_CPROTO
-#include "client/cororeindexer.h"
+#include "client/reindexer.h"
 #else
 #include "core/reindexer.h"
 #endif
@@ -19,7 +19,7 @@
 namespace pyreindexer {
 
 #ifdef PYREINDEXER_CPROTO
-using DBInterface = ReindexerInterface<reindexer::client::CoroReindexer>;
+using DBInterface = ReindexerInterface<reindexer::client::Reindexer>;
 #else
 using DBInterface = ReindexerInterface<reindexer::Reindexer>;
 #endif
@@ -73,7 +73,7 @@ public:
 
 	reindexer::Error On(std::string_view joinField, CondType condition, std::string_view joinIndex);
 
-	void SelectFilter(const reindexer::h_vector<std::string, 2>& fields);
+	void SelectFields(const reindexer::h_vector<std::string, 2>& fields);
 
 	void AddFunctions(const reindexer::h_vector<std::string, 2>& functions);
 	void AddEqualPosition(const reindexer::h_vector<std::string, 2>& equalPositions);

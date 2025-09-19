@@ -1174,7 +1174,7 @@ class Query:
         self.api.on(self.query_wrapper_ptr, index, condition.value, join_index)
         return self
 
-    def select(self, *fields: str) -> Query:
+    def select_fields(self, *fields: str) -> Query:
         """Sets list of columns in this namespace to be finally selected.
             The columns should be specified in the same case as the jsonpaths corresponding to them.
             Non-existent fields and fields in the wrong case are ignored.
@@ -1193,7 +1193,7 @@ class Query:
 
         keys: list = self.__convert_strs_to_list(fields)
 
-        self.err_code, self.err_msg = self.api.select_filter(self.query_wrapper_ptr, keys)
+        self.err_code, self.err_msg = self.api.select_fields(self.query_wrapper_ptr, keys)
         self.__raise_on_error()
         return self
 

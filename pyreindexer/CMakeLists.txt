@@ -26,7 +26,7 @@ else()
     find_package(Python3 ${PY_MIN_VERSION} REQUIRED COMPONENTS Development)
 endif()
 
-set(RX_MIN_VERSION 5.4.0)
+set(RX_MIN_VERSION 5.7.0)
 find_package(reindexer CONFIG ${RX_MIN_VERSION} REQUIRED)
 
 option(WITH_GCOV "Enable instrumented code coverage build" OFF)

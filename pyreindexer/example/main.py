@@ -63,10 +63,10 @@ def create_items_example(db, namespace):
 def select_item_query_example(db, namespace):
     item_name_for_lookup = 'item_0'
 
-    return db.select(f"SELECT * FROM {namespace} WHERE name='{item_name_for_lookup}'", timedelta(milliseconds = 1000))
+    return db.exec_sql(f"SELECT * FROM {namespace} WHERE name='{item_name_for_lookup}'", timedelta(milliseconds = 1000))
 
 def select_all_item_query_example(db, namespace):
-    return db.select(f'SELECT * FROM {namespace}', timedelta(milliseconds = 1000))
+    return db.exec_sql(f'SELECT * FROM {namespace}', timedelta(milliseconds = 1000))
 
 def print_all_records_from_namespace(db, namespace, message):
     selected_items_tr = select_all_item_query_example(db, namespace)
@@ -196,7 +196,7 @@ def float_vector_hnsw_example(db):
     param = IndexSearchParamHnsw(k=20, ef=30)
     query_result = (db.new_query(namespace)
                         .where_knn(fv_index_name, random_vector(dimension), param)
-                        .select("vectors()")
+                        .select_fields("vectors()")
                         .with_rank()
                         .sort(index="rank()", desc=True)
                         .must_execute(timedelta(seconds = 1)))
@@ -261,7 +261,7 @@ def float_vector_brute_force_sql_example(db):
     value = random_vector(dimension)
     k: Final[int] = 27
     query = f'SELECT *, vectors() FROM {namespace} WHERE KNN({fv_index_name}, {value}, k={k})'
-    query_result = db.select(query, timedelta(seconds = 1))
+    query_result = db.exec_sql(query, timedelta(seconds = 1))
     print("Select where KNN: ", query_result.count())
     for item in query_result:
         print('item vec: ', item, end='\n')

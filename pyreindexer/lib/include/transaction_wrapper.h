@@ -4,7 +4,7 @@
 #include "core/query/query.h"
 
 #ifdef PYREINDEXER_CPROTO
-#include "client/cororeindexer.h"
+#include "client/reindexer.h"
 #else
 #include "core/reindexer.h"
 #endif
@@ -12,9 +12,9 @@
 namespace pyreindexer {
 
 #ifdef PYREINDEXER_CPROTO
-using DBInterface = ReindexerInterface<reindexer::client::CoroReindexer>;
-using TransactionT = reindexer::client::CoroTransaction;
-using QueryResultsT = reindexer::client::CoroQueryResults;
+using DBInterface = ReindexerInterface<reindexer::client::Reindexer>;
+using TransactionT = reindexer::client::Transaction;
+using QueryResultsT = reindexer::client::QueryResults;
 using ItemT = reindexer::client::Item;
 #else
 using DBInterface = ReindexerInterface<reindexer::Reindexer>;

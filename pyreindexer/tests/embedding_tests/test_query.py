@@ -33,7 +33,7 @@ class TestQueryWhereKNNString:
         param = IndexSearchParamBruteForce(k=k)
         query_result = list(
             query.where_knn_string("vec", "word", param)
-            .select("vectors()")
+            .select_fields("vectors()")
             .execute())
         # Then ("Check knn select result")
         check_response_has_close_to_ns_items(query_result, items)
@@ -58,7 +58,7 @@ class TestQueryWhereKNNString:
         param = IndexSearchParamHnsw(k=5, ef=5)
         query_result = list(
             query.where_knn_string("vec", "same same", param)
-            .select("vectors()")
+            .select_fields("vectors()")
             .execute())
         # Then ("Check knn select result")
         check_response_has_close_to_ns_items(query_result, items)
@@ -82,7 +82,7 @@ class TestQueryWhereKNNString:
         param = IndexSearchParamIvf(k=5, nprobe=2)
         query_result = list(
             query.where_knn_string("vec", "a b c", param)
-            .select("vectors()")
+            .select_fields("vectors()")
             .execute())
         # Then ("Check knn select result")
         check_response_has_close_to_ns_items(query_result, items)
@@ -109,7 +109,7 @@ class TestQueryWhereKNNString:
             db.item.insert("new_ns", item)
         # Given ("Create new query")
         param = IndexSearchParamHnsw(k=5, ef=5)
-        query = db.query.new(namespace).select("vectors()")
+        query = db.query.new(namespace).select_fields("vectors()")
         # When ("Try to add where_knn_string to the query")
         assert_that(calling(query.where_knn_string).with_args("vec", value, param),
                     raises(err_type, pattern=err_msg))
@@ -128,10 +128,10 @@ class TestQueryWhereKNNString:
             db.item.insert("new_ns", item)
         # Given ("Create new query")
         param = IndexSearchParamHnsw(k=5, ef=5)
-        query = db.query.new(namespace).where_knn_string("vec", "word", param).select("vectors()")
+        query = db.query.new(namespace).where_knn_string("vec", "word", param).select_fields("vectors()")
         # When ("Try to execute query without query_embedder")
         param = IndexSearchParamHnsw(k=5, ef=5)
-        query = query.where_knn_string("vec", "word", param).select("vectors()")
+        query = query.where_knn_string("vec", "word", param).select_fields("vectors()")
         err_msg = ("Failed to get embedding for 'vec'. Problem with client: Unexpected problem with client|"
                    "Trying to find knn by string. No Embedder configured for index 'vec'")
         assert_that(calling(query.execute).with_args(), raises(ApiError, pattern=err_msg))

@@ -18,7 +18,7 @@
     * [meta\_get](#pyreindexer.rx_connector.RxConnector.meta_get)
     * [meta\_delete](#pyreindexer.rx_connector.RxConnector.meta_delete)
     * [meta\_enum](#pyreindexer.rx_connector.RxConnector.meta_enum)
-    * [select](#pyreindexer.rx_connector.RxConnector.select)
+    * [exec\_sql](#pyreindexer.rx_connector.RxConnector.exec_sql)
     * [new\_transaction](#pyreindexer.rx_connector.RxConnector.new_transaction)
     * [new\_query](#pyreindexer.rx_connector.RxConnector.new_query)
 * [pyreindexer.query\_results](#pyreindexer.query_results)
@@ -89,7 +89,7 @@
     * [left\_join](#pyreindexer.query.Query.left_join)
     * [merge](#pyreindexer.query.Query.merge)
     * [on](#pyreindexer.query.Query.on)
-    * [select](#pyreindexer.query.Query.select)
+    * [select\_fields](#pyreindexer.query.Query.select_fields)
     * [functions](#pyreindexer.query.Query.functions)
     * [equal\_position](#pyreindexer.query.Query.equal_position)
 * [pyreindexer.index\_search\_params](#pyreindexer.index_search_params)
@@ -128,7 +128,7 @@ RxConnector provides a binding to Reindexer upon two shared libraries (hereinaft
              start_special_thread (bool): Determines whether to request a special thread of execution
                 on the server for this connection
              client_name (string): Proper name of the application (as a client for Reindexer-server)
-             sync_rxcoro_count (int): Client concurrency per connection
+             sync_rxcoro_count (int): Client concurrency per connection [1..10'000], default 10
 
         built-in options:
             max_replication_updates_size (int): Max pended replication updates size in bytes
@@ -522,12 +522,12 @@ Gets a list of metadata keys from a storage of Reindexer
     ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
     ApiError: Raises with an error message of API return on non-zero error code
 
-<a id="pyreindexer.rx_connector.RxConnector.select"></a>
+<a id="pyreindexer.rx_connector.RxConnector.exec_sql"></a>
 
-### RxConnector.select
+### RxConnector.exec_sql
 
 ```python
-def select(
+def exec_sql(
     query: str,
     timeout: timedelta = timedelta(milliseconds=0)) -> QueryResults
 ```
@@ -1800,12 +1800,12 @@ On specifies join condition
 #### Raises:
     QueryError: Raises with an error message when query is in an invalid state
 
-<a id="pyreindexer.query.Query.select"></a>
+<a id="pyreindexer.query.Query.select_fields"></a>
 
-### Query.select
+### Query.select_fields
 
 ```python
-def select(*fields: str) -> Query
+def select_fields(*fields: str) -> Query
 ```
 
 Sets list of columns in this namespace to be finally selected.

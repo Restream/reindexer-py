@@ -1,7 +1,5 @@
 #include "query_wrapper.h"
 
-#include <limits>
-
 #include "core/query/query.h"
 #include "core/query/queryentry.h"
 #include "core/keyvalue/uuid.h"
@@ -115,11 +113,11 @@ Error QueryWrapper::OpenBracket() {
 
 Error QueryWrapper::CloseBracket() {
 	if (nextOperation_ != OpType::OpAnd) {
-		return reindexer::Error(ErrorCode::errLogic, "Operation before close bracket");
+		return {ErrorCode::errLogic, "Operation before close bracket"};
 	}
 
 	if (openedBrackets_.empty()) {
-		return reindexer::Error(ErrorCode::errLogic, "Close bracket before open it");
+		return {ErrorCode::errLogic, "Close bracket before open it"};
 	}
 
 	ser_.PutVarUint(QueryItemType::QueryCloseBracket);
@@ -237,9 +235,9 @@ reindexer::Error QueryWrapper::BuildQuery(reindexer::Query& query) {
 	} catch (const reindexer::Error& err) {
 		error = err;
 	} catch (const std::exception& ex) {
-		error = reindexer::Error(ErrorCode::errQueryExec, ex.what());
+		error = {ErrorCode::errQueryExec, ex.what()};
 	} catch (...) {
-		error = reindexer::Error(ErrorCode::errQueryExec, "Internal error");
+		error = {ErrorCode::errQueryExec, "Internal error"};
 	}
 
 	return error;
@@ -254,7 +252,7 @@ reindexer::Error QueryWrapper::SelectQuery(std::unique_ptr<QueryResultsWrapper>&
 	}
 
 	if (query.IsWALQuery()) {
-		return reindexer::Error(ErrorCode::errQueryExec, "WAL queries are not supported");
+		return {ErrorCode::errQueryExec, "WAL queries are not supported"};
 	}
 
 	qr = std::make_unique<QueryResultsWrapper>(db_);
@@ -346,7 +344,7 @@ Error QueryWrapper::On(std::string_view joinField, CondType condition, std::stri
 	return {};
 }
 
-void QueryWrapper::SelectFilter(const reindexer::h_vector<std::string, 2>& fields) {
+void QueryWrapper::SelectFields(const reindexer::h_vector<std::string, 2>& fields) {
 	for (const auto& field : fields) {
 		ser_.PutVarUint(QueryItemType::QuerySelectFilter);
 		ser_.PutVString(field);

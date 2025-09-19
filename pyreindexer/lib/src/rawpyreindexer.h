@@ -18,7 +18,7 @@ namespace pyreindexer {
 static PyObject* Init(PyObject* self, PyObject* args);
 static PyObject* Destroy(PyObject* self, PyObject* args);
 static PyObject* Connect(PyObject* self, PyObject* args);
-static PyObject* Select(PyObject* self, PyObject* args);
+static PyObject* ExecSQL(PyObject* self, PyObject* args);
 // namespace
 static PyObject* NamespaceOpen(PyObject* self, PyObject* args);
 static PyObject* NamespaceClose(PyObject* self, PyObject* args);
@@ -98,7 +98,7 @@ static PyObject* SetExpression(PyObject* self, PyObject* args);
 static PyObject* Join(PyObject* self, PyObject* args);
 static PyObject* Merge(PyObject* self, PyObject* args);
 static PyObject* On(PyObject* self, PyObject* args);
-static PyObject* SelectFilter(PyObject* self, PyObject* args);
+static PyObject* SelectFields(PyObject* self, PyObject* args);
 static PyObject* AddFunctions(PyObject* self, PyObject* args);
 static PyObject* AddEqualPosition(PyObject* self, PyObject* args);
 
@@ -107,7 +107,7 @@ static PyMethodDef module_methods[] = {
 	{"init", Init, METH_VARARGS, "init reindexer instance"},
 	{"destroy", Destroy, METH_VARARGS, "destroy reindexer instance"},
 	{"connect", Connect, METH_VARARGS, "connect to reindexer database"},
-	{"select", Select, METH_VARARGS, "select query"},
+	{"exec_sql", ExecSQL, METH_VARARGS, "Execure SQL query"},
 	// namespace
 	{"namespace_open", NamespaceOpen, METH_VARARGS, "open namespace"},
 	{"namespace_close", NamespaceClose, METH_VARARGS, "close namespace"},
@@ -187,7 +187,7 @@ static PyMethodDef module_methods[] = {
 	{"join", Join, METH_VARARGS, "join 2 query"},
 	{"merge", Merge, METH_VARARGS, "merge 2 query"},
 	{"on", On, METH_VARARGS, "on specifies join condition"},
-	{"select_filter", SelectFilter, METH_VARARGS, "select add filter to fields of result's objects"},
+	{"select_fields", SelectFields, METH_VARARGS, "select add filter to fields of result's objects"},
 	{"functions", AddFunctions, METH_VARARGS, "add sql-functions to query"},
 	{"equal_position", AddEqualPosition, METH_VARARGS, "add equal position fields"},
 
