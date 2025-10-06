@@ -11,7 +11,7 @@ from pyreindexer.transaction import Transaction
 
 class RxConnector(RaiserMixin):
     """RxConnector provides a binding to Reindexer upon two shared libraries (hereinafter - APIs): 'rawpyreindexerb.so'
-        and 'rawpyreindexerc.so'. The first one is aimed to a builtin way usage. That API embeds Reindexer, so it could
+        and 'rawpyreindexerc.so'. The first one is aimed at builtin usage. That API embeds Reindexer, so it could
         be used right in-place as is. The second one acts as a lightweight client which establishes a connection to
         Reindexer server via RPC. The APIs interfaces are completely the same.
 
@@ -37,7 +37,7 @@ class RxConnector(RaiserMixin):
 
     #### Attributes:
         api (module): An API module loaded dynamically for Reindexer calls
-        rx (int): A memory pointer to Reindexer instance
+        rx (int): A memory pointer to the Reindexer instance
         err_code (int): The API error code
         err_msg (string): The API error message
 
@@ -107,7 +107,7 @@ class RxConnector(RaiserMixin):
             self._api_close()
 
     def close(self) -> None:
-        """Closes an API instance with Reindexer resources freeing
+        """Closes the API instance and frees Reindexer resources
 
         #### Raises:
             ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
@@ -121,9 +121,9 @@ class RxConnector(RaiserMixin):
         """Opens a namespace specified or creates a namespace if it does not exist
 
         #### Arguments:
-            namespace (string): A name of a namespace
+            namespace (string): The name of the namespace
             timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
                 A value of 0 disables the timeout (default value)
 
         #### Raises:
@@ -137,12 +137,12 @@ class RxConnector(RaiserMixin):
 
     @raise_if_error
     def namespace_close(self, namespace: str, timeout: timedelta = timedelta(milliseconds=0)) -> None:
-        """Closes a namespace specified
+        """Closes the specified namespace
 
         #### Arguments:
-            namespace (string): A name of a namespace
+            namespace (string): The name of the namespace
             timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
                 A value of 0 disables the timeout (default value)
 
         #### Raises:
@@ -156,12 +156,12 @@ class RxConnector(RaiserMixin):
 
     @raise_if_error
     def namespace_drop(self, namespace: str, timeout: timedelta = timedelta(milliseconds=0)) -> None:
-        """Drops a namespace specified
+        """Drops the specified namespace
 
         #### Arguments:
-            namespace (string): A name of a namespace
+            namespace (string): The name of the namespace
             timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
                 A value of 0 disables the timeout (default value)
 
         #### Raises:
@@ -182,7 +182,7 @@ class RxConnector(RaiserMixin):
             enum_not_opened (bool, optional): An enumeration mode flag. If it is
                 set then closed namespaces are in result list too. Defaults to False
             timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
                 A value of 0 disables the timeout (default value)
 
         #### Returns:
@@ -200,13 +200,13 @@ class RxConnector(RaiserMixin):
 
     @raise_if_error
     def index_add(self, namespace: str, index_def: Dict, timeout: timedelta = timedelta(milliseconds=0)) -> None:
-        """Adds an index to the namespace specified
+        """Adds an index to the specified namespace
 
         #### Arguments:
-            namespace (string): A name of a namespace
+            namespace (string): The name of the namespace
             index_def (dict): A dictionary of index definition
             timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
                 A value of 0 disables the timeout (default value)
 
         #### Raises:
@@ -220,13 +220,13 @@ class RxConnector(RaiserMixin):
 
     @raise_if_error
     def index_update(self, namespace: str, index_def: Dict, timeout: timedelta = timedelta(milliseconds=0)) -> None:
-        """Updates an index in the namespace specified
+        """Updates an index in the specified namespace
 
         #### Arguments:
-            namespace (string): A name of a namespace
+            namespace (string): The name of the namespace
             index_def (dict): A dictionary of index definition
             timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
                 A value of 0 disables the timeout (default value)
 
         #### Raises:
@@ -240,13 +240,13 @@ class RxConnector(RaiserMixin):
 
     @raise_if_error
     def index_drop(self, namespace: str, index_name: str, timeout: timedelta = timedelta(milliseconds=0)) -> None:
-        """Drops an index from the namespace specified
+        """Drops an index from the specified namespace
 
         #### Arguments:
-            namespace (string): A name of a namespace
+            namespace (string): The name of the namespace
             index_name (string): A name of an index
             timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
                 A value of 0 disables the timeout (default value)
 
         #### Raises:
@@ -261,14 +261,14 @@ class RxConnector(RaiserMixin):
     @raise_if_error
     def item_insert(self, namespace: str, item_def: Dict, precepts: List[str] = None,
                     timeout: timedelta = timedelta(milliseconds=0)) -> None:
-        """Inserts an item with its precepts to the namespace specified
+        """Inserts an item with its precepts into the specified namespace
 
         #### Arguments:
-            namespace (string): A name of a namespace
+            namespace (string): The name of the namespace
             item_def (dict): A dictionary of item definition
             precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
             timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
                 A value of 0 disables the timeout (default value)
 
         #### Raises:
@@ -284,14 +284,14 @@ class RxConnector(RaiserMixin):
     @raise_if_error
     def item_update(self, namespace: str, item_def: Dict, precepts: List[str] = None,
                     timeout: timedelta = timedelta(milliseconds=0)) -> None:
-        """Updates an item with its precepts in the namespace specified
+        """Updates an item with its precepts in the specified namespace
 
         #### Arguments:
-            namespace (string): A name of a namespace
+            namespace (string): The name of the namespace
             item_def (dict): A dictionary of item definition
             precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
             timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
                 A value of 0 disables the timeout (default value)
 
         #### Raises:
@@ -307,14 +307,14 @@ class RxConnector(RaiserMixin):
     @raise_if_error
     def item_upsert(self, namespace: str, item_def: Dict, precepts: List[str] = None,
                     timeout: timedelta = timedelta(milliseconds=0)) -> None:
-        """Updates an item with its precepts in the namespace specified. Creates the item if it not exists
+        """Updates an item with its precepts in the specified namespace. Creates the item if it does not exist
 
         #### Arguments:
-            namespace (string): A name of a namespace
+            namespace (string): The name of the namespace
             item_def (dict): A dictionary of item definition
             precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
             timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
                 A value of 0 disables the timeout (default value)
 
         #### Raises:
@@ -332,10 +332,10 @@ class RxConnector(RaiserMixin):
         """Deletes an item from the namespace specified
 
         #### Arguments:
-            namespace (string): A name of a namespace
+            namespace (string): The name of the namespace
             item_def (dict): A dictionary of item definition
             timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
                 A value of 0 disables the timeout (default value)
 
         #### Raises:
@@ -352,11 +352,11 @@ class RxConnector(RaiserMixin):
         """Puts metadata to a storage of Reindexer by key
 
         #### Arguments:
-            namespace (string): A name of a namespace
+            namespace (string): The name of the namespace
             key (string): A key in a storage of Reindexer for metadata keeping
             value (string): A metadata for storage
             timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
                 A value of 0 disables the timeout (default value)
 
         #### Raises:
@@ -373,10 +373,10 @@ class RxConnector(RaiserMixin):
         """Gets metadata from a storage of Reindexer by key specified
 
         #### Arguments:
-            namespace (string): A name of a namespace
+            namespace (string): The name of the namespace
             key (string): A key in a storage of Reindexer where metadata is kept
             timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
                 A value of 0 disables the timeout (default value)
 
         #### Returns:
@@ -397,10 +397,10 @@ class RxConnector(RaiserMixin):
         """Deletes metadata from a storage of Reindexer by key specified
 
         #### Arguments:
-            namespace (string): A name of a namespace
+            namespace (string): The name of the namespace
             key (string): A key in a storage of Reindexer where metadata is kept
             timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
                 A value of 0 disables the timeout (default value)
 
         #### Raises:
@@ -417,9 +417,9 @@ class RxConnector(RaiserMixin):
         """Gets a list of metadata keys from a storage of Reindexer
 
         #### Arguments:
-            namespace (string): A name of a namespace
+            namespace (string): The name of the namespace
             timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
                 A value of 0 disables the timeout (default value)
 
         #### Returns:
@@ -442,7 +442,7 @@ class RxConnector(RaiserMixin):
         #### Arguments:
             query (string): An SQL query
             timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
                 A value of 0 disables the timeout (default value)
 
         #### Returns:
@@ -465,9 +465,9 @@ class RxConnector(RaiserMixin):
             Warning: once a timeout is set, it will apply to all subsequent steps in the transaction
 
         #### Arguments:
-            namespace (string): A name of a namespace
+            namespace (string): The name of the namespace
             timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
                 A value of 0 disables the timeout (default value)
 
         #### Returns:
@@ -489,7 +489,7 @@ class RxConnector(RaiserMixin):
         """Creates a new query and return the query object to processing
 
         #### Arguments:
-            namespace (string): A name of a namespace
+            namespace (string): The name of the namespace
 
         #### Returns:
             (:obj:`Query`): A new query
@@ -526,7 +526,7 @@ class RxConnector(RaiserMixin):
         #### Arguments:
             dsn (string): The connection string which contains a protocol
             timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
                 A value of 0 disables the timeout (default value)
 
         #### Raises:
