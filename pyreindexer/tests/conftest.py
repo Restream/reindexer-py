@@ -19,7 +19,7 @@ def log_setup(request):
     log_fixture.info("Work with pyreindexer connector using {} mode".format(request.config.getoption("--mode")))
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="module", autouse=True)
 def rx_server(request):
     """
     Start reindexer server for cproto mode
@@ -28,13 +28,15 @@ def rx_server(request):
         yield
     else:
         rx_bin_path = request.config.getoption("--rx_bin_path")
-        server = ReindexerServer(rx_bin_path=rx_bin_path, http_port=9088, rpc_port=6534, storage="/tmp/reindex_test")
-        server.run()
+        module = request.node.nodeid.replace(":", "_")
+        server = ReindexerServer(rx_bin_path=rx_bin_path, http_port=9088, rpc_port=6534,
+                                 storage=f"/tmp/reindex_test_{module}")
+        server.run(module=module)
         yield
         server.terminate()
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def db(request):
     """
     Create a database

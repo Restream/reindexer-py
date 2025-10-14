@@ -114,8 +114,6 @@ class TestQueryWhereKNNString:
         assert_that(calling(query.where_knn_string).with_args("vec", value, param),
                     raises(err_type, pattern=err_msg))
 
-
-
     def test_query_where_knn_string_no_query_embedder_config(self, db, namespace, index):
         # Given ("Create float vector index")
         dimension: Final[int] = 5

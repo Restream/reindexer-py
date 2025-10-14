@@ -44,9 +44,10 @@ log_fixture.addHandler(console_handler)
 log_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../logs/')
 if not os.path.exists(log_folder):
     os.makedirs(log_folder)
-log_filename = os.path.join(os.path.dirname(log_folder), 'test_run_%s.txt' % (datetime.now().strftime('%d%b-%H:%M:%S')))
+filename = f"test_run_{datetime.now().strftime('%d%b-%H_%M_%S')}.txt"
+log_filepath = os.path.join(os.path.dirname(log_folder), filename)
 
-file_handler = logging.FileHandler(log_filename)
+file_handler = logging.FileHandler(log_filepath)
 file_handler.setLevel(logging.INFO)
 file_handler.setFormatter(formatter)
 log_api.addHandler(file_handler)
