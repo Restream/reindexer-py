@@ -80,3 +80,8 @@ jobs:
         run: |
           cd pyreindexer
           $GITHUB_WORKSPACE/.github/workflows/test.sh
+      - name: Store test artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: test_artif
+          path: tests/logs
