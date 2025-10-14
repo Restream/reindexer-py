@@ -10,17 +10,17 @@ jobs:
       fail-fast: false
       matrix:
         python: [ "3.13" ]
-        platform: [ ubuntu-24.04]
+        platform: [ ubuntu-24.04 ]
         include:
           - python: "3.8"
             platform: ubuntu-22.04
             distutils: stdlib
-#          - python: "3.10"
-#            platform: ubuntu-24.04
-#          - python: "3.11"
-#            platform: ubuntu-24.04
-#          - python: "3.12"
-#            platform: ubuntu-24.04
+    #          - python: "3.10"
+    #            platform: ubuntu-24.04
+    #          - python: "3.11"
+    #            platform: ubuntu-24.04
+    #          - python: "3.12"
+    #            platform: ubuntu-24.04
     runs-on: ${{ matrix.platform }}
     env:
       SETUPTOOLS_USE_DISTUTILS: ${{ matrix.distutils || 'local' }}
@@ -84,4 +84,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: test_artif
-          path: ${{ github.workspace }}/pyreindexer/tests
+          path: ${{ github.workspace }}/pyreindexer/tests/logs/server
