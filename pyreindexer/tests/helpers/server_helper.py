@@ -1,3 +1,4 @@
+import datetime
 import os
 import shlex
 import subprocess
@@ -37,10 +38,29 @@ class ReindexerServer:
         if self.auth:
             self.__cmd += " --security"
 
-    def run(self, *args):
+    @staticmethod
+    def _server_log_file(module):
+        log_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../logs/server")
+        if not os.path.exists(log_folder):
+            os.makedirs(log_folder, exist_ok=True)
+        if module and "/" in module:
+            file_name = module.split("/")
+            module = file_name[-1]
+            parent = f"{file_name[-2]}_"
+        elif module:
+            parent = ""
+        else:
+            module = ""
+            parent = ""
+        time_suffix = datetime.datetime.now().strftime('%d%b-%H_%M_%S.%f')
+        log_path = os.path.join(log_folder, f"{parent}{module}_{time_suffix}.txt".replace(":", "_"))
+        log_file = open(log_path, "w+", buffering=1)
+        return log_file
+
+    def run(self, *args, **kwargs):
         command = shlex.split(self.__cmd) + list(args)
-        self.proc = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                     universal_newlines=True, bufsize=1)
+        log_file = self._server_log_file(kwargs.get("module"))
+        self.proc = subprocess.Popen(command, stdout=log_file, stderr=log_file, cwd=self.rx_bin_path or None)
         self.is_running()
         log_fixture.info(f"Reindexer server started at {self.http_port} http port")
 

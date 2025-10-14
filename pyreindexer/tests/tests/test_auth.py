@@ -34,7 +34,7 @@ def rx_server(request):
 
         server = ReindexerServer(rx_bin_path=rx_bin_path, http_port=9089, rpc_port=6535, storage=storage, auth=True,
                                  user="owner", password="owner")
-        server.run()
+        server.run(module=request.node.nodeid)
         yield
         server.terminate()
 
