@@ -53,7 +53,7 @@ class ReindexerServer:
             module = ""
             parent = ""
         time_suffix = datetime.datetime.now().strftime('%d%b-%H_%M_%S.%f')
-        log_path = os.path.join(log_folder, f"{parent}{module}_{time_suffix}.txt".replace(":", "_"))
+        log_path = os.path.join(log_folder, f"{parent}{module}_{time_suffix}.txt")
         log_file = open(log_path, "w+", buffering=1)
         return log_file
 

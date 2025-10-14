@@ -28,8 +28,10 @@ def rx_server(request):
         yield
     else:
         rx_bin_path = request.config.getoption("--rx_bin_path")
-        server = ReindexerServer(rx_bin_path=rx_bin_path, http_port=9088, rpc_port=6534, storage="/tmp/reindex_test")
-        server.run(module=request.node.nodeid)
+        module = request.node.nodeid.replace(":", "_")
+        server = ReindexerServer(rx_bin_path=rx_bin_path, http_port=9088, rpc_port=6534,
+                                 storage=f"/tmp/reindex_test_{module}")
+        server.run(module=module)
         yield
         server.terminate()
 
