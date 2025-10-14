@@ -125,7 +125,7 @@ class Transaction:
 
     @raise_if_error
     def upsert(self, item_def: Dict, precepts: List[str] = None) -> None:
-        """Updates an item with its precepts to the transaction. Creates the item if it not exists
+        """Updates an item with its precepts to the transaction. Creates the item if it does not exist
             Warning: the timeout set when the transaction was created is used
 
         #### Arguments:
@@ -180,7 +180,7 @@ class Transaction:
 
         #### Arguments:
             timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
                 A value of 0 disables the timeout (default value)
 
         #### Raises:
@@ -199,7 +199,7 @@ class Transaction:
 
         #### Arguments:
             timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
                 A value of 0 disables the timeout (default value)
 
         #### Raises:
@@ -219,7 +219,7 @@ class Transaction:
 
         #### Arguments:
             timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
                 A value of 0 disables the timeout (default value)
 
         #### Raises:

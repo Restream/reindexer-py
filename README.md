@@ -1,103 +1,295 @@
 # The PyReindexer module provides a connector and its auxiliary tools for interaction with Reindexer. Reindexer static library or reindexer-dev package must be installed
 
-* [pyreindexer.rx\_connector](#pyreindexer.rx_connector)
-  * [RxConnector](#pyreindexer.rx_connector.RxConnector)
-    * [close](#pyreindexer.rx_connector.RxConnector.close)
-    * [namespace\_open](#pyreindexer.rx_connector.RxConnector.namespace_open)
-    * [namespace\_close](#pyreindexer.rx_connector.RxConnector.namespace_close)
-    * [namespace\_drop](#pyreindexer.rx_connector.RxConnector.namespace_drop)
-    * [namespaces\_enum](#pyreindexer.rx_connector.RxConnector.namespaces_enum)
-    * [index\_add](#pyreindexer.rx_connector.RxConnector.index_add)
-    * [index\_update](#pyreindexer.rx_connector.RxConnector.index_update)
-    * [index\_drop](#pyreindexer.rx_connector.RxConnector.index_drop)
-    * [item\_insert](#pyreindexer.rx_connector.RxConnector.item_insert)
-    * [item\_update](#pyreindexer.rx_connector.RxConnector.item_update)
-    * [item\_upsert](#pyreindexer.rx_connector.RxConnector.item_upsert)
-    * [item\_delete](#pyreindexer.rx_connector.RxConnector.item_delete)
-    * [meta\_put](#pyreindexer.rx_connector.RxConnector.meta_put)
-    * [meta\_get](#pyreindexer.rx_connector.RxConnector.meta_get)
-    * [meta\_delete](#pyreindexer.rx_connector.RxConnector.meta_delete)
-    * [meta\_enum](#pyreindexer.rx_connector.RxConnector.meta_enum)
-    * [exec\_sql](#pyreindexer.rx_connector.RxConnector.exec_sql)
-    * [new\_transaction](#pyreindexer.rx_connector.RxConnector.new_transaction)
-    * [new\_query](#pyreindexer.rx_connector.RxConnector.new_query)
-* [pyreindexer.query\_results](#pyreindexer.query_results)
-  * [QueryResults](#pyreindexer.query_results.QueryResults)
-    * [status](#pyreindexer.query_results.QueryResults.status)
-    * [count](#pyreindexer.query_results.QueryResults.count)
-    * [total\_count](#pyreindexer.query_results.QueryResults.total_count)
-    * [get\_agg\_results](#pyreindexer.query_results.QueryResults.get_agg_results)
-    * [get\_explain\_results](#pyreindexer.query_results.QueryResults.get_explain_results)
-* [pyreindexer.transaction](#pyreindexer.transaction)
-  * [Transaction](#pyreindexer.transaction.Transaction)
-    * [insert](#pyreindexer.transaction.Transaction.insert)
-    * [update](#pyreindexer.transaction.Transaction.update)
-    * [update\_query](#pyreindexer.transaction.Transaction.update_query)
-    * [upsert](#pyreindexer.transaction.Transaction.upsert)
-    * [delete](#pyreindexer.transaction.Transaction.delete)
-    * [delete\_query](#pyreindexer.transaction.Transaction.delete_query)
-    * [commit](#pyreindexer.transaction.Transaction.commit)
-    * [commit\_with\_count](#pyreindexer.transaction.Transaction.commit_with_count)
-    * [rollback](#pyreindexer.transaction.Transaction.rollback)
-* [pyreindexer.point](#pyreindexer.point)
-  * [Point](#pyreindexer.point.Point)
-* [pyreindexer.query](#pyreindexer.query)
-  * [Query](#pyreindexer.query.Query)
-    * [where](#pyreindexer.query.Query.where)
-    * [where\_query](#pyreindexer.query.Query.where_query)
-    * [where\_subquery](#pyreindexer.query.Query.where_subquery)
-    * [where\_composite](#pyreindexer.query.Query.where_composite)
-    * [where\_uuid](#pyreindexer.query.Query.where_uuid)
-    * [where\_between\_fields](#pyreindexer.query.Query.where_between_fields)
-    * [where\_knn](#pyreindexer.query.Query.where_knn)
-    * [where\_knn\_string](#pyreindexer.query.Query.where_knn_string)
-    * [open\_bracket](#pyreindexer.query.Query.open_bracket)
-    * [close\_bracket](#pyreindexer.query.Query.close_bracket)
-    * [match](#pyreindexer.query.Query.match)
-    * [dwithin](#pyreindexer.query.Query.dwithin)
-    * [distinct](#pyreindexer.query.Query.distinct)
-    * [aggregate\_sum](#pyreindexer.query.Query.aggregate_sum)
-    * [aggregate\_avg](#pyreindexer.query.Query.aggregate_avg)
-    * [aggregate\_min](#pyreindexer.query.Query.aggregate_min)
-    * [aggregate\_max](#pyreindexer.query.Query.aggregate_max)
-    * [aggregate\_facet](#pyreindexer.query.Query.aggregate_facet)
-    * [sort](#pyreindexer.query.Query.sort)
-    * [sort\_stpoint\_distance](#pyreindexer.query.Query.sort_stpoint_distance)
-    * [sort\_stfield\_distance](#pyreindexer.query.Query.sort_stfield_distance)
-    * [op\_and](#pyreindexer.query.Query.op_and)
-    * [op\_or](#pyreindexer.query.Query.op_or)
-    * [op\_not](#pyreindexer.query.Query.op_not)
-    * [request\_total](#pyreindexer.query.Query.request_total)
-    * [cached\_total](#pyreindexer.query.Query.cached_total)
-    * [limit](#pyreindexer.query.Query.limit)
-    * [offset](#pyreindexer.query.Query.offset)
-    * [debug](#pyreindexer.query.Query.debug)
-    * [strict](#pyreindexer.query.Query.strict)
-    * [explain](#pyreindexer.query.Query.explain)
-    * [with\_rank](#pyreindexer.query.Query.with_rank)
-    * [execute](#pyreindexer.query.Query.execute)
-    * [delete](#pyreindexer.query.Query.delete)
-    * [set\_object](#pyreindexer.query.Query.set_object)
-    * [set](#pyreindexer.query.Query.set)
-    * [drop](#pyreindexer.query.Query.drop)
-    * [expression](#pyreindexer.query.Query.expression)
-    * [update](#pyreindexer.query.Query.update)
-    * [must\_execute](#pyreindexer.query.Query.must_execute)
-    * [get](#pyreindexer.query.Query.get)
-    * [inner\_join](#pyreindexer.query.Query.inner_join)
-    * [join](#pyreindexer.query.Query.join)
-    * [left\_join](#pyreindexer.query.Query.left_join)
-    * [merge](#pyreindexer.query.Query.merge)
-    * [on](#pyreindexer.query.Query.on)
-    * [select\_fields](#pyreindexer.query.Query.select_fields)
-    * [functions](#pyreindexer.query.Query.functions)
-    * [equal\_position](#pyreindexer.query.Query.equal_position)
-* [pyreindexer.index\_search\_params](#pyreindexer.index_search_params)
-  * [IndexSearchParamBruteForce](#pyreindexer.index_search_params.IndexSearchParamBruteForce)
-  * [IndexSearchParamHnsw](#pyreindexer.index_search_params.IndexSearchParamHnsw)
-  * [IndexSearchParamIvf](#pyreindexer.index_search_params.IndexSearchParamIvf)
-* [pyreindexer.index\_definition](#pyreindexer.index_definition)
-  * [IndexDefinition](#pyreindexer.index_definition.IndexDefinition)
+- [The PyReindexer module provides a connector and its auxiliary tools for interaction with Reindexer. Reindexer static library or reindexer-dev package must be installed](#the-pyreindexer-module-provides-a-connector-and-its-auxiliary-tools-for-interaction-with-reindexer-reindexer-static-library-or-reindexer-dev-package-must-be-installed)
+- [pyreindexer.rx\_connector](#pyreindexerrx_connector)
+  - [RxConnector Objects](#rxconnector-objects)
+      - [Arguments:](#arguments)
+      - [Attributes:](#attributes)
+    - [RxConnector.close](#rxconnectorclose)
+      - [Raises:](#raises)
+    - [RxConnector.namespace\_open](#rxconnectornamespace_open)
+      - [Arguments:](#arguments-1)
+      - [Raises:](#raises-1)
+    - [RxConnector.namespace\_close](#rxconnectornamespace_close)
+      - [Arguments:](#arguments-2)
+      - [Raises:](#raises-2)
+    - [RxConnector.namespace\_drop](#rxconnectornamespace_drop)
+      - [Arguments:](#arguments-3)
+      - [Raises:](#raises-3)
+    - [RxConnector.namespaces\_enum](#rxconnectornamespaces_enum)
+      - [Arguments:](#arguments-4)
+      - [Returns:](#returns)
+      - [Raises:](#raises-4)
+    - [RxConnector.index\_add](#rxconnectorindex_add)
+      - [Arguments:](#arguments-5)
+      - [Raises:](#raises-5)
+    - [RxConnector.index\_update](#rxconnectorindex_update)
+      - [Arguments:](#arguments-6)
+      - [Raises:](#raises-6)
+    - [RxConnector.index\_drop](#rxconnectorindex_drop)
+      - [Arguments:](#arguments-7)
+      - [Raises:](#raises-7)
+    - [RxConnector.item\_insert](#rxconnectoritem_insert)
+      - [Arguments:](#arguments-8)
+      - [Raises:](#raises-8)
+    - [RxConnector.item\_update](#rxconnectoritem_update)
+      - [Arguments:](#arguments-9)
+      - [Raises:](#raises-9)
+    - [RxConnector.item\_upsert](#rxconnectoritem_upsert)
+      - [Arguments:](#arguments-10)
+      - [Raises:](#raises-10)
+    - [RxConnector.item\_delete](#rxconnectoritem_delete)
+      - [Arguments:](#arguments-11)
+      - [Raises:](#raises-11)
+    - [RxConnector.meta\_put](#rxconnectormeta_put)
+      - [Arguments:](#arguments-12)
+      - [Raises:](#raises-12)
+    - [RxConnector.meta\_get](#rxconnectormeta_get)
+      - [Arguments:](#arguments-13)
+      - [Returns:](#returns-1)
+      - [Raises:](#raises-13)
+    - [RxConnector.meta\_delete](#rxconnectormeta_delete)
+      - [Arguments:](#arguments-14)
+      - [Raises:](#raises-14)
+    - [RxConnector.meta\_enum](#rxconnectormeta_enum)
+      - [Arguments:](#arguments-15)
+      - [Returns:](#returns-2)
+      - [Raises:](#raises-15)
+    - [RxConnector.exec\_sql](#rxconnectorexec_sql)
+      - [Arguments:](#arguments-16)
+      - [Returns:](#returns-3)
+      - [Raises:](#raises-16)
+    - [RxConnector.new\_transaction](#rxconnectornew_transaction)
+      - [Arguments:](#arguments-17)
+      - [Returns:](#returns-4)
+      - [Raises:](#raises-17)
+    - [RxConnector.new\_query](#rxconnectornew_query)
+      - [Arguments:](#arguments-18)
+      - [Returns:](#returns-5)
+      - [Raises:](#raises-18)
+- [pyreindexer.query\_results](#pyreindexerquery_results)
+  - [QueryResults Objects](#queryresults-objects)
+      - [Attributes:](#attributes-1)
+    - [QueryResults.status](#queryresultsstatus)
+      - [Raises:](#raises-19)
+    - [QueryResults.count](#queryresultscount)
+      - [Returns](#returns-6)
+    - [QueryResults.total\_count](#queryresultstotal_count)
+      - [Returns](#returns-7)
+    - [QueryResults.get\_agg\_results](#queryresultsget_agg_results)
+      - [Returns](#returns-8)
+      - [Raises:](#raises-20)
+    - [QueryResults.get\_explain\_results](#queryresultsget_explain_results)
+      - [Returns](#returns-9)
+      - [Raises:](#raises-21)
+- [pyreindexer.transaction](#pyreindexertransaction)
+  - [Transaction Objects](#transaction-objects)
+      - [Attributes:](#attributes-2)
+    - [Transaction.insert](#transactioninsert)
+      - [Arguments:](#arguments-19)
+      - [Raises:](#raises-22)
+    - [Transaction.update](#transactionupdate)
+      - [Arguments:](#arguments-20)
+      - [Raises:](#raises-23)
+    - [Transaction.update\_query](#transactionupdate_query)
+      - [Arguments:](#arguments-21)
+      - [Raises:](#raises-24)
+    - [Transaction.upsert](#transactionupsert)
+      - [Arguments:](#arguments-22)
+      - [Raises:](#raises-25)
+    - [Transaction.delete](#transactiondelete)
+      - [Arguments:](#arguments-23)
+      - [Raises:](#raises-26)
+    - [Transaction.delete\_query](#transactiondelete_query)
+      - [Arguments:](#arguments-24)
+      - [Raises:](#raises-27)
+    - [Transaction.commit](#transactioncommit)
+      - [Arguments:](#arguments-25)
+      - [Raises:](#raises-28)
+    - [Transaction.commit\_with\_count](#transactioncommit_with_count)
+      - [Arguments:](#arguments-26)
+      - [Raises:](#raises-29)
+    - [Transaction.rollback](#transactionrollback)
+      - [Arguments:](#arguments-27)
+      - [Raises:](#raises-30)
+- [pyreindexer.point](#pyreindexerpoint)
+  - [Point Objects](#point-objects)
+      - [Attributes:](#attributes-3)
+- [pyreindexer.query](#pyreindexerquery)
+  - [Query Objects](#query-objects)
+      - [Attributes:](#attributes-4)
+    - [Query.where](#querywhere)
+      - [Arguments:](#arguments-28)
+      - [Returns:](#returns-10)
+      - [Raises:](#raises-31)
+    - [Query.where\_query](#querywhere_query)
+      - [Arguments:](#arguments-29)
+      - [Returns:](#returns-11)
+      - [Raises:](#raises-32)
+    - [Query.where\_subquery](#querywhere_subquery)
+      - [Arguments:](#arguments-30)
+      - [Returns:](#returns-12)
+    - [Query.where\_composite](#querywhere_composite)
+      - [Arguments:](#arguments-31)
+      - [Returns:](#returns-13)
+      - [Raises:](#raises-33)
+    - [Query.where\_uuid](#querywhere_uuid)
+      - [Arguments:](#arguments-32)
+      - [Returns:](#returns-14)
+      - [Raises:](#raises-34)
+    - [Query.where\_between\_fields](#querywhere_between_fields)
+      - [Arguments:](#arguments-33)
+      - [Returns:](#returns-15)
+    - [Query.where\_knn](#querywhere_knn)
+      - [Arguments:](#arguments-34)
+      - [Returns:](#returns-16)
+      - [Raises:](#raises-35)
+    - [Query.where\_knn\_string](#querywhere_knn_string)
+      - [Arguments:](#arguments-35)
+      - [Returns:](#returns-17)
+      - [Raises:](#raises-36)
+    - [Query.open\_bracket](#queryopen_bracket)
+      - [Returns:](#returns-18)
+      - [Raises:](#raises-37)
+    - [Query.close\_bracket](#queryclose_bracket)
+      - [Returns:](#returns-19)
+      - [Raises:](#raises-38)
+    - [Query.match](#querymatch)
+      - [Arguments:](#arguments-36)
+      - [Returns:](#returns-20)
+      - [Raises:](#raises-39)
+    - [Query.dwithin](#querydwithin)
+      - [Arguments:](#arguments-37)
+      - [Returns:](#returns-21)
+    - [Query.distinct](#querydistinct)
+      - [Arguments:](#arguments-38)
+      - [Returns:](#returns-22)
+    - [Query.aggregate\_sum](#queryaggregate_sum)
+      - [Arguments:](#arguments-39)
+      - [Returns:](#returns-23)
+    - [Query.aggregate\_avg](#queryaggregate_avg)
+      - [Arguments:](#arguments-40)
+      - [Returns:](#returns-24)
+    - [Query.aggregate\_min](#queryaggregate_min)
+      - [Arguments:](#arguments-41)
+      - [Returns:](#returns-25)
+    - [Query.aggregate\_max](#queryaggregate_max)
+      - [Arguments:](#arguments-42)
+      - [Returns:](#returns-26)
+    - [Query.aggregate\_facet](#queryaggregate_facet)
+      - [Arguments:](#arguments-43)
+      - [Returns:](#returns-27)
+    - [Query.sort](#querysort)
+      - [Arguments:](#arguments-44)
+      - [Returns:](#returns-28)
+      - [Raises:](#raises-40)
+    - [Query.sort\_stpoint\_distance](#querysort_stpoint_distance)
+      - [Arguments:](#arguments-45)
+      - [Returns:](#returns-29)
+    - [Query.sort\_stfield\_distance](#querysort_stfield_distance)
+      - [Arguments:](#arguments-46)
+      - [Returns:](#returns-30)
+      - [Raises:](#raises-41)
+    - [Query.op\_and](#queryop_and)
+      - [Returns:](#returns-31)
+    - [Query.op\_or](#queryop_or)
+      - [Returns:](#returns-32)
+    - [Query.op\_not](#queryop_not)
+      - [Returns:](#returns-33)
+    - [Query.request\_total](#queryrequest_total)
+      - [Arguments:](#arguments-47)
+      - [Returns:](#returns-34)
+    - [Query.cached\_total](#querycached_total)
+      - [Arguments:](#arguments-48)
+      - [Returns:](#returns-35)
+    - [Query.limit](#querylimit)
+      - [Arguments:](#arguments-49)
+      - [Returns:](#returns-36)
+    - [Query.offset](#queryoffset)
+      - [Arguments:](#arguments-50)
+      - [Returns:](#returns-37)
+    - [Query.debug](#querydebug)
+      - [Arguments:](#arguments-51)
+      - [Returns:](#returns-38)
+    - [Query.strict](#querystrict)
+      - [Arguments:](#arguments-52)
+      - [Returns:](#returns-39)
+    - [Query.explain](#queryexplain)
+      - [Returns:](#returns-40)
+    - [Query.with\_rank](#querywith_rank)
+      - [Returns:](#returns-41)
+    - [Query.execute](#queryexecute)
+      - [Arguments:](#arguments-53)
+      - [Returns:](#returns-42)
+      - [Raises:](#raises-42)
+    - [Query.delete](#querydelete)
+      - [Arguments:](#arguments-54)
+      - [Returns:](#returns-43)
+      - [Raises:](#raises-43)
+    - [Query.set\_object](#queryset_object)
+      - [Arguments:](#arguments-55)
+      - [Returns:](#returns-44)
+      - [Raises:](#raises-44)
+    - [Query.set](#queryset)
+      - [Arguments:](#arguments-56)
+      - [Returns:](#returns-45)
+      - [Raises:](#raises-45)
+    - [Query.drop](#querydrop)
+      - [Arguments:](#arguments-57)
+      - [Returns:](#returns-46)
+    - [Query.expression](#queryexpression)
+      - [Arguments:](#arguments-58)
+      - [Returns:](#returns-47)
+    - [Query.update](#queryupdate)
+      - [Arguments:](#arguments-59)
+      - [Returns:](#returns-48)
+      - [Raises:](#raises-46)
+    - [Query.must\_execute](#querymust_execute)
+      - [Arguments:](#arguments-60)
+      - [Returns:](#returns-49)
+      - [Raises:](#raises-47)
+    - [Query.get](#queryget)
+      - [Arguments:](#arguments-61)
+      - [Returns:](#returns-50)
+      - [Raises:](#raises-48)
+    - [Query.inner\_join](#queryinner_join)
+      - [Arguments:](#arguments-62)
+      - [Returns:](#returns-51)
+    - [Query.join](#queryjoin)
+      - [Arguments:](#arguments-63)
+      - [Returns:](#returns-52)
+    - [Query.left\_join](#queryleft_join)
+      - [Arguments:](#arguments-64)
+      - [Returns:](#returns-53)
+    - [Query.merge](#querymerge)
+      - [Arguments:](#arguments-65)
+      - [Returns:](#returns-54)
+    - [Query.on](#queryon)
+      - [Arguments:](#arguments-66)
+      - [Returns:](#returns-55)
+      - [Raises:](#raises-49)
+    - [Query.select\_fields](#queryselect_fields)
+      - [Arguments:](#arguments-67)
+      - [Returns:](#returns-56)
+      - [Raises:](#raises-50)
+    - [Query.functions](#queryfunctions)
+      - [Arguments:](#arguments-68)
+      - [Returns:](#returns-57)
+      - [Raises:](#raises-51)
+    - [Query.equal\_position](#queryequal_position)
+      - [Arguments:](#arguments-69)
+      - [Returns:](#returns-58)
+      - [Raises:](#raises-52)
+- [pyreindexer.index\_search\_params](#pyreindexerindex_search_params)
+  - [IndexSearchParamBruteForce Objects](#indexsearchparambruteforce-objects)
+      - [Attributes:](#attributes-5)
+  - [IndexSearchParamHnsw Objects](#indexsearchparamhnsw-objects)
+      - [Attributes:](#attributes-6)
+  - [IndexSearchParamIvf Objects](#indexsearchparamivf-objects)
+      - [Attributes:](#attributes-7)
+- [pyreindexer.index\_definition](#pyreindexerindex_definition)
+  - [IndexDefinition Objects](#indexdefinition-objects)
+      - [Arguments:](#arguments-70)
 
 <a id="pyreindexer.rx_connector"></a>
 
@@ -112,7 +304,7 @@ class RxConnector(RaiserMixin)
 ```
 
 RxConnector provides a binding to Reindexer upon two shared libraries (hereinafter - APIs): 'rawpyreindexerb.so'
-    and 'rawpyreindexerc.so'. The first one is aimed to a builtin way usage. That API embeds Reindexer, so it could
+    and 'rawpyreindexerc.so'. The first one is aimed at built-in usage. That API embeds Reindexer, so it could
     be used right in-place as is. The second one acts as a lightweight client which establishes a connection to
     Reindexer server via RPC. The APIs interfaces are completely the same.
 
@@ -138,7 +330,7 @@ RxConnector provides a binding to Reindexer upon two shared libraries (hereinaft
 
 #### Attributes:
     api (module): An API module loaded dynamically for Reindexer calls
-    rx (int): A memory pointer to Reindexer instance
+    rx (int): A memory pointer to the Reindexer instance
     err_code (int): The API error code
     err_msg (string): The API error message
 
@@ -150,7 +342,7 @@ RxConnector provides a binding to Reindexer upon two shared libraries (hereinaft
 def close() -> None
 ```
 
-Closes an API instance with Reindexer resources freeing
+Closes the API instance and frees Reindexer resources
 
 #### Raises:
     ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
@@ -167,9 +359,9 @@ def namespace_open(
 Opens a namespace specified or creates a namespace if it does not exist
 
 #### Arguments:
-    namespace (string): A name of a namespace
+    namespace (string): The name of the namespace
     timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-        Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+        Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
         A value of 0 disables the timeout (default value)
 
 #### Raises:
@@ -185,12 +377,12 @@ def namespace_close(
     namespace: str, timeout: timedelta = timedelta(milliseconds=0)) -> None
 ```
 
-Closes a namespace specified
+Closes the specified namespace
 
 #### Arguments:
-    namespace (string): A name of a namespace
+    namespace (string): The name of the namespace
     timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-        Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+        Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
         A value of 0 disables the timeout (default value)
 
 #### Raises:
@@ -206,12 +398,12 @@ def namespace_drop(
     namespace: str, timeout: timedelta = timedelta(milliseconds=0)) -> None
 ```
 
-Drops a namespace specified
+Drops the specified namespace
 
 #### Arguments:
-    namespace (string): A name of a namespace
+    namespace (string): The name of the namespace
     timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-        Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+        Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
         A value of 0 disables the timeout (default value)
 
 #### Raises:
@@ -235,7 +427,7 @@ Gets a list of namespaces available
     enum_not_opened (bool, optional): An enumeration mode flag. If it is
         set then closed namespaces are in result list too. Defaults to False
     timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-        Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+        Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
         A value of 0 disables the timeout (default value)
 
 #### Returns:
@@ -256,13 +448,13 @@ def index_add(
     timeout: timedelta = timedelta(milliseconds=0)) -> None
 ```
 
-Adds an index to the namespace specified
+Adds an index to the specified namespace
 
 #### Arguments:
-    namespace (string): A name of a namespace
+    namespace (string): The name of the namespace
     index_def (dict): A dictionary of index definition
     timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-        Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+        Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
         A value of 0 disables the timeout (default value)
 
 #### Raises:
@@ -280,13 +472,13 @@ def index_update(
     timeout: timedelta = timedelta(milliseconds=0)) -> None
 ```
 
-Updates an index in the namespace specified
+Updates an index in the specified namespace
 
 #### Arguments:
-    namespace (string): A name of a namespace
+    namespace (string): The name of the namespace
     index_def (dict): A dictionary of index definition
     timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-        Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+        Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
         A value of 0 disables the timeout (default value)
 
 #### Raises:
@@ -304,13 +496,13 @@ def index_drop(
     timeout: timedelta = timedelta(milliseconds=0)) -> None
 ```
 
-Drops an index from the namespace specified
+Drops an index from the specified namespace
 
 #### Arguments:
-    namespace (string): A name of a namespace
+    namespace (string): The name of the namespace
     index_name (string): A name of an index
     timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-        Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+        Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
         A value of 0 disables the timeout (default value)
 
 #### Raises:
@@ -330,14 +522,14 @@ def item_insert(
 ) -> None
 ```
 
-Inserts an item with its precepts to the namespace specified
+Inserts an item with its precepts into the specified namespace
 
 #### Arguments:
-    namespace (string): A name of a namespace
+    namespace (string): The name of the namespace
     item_def (dict): A dictionary of item definition
     precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
     timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-        Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+        Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
         A value of 0 disables the timeout (default value)
 
 #### Raises:
@@ -357,14 +549,14 @@ def item_update(
 ) -> None
 ```
 
-Updates an item with its precepts in the namespace specified
+Updates an item with its precepts in the specified namespace
 
 #### Arguments:
-    namespace (string): A name of a namespace
+    namespace (string): The name of the namespace
     item_def (dict): A dictionary of item definition
     precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
     timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-        Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+        Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
         A value of 0 disables the timeout (default value)
 
 #### Raises:
@@ -384,14 +576,14 @@ def item_upsert(
 ) -> None
 ```
 
-Updates an item with its precepts in the namespace specified. Creates the item if it not exists
+Updates an item with its precepts in the specified namespace. Creates the item if it does not exist
 
 #### Arguments:
-    namespace (string): A name of a namespace
+    namespace (string): The name of the namespace
     item_def (dict): A dictionary of item definition
     precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
     timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-        Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+        Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
         A value of 0 disables the timeout (default value)
 
 #### Raises:
@@ -412,10 +604,10 @@ def item_delete(
 Deletes an item from the namespace specified
 
 #### Arguments:
-    namespace (string): A name of a namespace
+    namespace (string): The name of the namespace
     item_def (dict): A dictionary of item definition
     timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-        Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+        Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
         A value of 0 disables the timeout (default value)
 
 #### Raises:
@@ -437,11 +629,11 @@ def meta_put(
 Puts metadata to a storage of Reindexer by key
 
 #### Arguments:
-    namespace (string): A name of a namespace
+    namespace (string): The name of the namespace
     key (string): A key in a storage of Reindexer for metadata keeping
     value (string): A metadata for storage
     timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-        Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+        Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
         A value of 0 disables the timeout (default value)
 
 #### Raises:
@@ -461,10 +653,10 @@ def meta_get(namespace: str,
 Gets metadata from a storage of Reindexer by key specified
 
 #### Arguments:
-    namespace (string): A name of a namespace
+    namespace (string): The name of the namespace
     key (string): A key in a storage of Reindexer where metadata is kept
     timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-        Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+        Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
         A value of 0 disables the timeout (default value)
 
 #### Returns:
@@ -487,10 +679,10 @@ def meta_delete(
 Deletes metadata from a storage of Reindexer by key specified
 
 #### Arguments:
-    namespace (string): A name of a namespace
+    namespace (string): The name of the namespace
     key (string): A key in a storage of Reindexer where metadata is kept
     timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-        Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+        Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
         A value of 0 disables the timeout (default value)
 
 #### Raises:
@@ -510,9 +702,9 @@ def meta_enum(
 Gets a list of metadata keys from a storage of Reindexer
 
 #### Arguments:
-    namespace (string): A name of a namespace
+    namespace (string): The name of the namespace
     timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-        Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+        Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
         A value of 0 disables the timeout (default value)
 
 #### Returns:
@@ -537,7 +729,7 @@ Executes an SQL query and returns query results
 #### Arguments:
     query (string): An SQL query
     timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-        Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+        Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
         A value of 0 disables the timeout (default value)
 
 #### Returns:
@@ -561,9 +753,9 @@ Starts a new transaction and return the transaction object to processing.
     Warning: once a timeout is set, it will apply to all subsequent steps in the transaction
 
 #### Arguments:
-    namespace (string): A name of a namespace
+    namespace (string): The name of the namespace
     timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-        Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+        Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
         A value of 0 disables the timeout (default value)
 
 #### Returns:
@@ -584,7 +776,7 @@ def new_query(namespace: str) -> Query
 Creates a new query and return the query object to processing
 
 #### Arguments:
-    namespace (string): A name of a namespace
+    namespace (string): The name of the namespace
 
 #### Returns:
     (:obj:`Query`): A new query
@@ -771,7 +963,7 @@ Updates items with the transaction
 def upsert(item_def: Dict, precepts: List[str] = None) -> None
 ```
 
-Updates an item with its precepts to the transaction. Creates the item if it not exists
+Updates an item with its precepts to the transaction. Creates the item if it does not exist
     Warning: the timeout set when the transaction was created is used
 
 #### Arguments:
@@ -831,7 +1023,7 @@ Applies changes
 
 #### Arguments:
     timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-        Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+        Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
         A value of 0 disables the timeout (default value)
 
 #### Raises:
@@ -850,7 +1042,7 @@ Applies changes and return the number of count of changed items
 
 #### Arguments:
     timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-        Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+        Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
         A value of 0 disables the timeout (default value)
 
 #### Raises:
@@ -869,7 +1061,7 @@ Rollbacks changes
 
 #### Arguments:
     timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-        Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+        Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
         A value of 0 disables the timeout (default value)
 
 #### Raises:
@@ -1532,7 +1724,7 @@ Executes a select query
 
 #### Arguments:
     timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-        Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+        Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
         A value of 0 disables the timeout (default value)
 
 #### Returns:
@@ -1554,7 +1746,7 @@ Executes a query, and delete items, matches query
 
 #### Arguments:
     timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-        Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+        Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
         A value of 0 disables the timeout (default value)
 
 #### Returns:
@@ -1650,7 +1842,7 @@ Executes update query, and update fields in items, which matches query
 
 #### Arguments:
     timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-        Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+        Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
         A value of 0 disables the timeout (default value)
 
 #### Returns:
@@ -1673,7 +1865,7 @@ Executes a query, and update fields in items, which matches query, with status c
 
 #### Arguments:
     timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-        Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+        Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
         A value of 0 disables the timeout (default value)
 
 #### Returns:
@@ -1695,7 +1887,7 @@ Executes a query, and return 1 JSON item
 
 #### Arguments:
     timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-        Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+        Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
         A value of 0 disables the timeout (default value)
 
 #### Returns:

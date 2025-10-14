@@ -860,7 +860,7 @@ class Query:
 
         #### Arguments:
             timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
                 A value of 0 disables the timeout (default value)
 
         #### Returns:
@@ -886,7 +886,7 @@ class Query:
 
         #### Arguments:
             timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
                 A value of 0 disables the timeout (default value)
 
         #### Returns:
@@ -984,7 +984,7 @@ class Query:
 
         #### Arguments:
             timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
                 A value of 0 disables the timeout (default value)
 
         #### Returns:
@@ -1010,7 +1010,7 @@ class Query:
 
         #### Arguments:
             timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
                 A value of 0 disables the timeout (default value)
 
         #### Returns:
@@ -1031,7 +1031,7 @@ class Query:
 
         #### Arguments:
             timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-                Minimum 1 millisecond, if set to a value less, it corresponds to disabling the timeout.
+                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
                 A value of 0 disables the timeout (default value)
 
         #### Returns:
