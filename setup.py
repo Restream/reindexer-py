@@ -46,7 +46,7 @@ with open('README.md', 'r', encoding='utf-8') as file:
     LONG_DESCRIPTION = file.read()
 
 setup(name=PACKAGE_NAME,
-      version='0.5.80000',
+      version='0.5.80001',
       description='A connector that allows to interact with Reindexer. Reindexer static library or reindexer-dev package must be installed',
       author='Igor Tulmentyev',
       author_email='contactus@reindexer.io',
@@ -74,7 +74,7 @@ setup(name=PACKAGE_NAME,
           'tests/**/*.py'
       ]},
       python_requires='>=3.8',
-      install_requires=['PyHamcrest==2.0.2', 'pytest==6.2.5', 'requests==2.26.0'],
+      install_requires=['PyHamcrest==2.0.2', 'pytest>=6.2.5', 'requests>=2.26.0'],
       classifiers=[
           _c2('Development Status', '4 - Beta'),
           _c2('Environment', 'Console'),
@@ -101,5 +101,5 @@ setup(name=PACKAGE_NAME,
           _c2('Topic', 'Software Development', 'Libraries', 'Python Modules'),
           _c2('Topic', 'Software Development', 'Libraries', 'Application Frameworks'),
       ],
-      platforms=['ALT Linux', 'RED OS', 'Astra Linux', 'Ubuntu', 'MacOS'],
+      platforms=['Ubuntu', 'Debian', 'ALT Linux', 'RED OS', 'Astra Linux', 'MacOS'],
       )
