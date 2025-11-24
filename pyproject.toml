@@ -13,7 +13,7 @@ before-all = """
     cd ../..
     rm -rf reindexer/
 """
-manylinux-x86_64-image = "manylinux2014"
+manylinux-x86_64-image = "manylinux_2_28"
 skip = ["*musllinux*"]
 
 [tool.cibuildwheel.macos]
