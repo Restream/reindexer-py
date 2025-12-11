@@ -89,13 +89,14 @@ class Query:
         self.join_queries: list[Query] = []
         self.merged_queries: list[Query] = []
 
-    def _del(self):
+    def __del__(self):
         """Frees query memory
 
         """
 
         if self.query_wrapper_ptr > 0:
             self.api.destroy_query(self.query_wrapper_ptr)
+            self.query_wrapper_ptr = 0
 
     def __raise_on_error(self) -> None:
         """Checks if there is an error code and raises with an error message

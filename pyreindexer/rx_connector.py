@@ -106,7 +106,7 @@ class RxConnector(RaiserMixin):
 
         if self.rx > 0:
             for obj in self.rx_objects:
-                obj._del()
+                obj.__del__()
             self._api_close()
 
     def close(self) -> None:
