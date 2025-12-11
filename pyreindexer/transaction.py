@@ -40,13 +40,13 @@ class Transaction:
         self.err_code: int = 0
         self.err_msg: str = ""
 
-    def __del__(self):
+    def _del(self):
         """Rollbacks a transaction if it was not previously stopped
 
         """
 
         if self.transaction_wrapper_ptr > 0:
-            _, _ = self.api.rollback_transaction(self.transaction_wrapper_ptr)
+            self.api.rollback_transaction(self.transaction_wrapper_ptr, 0)
 
     def _raise_on_error(self):
         """Checks if there is an error code and raises with an error message

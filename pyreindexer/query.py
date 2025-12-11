@@ -89,7 +89,7 @@ class Query:
         self.join_queries: list[Query] = []
         self.merged_queries: list[Query] = []
 
-    def __del__(self):
+    def _del(self):
         """Frees query memory
 
         """

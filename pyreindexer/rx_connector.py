@@ -97,6 +97,7 @@ class RxConnector(RaiserMixin):
                                 start_special_thread, client_name, sync_rxcoro_count,
                                 max_replication_updates_size, allocator_cache_limit, allocator_cache_part)
         self._api_connect(dsn, net_timeout)
+        self.rx_objects = []
 
     def __del__(self):
         """Closes an API instance on a connector object deletion if the API is initialized
@@ -104,6 +105,8 @@ class RxConnector(RaiserMixin):
         """
 
         if self.rx > 0:
+            for obj in self.rx_objects:
+                obj._del()
             self._api_close()
 
     def close(self) -> None:
@@ -455,8 +458,8 @@ class RxConnector(RaiserMixin):
         """
 
         milliseconds: int = int(timeout / timedelta(milliseconds=1))
-        self.err_code, self.err_msg, wrapper_ptr, iter_count, total_count =\
-            self.api.exec_sql(self.rx, query, milliseconds)
+        self.err_code, self.err_msg, wrapper_ptr, iter_count, total_count = self.api.exec_sql(self.rx, query,
+                                                                                              milliseconds)
         return QueryResults(self.api, wrapper_ptr, iter_count, total_count)
 
     @raise_if_error
@@ -480,9 +483,11 @@ class RxConnector(RaiserMixin):
         """
 
         milliseconds: int = int(timeout / timedelta(milliseconds=1))
-        self.err_code, self.err_msg, transaction_wrapper_ptr =\
-            self.api.new_transaction(self.rx, namespace, milliseconds)
-        return Transaction(self.api, transaction_wrapper_ptr)
+        self.err_code, self.err_msg, transaction_wrapper_ptr = self.api.new_transaction(self.rx, namespace,
+                                                                                        milliseconds)
+        transaction = Transaction(self.api, transaction_wrapper_ptr)
+        self.rx_objects.append(transaction)
+        return transaction
 
     @raise_if_error
     def new_query(self, namespace: str) -> Query:
@@ -500,7 +505,9 @@ class RxConnector(RaiserMixin):
         """
 
         self.err_code, self.err_msg, query_wrapper_ptr = self.api.create_query(self.rx, namespace)
-        return Query(self.api, query_wrapper_ptr)
+        query = Query(self.api, query_wrapper_ptr)
+        self.rx_objects.append(query)
+        return query
 
     def _api_import(self, dsn: str) -> None:
         """Imports an API dynamically depending on protocol specified in dsn
