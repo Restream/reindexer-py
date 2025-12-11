@@ -26,7 +26,7 @@ class Transaction:
 
     """
 
-    def __init__(self, api, transaction_wrapper_ptr: int):
+    def __init__(self, rx, transaction_wrapper_ptr: int):
         """Constructs a new Reindexer transaction object
 
         #### Arguments:
@@ -35,7 +35,7 @@ class Transaction:
 
         """
 
-        self.api = api
+        self.rx = rx
         self.transaction_wrapper_ptr: int = transaction_wrapper_ptr
         self.err_code: int = 0
         self.err_msg: str = ""
@@ -46,8 +46,8 @@ class Transaction:
         """
 
         if self.transaction_wrapper_ptr > 0:
-            self.api.rollback_transaction(self.transaction_wrapper_ptr, 0)
-            self.transaction_wrapper_ptr = 0
+            print("TX")
+            self.rollback(timedelta(milliseconds=0))
 
     def _raise_on_error(self):
         """Checks if there is an error code and raises with an error message
@@ -87,7 +87,7 @@ class Transaction:
         """
 
         precepts = [] if precepts is None else precepts
-        self.err_code, self.err_msg = self.api.item_insert_transaction(self.transaction_wrapper_ptr, item_def, precepts)
+        self.err_code, self.err_msg = self.rx._tx_insert(self.transaction_wrapper_ptr, item_def, precepts)
 
     @raise_if_error
     def update(self, item_def: Dict, precepts: List[str] = None) -> None:
@@ -105,7 +105,7 @@ class Transaction:
         """
 
         precepts = [] if precepts is None else precepts
-        self.err_code, self.err_msg = self.api.item_update_transaction(self.transaction_wrapper_ptr, item_def, precepts)
+        self.err_code, self.err_msg = self.rx._tx_update(self.transaction_wrapper_ptr, item_def, precepts)
 
     @raise_if_error
     def update_query(self, query: Query) -> None:
@@ -122,7 +122,7 @@ class Transaction:
 
         """
 
-        self.err_code, self.err_msg = self.api.modify_transaction(self.transaction_wrapper_ptr, query.query_wrapper_ptr)
+        self.err_code, self.err_msg = self.rx._tx_update_query(self.transaction_wrapper_ptr, query.query_wrapper_ptr)
 
     @raise_if_error
     def upsert(self, item_def: Dict, precepts: List[str] = None) -> None:
@@ -140,7 +140,7 @@ class Transaction:
         """
 
         precepts = [] if precepts is None else precepts
-        self.err_code, self.err_msg = self.api.item_upsert_transaction(self.transaction_wrapper_ptr, item_def, precepts)
+        self.err_code, self.err_msg = self.rx._tx_upsert(self.transaction_wrapper_ptr, item_def, precepts)
 
     @raise_if_error
     def delete(self, item_def: Dict) -> None:
@@ -156,10 +156,10 @@ class Transaction:
 
         """
 
-        self.err_code, self.err_msg = self.api.item_delete_transaction(self.transaction_wrapper_ptr, item_def)
+        self.err_code, self.err_msg = self.rx._tx_delete(self.transaction_wrapper_ptr, item_def)
 
     @raise_if_error
-    def delete_query(self, query: Query):
+    def delete_query(self, query: Query) -> None:
         """Deletes items with the transaction
             Read-committed isolation is available for read operations.
             Changes made in active transaction is invisible to current and another transactions.
@@ -173,7 +173,7 @@ class Transaction:
 
         """
 
-        self.err_code, self.err_msg = self.api.delete_transaction(self.transaction_wrapper_ptr, query.query_wrapper_ptr)
+        self.err_code, self.err_msg = self.rx._tx_delete_query(self.transaction_wrapper_ptr, query.query_wrapper_ptr)
 
     @raise_if_error
     def commit(self, timeout: timedelta = timedelta(milliseconds=0)) -> None:
@@ -191,7 +191,7 @@ class Transaction:
         """
 
         milliseconds: int = int(timeout / timedelta(milliseconds=1))
-        self.err_code, self.err_msg, _ = self.api.commit_transaction(self.transaction_wrapper_ptr, milliseconds)
+        self.err_code, self.err_msg, _ = self.rx._tx_commit(self.transaction_wrapper_ptr, milliseconds)
         self.transaction_wrapper_ptr = 0
 
     @raise_if_error
@@ -210,7 +210,7 @@ class Transaction:
         """
 
         milliseconds: int = int(timeout / timedelta(milliseconds=1))
-        self.err_code, self.err_msg, count = self.api.commit_transaction(self.transaction_wrapper_ptr, milliseconds)
+        self.err_code, self.err_msg, count = self.rx._tx_commit_with_count(self.transaction_wrapper_ptr, milliseconds)
         self.transaction_wrapper_ptr = 0
         return count
 
@@ -230,5 +230,5 @@ class Transaction:
         """
 
         milliseconds: int = int(timeout / timedelta(milliseconds=1))
-        self.err_code, self.err_msg = self.api.rollback_transaction(self.transaction_wrapper_ptr, milliseconds)
+        self.err_code, self.err_msg = self.rx._tx_rollback(self.transaction_wrapper_ptr, milliseconds)
         self.transaction_wrapper_ptr = 0

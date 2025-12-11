@@ -97,7 +97,6 @@ class RxConnector(RaiserMixin):
                                 start_special_thread, client_name, sync_rxcoro_count,
                                 max_replication_updates_size, allocator_cache_limit, allocator_cache_part)
         self._api_connect(dsn, net_timeout)
-        self.rx_objects = []
 
     def __del__(self):
         """Closes an API instance on a connector object deletion if the API is initialized
@@ -105,9 +104,58 @@ class RxConnector(RaiserMixin):
         """
 
         if self.rx > 0:
-            for obj in self.rx_objects:
-                obj.__del__()
+            print("RX")
             self._api_close()
+
+    def _api_import(self, dsn: str) -> None:
+        """Imports an API dynamically depending on protocol specified in dsn
+
+        #### Arguments:
+            dsn (string): The connection string which contains a protocol
+
+        #### Raises:
+            ConnectionError: Raises an exception if a connection protocol is unrecognized
+
+        """
+
+        if dsn.startswith('builtin://'):
+            self.api = __import__('rawpyreindexerb')
+        elif dsn.startswith('cproto://'):
+            self.api = __import__('rawpyreindexerc')
+        else:
+            raise ConnectionError(f"Unknown Reindexer connection protocol for dsn: {dsn}")
+
+    def _api_connect(self, dsn: str, timeout: timedelta) -> None:
+        """Connects to a database specified in dsn. Obtains a pointer to Reindexer instance
+
+        #### Arguments:
+            dsn (string): The connection string which contains a protocol
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
+                A value of 0 disables the timeout (default value)
+
+        #### Raises:
+            ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
+            ApiError: Raises with an error message of API return on non-zero error code
+
+        """
+
+        self.raise_on_not_init()
+        milliseconds: int = int(timeout / timedelta(milliseconds=1))
+        self.err_code, self.err_msg = self.api.connect(self.rx, dsn, milliseconds)
+        self.raise_on_error()
+
+    def _api_close(self) -> None:
+        """Destructs Reindexer instance correctly and resets memory pointer
+
+        #### Raises:
+            ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
+
+        """
+
+        self.raise_on_not_init()
+        self.api.destroy(self.rx)
+        self.rx = 0
 
     def close(self) -> None:
         """Closes the API instance and frees Reindexer resources
@@ -460,7 +508,9 @@ class RxConnector(RaiserMixin):
         milliseconds: int = int(timeout / timedelta(milliseconds=1))
         self.err_code, self.err_msg, wrapper_ptr, iter_count, total_count = self.api.exec_sql(self.rx, query,
                                                                                               milliseconds)
-        return QueryResults(self.api, wrapper_ptr, iter_count, total_count)
+        return QueryResults(self, wrapper_ptr, iter_count, total_count)
+
+    ##### TRANSACTIONS
 
     @raise_if_error
     def new_transaction(self, namespace: str, timeout: timedelta = timedelta(milliseconds=0)) -> Transaction:
@@ -485,9 +535,36 @@ class RxConnector(RaiserMixin):
         milliseconds: int = int(timeout / timedelta(milliseconds=1))
         self.err_code, self.err_msg, transaction_wrapper_ptr = self.api.new_transaction(self.rx, namespace,
                                                                                         milliseconds)
-        transaction = Transaction(self.api, transaction_wrapper_ptr)
-        self.rx_objects.append(transaction)
-        return transaction
+        return Transaction(self, transaction_wrapper_ptr)
+
+    def _tx_insert(self, tx_ptr: int, item_def: Dict, precepts: List[str]):
+        return self.api.item_insert_transaction(tx_ptr, item_def, precepts)
+
+    def _tx_update(self, tx_ptr: int, item_def: Dict, precepts: List[str]):
+        return self.api.item_update_transaction(tx_ptr, item_def, precepts)
+
+    def _tx_update_query(self, tx_ptr: int, query: Query):
+        return self.api.modify_transaction(tx_ptr, query.query_wrapper_ptr)
+
+    def _tx_upsert(self, tx_ptr: int, item_def: Dict, precepts: List[str]):
+        return self.api.item_upsert_transaction(tx_ptr, item_def, precepts)
+
+    def _tx_delete(self, tx_ptr: int, item_def: Dict):
+        return self.api.item_delete_transaction(tx_ptr, item_def)
+
+    def _tx_delete_query(self, tx_ptr: int, query: Query):
+        return self.api.delete_transaction(tx_ptr, query.query_wrapper_ptr)
+
+    def _tx_commit(self, tx_ptr: int, timeout: int):
+        return self.api.commit_transaction(tx_ptr, timeout)
+
+    def _tx_commit_with_count(self, tx_ptr: int, timeout: int):
+        return self.api.commit_transaction(tx_ptr, timeout)
+
+    def _tx_rollback(self, tx_ptr: int, timeout: int):
+        return self.api.rollback_transaction(tx_ptr, timeout)
+
+    ##### QUERY
 
     @raise_if_error
     def new_query(self, namespace: str) -> Query:
@@ -505,56 +582,4 @@ class RxConnector(RaiserMixin):
         """
 
         self.err_code, self.err_msg, query_wrapper_ptr = self.api.create_query(self.rx, namespace)
-        query = Query(self.api, query_wrapper_ptr)
-        self.rx_objects.append(query)
-        return query
-
-    def _api_import(self, dsn: str) -> None:
-        """Imports an API dynamically depending on protocol specified in dsn
-
-        #### Arguments:
-            dsn (string): The connection string which contains a protocol
-
-        #### Raises:
-            ConnectionError: Raises an exception if a connection protocol is unrecognized
-
-        """
-
-        if dsn.startswith('builtin://'):
-            self.api = __import__('rawpyreindexerb')
-        elif dsn.startswith('cproto://'):
-            self.api = __import__('rawpyreindexerc')
-        else:
-            raise ConnectionError(f"Unknown Reindexer connection protocol for dsn: {dsn}")
-
-    def _api_connect(self, dsn: str, timeout: timedelta) -> None:
-        """Connects to a database specified in dsn. Obtains a pointer to Reindexer instance
-
-        #### Arguments:
-            dsn (string): The connection string which contains a protocol
-            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
-                A value of 0 disables the timeout (default value)
-
-        #### Raises:
-            ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
-            ApiError: Raises with an error message of API return on non-zero error code
-
-        """
-
-        self.raise_on_not_init()
-        milliseconds: int = int(timeout / timedelta(milliseconds=1))
-        self.err_code, self.err_msg = self.api.connect(self.rx, dsn, milliseconds)
-        self.raise_on_error()
-
-    def _api_close(self) -> None:
-        """Destructs Reindexer instance correctly and resets memory pointer
-
-        #### Raises:
-            ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
-
-        """
-
-        self.raise_on_not_init()
-        self.api.destroy(self.rx)
-        self.rx = 0
+        return Query(self.api, query_wrapper_ptr)
