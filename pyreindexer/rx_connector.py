@@ -5,11 +5,11 @@ from typing import Dict, List
 
 from pyreindexer.query import Query
 from pyreindexer.query_results import QueryResults
-from pyreindexer.raiser_mixin import RaiserMixin, raise_if_error
+from pyreindexer.raiser_mixin import RaiserRx
 from pyreindexer.transaction import Transaction
 
 
-class RxConnector(RaiserMixin):
+class RxConnector(RaiserRx):
     """RxConnector provides a binding to Reindexer upon two shared libraries (hereinafter - APIs): 'rawpyreindexerb.so'
         and 'rawpyreindexerc.so'. The first one is aimed at builtin usage. That API embeds Reindexer, so it could
         be used right in-place as is. The second one acts as a lightweight client which establishes a connection to
@@ -97,7 +97,8 @@ class RxConnector(RaiserMixin):
                                 start_special_thread, client_name, sync_rxcoro_count,
                                 max_replication_updates_size, allocator_cache_limit, allocator_cache_part)
         self._api_connect(dsn, net_timeout)
-        self.rx_objects = []
+        self.tx_ptrs = set()
+        self.query_ptrs = set()
 
     def __del__(self):
         """Closes an API instance on a connector object deletion if the API is initialized
@@ -105,409 +106,11 @@ class RxConnector(RaiserMixin):
         """
 
         if self.rx > 0:
-            for obj in self.rx_objects:
-                obj.__del__()
+            for tx_ptr in self.tx_ptrs:
+                self.api.rollback_transaction(tx_ptr, 0)
+            for q_ptr in self.query_ptrs:
+                self.api.destroy_query(q_ptr)
             self._api_close()
-
-    def close(self) -> None:
-        """Closes the API instance and frees Reindexer resources
-
-        #### Raises:
-            ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
-
-        """
-
-        self._api_close()
-
-    @raise_if_error
-    def namespace_open(self, namespace: str, timeout: timedelta = timedelta(milliseconds=0)) -> None:
-        """Opens a namespace specified or creates a namespace if it does not exist
-
-        #### Arguments:
-            namespace (string): The name of the namespace
-            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
-                A value of 0 disables the timeout (default value)
-
-        #### Raises:
-            ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
-            ApiError: Raises with an error message of API return on non-zero error code
-
-        """
-
-        milliseconds: int = int(timeout / timedelta(milliseconds=1))
-        self.err_code, self.err_msg = self.api.namespace_open(self.rx, namespace, milliseconds)
-
-    @raise_if_error
-    def namespace_close(self, namespace: str, timeout: timedelta = timedelta(milliseconds=0)) -> None:
-        """Closes the specified namespace
-
-        #### Arguments:
-            namespace (string): The name of the namespace
-            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
-                A value of 0 disables the timeout (default value)
-
-        #### Raises:
-            ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
-            ApiError: Raises with an error message of API return on non-zero error code
-
-        """
-
-        milliseconds: int = int(timeout / timedelta(milliseconds=1))
-        self.err_code, self.err_msg = self.api.namespace_close(self.rx, namespace, milliseconds)
-
-    @raise_if_error
-    def namespace_drop(self, namespace: str, timeout: timedelta = timedelta(milliseconds=0)) -> None:
-        """Drops the specified namespace
-
-        #### Arguments:
-            namespace (string): The name of the namespace
-            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
-                A value of 0 disables the timeout (default value)
-
-        #### Raises:
-            Exception: Raises with an error message when Reindexer instance is not initialized yet
-            Exception: Raises with an error message of API return on non-zero error code
-
-        """
-
-        milliseconds: int = int(timeout / timedelta(milliseconds=1))
-        self.err_code, self.err_msg = self.api.namespace_drop(self.rx, namespace, milliseconds)
-
-    @raise_if_error
-    def namespaces_enum(self, enum_not_opened: bool = False,
-                        timeout: timedelta = timedelta(milliseconds=0)) -> List[Dict[str, str]]:
-        """Gets a list of namespaces available
-
-        #### Arguments:
-            enum_not_opened (bool, optional): An enumeration mode flag. If it is
-                set then closed namespaces are in result list too. Defaults to False
-            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
-                A value of 0 disables the timeout (default value)
-
-        #### Returns:
-            (:obj:`list` of :obj:`dict`): A list of dictionaries which describe each namespace
-
-        #### Raises:
-            ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
-            ApiError: Raises with an error message of API return on non-zero error code
-
-        """
-
-        milliseconds: int = int(timeout / timedelta(milliseconds=1))
-        self.err_code, self.err_msg, res = self.api.namespaces_enum(self.rx, enum_not_opened, milliseconds)
-        return res
-
-    @raise_if_error
-    def index_add(self, namespace: str, index_def: Dict, timeout: timedelta = timedelta(milliseconds=0)) -> None:
-        """Adds an index to the specified namespace
-
-        #### Arguments:
-            namespace (string): The name of the namespace
-            index_def (dict): A dictionary of index definition
-            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
-                A value of 0 disables the timeout (default value)
-
-        #### Raises:
-            ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
-            ApiError: Raises with an error message of API return on non-zero error code
-
-        """
-
-        milliseconds: int = int(timeout / timedelta(milliseconds=1))
-        self.err_code, self.err_msg = self.api.index_add(self.rx, namespace, index_def, milliseconds)
-
-    @raise_if_error
-    def index_update(self, namespace: str, index_def: Dict, timeout: timedelta = timedelta(milliseconds=0)) -> None:
-        """Updates an index in the specified namespace
-
-        #### Arguments:
-            namespace (string): The name of the namespace
-            index_def (dict): A dictionary of index definition
-            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
-                A value of 0 disables the timeout (default value)
-
-        #### Raises:
-            ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
-            ApiError: Raises with an error message of API return on non-zero error code
-
-        """
-
-        milliseconds: int = int(timeout / timedelta(milliseconds=1))
-        self.err_code, self.err_msg = self.api.index_update(self.rx, namespace, index_def, milliseconds)
-
-    @raise_if_error
-    def index_drop(self, namespace: str, index_name: str, timeout: timedelta = timedelta(milliseconds=0)) -> None:
-        """Drops an index from the specified namespace
-
-        #### Arguments:
-            namespace (string): The name of the namespace
-            index_name (string): A name of an index
-            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
-                A value of 0 disables the timeout (default value)
-
-        #### Raises:
-            ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
-            ApiError: Raises with an error message of API return on non-zero error code
-
-        """
-
-        milliseconds: int = int(timeout / timedelta(milliseconds=1))
-        self.err_code, self.err_msg = self.api.index_drop(self.rx, namespace, index_name, milliseconds)
-
-    @raise_if_error
-    def item_insert(self, namespace: str, item_def: Dict, precepts: List[str] = None,
-                    timeout: timedelta = timedelta(milliseconds=0)) -> None:
-        """Inserts an item with its precepts into the specified namespace
-
-        #### Arguments:
-            namespace (string): The name of the namespace
-            item_def (dict): A dictionary of item definition
-            precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
-            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
-                A value of 0 disables the timeout (default value)
-
-        #### Raises:
-            ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
-            ApiError: Raises with an error message of API return on non-zero error code
-
-        """
-
-        precepts = [] if precepts is None else precepts
-        milliseconds: int = int(timeout / timedelta(milliseconds=1))
-        self.err_code, self.err_msg = self.api.item_insert(self.rx, namespace, item_def, precepts, milliseconds)
-
-    @raise_if_error
-    def item_update(self, namespace: str, item_def: Dict, precepts: List[str] = None,
-                    timeout: timedelta = timedelta(milliseconds=0)) -> None:
-        """Updates an item with its precepts in the specified namespace
-
-        #### Arguments:
-            namespace (string): The name of the namespace
-            item_def (dict): A dictionary of item definition
-            precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
-            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
-                A value of 0 disables the timeout (default value)
-
-        #### Raises:
-            ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
-            ApiError: Raises with an error message of API return on non-zero error code
-
-        """
-
-        precepts = [] if precepts is None else precepts
-        milliseconds: int = int(timeout / timedelta(milliseconds=1))
-        self.err_code, self.err_msg = self.api.item_update(self.rx, namespace, item_def, precepts, milliseconds)
-
-    @raise_if_error
-    def item_upsert(self, namespace: str, item_def: Dict, precepts: List[str] = None,
-                    timeout: timedelta = timedelta(milliseconds=0)) -> None:
-        """Updates an item with its precepts in the specified namespace. Creates the item if it does not exist
-
-        #### Arguments:
-            namespace (string): The name of the namespace
-            item_def (dict): A dictionary of item definition
-            precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
-            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
-                A value of 0 disables the timeout (default value)
-
-        #### Raises:
-            ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
-            ApiError: Raises with an error message of API return on non-zero error code
-
-        """
-
-        precepts = [] if precepts is None else precepts
-        milliseconds: int = int(timeout / timedelta(milliseconds=1))
-        self.err_code, self.err_msg = self.api.item_upsert(self.rx, namespace, item_def, precepts, milliseconds)
-
-    @raise_if_error
-    def item_delete(self, namespace: str, item_def: Dict, timeout: timedelta = timedelta(milliseconds=0)) -> None:
-        """Deletes an item from the namespace specified
-
-        #### Arguments:
-            namespace (string): The name of the namespace
-            item_def (dict): A dictionary of item definition
-            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
-                A value of 0 disables the timeout (default value)
-
-        #### Raises:
-            ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
-            ApiError: Raises with an error message of API return on non-zero error code
-
-        """
-
-        milliseconds: int = int(timeout / timedelta(milliseconds=1))
-        self.err_code, self.err_msg = self.api.item_delete(self.rx, namespace, item_def, [], milliseconds)
-
-    @raise_if_error
-    def meta_put(self, namespace: str, key: str, value: str, timeout: timedelta = timedelta(milliseconds=0)) -> None:
-        """Puts metadata to a storage of Reindexer by key
-
-        #### Arguments:
-            namespace (string): The name of the namespace
-            key (string): A key in a storage of Reindexer for metadata keeping
-            value (string): A metadata for storage
-            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
-                A value of 0 disables the timeout (default value)
-
-        #### Raises:
-            ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
-            ApiError: Raises with an error message of API return on non-zero error code
-
-        """
-
-        milliseconds: int = int(timeout / timedelta(milliseconds=1))
-        self.err_code, self.err_msg = self.api.meta_put(self.rx, namespace, key, value, milliseconds)
-
-    @raise_if_error
-    def meta_get(self, namespace: str, key: str, timeout: timedelta = timedelta(milliseconds=0)) -> str:
-        """Gets metadata from a storage of Reindexer by key specified
-
-        #### Arguments:
-            namespace (string): The name of the namespace
-            key (string): A key in a storage of Reindexer where metadata is kept
-            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
-                A value of 0 disables the timeout (default value)
-
-        #### Returns:
-            string: A metadata value
-
-        #### Raises:
-            ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
-            ApiError: Raises with an error message of API return on non-zero error code
-
-        """
-
-        milliseconds: int = int(timeout / timedelta(milliseconds=1))
-        self.err_code, self.err_msg, res = self.api.meta_get(self.rx, namespace, key, milliseconds)
-        return res
-
-    @raise_if_error
-    def meta_delete(self, namespace: str, key: str, timeout: timedelta = timedelta(milliseconds=0)) -> None:
-        """Deletes metadata from a storage of Reindexer by key specified
-
-        #### Arguments:
-            namespace (string): The name of the namespace
-            key (string): A key in a storage of Reindexer where metadata is kept
-            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
-                A value of 0 disables the timeout (default value)
-
-        #### Raises:
-            ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
-            ApiError: Raises with an error message of API return on non-zero error code
-
-        """
-
-        milliseconds: int = int(timeout / timedelta(milliseconds=1))
-        self.err_code, self.err_msg = self.api.meta_delete(self.rx, namespace, key, milliseconds)
-
-    @raise_if_error
-    def meta_enum(self, namespace: str, timeout: timedelta = timedelta(milliseconds=0)) -> List[str]:
-        """Gets a list of metadata keys from a storage of Reindexer
-
-        #### Arguments:
-            namespace (string): The name of the namespace
-            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
-                A value of 0 disables the timeout (default value)
-
-        #### Returns:
-            (:obj:`list` of :obj:`str`): A list of all metadata keys
-
-        #### Raises:
-            ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
-            ApiError: Raises with an error message of API return on non-zero error code
-
-        """
-
-        milliseconds: int = int(timeout / timedelta(milliseconds=1))
-        self.err_code, self.err_msg, res = self.api.meta_enum(self.rx, namespace, milliseconds)
-        return res
-
-    @raise_if_error
-    def exec_sql(self, query: str, timeout: timedelta = timedelta(milliseconds=0)) -> QueryResults:
-        """Executes an SQL query and returns query results
-
-        #### Arguments:
-            query (string): An SQL query
-            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
-                A value of 0 disables the timeout (default value)
-
-        #### Returns:
-            (:obj:`QueryResults`): A QueryResults iterator
-
-        #### Raises:
-            ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
-            ApiError: Raises with an error message of API return on non-zero error code
-
-        """
-
-        milliseconds: int = int(timeout / timedelta(milliseconds=1))
-        self.err_code, self.err_msg, wrapper_ptr, iter_count, total_count = self.api.exec_sql(self.rx, query,
-                                                                                              milliseconds)
-        return QueryResults(self.api, wrapper_ptr, iter_count, total_count)
-
-    @raise_if_error
-    def new_transaction(self, namespace: str, timeout: timedelta = timedelta(milliseconds=0)) -> Transaction:
-        """Starts a new transaction and return the transaction object to processing.
-            Warning: once a timeout is set, it will apply to all subsequent steps in the transaction
-
-        #### Arguments:
-            namespace (string): The name of the namespace
-            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
-                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
-                A value of 0 disables the timeout (default value)
-
-        #### Returns:
-            (:obj:`Transaction`): A new transaction
-
-        #### Raises:
-            ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
-            ApiError: Raises with an error message of API return on non-zero error code
-
-        """
-
-        milliseconds: int = int(timeout / timedelta(milliseconds=1))
-        self.err_code, self.err_msg, transaction_wrapper_ptr = self.api.new_transaction(self.rx, namespace,
-                                                                                        milliseconds)
-        transaction = Transaction(self.api, transaction_wrapper_ptr)
-        self.rx_objects.append(transaction)
-        return transaction
-
-    @raise_if_error
-    def new_query(self, namespace: str) -> Query:
-        """Creates a new query and return the query object to processing
-
-        #### Arguments:
-            namespace (string): The name of the namespace
-
-        #### Returns:
-            (:obj:`Query`): A new query
-
-        #### Raises:
-            ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
-
-        """
-
-        self.err_code, self.err_msg, query_wrapper_ptr = self.api.create_query(self.rx, namespace)
-        query = Query(self.api, query_wrapper_ptr)
-        self.rx_objects.append(query)
-        return query
 
     def _api_import(self, dsn: str) -> None:
         """Imports an API dynamically depending on protocol specified in dsn
@@ -558,3 +161,403 @@ class RxConnector(RaiserMixin):
         self.raise_on_not_init()
         self.api.destroy(self.rx)
         self.rx = 0
+
+    def close(self) -> None:
+        """Closes the API instance and frees Reindexer resources
+
+        #### Raises:
+            ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
+
+        """
+
+        self._api_close()
+
+    @RaiserRx.raise_if_error
+    def namespace_open(self, namespace: str, timeout: timedelta = timedelta(milliseconds=0)) -> None:
+        """Opens a namespace specified or creates a namespace if it does not exist
+
+        #### Arguments:
+            namespace (string): The name of the namespace
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
+                A value of 0 disables the timeout (default value)
+
+        #### Raises:
+            ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
+            ApiError: Raises with an error message of API return on non-zero error code
+
+        """
+
+        milliseconds: int = int(timeout / timedelta(milliseconds=1))
+        self.err_code, self.err_msg = self.api.namespace_open(self.rx, namespace, milliseconds)
+
+    @RaiserRx.raise_if_error
+    def namespace_close(self, namespace: str, timeout: timedelta = timedelta(milliseconds=0)) -> None:
+        """Closes the specified namespace
+
+        #### Arguments:
+            namespace (string): The name of the namespace
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
+                A value of 0 disables the timeout (default value)
+
+        #### Raises:
+            ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
+            ApiError: Raises with an error message of API return on non-zero error code
+
+        """
+
+        milliseconds: int = int(timeout / timedelta(milliseconds=1))
+        self.err_code, self.err_msg = self.api.namespace_close(self.rx, namespace, milliseconds)
+
+    @RaiserRx.raise_if_error
+    def namespace_drop(self, namespace: str, timeout: timedelta = timedelta(milliseconds=0)) -> None:
+        """Drops the specified namespace
+
+        #### Arguments:
+            namespace (string): The name of the namespace
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
+                A value of 0 disables the timeout (default value)
+
+        #### Raises:
+            Exception: Raises with an error message when Reindexer instance is not initialized yet
+            Exception: Raises with an error message of API return on non-zero error code
+
+        """
+
+        milliseconds: int = int(timeout / timedelta(milliseconds=1))
+        self.err_code, self.err_msg = self.api.namespace_drop(self.rx, namespace, milliseconds)
+
+    @RaiserRx.raise_if_error
+    def namespaces_enum(self, enum_not_opened: bool = False,
+                        timeout: timedelta = timedelta(milliseconds=0)) -> List[Dict[str, str]]:
+        """Gets a list of namespaces available
+
+        #### Arguments:
+            enum_not_opened (bool, optional): An enumeration mode flag. If it is
+                set then closed namespaces are in result list too. Defaults to False
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
+                A value of 0 disables the timeout (default value)
+
+        #### Returns:
+            (:obj:`list` of :obj:`dict`): A list of dictionaries which describe each namespace
+
+        #### Raises:
+            ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
+            ApiError: Raises with an error message of API return on non-zero error code
+
+        """
+
+        milliseconds: int = int(timeout / timedelta(milliseconds=1))
+        self.err_code, self.err_msg, res = self.api.namespaces_enum(self.rx, enum_not_opened, milliseconds)
+        return res
+
+    @RaiserRx.raise_if_error
+    def index_add(self, namespace: str, index_def: Dict, timeout: timedelta = timedelta(milliseconds=0)) -> None:
+        """Adds an index to the specified namespace
+
+        #### Arguments:
+            namespace (string): The name of the namespace
+            index_def (dict): A dictionary of index definition
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
+                A value of 0 disables the timeout (default value)
+
+        #### Raises:
+            ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
+            ApiError: Raises with an error message of API return on non-zero error code
+
+        """
+
+        milliseconds: int = int(timeout / timedelta(milliseconds=1))
+        self.err_code, self.err_msg = self.api.index_add(self.rx, namespace, index_def, milliseconds)
+
+    @RaiserRx.raise_if_error
+    def index_update(self, namespace: str, index_def: Dict, timeout: timedelta = timedelta(milliseconds=0)) -> None:
+        """Updates an index in the specified namespace
+
+        #### Arguments:
+            namespace (string): The name of the namespace
+            index_def (dict): A dictionary of index definition
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
+                A value of 0 disables the timeout (default value)
+
+        #### Raises:
+            ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
+            ApiError: Raises with an error message of API return on non-zero error code
+
+        """
+
+        milliseconds: int = int(timeout / timedelta(milliseconds=1))
+        self.err_code, self.err_msg = self.api.index_update(self.rx, namespace, index_def, milliseconds)
+
+    @RaiserRx.raise_if_error
+    def index_drop(self, namespace: str, index_name: str, timeout: timedelta = timedelta(milliseconds=0)) -> None:
+        """Drops an index from the specified namespace
+
+        #### Arguments:
+            namespace (string): The name of the namespace
+            index_name (string): A name of an index
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
+                A value of 0 disables the timeout (default value)
+
+        #### Raises:
+            ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
+            ApiError: Raises with an error message of API return on non-zero error code
+
+        """
+
+        milliseconds: int = int(timeout / timedelta(milliseconds=1))
+        self.err_code, self.err_msg = self.api.index_drop(self.rx, namespace, index_name, milliseconds)
+
+    @RaiserRx.raise_if_error
+    def item_insert(self, namespace: str, item_def: Dict, precepts: List[str] = None,
+                    timeout: timedelta = timedelta(milliseconds=0)) -> None:
+        """Inserts an item with its precepts into the specified namespace
+
+        #### Arguments:
+            namespace (string): The name of the namespace
+            item_def (dict): A dictionary of item definition
+            precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
+                A value of 0 disables the timeout (default value)
+
+        #### Raises:
+            ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
+            ApiError: Raises with an error message of API return on non-zero error code
+
+        """
+
+        precepts = [] if precepts is None else precepts
+        milliseconds: int = int(timeout / timedelta(milliseconds=1))
+        self.err_code, self.err_msg = self.api.item_insert(self.rx, namespace, item_def, precepts, milliseconds)
+
+    @RaiserRx.raise_if_error
+    def item_update(self, namespace: str, item_def: Dict, precepts: List[str] = None,
+                    timeout: timedelta = timedelta(milliseconds=0)) -> None:
+        """Updates an item with its precepts in the specified namespace
+
+        #### Arguments:
+            namespace (string): The name of the namespace
+            item_def (dict): A dictionary of item definition
+            precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
+                A value of 0 disables the timeout (default value)
+
+        #### Raises:
+            ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
+            ApiError: Raises with an error message of API return on non-zero error code
+
+        """
+
+        precepts = [] if precepts is None else precepts
+        milliseconds: int = int(timeout / timedelta(milliseconds=1))
+        self.err_code, self.err_msg = self.api.item_update(self.rx, namespace, item_def, precepts, milliseconds)
+
+    @RaiserRx.raise_if_error
+    def item_upsert(self, namespace: str, item_def: Dict, precepts: List[str] = None,
+                    timeout: timedelta = timedelta(milliseconds=0)) -> None:
+        """Updates an item with its precepts in the specified namespace. Creates the item if it does not exist
+
+        #### Arguments:
+            namespace (string): The name of the namespace
+            item_def (dict): A dictionary of item definition
+            precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
+                A value of 0 disables the timeout (default value)
+
+        #### Raises:
+            ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
+            ApiError: Raises with an error message of API return on non-zero error code
+
+        """
+
+        precepts = [] if precepts is None else precepts
+        milliseconds: int = int(timeout / timedelta(milliseconds=1))
+        self.err_code, self.err_msg = self.api.item_upsert(self.rx, namespace, item_def, precepts, milliseconds)
+
+    @RaiserRx.raise_if_error
+    def item_delete(self, namespace: str, item_def: Dict, timeout: timedelta = timedelta(milliseconds=0)) -> None:
+        """Deletes an item from the namespace specified
+
+        #### Arguments:
+            namespace (string): The name of the namespace
+            item_def (dict): A dictionary of item definition
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
+                A value of 0 disables the timeout (default value)
+
+        #### Raises:
+            ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
+            ApiError: Raises with an error message of API return on non-zero error code
+
+        """
+
+        milliseconds: int = int(timeout / timedelta(milliseconds=1))
+        self.err_code, self.err_msg = self.api.item_delete(self.rx, namespace, item_def, [], milliseconds)
+
+    @RaiserRx.raise_if_error
+    def meta_put(self, namespace: str, key: str, value: str, timeout: timedelta = timedelta(milliseconds=0)) -> None:
+        """Puts metadata to a storage of Reindexer by key
+
+        #### Arguments:
+            namespace (string): The name of the namespace
+            key (string): A key in a storage of Reindexer for metadata keeping
+            value (string): A metadata for storage
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
+                A value of 0 disables the timeout (default value)
+
+        #### Raises:
+            ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
+            ApiError: Raises with an error message of API return on non-zero error code
+
+        """
+
+        milliseconds: int = int(timeout / timedelta(milliseconds=1))
+        self.err_code, self.err_msg = self.api.meta_put(self.rx, namespace, key, value, milliseconds)
+
+    @RaiserRx.raise_if_error
+    def meta_get(self, namespace: str, key: str, timeout: timedelta = timedelta(milliseconds=0)) -> str:
+        """Gets metadata from a storage of Reindexer by key specified
+
+        #### Arguments:
+            namespace (string): The name of the namespace
+            key (string): A key in a storage of Reindexer where metadata is kept
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
+                A value of 0 disables the timeout (default value)
+
+        #### Returns:
+            string: A metadata value
+
+        #### Raises:
+            ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
+            ApiError: Raises with an error message of API return on non-zero error code
+
+        """
+
+        milliseconds: int = int(timeout / timedelta(milliseconds=1))
+        self.err_code, self.err_msg, res = self.api.meta_get(self.rx, namespace, key, milliseconds)
+        return res
+
+    @RaiserRx.raise_if_error
+    def meta_delete(self, namespace: str, key: str, timeout: timedelta = timedelta(milliseconds=0)) -> None:
+        """Deletes metadata from a storage of Reindexer by key specified
+
+        #### Arguments:
+            namespace (string): The name of the namespace
+            key (string): A key in a storage of Reindexer where metadata is kept
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
+                A value of 0 disables the timeout (default value)
+
+        #### Raises:
+            ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
+            ApiError: Raises with an error message of API return on non-zero error code
+
+        """
+
+        milliseconds: int = int(timeout / timedelta(milliseconds=1))
+        self.err_code, self.err_msg = self.api.meta_delete(self.rx, namespace, key, milliseconds)
+
+    @RaiserRx.raise_if_error
+    def meta_enum(self, namespace: str, timeout: timedelta = timedelta(milliseconds=0)) -> List[str]:
+        """Gets a list of metadata keys from a storage of Reindexer
+
+        #### Arguments:
+            namespace (string): The name of the namespace
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
+                A value of 0 disables the timeout (default value)
+
+        #### Returns:
+            (:obj:`list` of :obj:`str`): A list of all metadata keys
+
+        #### Raises:
+            ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
+            ApiError: Raises with an error message of API return on non-zero error code
+
+        """
+
+        milliseconds: int = int(timeout / timedelta(milliseconds=1))
+        self.err_code, self.err_msg, res = self.api.meta_enum(self.rx, namespace, milliseconds)
+        return res
+
+    @RaiserRx.raise_if_error
+    def exec_sql(self, query: str, timeout: timedelta = timedelta(milliseconds=0)) -> QueryResults:
+        """Executes an SQL query and returns query results
+
+        #### Arguments:
+            query (string): An SQL query
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
+                A value of 0 disables the timeout (default value)
+
+        #### Returns:
+            (:obj:`QueryResults`): A QueryResults iterator
+
+        #### Raises:
+            ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
+            ApiError: Raises with an error message of API return on non-zero error code
+
+        """
+
+        milliseconds: int = int(timeout / timedelta(milliseconds=1))
+        self.err_code, self.err_msg, wrapper_ptr, iter_count, total_count = self.api.exec_sql(self.rx, query,
+                                                                                              milliseconds)
+        return QueryResults(self.api, wrapper_ptr, iter_count, total_count)
+
+    @RaiserRx.raise_if_error
+    def new_transaction(self, namespace: str, timeout: timedelta = timedelta(milliseconds=0)) -> Transaction:
+        """Starts a new transaction and return the transaction object to processing.
+            Warning: once a timeout is set, it will apply to all subsequent steps in the transaction
+
+        #### Arguments:
+            namespace (string): The name of the namespace
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
+                A value of 0 disables the timeout (default value)
+
+        #### Returns:
+            (:obj:`Transaction`): A new transaction
+
+        #### Raises:
+            ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
+            ApiError: Raises with an error message of API return on non-zero error code
+
+        """
+
+        milliseconds: int = int(timeout / timedelta(milliseconds=1))
+        self.err_code, self.err_msg, transaction_wrapper_ptr = self.api.new_transaction(self.rx, namespace,
+                                                                                        milliseconds)
+        transaction = Transaction(self, transaction_wrapper_ptr)
+        self.tx_ptrs.add(transaction_wrapper_ptr)
+        return transaction
+
+    @RaiserRx.raise_if_error
+    def new_query(self, namespace: str) -> Query:
+        """Creates a new query and return the query object to processing
+
+        #### Arguments:
+            namespace (string): The name of the namespace
+
+        #### Returns:
+            (:obj:`Query`): A new query
+
+        #### Raises:
+            ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
+
+        """
+
+        self.err_code, self.err_msg, query_wrapper_ptr = self.api.create_query(self.rx, namespace)
+        query = Query(self, query_wrapper_ptr)
+        self.query_ptrs.add(query_wrapper_ptr)
+        return query
