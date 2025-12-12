@@ -97,8 +97,9 @@ class Query(RaiserQuery):
         """
 
         if self.query_wrapper_ptr > 0 and self.rx.rx > 0:
+            with self.rx._query_lock:
+                self.rx._query_ptrs.remove(self.query_wrapper_ptr)
             self.api.destroy_query(self.query_wrapper_ptr)
-            self.rx.query_ptrs.remove(self.query_wrapper_ptr)
             self.query_wrapper_ptr = 0
 
     @staticmethod

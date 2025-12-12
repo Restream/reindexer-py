@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import threading
 from datetime import timedelta
 from typing import Dict, List
 
@@ -97,8 +98,10 @@ class RxConnector(RaiserRx):
                                 start_special_thread, client_name, sync_rxcoro_count,
                                 max_replication_updates_size, allocator_cache_limit, allocator_cache_part)
         self._api_connect(dsn, net_timeout)
-        self.tx_ptrs = set()
-        self.query_ptrs = set()
+        self._tx_ptrs = set()
+        self._tx_lock = threading.Lock()
+        self._query_ptrs = set()
+        self._query_lock = threading.Lock()
 
     def __del__(self):
         """Closes an API instance on a connector object deletion if the API is initialized
@@ -106,10 +109,18 @@ class RxConnector(RaiserRx):
         """
 
         if self.rx > 0:
-            for tx_ptr in self.tx_ptrs:
+            with self._tx_lock:
+                tx_ptrs_list = list(self._tx_ptrs)
+                self._tx_ptrs.clear()
+            with self._query_lock:
+                query_ptrs_list = list(self._query_ptrs)
+                self._query_ptrs.clear()
+
+            for tx_ptr in tx_ptrs_list:
                 self.api.rollback_transaction(tx_ptr, 0)
-            for q_ptr in self.query_ptrs:
+            for q_ptr in query_ptrs_list:
                 self.api.destroy_query(q_ptr)
+
             self._api_close()
 
     def _api_import(self, dsn: str) -> None:
@@ -539,7 +550,8 @@ class RxConnector(RaiserRx):
         self.err_code, self.err_msg, transaction_wrapper_ptr = self.api.new_transaction(self.rx, namespace,
                                                                                         milliseconds)
         transaction = Transaction(self, transaction_wrapper_ptr)
-        self.tx_ptrs.add(transaction_wrapper_ptr)
+        with self._tx_lock:
+            self._tx_ptrs.add(transaction_wrapper_ptr)
         return transaction
 
     @RaiserRx.raise_if_error
@@ -559,5 +571,6 @@ class RxConnector(RaiserRx):
 
         self.err_code, self.err_msg, query_wrapper_ptr = self.api.create_query(self.rx, namespace)
         query = Query(self, query_wrapper_ptr)
-        self.query_ptrs.add(query_wrapper_ptr)
+        with self._query_lock:
+            self._query_ptrs.add(query_wrapper_ptr)
         return query

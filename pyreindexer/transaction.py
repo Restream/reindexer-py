@@ -40,7 +40,8 @@ class Transaction(RaiserTx):
             self.rollback(timedelta(milliseconds=0))
 
     def __finalize(self):
-        self.rx.tx_ptrs.remove(self.transaction_wrapper_ptr)
+        with self.rx._tx_lock:
+            self.rx._tx_ptrs.remove(self.transaction_wrapper_ptr)
         self.transaction_wrapper_ptr = 0
 
     @RaiserTx.raise_if_error
