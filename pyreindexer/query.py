@@ -6,10 +6,11 @@ from enum import Enum
 from typing import List, Optional, Union
 from uuid import UUID
 
-from pyreindexer.exceptions import ApiError, QueryError
+from pyreindexer.exceptions import QueryError
 from pyreindexer.index_search_params import IndexSearchParamBruteForce, IndexSearchParamHnsw, IndexSearchParamIvf
 from pyreindexer.point import Point
 from pyreindexer.query_results import QueryResults
+from raiser_mixin import RaiserQuery
 
 
 class ExtendedEnum(Enum):
@@ -58,7 +59,7 @@ class LogLevel(ExtendedEnum):
 simple_types = Union[int, str, bool, float]
 
 
-class Query:
+class Query(RaiserQuery):
     """An object representing the context of a Reindexer query
 
     #### Attributes:
@@ -72,7 +73,7 @@ class Query:
 
     """
 
-    def __init__(self, api, query_wrapper_ptr: int):
+    def __init__(self, rx, query_wrapper_ptr: int):
         """Constructs a new Reindexer query object
 
         #### Arguments:
@@ -81,7 +82,8 @@ class Query:
 
         """
 
-        self.api = api
+        self.rx = rx
+        self.api = rx.api
         self.query_wrapper_ptr: int = query_wrapper_ptr
         self.err_code: int = 0
         self.err_msg: str = ''
@@ -94,22 +96,14 @@ class Query:
 
         """
 
-        if self.query_wrapper_ptr > 0:
+        if self.query_wrapper_ptr > 0 and self.rx.rx > 0:
+            with self.rx._query_lock:
+                self.rx._query_ptrs.remove(self.query_wrapper_ptr)
             self.api.destroy_query(self.query_wrapper_ptr)
-
-    def __raise_on_error(self) -> None:
-        """Checks if there is an error code and raises with an error message
-
-        #### Raises:
-            ApiError: Raises with an error message of API return on non-zero error code
-
-        """
-
-        if self.err_code:
-            raise ApiError(self.err_msg)
+            self.query_wrapper_ptr = 0
 
     @staticmethod
-    def __where_knn_param(param: Union[IndexSearchParamBruteForce|IndexSearchParamHnsw|IndexSearchParamIvf]):
+    def __where_knn_param(param: Union[IndexSearchParamBruteForce | IndexSearchParamHnsw | IndexSearchParamIvf]):
         """Validate and convert KNN search parameters
 
         #### Arguments:
@@ -207,6 +201,7 @@ class Query:
 
         return [] if param is None else list(param)
 
+    @RaiserQuery.raise_if_error
     def __where(self, index: str, condition: CondType,
                 keys: Union[simple_types, tuple[list[simple_types], ...]]) -> Query:
         """Adds where condition to DB query with args
@@ -233,7 +228,6 @@ class Query:
         params = self.__convert_to_list(keys)
 
         self.err_code, self.err_msg = self.api.where(self.query_wrapper_ptr, index, condition.value, params)
-        self.__raise_on_error()
         return self
 
     def where(self, index: str, condition: CondType,
@@ -257,6 +251,7 @@ class Query:
 
         return self.__where(index, condition, keys)
 
+    @RaiserQuery.raise_if_error
     def where_query(self, sub_query: Query, condition: CondType,
                     keys: Union[simple_types, tuple[list[simple_types], ...]] = None) -> Query:
         """Adds sub-query where condition to DB query with args
@@ -278,11 +273,12 @@ class Query:
 
         params = self.__convert_to_list(keys)
 
-        self.err_code, self.err_msg = self.api.where_subquery(self.query_wrapper_ptr, sub_query.query_wrapper_ptr,
+        self.err_code, self.err_msg = self.api.where_subquery(self.query_wrapper_ptr,
+                                                              sub_query.query_wrapper_ptr,
                                                               condition.value, params)
-        self.__raise_on_error()
         return self
 
+    @RaiserQuery.raise_if_error
     def where_subquery(self, index: str, condition: CondType, sub_query: Query) -> Query:
         """Adds sub-query where condition to DB query
 
@@ -296,7 +292,8 @@ class Query:
 
         """
 
-        self.api.where_field_subquery(self.query_wrapper_ptr, index, condition.value, sub_query.query_wrapper_ptr)
+        self.api.where_field_subquery(self.query_wrapper_ptr, index, condition.value,
+                                      sub_query.query_wrapper_ptr)
         return self
 
     def where_composite(self, index: str, condition: CondType, keys: tuple[list[simple_types], ...]) -> Query:
@@ -323,6 +320,7 @@ class Query:
 
         return self.__where(index, condition, keys)
 
+    @RaiserQuery.raise_if_error
     def where_uuid(self, index: str, condition: CondType, *uuids: UUID) -> Query:
         """Adds where condition to DB query with UUID.
             `index` MUST be declared as uuid-string index in this case
@@ -345,10 +343,11 @@ class Query:
         for item in uuids:
             params.append(str(item))
 
-        self.err_code, self.err_msg = self.api.where_uuid(self.query_wrapper_ptr, index, condition.value, params)
-        self.__raise_on_error()
+        self.err_code, self.err_msg = self.api.where_uuid(self.query_wrapper_ptr, index, condition.value,
+                                                          params)
         return self
 
+    @RaiserQuery.raise_if_error
     def where_between_fields(self, first_field: str, condition: CondType, second_field: str) -> Query:
         """Adds comparing two fields where condition to DB query
 
@@ -365,8 +364,9 @@ class Query:
         self.api.where_between_fields(self.query_wrapper_ptr, first_field, condition.value, second_field)
         return self
 
+    @RaiserQuery.raise_if_error
     def where_knn(self, index: str, vec: List[float],
-                  param: Union[IndexSearchParamBruteForce|IndexSearchParamHnsw|IndexSearchParamIvf]) -> Query:
+                  param: Union[IndexSearchParamBruteForce | IndexSearchParamHnsw | IndexSearchParamIvf]) -> Query:
         """Adds where condition to DB query with float_vector as args.
             `index` MUST be declared as float_vector index in this case
 
@@ -391,13 +391,14 @@ class Query:
 
         k, is_k, radius, is_radius, ef, nprobe = self.__where_knn_param(param)
 
-        self.err_code, self.err_msg =\
-            self.api.where_knn(self.query_wrapper_ptr, index, is_k, k, is_radius, radius, ef, nprobe, vec)
-        self.__raise_on_error()
+        self.err_code, self.err_msg = self.api.where_knn(self.query_wrapper_ptr, index, is_k, k,
+                                                         is_radius, radius, ef, nprobe, vec)
         return self
 
+    @RaiserQuery.raise_if_error
     def where_knn_string(self, index: str, value: str,
-                         param: Union[IndexSearchParamBruteForce|IndexSearchParamHnsw|IndexSearchParamIvf]) -> Query:
+                         param: Union[
+                             IndexSearchParamBruteForce | IndexSearchParamHnsw | IndexSearchParamIvf]) -> Query:
         """Adds where condition to DB query with string as args.
             `index` MUST be declared as float_vector index in this case.
             WARNING: Only relevant if automatic embedding is configured for this float_vector index
@@ -423,11 +424,11 @@ class Query:
 
         k, is_k, radius, is_radius, ef, nprobe = self.__where_knn_param(param)
 
-        self.err_code, self.err_msg =\
-            self.api.where_knn_string(self.query_wrapper_ptr, index, is_k, k, is_radius, radius, ef, nprobe, value)
-        self.__raise_on_error()
+        self.err_code, self.err_msg = self.api.where_knn_string(self.query_wrapper_ptr, index, is_k, k,
+                                                                is_radius, radius, ef, nprobe, value)
         return self
 
+    @RaiserQuery.raise_if_error
     def open_bracket(self) -> Query:
         """Opens bracket for where condition to DB query
 
@@ -440,9 +441,9 @@ class Query:
         """
 
         self.err_code, self.err_msg = self.api.open_bracket(self.query_wrapper_ptr)
-        self.__raise_on_error()
         return self
 
+    @RaiserQuery.raise_if_error
     def close_bracket(self) -> Query:
         """Closes bracket for where condition to DB query
 
@@ -455,9 +456,9 @@ class Query:
         """
 
         self.err_code, self.err_msg = self.api.close_bracket(self.query_wrapper_ptr)
-        self.__raise_on_error()
         return self
 
+    @RaiserQuery.raise_if_error
     def match(self, index: str, *keys: str) -> Query:
         """Adds string EQ-condition to DB query with string args
 
@@ -476,10 +477,11 @@ class Query:
 
         params: list = self.__convert_strs_to_list(keys)
 
-        self.err_code, self.err_msg = self.api.where(self.query_wrapper_ptr, index, CondType.CondEq.value, params)
-        self.__raise_on_error()
+        self.err_code, self.err_msg = self.api.where(self.query_wrapper_ptr, index, CondType.CondEq.value,
+                                                     params)
         return self
 
+    @RaiserQuery.raise_if_error
     def dwithin(self, index: str, point: Point, distance: float) -> Query:
         """Adds DWithin condition to DB query
 
@@ -496,6 +498,7 @@ class Query:
         self.api.dwithin(self.query_wrapper_ptr, index, point.x, point.y, distance)
         return self
 
+    @RaiserQuery.raise_if_error
     def distinct(self, index: str) -> Query:
         """Performs distinct for a certain index. Return only items with uniq value of field
 
@@ -510,6 +513,7 @@ class Query:
         self.api.aggregate_distinct(self.query_wrapper_ptr, index)
         return self
 
+    @RaiserQuery.raise_if_error
     def aggregate_sum(self, index: str) -> Query:
         """Performs a summation of values for a specified index
 
@@ -524,6 +528,7 @@ class Query:
         self.api.aggregate_sum(self.query_wrapper_ptr, index)
         return self
 
+    @RaiserQuery.raise_if_error
     def aggregate_avg(self, index: str) -> Query:
         """Finds for the average at the specified index
 
@@ -538,6 +543,7 @@ class Query:
         self.api.aggregate_avg(self.query_wrapper_ptr, index)
         return self
 
+    @RaiserQuery.raise_if_error
     def aggregate_min(self, index: str) -> Query:
         """Finds for the minimum at the specified index
 
@@ -552,6 +558,7 @@ class Query:
         self.api.aggregate_min(self.query_wrapper_ptr, index)
         return self
 
+    @RaiserQuery.raise_if_error
     def aggregate_max(self, index: str) -> Query:
         """Finds for the maximum at the specified index
 
@@ -566,7 +573,7 @@ class Query:
         self.api.aggregate_max(self.query_wrapper_ptr, index)
         return self
 
-    class _AggregateFacet:
+    class _AggregateFacet(RaiserQuery):
         """An object representing the context of a Reindexer aggregate facet
 
         #### Attributes:
@@ -583,6 +590,7 @@ class Query:
 
             """
 
+            self.rx = query.rx
             self.api = query.api
             self.query_wrapper_ptr = query.query_wrapper_ptr
 
@@ -629,6 +637,7 @@ class Query:
             self.api.aggregation_sort(self.query_wrapper_ptr, field, desc)
             return self
 
+    @RaiserQuery.raise_if_error
     def aggregate_facet(self, *fields: str) -> Query._AggregateFacet:
         """Gets fields facet value. Applicable to multiple data fields and the result of that could be sorted
             by any data column or `count` and cut off by offset and limit. In order to support this functionality
@@ -645,9 +654,9 @@ class Query:
         params: list = self.__convert_strs_to_list(fields)
 
         self.err_code, self.err_msg = self.api.aggregation(self.query_wrapper_ptr, params)
-        self.__raise_on_error()
         return self._AggregateFacet(self)
 
+    @RaiserQuery.raise_if_error
     def sort(self, index: str, desc: bool = False,
              forced_sort_values: Union[simple_types, tuple[list[simple_types], ...]] = None) -> Query:
         """Applies sort order to return from query items. If forced_sort_values argument specified, then items equal to
@@ -671,7 +680,6 @@ class Query:
         values = self.__convert_to_list(forced_sort_values)
 
         self.err_code, self.err_msg = self.api.sort(self.query_wrapper_ptr, index, desc, values)
-        self.__raise_on_error()
         return self
 
     def sort_stpoint_distance(self, index: str, point: Point, desc: bool) -> Query:
@@ -711,6 +719,7 @@ class Query:
         request: str = f"ST_Distance({first_field},{second_field})"
         return self.sort(request, desc)
 
+    @RaiserQuery.raise_if_error
     def op_and(self) -> Query:
         """Next condition will be added with AND.
             This is the default operation for WHERE statement. Do not have to be called explicitly in user's code.
@@ -724,6 +733,7 @@ class Query:
         self.api.op_and(self.query_wrapper_ptr)
         return self
 
+    @RaiserQuery.raise_if_error
     def op_or(self) -> Query:
         """Next condition will be added with OR.
             Implements short-circuiting:
@@ -737,6 +747,7 @@ class Query:
         self.api.op_or(self.query_wrapper_ptr)
         return self
 
+    @RaiserQuery.raise_if_error
     def op_not(self) -> Query:
         """Next condition will be added with NOT AND.
             Implements short-circuiting: if the previous condition is failed the next will not be evaluated
@@ -749,6 +760,7 @@ class Query:
         self.api.op_not(self.query_wrapper_ptr)
         return self
 
+    @RaiserQuery.raise_if_error
     def request_total(self) -> Query:
         """Requests total items calculation
 
@@ -763,6 +775,7 @@ class Query:
         self.api.request_total(self.query_wrapper_ptr)
         return self
 
+    @RaiserQuery.raise_if_error
     def cached_total(self) -> Query:
         """Requests cached total items calculation
 
@@ -777,6 +790,7 @@ class Query:
         self.api.cached_total(self.query_wrapper_ptr)
         return self
 
+    @RaiserQuery.raise_if_error
     def limit(self, limit_items: int) -> Query:
         """Sets a limit (count) of returned items. Analog to sql LIMIT rowsNumber
 
@@ -791,6 +805,7 @@ class Query:
         self.api.limit(self.query_wrapper_ptr, limit_items)
         return self
 
+    @RaiserQuery.raise_if_error
     def offset(self, start_offset: int) -> Query:
         """Sets the number of the first selected row from result query
 
@@ -805,6 +820,7 @@ class Query:
         self.api.offset(self.query_wrapper_ptr, start_offset)
         return self
 
+    @RaiserQuery.raise_if_error
     def debug(self, level: LogLevel) -> Query:
         """Changes debug log level on server
 
@@ -819,6 +835,7 @@ class Query:
         self.api.debug(self.query_wrapper_ptr, level.value)
         return self
 
+    @RaiserQuery.raise_if_error
     def strict(self, mode: StrictMode) -> Query:
         """Changes strict mode
 
@@ -833,6 +850,7 @@ class Query:
         self.api.strict(self.query_wrapper_ptr, mode.value)
         return self
 
+    @RaiserQuery.raise_if_error
     def explain(self) -> Query:
         """Enables explain query
 
@@ -844,6 +862,7 @@ class Query:
         self.api.explain(self.query_wrapper_ptr)
         return self
 
+    @RaiserQuery.raise_if_error
     def with_rank(self) -> Query:
         """Outputs fulltext/float_vector rank. Allowed only with fulltext and KNN query
 
@@ -855,6 +874,7 @@ class Query:
         self.api.with_rank(self.query_wrapper_ptr)
         return self
 
+    @RaiserQuery.raise_if_error
     def execute(self, timeout: timedelta = timedelta(milliseconds=0)) -> QueryResults:
         """Executes a select query
 
@@ -876,11 +896,11 @@ class Query:
             return self.root.execute(timeout)
 
         milliseconds: int = int(timeout / timedelta(milliseconds=1))
-        (self.err_code, self.err_msg,
-         wrapper_ptr, iter_count, total_count) = self.api.select_query(self.query_wrapper_ptr, milliseconds)
-        self.__raise_on_error()
+        self.err_code, self.err_msg, wrapper_ptr, iter_count, total_count = self.api.select_query(
+            self.query_wrapper_ptr, milliseconds)
         return QueryResults(self.api, wrapper_ptr, iter_count, total_count)
 
+    @RaiserQuery.raise_if_error
     def delete(self, timeout: timedelta = timedelta(milliseconds=0)) -> int:
         """Executes a query, and delete items, matches query
 
@@ -903,9 +923,9 @@ class Query:
 
         milliseconds: int = int(timeout / timedelta(milliseconds=1))
         self.err_code, self.err_msg, number = self.api.delete_query(self.query_wrapper_ptr, milliseconds)
-        self.__raise_on_error()
         return number
 
+    @RaiserQuery.raise_if_error
     def set_object(self, field: str, values: list[simple_types]) -> Query:
         """Adds an update query to an object field for an update query
 
@@ -926,9 +946,9 @@ class Query:
             raise QueryError("A required parameter is not specified. `values` can't be None")
 
         self.err_code, self.err_msg = self.api.set_object(self.query_wrapper_ptr, field, values)
-        self.__raise_on_error()
         return self
 
+    @RaiserQuery.raise_if_error
     def set(self, field: str, values: list[simple_types]) -> Query:
         """Adds a field update request to the update request
 
@@ -947,9 +967,9 @@ class Query:
         values = [] if values is None else values
 
         self.err_code, self.err_msg = self.api.set(self.query_wrapper_ptr, field, values)
-        self.__raise_on_error()
         return self
 
+    @RaiserQuery.raise_if_error
     def drop(self, index: str) -> Query:
         """Drops a value for a field
 
@@ -964,6 +984,7 @@ class Query:
         self.api.drop(self.query_wrapper_ptr, index)
         return self
 
+    @RaiserQuery.raise_if_error
     def expression(self, field: str, value: str) -> Query:
         """Updates indexed field by arithmetical expression
 
@@ -979,6 +1000,7 @@ class Query:
         self.api.expression(self.query_wrapper_ptr, field, value)
         return self
 
+    @RaiserQuery.raise_if_error
     def update(self, timeout: timedelta = timedelta(milliseconds=0)) -> QueryResults:
         """Executes update query, and update fields in items, which matches query
 
@@ -1000,11 +1022,11 @@ class Query:
             raise QueryError("Update does not support joined queries")
 
         milliseconds: int = int(timeout / timedelta(milliseconds=1))
-        (self.err_code, self.err_msg,
-         wrapper_ptr, iter_count, total_count) = self.api.update_query(self.query_wrapper_ptr, milliseconds)
-        self.__raise_on_error()
+        self.err_code, self.err_msg, wrapper_ptr, iter_count, total_count = self.api.update_query(
+            self.query_wrapper_ptr, milliseconds)
         return QueryResults(self.api, wrapper_ptr, iter_count, total_count)
 
+    @RaiserQuery.raise_if_error
     def must_execute(self, timeout: timedelta = timedelta(milliseconds=0)) -> QueryResults:
         """Executes a query, and update fields in items, which matches query, with status check
 
@@ -1026,6 +1048,7 @@ class Query:
         result.status()
         return result
 
+    @RaiserQuery.raise_if_error
     def get(self, timeout: timedelta = timedelta(milliseconds=0)) -> (str, bool):
         """Executes a query, and return 1 JSON item
 
@@ -1052,6 +1075,7 @@ class Query:
 
         return '', False
 
+    @RaiserQuery.raise_if_error
     def __join(self, query: Query, field: str, join_type: JoinType) -> Query:
         """Joins queries
 
@@ -1130,6 +1154,7 @@ class Query:
 
         return self.__join(join_query, field, JoinType.LeftJoin)
 
+    @RaiserQuery.raise_if_error
     def merge(self, query: Query) -> Query:
         """Merges queries of the same type
 
@@ -1152,6 +1177,7 @@ class Query:
         self.api.merge(self.query_wrapper_ptr, query.query_wrapper_ptr)
         return self
 
+    @RaiserQuery.raise_if_error
     def on(self, index: str, condition: CondType, join_index: str) -> Query:
         """On specifies join condition
 
@@ -1174,6 +1200,7 @@ class Query:
         self.api.on(self.query_wrapper_ptr, index, condition.value, join_index)
         return self
 
+    @RaiserQuery.raise_if_error
     def select_fields(self, *fields: str) -> Query:
         """Sets list of columns in this namespace to be finally selected.
             The columns should be specified in the same case as the jsonpaths corresponding to them.
@@ -1194,9 +1221,9 @@ class Query:
         keys: list = self.__convert_strs_to_list(fields)
 
         self.err_code, self.err_msg = self.api.select_fields(self.query_wrapper_ptr, keys)
-        self.__raise_on_error()
         return self
 
+    @RaiserQuery.raise_if_error
     def functions(self, *functions: str) -> Query:
         """Adds sql-functions to query
 
@@ -1214,9 +1241,9 @@ class Query:
         funcs: list = self.__convert_strs_to_list(functions)
 
         self.err_code, self.err_msg = self.api.functions(self.query_wrapper_ptr, funcs)
-        self.__raise_on_error()
         return self
 
+    @RaiserQuery.raise_if_error
     def equal_position(self, *equal_position: str) -> Query:
         """Adds equal position fields to arrays queries
 
@@ -1234,5 +1261,4 @@ class Query:
         equal_pos: list = self.__convert_strs_to_list(equal_position)
 
         self.err_code, self.err_msg = self.api.equal_position(self.query_wrapper_ptr, equal_pos)
-        self.__raise_on_error()
         return self
