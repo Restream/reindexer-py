@@ -2,7 +2,7 @@ from datetime import timedelta
 from typing import Dict, List
 
 from pyreindexer.query import Query
-from raiser_mixin import RaiserTx
+from pyreindexer.raiser_mixin import RaiserTx
 
 
 class Transaction(RaiserTx):
