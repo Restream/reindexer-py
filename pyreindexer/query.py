@@ -10,7 +10,7 @@ from pyreindexer.exceptions import QueryError
 from pyreindexer.index_search_params import IndexSearchParamBruteForce, IndexSearchParamHnsw, IndexSearchParamIvf
 from pyreindexer.point import Point
 from pyreindexer.query_results import QueryResults
-from raiser_mixin import RaiserQuery
+from pyreindexer.raiser_mixin import RaiserQuery
 
 
 class ExtendedEnum(Enum):
