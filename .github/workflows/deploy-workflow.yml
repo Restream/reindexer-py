@@ -11,10 +11,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [ ubuntu-22.04, macos-14 ]
+        platform: [ ubuntu-22.04, macos-15 ]
     env:
       DEPLOY_BUILD_PYTHON_VERSION: "3.8"
-      MACOSX_DEPLOYMENT_TARGET: "14"
+      MACOSX_DEPLOYMENT_TARGET: "15"
     defaults:
       run:
         shell: bash
@@ -86,7 +86,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [ ubuntu-22.04, ubuntu-24.04, macos-14, macos-15 ]
+        platform: [ ubuntu-22.04, ubuntu-24.04, macos-15 ]
         python: [ "3.13" ]
     runs-on: ${{ matrix.platform }}
     needs: deploy
@@ -141,7 +141,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [ ubuntu-22.04, ubuntu-24.04, macos-14 ]
+        platform: [ ubuntu-22.04, ubuntu-24.04, macos-15 ]
         python: [ "3.8", "3.13" ]
         rxmode: [ builtin, cproto ]
     runs-on: ${{ matrix.platform }}

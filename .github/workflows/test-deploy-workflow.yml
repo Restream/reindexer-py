@@ -10,10 +10,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [ ubuntu-22.04, macos-14 ]
+        platform: [ ubuntu-22.04, macos-15 ]
     env:
       DEPLOY_BUILD_PYTHON_VERSION: "3.8"
-      MACOSX_DEPLOYMENT_TARGET: "14"
+      MACOSX_DEPLOYMENT_TARGET: "15"
       CIBW_BUILD: "cp38-* cp313-*" # build wheel for python 3.8 and 3.13
     defaults:
       run:
@@ -87,7 +87,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [ ubuntu-22.04, ubuntu-24.04, macos-14, macos-15 ]
+        platform: [ ubuntu-22.04, ubuntu-24.04, macos-15 ]
         python: [ "3.12", "3.13" ] # versions of python with missing wheel and presented wheel
     runs-on: ${{ matrix.platform }}
     needs: deploy
@@ -147,7 +147,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [ ubuntu-22.04, ubuntu-24.04, macos-14 ]
+        platform: [ ubuntu-22.04, ubuntu-24.04, macos-15 ]
         python: [ "3.8", "3.13" ] # both versions of python with the wheel presented
         rxmode: [ builtin, cproto ]
     runs-on: ${{ matrix.platform }}
