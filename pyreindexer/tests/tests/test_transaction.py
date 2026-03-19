@@ -13,7 +13,7 @@ from tests.test_data.constants import item_definition, vector_index_bf, vector_i
 
 
 class TestCrudTransaction:
-    def test_negative_commit_after_rollback(self, db, namespace):
+    def test_negative_commit_after_rollback(self, db, namespace, index):
         # Given("Create namespace")
         # When ("Start new transaction")
         transaction = db.tx.begin(namespace)
@@ -23,7 +23,7 @@ class TestCrudTransaction:
         assert_that(calling(transaction.commit).with_args(),
                     raises(TransactionError, matching=has_string("Transaction is over")))
 
-    def test_negative_rollback_after_commit(self, db, namespace):
+    def test_negative_rollback_after_commit(self, db, namespace, index):
         # Given("Create namespace")
         # When ("Start new transaction")
         transaction = db.tx.begin(namespace)
