@@ -10,7 +10,7 @@ from tests.test_data.constants import composite_index_definition, index_definiti
 
 
 def pytest_addoption(parser):
-    parser.addoption("--mode", choices=["builtin", "cproto"], default="cproto", help="Connection mode")
+    parser.addoption("--mode", choices=["builtin", "cproto"], default="builtin", help="Connection mode")
     parser.addoption("--rx_bin_path", action="store", help="path to reindexer_server", default="")
 
 
