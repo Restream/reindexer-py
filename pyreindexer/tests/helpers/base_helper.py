@@ -1,5 +1,6 @@
 import math
 import random
+import time
 from typing import List
 
 from tests.test_data.constants import index_definition
@@ -10,10 +11,12 @@ def get_ns_items(db, ns_name):
     """
     return list(db.query.sql(f"SELECT * FROM {ns_name}"))
 
+
 def get_ns_vect_items(db, ns_name):
     """ Get all items via sql query
     """
     return list(db.query.sql(f"SELECT *, vectors() FROM {ns_name}"))
+
 
 def get_ns_description(db, ns_name):
     """ Get information about namespace in database
@@ -40,3 +43,16 @@ def calculate_distance(point1, point2):
 
 def random_vector(dimension: int) -> List[float]:
     return [random.uniform(-10.0, 10.0) for _ in range(dimension)]
+
+
+def await_vectors_quantization(db, ns, index):
+    q = f"SELECT indexes FROM #memstats WHERE name = '{ns}'"
+    time_start = time.time()
+    while time.time() - time_start <= 30:
+        r = list(db.query.sql(q))
+        if r:
+            found_index = [idx for idx in r[0]["indexes"] if idx["name"] == index["name"]]
+            if found_index and found_index[0]["is_quantized"]:
+                return
+        time.sleep(0.1)
+    raise TimeoutError("Too long index quantization")

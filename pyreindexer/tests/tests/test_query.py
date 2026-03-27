@@ -12,7 +12,7 @@ from pyreindexer.exceptions import ApiError, QueryError
 from pyreindexer.index_search_params import IndexSearchParamBruteForce, IndexSearchParamHnsw, IndexSearchParamIvf
 from pyreindexer.point import Point
 from pyreindexer.query import CondType, LogLevel, StrictMode
-from tests.helpers.base_helper import calculate_distance, get_ns_items, random_vector
+from tests.helpers.base_helper import await_vectors_quantization, calculate_distance, get_ns_items, random_vector
 from tests.helpers.check_helper import check_response_has_close_to_ns_items, check_response_has_only_close_to_items
 from tests.test_data.constants import AGGREGATE_FUNCTIONS_MATH, vector_index_bf, vector_index_hnsw, vector_index_ivf
 
@@ -933,6 +933,30 @@ class TestQueryKNN:
             query.where_knn("vec", random_vector(dimension), param)
             .select_fields("vectors()")
             .execute(timeout=timedelta(seconds=1)))
+        # Then ("Check knn select result")
+        check_response_has_close_to_ns_items(query_result, items)
+
+    def test_query_hnsw_quantized(self, db, namespace, index):
+        # Given ("Create float vector index")
+        vec_index = copy.deepcopy(vector_index_hnsw)
+        vec_index["config"]["quantization_config"] = {"quantization_type": "scalar_quantization_8_bit",
+                                                      "sample_size": 20, "quantization_threshold": 1}
+        db.index.create(namespace, vec_index)
+        # Given("Insert items")
+        # When ("Insert item")
+        dimension = vec_index["config"]["dimension"]
+        items = [{"id": i, "vec": random_vector(dimension)} for i in range(20)]
+        for item in items:
+            db.item.insert("new_ns", item)
+        await_vectors_quantization(db, namespace, vec_index)
+        # Given ("Create new query")
+        query = db.query.new(namespace)
+        # When ("Execute query")
+        param = IndexSearchParamHnsw(k=10, ef=10)
+        query_result = list(
+            query.where_knn("vec", random_vector(dimension), param)
+            .select_fields("vectors()")
+            .execute(timeout=timedelta(seconds=2)))
         # Then ("Check knn select result")
         check_response_has_close_to_ns_items(query_result, items)
 
