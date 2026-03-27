@@ -38,6 +38,32 @@ class TestCrudIndexes:
         assert_that(ns_entry, has_item(has_entry("indexes", has_item(vector_index))),
                     "Index wasn't created")
 
+    def test_create_vector_index_quantized(self, db, namespace):
+        # Given("Create namespace")
+        # When ("Add index")
+        vec_index = copy.deepcopy(vector_index_hnsw)
+        vec_index["config"]["quantization_config"] = {"quantization_type": "scalar_quantization_8_bit",
+                                                      "sample_size": 5, "quantization_threshold": 1}
+        db.index.create(namespace, vec_index)
+        # Then ("Check that index is added")
+        ns_entry = get_ns_description(db, namespace)
+        assert_that(ns_entry, has_item(has_entry("indexes", has_item(vec_index))))
+
+    def test_update_vector_index_quantized(self, db, namespace):
+        # Given("Create namespace")
+        # When ("Add index")
+        vec_index = copy.deepcopy(vector_index_hnsw)
+        vec_index["config"]["quantization_config"] = {"quantization_type": "scalar_quantization_8_bit",
+                                                      "sample_size": 5, "quantization_threshold": 1}
+        db.index.create(namespace, vec_index)
+        # When ("Update index")
+        vec_index["config"]["quantization_config"] = {"quantization_type": "scalar_quantization_8_bit",
+                                                      "sample_size": 10, "quantization_threshold": 2}
+        db.index.update(namespace, vec_index)
+        # Then ("Check that index is updated")
+        ns_entry = get_ns_description(db, namespace)
+        assert_that(ns_entry, has_item(has_entry("indexes", has_item(vec_index))))
+
     def test_update_index(self, db, namespace, index):
         # Given("Create namespace with index")
         # When ("Update index")

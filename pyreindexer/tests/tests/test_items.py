@@ -1,10 +1,11 @@
+import copy
 from datetime import timedelta
-from math import nan, inf
+from math import inf, nan
 
 import pytest
 from hamcrest import *
 
-from tests.helpers.base_helper import get_ns_items, get_ns_vect_items, random_vector
+from tests.helpers.base_helper import await_vectors_quantization, get_ns_items, get_ns_vect_items, random_vector
 from tests.helpers.matchers import close_to_dict
 from tests.test_data.constants import item_definition, vector_index_bf, vector_index_hnsw, vector_index_ivf
 
@@ -50,6 +51,23 @@ class TestCrudItems:
         dimension = vector_index["config"]["dimension"]
         item = {"id": 0, "vec": random_vector(dimension)}
         db.item.insert(namespace, item)
+        # Then ("Check that item is added")
+        select_result = get_ns_vect_items(db, namespace)
+        assert_that(select_result, has_length(1), "Item wasn't created")
+        assert_that(select_result[0], close_to_dict(item))
+
+    def test_create_items_with_vector_index_quantized(self, db, namespace, index):
+        # Given("Create namespace")
+        # When ("Add index")
+        vec_index = copy.deepcopy(vector_index_hnsw)
+        vec_index["config"]["quantization_config"] = {"quantization_type": "scalar_quantization_8_bit",
+                                                      "sample_size": 5, "quantization_threshold": 1}
+        db.index.create(namespace, vec_index)
+        # When ("Insert item")
+        dimension = vec_index["config"]["dimension"]
+        item = {"id": 0, "vec": random_vector(dimension)}
+        db.item.insert(namespace, item)
+        await_vectors_quantization(db, namespace, vec_index)
         # Then ("Check that item is added")
         select_result = get_ns_vect_items(db, namespace)
         assert_that(select_result, has_length(1), "Item wasn't created")
