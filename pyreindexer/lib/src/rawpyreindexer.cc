@@ -838,6 +838,23 @@ static PyObject* WhereBetweenFields(PyObject* self, PyObject* args) {
 	Py_RETURN_NONE;
 }
 
+static PyObject* WhereExpressions(PyObject* self, PyObject* args) {
+    uintptr_t queryWrapperAddr = 0;
+    PyObject* leftExpr = nullptr;
+    unsigned condition = 0;
+    PyObject* rightExpr = nullptr;
+    if (!PyArg_ParseTuple(args, "kOIO", &queryWrapperAddr, &leftExpr, &condition, &rightExpr)) {
+        return nullptr;
+    }
+
+    try {
+        getWrapper<QueryWrapper>(queryWrapperAddr)->WhereExpressions(leftExpr, CondType(condition), rightExpr);
+        return pyErr({});
+    } catch (const reindexer::Error& err) {
+        return pyErr(err);
+    }
+}
+
 namespace {
 reindexer::KnnSearchParams GetParams(bool is_k, unsigned k, bool is_r, double r, unsigned ef, unsigned nprobe) {
 	auto radius = float(r);

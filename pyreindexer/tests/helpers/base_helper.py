@@ -6,6 +6,13 @@ from typing import List
 from tests.test_data.constants import index_definition
 
 
+def create_items(db, ns, items: list):
+    """ Create items
+    """
+    for item in items:
+        db.item.insert(ns, item)
+
+
 def get_ns_items(db, ns_name):
     """ Get all items via sql query
     """

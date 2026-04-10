@@ -7,6 +7,7 @@ from typing import List, Optional, Union
 from uuid import UUID
 
 from pyreindexer.exceptions import QueryError
+from pyreindexer.expressions import Expression
 from pyreindexer.index_search_params import IndexSearchParamBruteForce, IndexSearchParamHnsw, IndexSearchParamIvf
 from pyreindexer.point import Point
 from pyreindexer.query_results import QueryResults
@@ -362,6 +363,29 @@ class Query(RaiserQuery):
         """
 
         self.api.where_between_fields(self.query_wrapper_ptr, first_field, condition.value, second_field)
+        return self
+
+    @RaiserQuery.raise_if_error
+    def where_expressions(self, left: Expression, condition: CondType, right: Expression) -> Query:
+        """Adds where condition with expressions
+
+        #### Arguments:
+            left (Expression): Left expression (Field, FlatArrayLen, SubQuery)
+            condition (:enum:`CondType`): Type of condition
+            right (Expression): Right expression (Field, Values, Now, SubQuery)
+
+        #### Returns:
+            (:obj:`Query`): Query object for further customizations
+
+        """
+        if not isinstance(left, Expression):
+            raise TypeError(f"Left expression must have 'Expression' type, got {type(left)}")
+        if not isinstance(right, Expression):
+            raise TypeError(f"Right expression must have 'Expression' type, got {type(right)}")
+
+        left_data = left._serialize()
+        right_data = right._serialize()
+        self.api.where_expressions(self.query_wrapper_ptr, left_data, condition.value, right_data)
         return self
 
     @RaiserQuery.raise_if_error

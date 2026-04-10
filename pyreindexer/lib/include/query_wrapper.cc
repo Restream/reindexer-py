@@ -1,4 +1,5 @@
 #include "query_wrapper.h"
+#include "pyobjtools.h"
 
 #include "core/query/query.h"
 #include "core/query/queryentry.h"
@@ -74,6 +75,83 @@ void QueryWrapper::WhereBetweenFields(std::string_view firstField, CondType cond
 
 	nextOperation_ = OpType::OpAnd;
 	++queriesCount_;
+}
+
+void QueryWrapper::serializeExpression(PyObject* obj, reindexer::WrSerializer& ser) {
+    if (!PyTuple_Check(obj) || PyTuple_Size(obj) != 2) {
+        throw reindexer::Error(ErrorCode::errParseJson, "Expression must be tuple (exprType, payload)");
+    }
+
+    PyObject* typeObj = PyTuple_GetItem(obj, 0);
+    int exprType = static_cast<int>(PyLong_AsLong(typeObj));
+    ser.PutVarUint(exprType);
+
+    PyObject* payload = PyTuple_GetItem(obj, 1);
+    if (!PyList_Check(payload))
+        throw reindexer::Error(ErrorCode::errParseJson, "Payload must be list");
+
+    if (exprType == ExpressionType::ExpressionTypeField) {
+        if (PyList_Size(payload) != 1)
+            throw reindexer::Error(ErrorCode::errParseJson, "Field payload must be [name]");
+        PyObject* nameObj = PyList_GetItem(payload, 0);
+        if (!PyUnicode_Check(nameObj))
+            throw reindexer::Error(ErrorCode::errParseJson, "Field name must be string");
+        const char* name = PyUnicode_AsUTF8(nameObj);
+        if (!name)
+            throw reindexer::Error(ErrorCode::errParseJson, "Failed to convert field name to UTF-8");
+        ser.PutVString(name);
+    }
+    else if (exprType == ExpressionType::ExpressionTypeValues) {
+        auto variants = ParseListToVec(&payload);
+        ser.PutVarUint(variants.size());
+        for (auto& v : variants) {
+            ser.PutVariant(v);
+        }
+    }
+    else if (exprType == ExpressionType::ExpressionTypeExpression) {
+        // Function: fields_count + fields + args_count + args + func_type
+        if (PyList_Size(payload) != 3)
+            throw reindexer::Error(ErrorCode::errParseJson, "Function payload must be [fields, args, func_type]");
+        // Fields (list of strings)
+        PyObject* fieldsList = PyList_GetItem(payload, 0);
+        auto fields = ParseStrListToStrVec<std::vector>(&fieldsList);
+        ser.PutVarUint(fields.size());
+        for (auto& f : fields) {
+            ser.PutVString(f);
+        }
+        // Args (list of values)
+        PyObject* argsList = PyList_GetItem(payload, 1);
+        auto args = ParseListToVec(&argsList);
+        ser.PutVarUint(args.size());
+        for (auto& a : args) {
+            ser.PutVariant(a);
+        }
+        // FunctionType (int)
+        int funcType = static_cast<int>(PyLong_AsLong(PyList_GetItem(payload, 2)));
+        ser.PutVarUint(funcType);
+    }
+    else if (exprType == ExpressionType::ExpressionTypeSubQuery) {
+        if (PyList_Size(payload) != 1)
+            throw reindexer::Error(ErrorCode::errParseJson, "SubQuery payload must be [wrapper_ptr]");
+        uintptr_t ptr = static_cast<uintptr_t>(PyLong_AsLong(PyList_GetItem(payload, 0)));
+        auto* subQ = reinterpret_cast<QueryWrapper*>(ptr);
+        ser.Write(subQ->ser_.Slice());
+    }
+    else {
+        throw reindexer::Error(ErrorCode::errParseJson,
+            "Unknown ExpressionType: " + std::to_string(exprType));
+    }
+}
+
+void QueryWrapper::WhereExpressions(PyObject* leftExpr, CondType condition, PyObject* rightExpr) {
+    ser_.PutVarUint(QueryItemType::QueryExpressions);
+    serializeExpression(leftExpr, ser_);
+    ser_.PutVarUint(nextOperation_);
+    ser_.PutVarUint(condition);
+    serializeExpression(rightExpr, ser_);
+
+    nextOperation_ = OpType::OpAnd;
+    ++queriesCount_;
 }
 
 void QueryWrapper::WhereKNN(std::string_view index, reindexer::ConstFloatVectorView vec,
