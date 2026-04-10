@@ -1,0 +1,68 @@
+name: Retry network failures
+
+on:
+  workflow_run:
+    workflows:
+      - "Test the project"
+      - "Upload Release package to TestPyPI"
+      - "Upload Release package"
+    types: [completed]
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  retry-on-network-error:
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'failure'
+
+    steps:
+      - name: Download and analyze logs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt }}
+        run: |
+          echo "Analyzing run #$RUN_ID (attempt #$RUN_ATTEMPT)"
+          
+          # GitHub allows only 3 attempts max
+          if [[ "$RUN_ATTEMPT" -ge 3 ]]; then
+            echo "⚠️ Max retry attempts reached ($RUN_ATTEMPT). Exiting."
+            exit 0
+          fi
+          
+          mkdir -p ./logs
+          gh run view "$RUN_ID" --log-failed > ./logs/failed-logs.txt 2>&1 || true
+          
+          if [[ ! -s ./logs/failed-logs.txt ]]; then
+            echo "No failed logs found or download failed"
+            exit 0
+          fi
+          
+          NETWORK_ERROR=false
+          ERROR_PATTERNS=(
+            "Input/output error"
+            "ETIMEDOUT"
+            "ECONNRESET"
+            "ECONNREFUSED"
+            "Connection timed out"
+            "Failed to fetch"
+            "502 Bad Gateway"
+            "503 Service Unavailable"
+            "504 Gateway Time-out"
+          )
+          
+          for pattern in "${ERROR_PATTERNS[@]}"; do
+            if grep -qEi "$pattern" ./logs/failed-logs.txt; then
+              echo "⚠️ Found network error pattern: '$pattern'"
+              NETWORK_ERROR=true
+              break
+            fi
+          done
+          
+          if [[ "$NETWORK_ERROR" == "true" ]]; then
+            echo "🔁 Network-related failure detected — triggering retry"
+            gh run rerun "$RUN_ID" --failed
+            echo "Retry triggered for run #$RUN_ID"
+          fi
