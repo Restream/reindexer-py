@@ -135,7 +135,9 @@ void QueryWrapper::serializeExpression(PyObject* obj, reindexer::WrSerializer& s
             throw reindexer::Error(ErrorCode::errParseJson, "SubQuery payload must be [wrapper_ptr]");
         uintptr_t ptr = static_cast<uintptr_t>(PyLong_AsLong(PyList_GetItem(payload, 0)));
         auto* subQ = reinterpret_cast<QueryWrapper*>(ptr);
-        ser.Write(subQ->ser_.Slice());
+        auto subQBuf = subQ->ser_.Slice();
+        ser.PutVarUint(subQBuf.size());
+        ser.Write(subQBuf);
     }
     else {
         throw reindexer::Error(ErrorCode::errParseJson,
