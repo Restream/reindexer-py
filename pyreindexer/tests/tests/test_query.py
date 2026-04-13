@@ -544,6 +544,7 @@ class TestQuerySelectWhereExpressions:
         # Then ("Check that selected item is in result")
         assert_that(query_result, equal_to(items[:2]))
 
+    @pytest.mark.skip(reason="Unskip after v0.5.130000")
     def test_query_select_where_expressions_subquery_values(self, db, namespace, index):
         # Given("Create namespace with index")
         # Given("Create items")
@@ -564,6 +565,7 @@ class TestQuerySelectWhereExpressions:
         # Then ("Check that result is empty")
         assert_that(query_result, empty())
 
+    @pytest.mark.skip(reason="Unskip after v0.5.130000")
     def test_query_select_where_expressions_subquery_function_now(self, db, namespace, index):
         # Given("Create namespace with index")
         # Given("Create items")
