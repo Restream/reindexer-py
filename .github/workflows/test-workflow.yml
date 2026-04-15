@@ -88,17 +88,24 @@ jobs:
           for archive in reindexer-*-Darwin-*.tar.gz; do
             tar -xzf "$archive"
           done
+          mkdir -p /usr/local/lib /usr/local/include /usr/local/bin
           if [ -d "usr/local/bin" ]; then
-            sudo cp -f usr/local/bin/* /usr/local/bin/ 2>/dev/null || echo "No binaries to copy"
+            cp -f usr/local/bin/* /usr/local/bin/ 2>/dev/null || echo "No binaries"
           fi
           if [ -d "usr/local/lib" ]; then
-            sudo cp -f usr/local/lib/* /usr/local/lib/ 2>/dev/null || echo "No libraries to copy"
+            cp -f usr/local/lib/*.dylib /usr/local/lib/ 2>/dev/null || echo "No dylib files"
+            cp -f usr/local/lib/*.a /usr/local/lib/ 2>/dev/null || echo "No static libs"
           fi
           if [ -d "usr/local/include" ]; then
-            sudo cp -rf usr/local/include/* /usr/local/include/ 2>/dev/null || echo "No includes to copy"
+            cp -rf usr/local/include/* /usr/local/include/ 2>/dev/null || echo "No includes"
           fi
-          ls -la /usr/local/bin/reindexer* || echo "Binaries not found"
-          ls -la /usr/local/lib/libreindexer* || echo "Libraries not found"
+          if [ -d "usr/local/lib/cmake" ]; then
+            mkdir -p /usr/local/lib/cmake
+            cp -rf usr/local/lib/cmake/* /usr/local/lib/cmake/ 2>/dev/null || echo "No cmake files"
+          fi
+          echo "CMAKE_PREFIX_PATH=/usr/local" >> $GITHUB_ENV
+          find /usr/local -name "*reindexer*" -type f 2>/dev/null || echo "No reindexer files found"
+          update_dyld_shared_cache || true
       - name: Install Reindexer-Dev/Server (Ubuntu)
         if: startsWith(matrix.platform, 'ubuntu')
         run: |
