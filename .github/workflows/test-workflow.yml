@@ -58,7 +58,7 @@ jobs:
         platform: [ubuntu-24.04, macos-15]
         include:
           - python: "3.8"
-            platform: ubuntu-22.04
+            platform: ubuntu-24.04
             distutils: stdlib
           - python: "3.10"
             platform: ubuntu-24.04
@@ -85,15 +85,20 @@ jobs:
         if: startsWith(matrix.platform, 'macos')
         run: |
           cd reindexer_build
-          if [ -f *.pkg ]; then
-            sudo installer -pkg *.pkg -target /
-          elif [ -f *.dmg ]; then
-            hdiutil attach *.dmg
-            sudo installer -pkg /Volumes/*/*.pkg -target /
-            hdiutil detach /Volumes/*
+          for archive in reindexer-*-Darwin-*.tar.gz; do
+            tar -xzf "$archive"
+          done
+          if [ -d "usr/local/bin" ]; then
+            sudo cp -f usr/local/bin/* /usr/local/bin/ 2>/dev/null || echo "No binaries to copy"
           fi
-          sudo cp -r reindexer_server /usr/local/bin/ || true
-          sudo cp -r lib* /usr/local/lib/ || true
+          if [ -d "usr/local/lib" ]; then
+            sudo cp -f usr/local/lib/* /usr/local/lib/ 2>/dev/null || echo "No libraries to copy"
+          fi
+          if [ -d "usr/local/include" ]; then
+            sudo cp -rf usr/local/include/* /usr/local/include/ 2>/dev/null || echo "No includes to copy"
+          fi
+          ls -la /usr/local/bin/reindexer* || echo "Binaries not found"
+          ls -la /usr/local/lib/libreindexer* || echo "Libraries not found"
       - name: Install Reindexer-Dev/Server (Ubuntu)
         if: startsWith(matrix.platform, 'ubuntu')
         run: |
