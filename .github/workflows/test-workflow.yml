@@ -16,23 +16,33 @@ jobs:
       run:
         shell: bash
     steps:
+      - name: Install build dependencies (Ubuntu)
+        if: startsWith(matrix.platform, 'ubuntu')
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y build-essential cmake
       - name: Build reindexer
         run: |
           git clone https://github.com/Restream/reindexer.git
           cd reindexer
-          ./dependencies.sh
+          if [[ "${{ matrix.platform }}" == ubuntu-* ]]; then
+            sudo ./dependencies.sh
+          else
+            ./dependencies.sh
+          fi
           mkdir -p build && cd build
           cmake ..
           make -j4
           cpack
           find . -name CMakeFiles -o -name "*.cc" -o -name "*.h" -o \
             -name Makefile -o -name _cmrc -o -name "*.json" -o -name "*.txt" -o -name \
-            "*.in" | xargs -n1 rm -rf && rm -rf _CPack_Packages \
+            "*.in" | xargs -n1 rm -rf
+          rm -rf _CPack_Packages \
             cpp_src/server/reindexer_server_resources cpp_src/server/face \
             cpp_src/server/swagger cpp_src/cmd/reindexer_server/contrib \
             cpp_src/leveldb_lib* cpp_src/snappy_lib* \
-            cpp_src/cmd/reindexer_tool/replxx_lib* Testing cpp_src/gtests/tests/logs && \
-            find . -empty -type d -delete
+            cpp_src/cmd/reindexer_tool/replxx_lib* Testing cpp_src/gtests/tests/logs
+          find . -empty -type d -delete
       - name: Store build artifacts
         uses: actions/upload-artifact@v4
         with:
