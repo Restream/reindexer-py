@@ -92,7 +92,7 @@ private:
 	reindexer::WrSerializer ser_;
 
 	OpType nextOperation_{OpType::OpAnd};
-	unsigned queriesCount_{0};
+	unsigned whereEntriesCount_{0};
 	std::deque<uint32_t> openedBrackets_;
 	JoinType joinType_{JoinType::LeftJoin};
 	reindexer::h_vector<QueryWrapper*, 1> joinQueries_;
