@@ -5,12 +5,47 @@ on:
       - master
 
 jobs:
-  test:
+  build:
     strategy:
       fail-fast: false
       matrix:
-        python: [ "3.9", "3.13" ]
-        platform: [ ubuntu-22.04, ubuntu-24.04, macos-15 ]
+        platform: [ubuntu-24.04, macos-15]
+    name: Build reindexer for ${{ matrix.platform }}
+    runs-on: ${{ matrix.platform }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Build reindexer
+        run: |
+          git clone https://github.com/Restream/reindexer.git
+          cd reindexer
+          ./dependencies.sh
+          mkdir -p build && cd build
+          cmake ..
+          make -j4
+          cpack
+          find . -name CMakeFiles -o -name "*.cc" -o -name "*.h" -o \
+            -name Makefile -o -name _cmrc -o -name "*.json" -o -name "*.txt" -o -name \
+            "*.in" | xargs -n1 rm -rf && rm -rf _CPack_Packages \
+            cpp_src/server/reindexer_server_resources cpp_src/server/face \
+            cpp_src/server/swagger cpp_src/cmd/reindexer_server/contrib \
+            cpp_src/leveldb_lib* cpp_src/snappy_lib* \
+            cpp_src/cmd/reindexer_tool/replxx_lib* Testing cpp_src/gtests/tests/logs && \
+            find . -empty -type d -delete
+      - name: Store build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build_${{ matrix.platform }}
+          path: reindexer/build
+
+  test:
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.9", "3.13"]
+        platform: [ubuntu-24.04, macos-15]
         include:
           - python: "3.8"
             platform: ubuntu-22.04
@@ -31,28 +66,35 @@ jobs:
     steps:
       - name: Checkout PyReindexer repo
         uses: actions/checkout@v4
-      - name: Install Reindexer-Dev\Server (MacOS)
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build_${{ matrix.platform }}
+          path: reindexer_build
+      - name: Install Reindexer-Dev/Server (MacOS)
         if: startsWith(matrix.platform, 'macos')
         run: |
-          brew uninstall cmake
-          brew tap restream/reindexer
-          brew install reindexer
-      - name: Install Reindexer-Dev\Server (Ubuntu)
+          cd reindexer_build
+          if [ -f *.pkg ]; then
+            sudo installer -pkg *.pkg -target /
+          elif [ -f *.dmg ]; then
+            hdiutil attach *.dmg
+            sudo installer -pkg /Volumes/*/*.pkg -target /
+            hdiutil detach /Volumes/*
+          fi
+          sudo cp -r reindexer_server /usr/local/bin/ || true
+          sudo cp -r lib* /usr/local/lib/ || true
+      - name: Install Reindexer-Dev/Server (Ubuntu)
         if: startsWith(matrix.platform, 'ubuntu')
         run: |
-          curl https://repo.reindexer.io/RX-KEY.GPG | sudo apt-key add
-          if [[ ${{matrix.platform}} == ubuntu-22.04 ]]; then
-            echo 'deb https://repo.reindexer.io/ubuntu-jammy /' | sudo tee -a /etc/apt/sources.list
-          elif [[ ${{matrix.platform}} == ubuntu-24.04 ]]; then
-            echo 'deb https://repo.reindexer.io/ubuntu-noble /' | sudo tee -a /etc/apt/sources.list
-          else
-            echo "${{matrix.platform}} not supported"
-            exit 1
-          fi
           sudo apt-get update -y
           sudo apt-get install -y libunwind-dev
-          sudo apt-get install -y reindexer-dev
-          sudo apt-get install -y reindexer-server
+          cd reindexer_build
+          sudo dpkg -i reindexer-server*.deb || true
+          sudo apt-get install -y -f || true
+          sudo dpkg -i reindexer-dev*.deb || true
+          sudo apt-get install -y -f || true
+          cd ..
       - name: Set up Python ${{ matrix.python }}
         id: python-install
         uses: actions/setup-python@v5
@@ -61,16 +103,11 @@ jobs:
           allow-prereleases: false
         env:
           PIP_DISABLE_PIP_VERSION_CHECK: 1
-          # Workaround for actions/setup-python#981 (env var only modified for this specific step)
-          SETUPTOOLS_USE_DISTUTILS: >-
-            ${{ matrix.platform == 'macos-15' && matrix.python == '3.9' && 'stdlib' || 'local' }}-
-            ${{ matrix.platform == 'macos-latest' && matrix.python == '3.9' && 'stdlib' || 'local' }}-
-            ${{ matrix.platform == 'ubuntu-22.04' && matrix.python == '3.8' && 'stdlib' || 'local' }}
+          SETUPTOOLS_USE_DISTUTILS: ${{ matrix.distutils || 'local' }}
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade --disable-pip-version-check pip setuptools build
-      - name: Prepare Test Environment
-        run: python -m pip install -r requirements.txt
+          python -m pip install -r requirements.txt
       - name: Build PyReindexer
         run: |
           python -m build
