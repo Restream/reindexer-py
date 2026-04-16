@@ -84,6 +84,8 @@ jobs:
       - name: Install Reindexer-Dev/Server (MacOS)
         if: startsWith(matrix.platform, 'macos')
         run: |
+          brew update
+          brew install leveldb snappy lz4 zstd icu4c openssl
           cd reindexer_build
           tar -xzf reindexer-*-Darwin-server.tar.gz
           tar -xzf reindexer-*-Darwin-dev.tar.gz
