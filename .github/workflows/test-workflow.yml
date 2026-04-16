@@ -9,7 +9,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [ubuntu-24.04, macos-15]
+        platform: [macos-15] # TODO add ubuntu-24.04
     name: Build reindexer for ${{ matrix.platform }}
     runs-on: ${{ matrix.platform }}
     defaults:
@@ -25,11 +25,7 @@ jobs:
         run: |
           git clone https://github.com/Restream/reindexer.git
           cd reindexer
-          if [[ "${{ matrix.platform }}" == ubuntu-* ]]; then
-            sudo ./dependencies.sh
-          else
-            ./dependencies.sh
-          fi
+          sudo ./dependencies.sh
           mkdir -p build && cd build
           cmake ..
           make -j4
@@ -55,17 +51,17 @@ jobs:
       fail-fast: false
       matrix:
         python: ["3.9", "3.13"]
-        platform: [ubuntu-24.04, macos-15]
-        include:
-          - python: "3.8"
-            platform: ubuntu-24.04
-            distutils: stdlib
-          - python: "3.10"
-            platform: ubuntu-24.04
-          - python: "3.11"
-            platform: ubuntu-24.04
-          - python: "3.12"
-            platform: ubuntu-24.04
+        platform: [macos-15] # TODO add ubuntu-24.04
+    #        include:
+    #          - python: "3.8"
+    #            platform: ubuntu-24.04
+    #            distutils: stdlib
+    #          - python: "3.10"
+    #            platform: ubuntu-24.04
+    #          - python: "3.11"
+    #            platform: ubuntu-24.04
+    #          - python: "3.12"
+    #            platform: ubuntu-24.04
     runs-on: ${{ matrix.platform }}
     env:
       SETUPTOOLS_USE_DISTUTILS: ${{ matrix.distutils || 'local' }}
@@ -85,8 +81,10 @@ jobs:
         if: startsWith(matrix.platform, 'macos')
         run: |
           brew update
-          brew install leveldb snappy lz4 zstd icu4c openssl
-          cd reindexer_build
+          git clone https://github.com/Restream/reindexer.git
+          cd reindexer
+          sudo ./dependencies.sh
+          cd ../reindexer_build
           tar -xzf reindexer-*-Darwin-server.tar.gz
           tar -xzf reindexer-*-Darwin-dev.tar.gz
           sudo cp -rf usr/local/* /usr/local/
