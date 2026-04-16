@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [ ubuntu-22.04, macos-15 ]
+        platform: [ ubuntu-24.04, macos-15 ]
     env:
       DEPLOY_BUILD_PYTHON_VERSION: "3.8"
       MACOSX_DEPLOYMENT_TARGET: "15"
@@ -32,12 +32,12 @@ jobs:
       - name: Store all build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: rx_artifacts_wheels_${{ matrix.platform }}
+          name: pyrx_artifacts_wheels_${{ matrix.platform }}
           path: dist/*
 
   build_sdist:
     name: Build sdist on Ubuntu
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     env:
       DEPLOY_BUILD_PYTHON_VERSION: "3.12"
     defaults:
@@ -57,21 +57,21 @@ jobs:
       - name: Store all build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: rx_artifacts_sdist
+          name: pyrx_artifacts_sdist
           path: dist/*
 
   deploy:
     name: Upload to PyPI (ubuntu)
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     needs: [ build_wheels, build_sdist ]
     environment:
       name: pypi
       url: https://pypi.org/p/pyreindexer/
     steps:
-      - name: Download all artifacts
+      - name: Download pyreindexer artifacts
         uses: actions/download-artifact@v4
         with:
-          pattern: rx_artifacts*
+          pattern: pyrx_artifacts*
           path: dist
           merge-multiple: true
       - name: Publish package distributions to PyPI
@@ -82,14 +82,58 @@ jobs:
           password: pypi-${{ secrets.PYPI_TOKEN }}
           attestations: false
 
-  test_dist:
+  build_reindexer:
     strategy:
       fail-fast: false
       matrix:
-        platform: [ ubuntu-22.04, ubuntu-24.04, macos-15 ]
+        platform: [ ubuntu-24.04, macos-15 ]
+    name: Build reindexer for ${{ matrix.platform }}
+    runs-on: ${{ matrix.platform }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Install build dependencies (Ubuntu)
+        if: startsWith(matrix.platform, 'ubuntu')
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y build-essential cmake
+      - name: Build reindexer
+        run: |
+          git clone https://github.com/Restream/reindexer.git
+          cd reindexer
+          if [[ "${{ matrix.platform }}" == ubuntu-* ]]; then
+            sudo ./dependencies.sh
+          else
+            ./dependencies.sh
+          fi
+          mkdir -p build && cd build
+          cmake ..
+          make -j4
+          cpack
+          find . -name CMakeFiles -o -name "*.cc" -o -name "*.h" -o \
+            -name Makefile -o -name _cmrc -o -name "*.json" -o -name "*.txt" -o -name \
+            "*.in" | xargs -n1 rm -rf
+          rm -rf _CPack_Packages \
+            cpp_src/server/reindexer_server_resources cpp_src/server/face \
+            cpp_src/server/swagger cpp_src/cmd/reindexer_server/contrib \
+            cpp_src/leveldb_lib* cpp_src/snappy_lib* \
+            cpp_src/cmd/reindexer_tool/replxx_lib* Testing cpp_src/gtests/tests/logs
+          find . -empty -type d -delete
+      - name: Store build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build_${{ matrix.platform }}
+          path: reindexer/build
+
+  test_dist:
+    needs: [ build_reindexer, deploy ]
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [ ubuntu-24.04, macos-15 ]
         python: [ "3.13" ]
     runs-on: ${{ matrix.platform }}
-    needs: deploy
     defaults:
       run:
         shell: bash
@@ -97,28 +141,32 @@ jobs:
       - name: Checkout PyReindexer
         uses: actions/checkout@v4
 
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build_${{ matrix.platform }}
+          path: reindexer_build
       - name: Install Reindexer (MacOS)
         if: startsWith(matrix.platform, 'macos')
         run: |
-          brew uninstall cmake
-          brew tap restream/reindexer
-          brew install reindexer
-      - name: Install Reindexer-Dev\Server (Ubuntu)
+          brew update
+          git clone https://github.com/Restream/reindexer.git
+          cd reindexer
+          ./dependencies.sh
+          cd ../reindexer_build
+          tar -xzf reindexer-*-Darwin-server.tar.gz
+          tar -xzf reindexer-*-Darwin-dev.tar.gz
+          sudo cp -rf usr/local/* /usr/local/
+      - name: Install Reindexer (Ubuntu)
         if: startsWith(matrix.platform, 'ubuntu')
         run: |
-          curl https://repo.reindexer.io/RX-KEY.GPG | sudo apt-key add
-          if [[ ${{matrix.platform}} == ubuntu-22.04 ]]; then
-            echo 'deb https://repo.reindexer.io/ubuntu-jammy /' | sudo tee -a /etc/apt/sources.list
-          elif [[ ${{matrix.platform}} == ubuntu-24.04 ]]; then
-            echo 'deb https://repo.reindexer.io/ubuntu-noble /' | sudo tee -a /etc/apt/sources.list
-          else
-            echo "${{matrix.platform}} not supported"
-            exit 1
-          fi
           sudo apt-get update -y
           sudo apt-get install -y libunwind-dev
-          sudo apt-get install -y reindexer-dev
-          sudo apt-get install -y reindexer-server
+          cd reindexer_build
+          sudo dpkg -i reindexer-server*.deb || true
+          sudo apt-get install -y -f || true
+          sudo dpkg -i reindexer-dev*.deb || true
+          sudo apt-get install -y -f || true
 
       - name: Set up Python ${{ matrix.python }}
         uses: actions/setup-python@v5
@@ -138,14 +186,14 @@ jobs:
           $GITHUB_WORKSPACE/.github/workflows/test.sh
 
   test_wheel:
+    needs: [ build_reindexer, deploy ]
     strategy:
       fail-fast: false
       matrix:
-        platform: [ ubuntu-22.04, ubuntu-24.04, macos-15 ]
+        platform: [ ubuntu-24.04, macos-15 ]
         python: [ "3.8", "3.13" ]
         rxmode: [ builtin, cproto ]
     runs-on: ${{ matrix.platform }}
-    needs: deploy
     defaults:
       run:
         shell: bash
@@ -153,27 +201,32 @@ jobs:
       - name: Checkout PyReindexer
         uses: actions/checkout@v4
 
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build_${{ matrix.platform }}
+          path: reindexer_build
       - name: Install Reindexer (MacOS)
         if: startsWith(matrix.platform, 'macos') && matrix.rxmode == 'cproto'
         run: |
-          brew uninstall cmake
-          brew tap restream/reindexer
-          brew install reindexer
-      - name: Install Reindexer-Dev\Server (Ubuntu)
+          brew update
+          git clone https://github.com/Restream/reindexer.git
+          cd reindexer
+          ./dependencies.sh
+          cd ../reindexer_build
+          tar -xzf reindexer-*-Darwin-server.tar.gz
+          tar -xzf reindexer-*-Darwin-dev.tar.gz
+          sudo cp -rf usr/local/* /usr/local/
+      - name: Install Reindexer (Ubuntu)
         if: startsWith(matrix.platform, 'ubuntu') && matrix.rxmode == 'cproto'
         run: |
-          curl https://repo.reindexer.io/RX-KEY.GPG | sudo apt-key add
-          if [[ ${{matrix.platform}} == ubuntu-22.04 ]]; then
-            echo 'deb https://repo.reindexer.io/ubuntu-jammy /' | sudo tee -a /etc/apt/sources.list
-          elif [[ ${{matrix.platform}} == ubuntu-24.04 ]]; then
-            echo 'deb https://repo.reindexer.io/ubuntu-noble /' | sudo tee -a /etc/apt/sources.list
-          else
-            echo "${{matrix.platform}} not supported"
-            exit 1
-          fi
           sudo apt-get update -y
           sudo apt-get install -y libunwind-dev
-          sudo apt-get install -y reindexer-server
+          cd reindexer_build
+          sudo dpkg -i reindexer-server*.deb || true
+          sudo apt-get install -y -f || true
+          sudo dpkg -i reindexer-dev*.deb || true
+          sudo apt-get install -y -f || true
       - name: Install Openblas (Ubuntu)
         if: startsWith(matrix.platform, 'ubuntu') && matrix.rxmode == 'builtin'
         run: sudo apt-get install -y libopenblas-pthread-dev

@@ -1,4 +1,5 @@
 [tool.cibuildwheel]
+build = ["cp38-*"]
 archs = ["auto64"]
 
 [tool.cibuildwheel.linux]
@@ -28,7 +29,7 @@ before-all = """
     cd ../..
     sudo rm -rf reindexer/
 """
-repair-wheel-command = "delocate-wheel --require-archs arm64  --ignore-missing-dependencies --exclude 'Python.framework' -w {dest_dir} -v {wheel}"
+archs = ["arm64"]
 
 [build-system]
 requires = [
