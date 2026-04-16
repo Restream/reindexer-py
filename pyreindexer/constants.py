@@ -1,4 +1,4 @@
-from typing import TypeAlias, Union
+from typing import Union
 
 
-ValueType: TypeAlias = Union[int, float, str, bool, None]
+ValueType = Union[int, float, str, bool, None]
