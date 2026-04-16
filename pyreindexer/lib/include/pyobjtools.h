@@ -32,14 +32,12 @@ struct PyUnicodeUTF8 {
 };
 
 inline const char* py_get_type_name(PyObject* obj) {
-#if defined(Py_LIMITED_API)
-	#if PY_VERSION_HEX >= 0x030B0000
-		return PyType_GetName(Py_TYPE(obj));
-	#else
-		return "<unknown type>";
-	#endif
-#else
+#if !defined(Py_LIMITED_API)
 	return Py_TYPE(obj)->tp_name;
+#elif Py_LIMITED_API >= 0x030B0000
+	return PyType_GetName(Py_TYPE(obj));
+#else
+	return "<unknown type>";
 #endif
 }
 
