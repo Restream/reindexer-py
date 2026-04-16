@@ -85,27 +85,26 @@ jobs:
         if: startsWith(matrix.platform, 'macos')
         run: |
           cd reindexer_build
-          for archive in reindexer-*-Darwin-*.tar.gz; do
-            tar -xzf "$archive"
-          done
-          mkdir -p /usr/local/lib /usr/local/include /usr/local/bin
-          if [ -d "usr/local/bin" ]; then
-            cp -f usr/local/bin/* /usr/local/bin/ 2>/dev/null || echo "No binaries"
-          fi
-          if [ -d "usr/local/lib" ]; then
-            cp -f usr/local/lib/*.dylib /usr/local/lib/ 2>/dev/null || echo "No dylib files"
-            cp -f usr/local/lib/*.a /usr/local/lib/ 2>/dev/null || echo "No static libs"
-          fi
-          if [ -d "usr/local/include" ]; then
-            cp -rf usr/local/include/* /usr/local/include/ 2>/dev/null || echo "No includes"
-          fi
-          if [ -d "usr/local/lib/cmake" ]; then
-            mkdir -p /usr/local/lib/cmake
-            cp -rf usr/local/lib/cmake/* /usr/local/lib/cmake/ 2>/dev/null || echo "No cmake files"
-          fi
+          tar -xzf reindexer-*-Darwin-server.tar.gz
+          tar -xzf reindexer-*-Darwin-dev.tar.gz
+          sudo cp -rf usr/local/* /usr/local/
+          
+          sudo mkdir -p /usr/local/lib/cmake/reindexer
+          sudo ln -sf /usr/local/lib/reindexer/reindexer-config.cmake /usr/local/lib/cmake/reindexer/reindexerConfig.cmake
+          sudo ln -sf /usr/local/lib/reindexer/reindexer-config-version.cmake /usr/local/lib/cmake/reindexer/reindexerConfigVersion.cmake
+
+          # TODO delete ??
           echo "CMAKE_PREFIX_PATH=/usr/local" >> $GITHUB_ENV
-          find /usr/local -name "*reindexer*" -type f 2>/dev/null || echo "No reindexer files found"
-          update_dyld_shared_cache || true
+          echo "reindexer_DIR=/usr/local/lib/cmake/reindexer" >> $GITHUB_ENV
+
+          echo "DYLD_LIBRARY_PATH=/usr/local/lib:$DYLD_LIBRARY_PATH" >> $GITHUB_ENV
+
+          # TODO Delete
+          echo "== Check! =="
+          ls -la /usr/local/lib/reindexer/
+          ls -la /usr/local/lib/cmake/reindexer/ 2>/dev/null || echo "CMake link dir not created yet"
+          ls -la /usr/local/bin/reindexer_*
+          file /usr/local/lib/libreindexer.a
       - name: Install Reindexer-Dev/Server (Ubuntu)
         if: startsWith(matrix.platform, 'ubuntu')
         run: |
@@ -125,7 +124,10 @@ jobs:
           allow-prereleases: false
         env:
           PIP_DISABLE_PIP_VERSION_CHECK: 1
-          SETUPTOOLS_USE_DISTUTILS: ${{ matrix.distutils || 'local' }}
+          # Workaround for actions/setup-python#981 (env var only modified for this specific step)
+          SETUPTOOLS_USE_DISTUTILS: >-
+            ${{ matrix.platform == 'macos-15' && matrix.python == '3.9' && 'stdlib' || 'local' }}-
+            ${{ matrix.platform == 'macos-latest' && matrix.python == '3.9' && 'stdlib' || 'local' }}-
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade --disable-pip-version-check pip setuptools build
