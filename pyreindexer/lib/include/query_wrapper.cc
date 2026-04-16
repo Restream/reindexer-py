@@ -99,7 +99,7 @@ void QueryWrapper::serializeExpression(PyObject* obj, reindexer::WrSerializer& s
 			if (!PyUnicode_Check(nameObj)) {
 				throw reindexer::Error(ErrorCode::errParseJson, "Field name must be string");
 			}
-			const char* name = PyUnicode_AsUTF8(nameObj);
+			PyUnicodeUTF8 name(nameObj);
 			if (!name) {
 				throw reindexer::Error(ErrorCode::errParseJson, "Failed to convert field name to UTF-8");
 			}
