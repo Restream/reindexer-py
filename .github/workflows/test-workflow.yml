@@ -25,7 +25,11 @@ jobs:
         run: |
           git clone https://github.com/Restream/reindexer.git
           cd reindexer
-          sudo ./dependencies.sh
+          if [[ "${{ matrix.platform }}" == ubuntu-* ]]; then
+            sudo ./dependencies.sh
+          else
+            ./dependencies.sh
+          fi
           mkdir -p build && cd build
           cmake ..
           make -j4
@@ -83,12 +87,11 @@ jobs:
           brew update
           git clone https://github.com/Restream/reindexer.git
           cd reindexer
-          sudo ./dependencies.sh
+          ./dependencies.sh
           cd ../reindexer_build
           tar -xzf reindexer-*-Darwin-server.tar.gz
           tar -xzf reindexer-*-Darwin-dev.tar.gz
           sudo cp -rf usr/local/* /usr/local/
-          
           sudo mkdir -p /usr/local/lib/cmake/reindexer
           sudo ln -sf /usr/local/lib/reindexer/reindexer-config.cmake /usr/local/lib/cmake/reindexer/reindexerConfig.cmake
           sudo ln -sf /usr/local/lib/reindexer/reindexer-config-version.cmake /usr/local/lib/cmake/reindexer/reindexerConfigVersion.cmake
