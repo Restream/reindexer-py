@@ -92,22 +92,9 @@ jobs:
           tar -xzf reindexer-*-Darwin-server.tar.gz
           tar -xzf reindexer-*-Darwin-dev.tar.gz
           sudo cp -rf usr/local/* /usr/local/
-          sudo mkdir -p /usr/local/lib/cmake/reindexer
-          sudo ln -sf /usr/local/lib/reindexer/reindexer-config.cmake /usr/local/lib/cmake/reindexer/reindexerConfig.cmake
-          sudo ln -sf /usr/local/lib/reindexer/reindexer-config-version.cmake /usr/local/lib/cmake/reindexer/reindexerConfigVersion.cmake
-
-          # TODO delete ??
-          echo "CMAKE_PREFIX_PATH=/usr/local" >> $GITHUB_ENV
-          echo "reindexer_DIR=/usr/local/lib/cmake/reindexer" >> $GITHUB_ENV
-
-          echo "DYLD_LIBRARY_PATH=/usr/local/lib:$DYLD_LIBRARY_PATH" >> $GITHUB_ENV
-
-          # TODO Delete
-          echo "== Check! =="
-          ls -la /usr/local/lib/reindexer/
-          ls -la /usr/local/lib/cmake/reindexer/ 2>/dev/null || echo "CMake link dir not created yet"
-          ls -la /usr/local/bin/reindexer_*
-          file /usr/local/lib/libreindexer.a
+#          sudo mkdir -p /usr/local/lib/cmake/reindexer
+#          sudo ln -sf /usr/local/lib/reindexer/reindexer-config.cmake /usr/local/lib/cmake/reindexer/reindexerConfig.cmake
+#          sudo ln -sf /usr/local/lib/reindexer/reindexer-config-version.cmake /usr/local/lib/cmake/reindexer/reindexerConfigVersion.cmake
       - name: Install Reindexer-Dev/Server (Ubuntu)
         if: startsWith(matrix.platform, 'ubuntu')
         run: |
