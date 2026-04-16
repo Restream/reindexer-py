@@ -1,4 +1,4 @@
-from enum import IntEnum, StrEnum
+from enum import Enum, IntEnum
 from typing import List, Union
 
 from pyreindexer.constants import ValueType
@@ -16,11 +16,14 @@ class FunctionType(IntEnum):
     Now = 1
 
 
-class TimeUnit(StrEnum):
+class TimeUnit(str, Enum):
     SEC = "sec"
     MSEC = "msec"
     USEC = "usec"
     NSEC = "nsec"
+
+    def __str__(self):
+        return self.value
 
 
 class Expression:
