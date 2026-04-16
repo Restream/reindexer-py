@@ -7,6 +7,40 @@
 
 namespace pyreindexer {
 
+struct PyUnicodeUTF8 {
+	PyObject* objBytes = nullptr;
+	const char* objStr = nullptr;
+
+	explicit PyUnicodeUTF8(PyObject* obj) {
+#if !defined(Py_LIMITED_API)
+		objStr = PyUnicode_AsUTF8(obj);
+#else
+		objBytes = PyUnicode_AsUTF8String(obj);
+		if (objBytes) {
+			objStr = PyBytes_AsString(objBytes);
+		}
+#endif
+	}
+
+	~PyUnicodeUTF8() { Py_XDECREF(objBytes); }
+
+	operator const char*() const noexcept { return objStr; }
+	operator std::string_view() const noexcept { return objStr ? std::string_view(objStr) : std::string_view(); }
+
+	PyUnicodeUTF8(const PyUnicodeUTF8&) = delete;
+	PyUnicodeUTF8& operator=(const PyUnicodeUTF8&) = delete;
+};
+
+inline const char* py_get_type_name(PyObject* obj) {
+#if !defined(Py_LIMITED_API)
+	return Py_TYPE(obj)->tp_name;
+#elif Py_LIMITED_API >= 0x030B0000
+	return PyType_GetName(Py_TYPE(obj));
+#else
+	return "<unknown type>";
+#endif
+}
+
 template <typename T>
 using HVectorT = reindexer::h_vector<T, 2>;
 
@@ -21,10 +55,9 @@ VectorT<std::string> ParseStrListToStrVec(PyObject** list) {
 
 		if (!PyUnicode_Check(item)) {
 			throw reindexer::Error(ErrorCode::errParseJson,
-									std::string("String expected, got ") + Py_TYPE(item)->tp_name);
+									std::string("String expected, got ") + py_get_type_name(item));
 		}
-
-		result.emplace_back(PyUnicode_AsUTF8(item));
+		result.emplace_back(PyUnicodeUTF8(item));
 	}
 
 	return result;

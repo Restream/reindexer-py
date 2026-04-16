@@ -66,6 +66,10 @@ target_link_libraries(${LIB_BUILTIN_NAME} ${Python3_LIBRARIES} ${REINDEXER_LIBRA
 target_link_libraries(${LIB_CPROTO_NAME} ${Python3_LIBRARIES} ${REINDEXER_LIBRARIES})
 
 target_compile_definitions(${LIB_CPROTO_NAME} PRIVATE PYREINDEXER_CPROTO=1)
+if(CIBUILDWHEEL)
+    target_compile_definitions(${LIB_BUILTIN_NAME} PRIVATE Py_LIMITED_API=0x03080000)
+    target_compile_definitions(${LIB_CPROTO_NAME} PRIVATE Py_LIMITED_API=0x03080000)
+endif()
 
 set_target_properties(${LIB_BUILTIN_NAME} PROPERTIES SUFFIX ${LIBS_EXT})
 set_target_properties(${LIB_CPROTO_NAME} PROPERTIES SUFFIX ${LIBS_EXT})

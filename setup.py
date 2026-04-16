@@ -16,8 +16,9 @@ def _c2(*names):
 
 
 class CMakeExtension(Extension):
-    def __init__(self, name):
-        super().__init__(name, sources=[])
+    def __init__(self, name, **kwargs):
+        kwargs.setdefault("sources", [])
+        super().__init__(name, **kwargs)
 
 
 class BuildExt(build_ext_orig):
@@ -46,8 +47,8 @@ with open('README.md', 'r', encoding='utf-8') as file:
     LONG_DESCRIPTION = file.read()
 
 setup(name=PACKAGE_NAME,
-      version='0.5.120102',
-      description='A connector that allows to interact with Reindexer. Reindexer static library or reindexer-dev package must be installed',
+      version='0.5.120104',
+      description='A connector that allows to interact with Reindexer',
       author='Igor Tulmentyev',
       author_email='contactus@reindexer.io',
       maintainer='Reindexer Team',
@@ -64,7 +65,7 @@ setup(name=PACKAGE_NAME,
       long_description_content_type="text/markdown",
       license='Apache License 2.0',
       packages=[PACKAGE_NAME],
-      ext_modules=[CMakeExtension('rawpyreindexer')],
+      ext_modules=[CMakeExtension('rawpyreindexer', py_limited_api=True)],
       cmdclass={'build_ext': BuildExt},
       keywords=['reindexer', 'reindexer-py', 'in-memory-database', 'database', 'python', 'connector'],
       package_data={'pyreindexer': [
@@ -75,6 +76,7 @@ setup(name=PACKAGE_NAME,
       ]},
       python_requires='>=3.8',
       install_requires=['PyHamcrest==2.0.2', 'pytest>=6.2.5', 'requests>=2.26.0'],
+      options={'bdist_wheel': {'py_limited_api': 'cp38'}},
       classifiers=[
           _c2('Development Status', '4 - Beta'),
           _c2('Environment', 'Console'),
