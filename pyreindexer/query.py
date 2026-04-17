@@ -6,6 +6,7 @@ from enum import Enum
 from typing import List, Optional, Union
 from uuid import UUID
 
+from pyreindexer.constants import ValueType
 from pyreindexer.exceptions import QueryError
 from pyreindexer.expressions import Expression
 from pyreindexer.index_search_params import IndexSearchParamBruteForce, IndexSearchParamHnsw, IndexSearchParamIvf
@@ -55,9 +56,6 @@ class LogLevel(ExtendedEnum):
     Warning = 2
     Info = 3
     Trace = 4
-
-
-simple_types = Union[int, str, bool, float]
 
 
 class Query(RaiserQuery):
@@ -112,7 +110,7 @@ class Query(RaiserQuery):
                 KNN search parameters
 
         #### Returns:
-            (:obj:`tuple[simple_types]`): actual parameters
+            (:obj:`tuple[ValueType]`): actual parameters
 
         #### Raises:
             QueryError: Raises with an error message if no param are specified or have an invalid value
@@ -162,11 +160,11 @@ class Query(RaiserQuery):
         return k, is_k, radius, is_radius, ef, nprobe
 
     @staticmethod
-    def __convert_to_list(param: Union[simple_types, tuple[list[simple_types], ...]]) -> list:
+    def __convert_to_list(param: Union[ValueType, tuple[list[ValueType], ...]]) -> list:
         """Converts an input parameter to a list of lists
 
         #### Arguments:
-            param (union[simple_types, (list[simple_types], ...)]): The input parameter
+            param (union[ValueType, (list[ValueType], ...)]): The input parameter
 
         #### Returns:
             list[union[union[int, bool, float, str], list[union[int, bool, float, str]]]:
@@ -204,13 +202,13 @@ class Query(RaiserQuery):
 
     @RaiserQuery.raise_if_error
     def __where(self, index: str, condition: CondType,
-                keys: Union[simple_types, tuple[list[simple_types], ...]]) -> Query:
+                keys: Union[ValueType, tuple[list[ValueType], ...]]) -> Query:
         """Adds where condition to DB query with args
 
         #### Arguments:
             index (string): Field name used in condition clause
             condition (:enum:`CondType`): Type of condition
-            keys (union[simple_types, (list[simple_types], ...)]):
+            keys (union[ValueType, (list[ValueType], ...)]):
                 Value of index to be compared with. For composite indexes keys must be list,
                 with value of each sub-index
 
@@ -232,13 +230,13 @@ class Query(RaiserQuery):
         return self
 
     def where(self, index: str, condition: CondType,
-              keys: Union[simple_types, tuple[list[simple_types], ...]] = None) -> Query:
+              keys: Union[ValueType, tuple[list[ValueType], ...]] = None) -> Query:
         """Adds where condition to DB query with args
 
         #### Arguments:
             index (string): Field name used in condition clause
             condition (:enum:`CondType`): Type of condition
-            keys (union[simple_types, (list[simple_types], ...)]):
+            keys (union[ValueType, (list[ValueType], ...)]):
                 Value of index to be compared with. For composite indexes keys must be list,
                 with value of each sub-index
 
@@ -254,13 +252,13 @@ class Query(RaiserQuery):
 
     @RaiserQuery.raise_if_error
     def where_query(self, sub_query: Query, condition: CondType,
-                    keys: Union[simple_types, tuple[list[simple_types], ...]] = None) -> Query:
+                    keys: Union[ValueType, tuple[list[ValueType], ...]] = None) -> Query:
         """Adds sub-query where condition to DB query with args
 
         #### Arguments:
             sub_query (:obj:`Query`): Field name used in condition clause
             condition (:enum:`CondType`): Type of condition
-            keys (union[simple_types, (list[simple_types], ...)]):
+            keys (union[ValueType, (list[ValueType], ...)]):
                 Value of index to be compared with. For composite indexes keys must be list,
                 with value of each sub-index
 
@@ -297,13 +295,13 @@ class Query(RaiserQuery):
                                       sub_query.query_wrapper_ptr)
         return self
 
-    def where_composite(self, index: str, condition: CondType, keys: tuple[list[simple_types], ...]) -> Query:
+    def where_composite(self, index: str, condition: CondType, keys: tuple[list[ValueType], ...]) -> Query:
         """Adds where condition to DB query with interface args for composite indexes
 
         #### Arguments:
             index (string): Field name used in condition clause
             condition (:enum:`CondType`): Type of condition
-            keys (list[simple_types], ...): Values of composite index to be compared with (value of each sub-index).
+            keys (list[ValueType], ...): Values of composite index to be compared with (value of each sub-index).
                 Supported variants:
                     ([1, "test1"], [2, "test2"])
                     [[1, "test1"], [2, "test2"]])
@@ -682,7 +680,7 @@ class Query(RaiserQuery):
 
     @RaiserQuery.raise_if_error
     def sort(self, index: str, desc: bool = False,
-             forced_sort_values: Union[simple_types, tuple[list[simple_types], ...]] = None) -> Query:
+             forced_sort_values: Union[ValueType, tuple[list[ValueType], ...]] = None) -> Query:
         """Applies sort order to return from query items. If forced_sort_values argument specified, then items equal to
             values, if found will be placed in the top positions. Forced sort is support for the first sorting field
             only
@@ -690,7 +688,7 @@ class Query(RaiserQuery):
         #### Arguments:
             index (string): The index name
             desc (bool): Sort in descending order
-            forced_sort_values (union[simple_types, (list[simple_types], ...)]):
+            forced_sort_values (union[ValueType, (list[ValueType], ...)]):
                 Value of index to match. For composite indexes keys must be list, with value of each sub-index
 
         #### Returns:
@@ -950,12 +948,12 @@ class Query(RaiserQuery):
         return number
 
     @RaiserQuery.raise_if_error
-    def set_object(self, field: str, values: list[simple_types]) -> Query:
+    def set_object(self, field: str, values: list[ValueType]) -> Query:
         """Adds an update query to an object field for an update query
 
         #### Arguments:
             field (string): Field name
-            values (list[simple_types]): List of values to add
+            values (list[ValueType]): List of values to add
 
         #### Returns:
             (:obj:`Query`): Query object for further customizations
@@ -973,12 +971,12 @@ class Query(RaiserQuery):
         return self
 
     @RaiserQuery.raise_if_error
-    def set(self, field: str, values: list[simple_types]) -> Query:
+    def set(self, field: str, values: list[ValueType]) -> Query:
         """Adds a field update request to the update request
 
         #### Arguments:
             field (string): Field name
-            values (list[simple_types]): List of values to add
+            values (list[ValueType]): List of values to add
 
         #### Returns:
             (:obj:`Query`): Query object for further customizations
