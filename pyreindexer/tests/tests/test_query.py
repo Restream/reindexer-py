@@ -1,6 +1,7 @@
 import copy
 import json
 import random
+import time
 import uuid
 from datetime import timedelta
 from typing import Final
@@ -9,10 +10,12 @@ import pytest
 from hamcrest import *
 
 from pyreindexer.exceptions import ApiError, QueryError
+from pyreindexer.expressions import Field, FlatArrayLen, Now, SubQuery, TimeUnit, Values
 from pyreindexer.index_search_params import IndexSearchParamBruteForce, IndexSearchParamHnsw, IndexSearchParamIvf
 from pyreindexer.point import Point
 from pyreindexer.query import CondType, LogLevel, StrictMode
-from tests.helpers.base_helper import await_vectors_quantization, calculate_distance, get_ns_items, random_vector
+from tests.helpers.base_helper import (await_vectors_quantization, calculate_distance, create_items, get_ns_items,
+                                       random_vector)
 from tests.helpers.check_helper import check_response_has_close_to_ns_items, check_response_has_only_close_to_items
 from tests.test_data.constants import AGGREGATE_FUNCTIONS_MATH, vector_index_bf, vector_index_hnsw, vector_index_ivf
 
@@ -453,6 +456,148 @@ class TestQuerySelectAggregations:
                     has_item(has_entries(type="facet", fields=["id", "idx"],
                                          facets=contains_inanyorder(*expected_facets))),
                     "Wrong aggregation results")
+
+
+class TestQuerySelectWhereExpressions:
+    def test_query_select_where_expressions_field_field(self, db, namespace, index):
+        # Given("Create namespace with index")
+        # Given("Create items")
+        items = [{"id": 0, "age": 0}, {"id": 1, "age": 11}, {"id": 2, "age": 2}]
+        create_items(db, namespace, items)
+        # When ("Make select query with where_expressions")
+        query = db.query.new(namespace)
+        query_result = list(query.where_expressions(Field("id"), CondType.CondEq, Field("age")).must_execute())
+        # Then ("Check that selected item is in result")
+        assert_that(query_result, equal_to([items[0], items[2]]))
+
+    def test_query_select_where_expressions_field_values(self, db, namespace, index):
+        # Given("Create namespace with index")
+        # Given("Create items")
+        items = [{"id": 0, "age": 10}, {"id": 1, "age": 11}, {"id": 2, "age": 12}]
+        create_items(db, namespace, items)
+        # When ("Make select query with where_expressions")
+        query = db.query.new(namespace)
+        query_result = list(query.where_expressions(Field("id"), CondType.CondEq, Values(2)).must_execute())
+        # Then ("Check that selected item is in result")
+        assert_that(query_result, equal_to([items[2]]))
+        # When ("Make select query with where_expressions")
+        query = db.query.new(namespace)
+        query_result = list(query.where_expressions(Field("id"), CondType.CondSet, Values([0, 1])).must_execute())
+        # Then ("Check that selected item is in result")
+        assert_that(query_result, equal_to(items[:2]))
+
+    def test_query_select_where_expressions_with_op(self, db, namespace, index):
+        # Given("Create namespace with index")
+        # Given("Create items")
+        items = [{"id": 0, "age": 0}, {"id": 1, "age": 1}, {"id": 2, "age": 2}, {"id": 33, "age": 333}]
+        create_items(db, namespace, items)
+        # When ("Make select query with where_expressions")
+        query = db.query.new(namespace)
+        query_result = list(query.where_expressions(Field("id"), CondType.CondEq, Field("age")).op_and().
+                            where("id", CondType.CondGt, 0).op_or().
+                            where_expressions(Field("id"), CondType.CondEq, Values(33)).must_execute())
+        # Then ("Check that selected item is in result")
+        assert_that(query_result, equal_to(items[1:3]))
+
+    @pytest.mark.parametrize("unit, items_cnt", [
+        (TimeUnit.SEC, 2), (TimeUnit.MSEC, 3), (TimeUnit.USEC, 4), (TimeUnit.NSEC, 5)
+    ])
+    def test_query_select_where_expressions_field_function_now(self, db, namespace, index, unit, items_cnt):
+        # Given("Create namespace with index")
+        # Given("Create items")
+        time_now = int(time.time())
+        items = [{"id": 0, "age": 0},
+                 {"id": 1, "age": time_now},
+                 {"id": 2, "age": time_now * 1e3},
+                 {"id": 3, "age": time_now * 1e6},
+                 {"id": 4, "age": time_now * 1e9}]
+        create_items(db, namespace, items)
+        query = db.query.new(namespace)
+        # When ("Make select query with where_expressions")
+        query = db.query.new(namespace)
+        query_result = list(query.where_expressions(Field("age"), CondType.CondLe, Now(unit)).must_execute())
+        # Then ("Check that selected item is in result")
+        assert_that(query_result, equal_to(items[:items_cnt]))
+
+    def test_query_select_where_expressions_function_flat_array_len_values(self, db, namespace, index):
+        # Given("Create namespace with index")
+        # Given("Create items")
+        items = [{"id": 0, "arr": []}, {"id": 1, "arr": [1]}, {"id": 2, "arr": [1, 2]}, {"id": 3, "arr": [1, 2, 3]}]
+        create_items(db, namespace, items)
+        query = db.query.new(namespace)
+        # When ("Make select query with where_expressions")
+        query = db.query.new(namespace)
+        query_result = list(query.where_expressions(FlatArrayLen("arr"), CondType.CondGe, Values(2)).must_execute())
+        # Then ("Check that selected item is in result")
+        assert_that(query_result, equal_to(items[2:]))
+
+    def test_query_select_where_expressions_field_subquery(self, db, namespace, index):
+        # Given("Create namespace with index")
+        # Given("Create items")
+        items = [{"id": 0, "age": 10}, {"id": 1, "age": 11}, {"id": 2, "age": 1}, {"id": 3, "age": 0}]
+        create_items(db, namespace, items)
+        query = db.query.new(namespace)
+        # When ("Make select query with where_expressions")
+        sub_query = db.query.new(namespace).select_fields("age").where("id", CondType.CondGt, 1)
+        query = db.query.new(namespace)
+        query_result = list(query.where_expressions(Field("id"), CondType.CondEq, SubQuery(sub_query)).must_execute())
+        # Then ("Check that selected item is in result")
+        assert_that(query_result, equal_to(items[:2]))
+
+    def test_query_select_where_expressions_subquery_values(self, db, namespace, index):
+        # Given("Create namespace with index")
+        # Given("Create items")
+        items = [{"id": 0, "age": 2}, {"id": 1, "age": 3}, {"id": 2, "age": 1}, {"id": 3, "age": 0}]
+        create_items(db, namespace, items)
+        query = db.query.new(namespace)
+        # When ("Make select query with where_expressions")
+        sub_query = db.query.new(namespace).select_fields("age").where("id", CondType.CondEq, 3)
+        query = db.query.new(namespace)
+        query_result = list(query.where_expressions(SubQuery(sub_query), CondType.CondEq, Values(0)).must_execute())
+        # Then ("Check that selected item is in result")
+        assert_that(query_result, equal_to(items))
+
+        # When ("Make select query with where_expressions (empty result)")
+        sub_query = db.query.new(namespace).select_fields("id").where("age", CondType.CondLt, 5)
+        query = db.query.new(namespace)
+        query_result = list(query.where_expressions(SubQuery(sub_query), CondType.CondGe, Values(5)).must_execute())
+        # Then ("Check that result is empty")
+        assert_that(query_result, empty())
+
+    def test_query_select_where_expressions_subquery_function_now(self, db, namespace, index):
+        # Given("Create namespace with index")
+        # Given("Create items")
+        time_now = int(time.time())
+        items = [{"id": time_now + 2, "age": time_now - 2}, {"id": time_now - 2, "age": time_now + 2}]
+        create_items(db, namespace, items)
+        # When ("Make select query with where_expressions")
+        sub_query = db.query.new(namespace).select_fields("age").where_expressions(Field("id"), CondType.CondGe, Now())
+        query = db.query.new(namespace)
+        query_result = list(query.where_expressions(SubQuery(sub_query), CondType.CondLe, Now()).must_execute())
+        # Then ("Check that selected item is in result")
+        assert_that(query_result, equal_to(items))
+
+        # When ("Make select query with where_expressions (empty result)")
+        sub_query = db.query.new(namespace).select_fields("age").where_expressions(Field("id"), CondType.CondGe, Now())
+        query = db.query.new(namespace)
+        query_result = list(query.where_expressions(SubQuery(sub_query), CondType.CondGt, Now()).must_execute())
+        # Then ("Check that result is empty")
+        assert_that(query_result, empty())
+
+    def test_query_select_where_expressions_function_flat_array_subquery(self, db, namespace, index):
+        # Given("Create namespace with index")
+        # Given("Create items")
+        items = [{"id": 0, "arr": []}, {"id": 1, "arr": [10]}, {"id": 2, "arr": [10, 20]}, {"id": 5, "arr": [1, 2, 3]}]
+        create_items(db, namespace, items)
+        query = db.query.new(namespace)
+        # When ("Make select query with where_expressions")
+        sub_query = (db.query.new(namespace).select_fields("id").
+                     where_expressions(FlatArrayLen("arr"), CondType.CondLe, Values(2)))
+        query = db.query.new(namespace)
+        query_result = list(query.where_expressions(FlatArrayLen("arr"), CondType.CondSet, SubQuery(sub_query)).
+                            must_execute())
+        # Then ("Check that selected item is in result")
+        assert_that(query_result, equal_to(items[:-1]))
 
 
 class TestQuerySelectSort:

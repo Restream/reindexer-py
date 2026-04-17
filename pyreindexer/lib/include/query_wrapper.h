@@ -1,6 +1,7 @@
 #pragma once
 
 #include <deque>
+#include <Python.h>
 
 #include "core/query/knn_search_params.h"
 #include "core/keyvalue/float_vector.h"
@@ -38,6 +39,8 @@ public:
 	void WhereKNN(std::string_view index, std::string_view value, const reindexer::KnnSearchParams& params);
 
 	void WhereBetweenFields(std::string_view firstField, CondType condition, std::string_view secondField);
+
+	void WhereExpressions(PyObject* leftExpression, CondType condition, PyObject* rightExpression);
 
 	reindexer::Error OpenBracket();
 	reindexer::Error CloseBracket();
@@ -81,6 +84,7 @@ public:
 	reindexer::Error BuildQuery(reindexer::Query& query);
 
 private:
+    void serializeExpression(PyObject* obj, reindexer::WrSerializer& ser);
 	void addJoinQueries(const reindexer::h_vector<QueryWrapper*, 1>& queries, reindexer::WrSerializer& buffer) const;
 	void putKeys(const reindexer::VariantArray& keys);
 
@@ -88,7 +92,7 @@ private:
 	reindexer::WrSerializer ser_;
 
 	OpType nextOperation_{OpType::OpAnd};
-	unsigned queriesCount_{0};
+	unsigned whereEntriesCount_{0};
 	std::deque<uint32_t> openedBrackets_;
 	JoinType joinType_{JoinType::LeftJoin};
 	reindexer::h_vector<QueryWrapper*, 1> joinQueries_;

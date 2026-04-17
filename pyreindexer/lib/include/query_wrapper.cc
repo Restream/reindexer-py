@@ -1,8 +1,9 @@
 #include "query_wrapper.h"
+#include "pyobjtools.h"
 
+#include "core/keyvalue/uuid.h"
 #include "core/query/query.h"
 #include "core/query/queryentry.h"
-#include "core/keyvalue/uuid.h"
 #include "queryresults_wrapper.h"
 
 namespace pyreindexer {
@@ -19,7 +20,7 @@ void QueryWrapper::Where(std::string_view index, CondType condition, const reind
 	putKeys(keys);
 
 	nextOperation_ = OpType::OpAnd;
-	++queriesCount_;
+	++whereEntriesCount_;
 }
 
 void QueryWrapper::WhereSubQuery(QueryWrapper& query, CondType condition, const reindexer::VariantArray& keys) {
@@ -30,7 +31,7 @@ void QueryWrapper::WhereSubQuery(QueryWrapper& query, CondType condition, const 
 	putKeys(keys);
 
 	nextOperation_ = OpType::OpAnd;
-	++queriesCount_;
+	++whereEntriesCount_;
 }
 
 void QueryWrapper::WhereFieldSubQuery(std::string_view index, CondType condition, QueryWrapper& query) {
@@ -41,11 +42,10 @@ void QueryWrapper::WhereFieldSubQuery(std::string_view index, CondType condition
 	ser_.PutVString(query.ser_.Slice());
 
 	nextOperation_ = OpType::OpAnd;
-	++queriesCount_;
+	++whereEntriesCount_;
 }
 
-void QueryWrapper::WhereUUID(std::string_view index, CondType condition,
-							 const reindexer::h_vector<std::string, 2>& keys) {
+void QueryWrapper::WhereUUID(std::string_view index, CondType condition, const reindexer::h_vector<std::string, 2>& keys) {
 	ser_.PutVarUint(QueryItemType::QueryCondition);
 	ser_.PutVString(index);
 	ser_.PutVarUint(nextOperation_);
@@ -62,7 +62,7 @@ void QueryWrapper::WhereUUID(std::string_view index, CondType condition,
 	}
 
 	nextOperation_ = OpType::OpAnd;
-	++queriesCount_;
+	++whereEntriesCount_;
 }
 
 void QueryWrapper::WhereBetweenFields(std::string_view firstField, CondType condition, std::string_view secondField) {
@@ -73,11 +73,97 @@ void QueryWrapper::WhereBetweenFields(std::string_view firstField, CondType cond
 	ser_.PutVString(secondField);
 
 	nextOperation_ = OpType::OpAnd;
-	++queriesCount_;
+	++whereEntriesCount_;
 }
 
-void QueryWrapper::WhereKNN(std::string_view index, reindexer::ConstFloatVectorView vec,
-							const reindexer::KnnSearchParams& params) {
+void QueryWrapper::serializeExpression(PyObject* obj, reindexer::WrSerializer& ser) {
+	if (!PyTuple_Check(obj) || PyTuple_Size(obj) != 2) {
+		throw reindexer::Error(ErrorCode::errParseJson, "Expression must be tuple (exprType, payload)");
+	}
+
+	PyObject* typeObj = PyTuple_GetItem(obj, 0);
+	int exprType = static_cast<int>(PyLong_AsLong(typeObj));
+	ser.PutVarUint(exprType);
+
+	PyObject* payload = PyTuple_GetItem(obj, 1);
+	if (!PyList_Check(payload)) {
+		throw reindexer::Error(ErrorCode::errParseJson, "Payload must be list");
+	}
+
+	switch (exprType) {
+		case ExpressionType::ExpressionTypeField: {
+			if (PyList_Size(payload) != 1) {
+				throw reindexer::Error(ErrorCode::errParseJson, "Field payload must be [name]");
+			}
+			PyObject* nameObj = PyList_GetItem(payload, 0);
+			if (!PyUnicode_Check(nameObj)) {
+				throw reindexer::Error(ErrorCode::errParseJson, "Field name must be string");
+			}
+			PyUnicodeUTF8 name(nameObj);
+			if (!name) {
+				throw reindexer::Error(ErrorCode::errParseJson, "Failed to convert field name to UTF-8");
+			}
+			ser.PutVString(name);
+			break;
+		}
+		case ExpressionType::ExpressionTypeValues: {
+			auto variants = ParseListToVec(&payload);
+			ser.PutVarUint(variants.size());
+			for (auto& v : variants) {
+				ser.PutVariant(v);
+			}
+			break;
+		}
+		case ExpressionType::ExpressionTypeExpression: {
+			// Function: fields_count + fields + args_count + args + func_type
+			if (PyList_Size(payload) != 3) {
+				throw reindexer::Error(ErrorCode::errParseJson, "Function payload must be [fields, args, func_type]");
+			}
+			// Fields (list of strings)
+			PyObject* fieldsList = PyList_GetItem(payload, 0);
+			auto fields = ParseStrListToStrVec<std::vector>(&fieldsList);
+			ser.PutVarUint(fields.size());
+			for (auto& f : fields) {
+				ser.PutVString(f);
+			}
+			// Args (list of values)
+			PyObject* argsList = PyList_GetItem(payload, 1);
+			auto args = ParseListToVec(&argsList);
+			ser.PutVarUint(args.size());
+			for (auto& a : args) {
+				ser.PutVariant(a);
+			}
+			// FunctionType (int)
+			int funcType = static_cast<int>(PyLong_AsLong(PyList_GetItem(payload, 2)));
+			ser.PutVarUint(funcType);
+			break;
+		}
+		case ExpressionType::ExpressionTypeSubQuery: {
+			if (PyList_Size(payload) != 1) {
+				throw reindexer::Error(ErrorCode::errParseJson, "SubQuery payload must be [wrapper_ptr]");
+			}
+			uintptr_t ptr = static_cast<uintptr_t>(PyLong_AsLong(PyList_GetItem(payload, 0)));
+			auto* subQ = reinterpret_cast<QueryWrapper*>(ptr);
+			ser.PutVString(subQ->ser_.Slice());
+			break;
+		}
+		default:
+			throw reindexer::Error(ErrorCode::errParseJson, "Unknown ExpressionType: {}", int(exprType));
+	}
+}
+
+void QueryWrapper::WhereExpressions(PyObject* leftExpr, CondType condition, PyObject* rightExpr) {
+	ser_.PutVarUint(QueryItemType::QueryExpressions);
+	serializeExpression(leftExpr, ser_);
+	ser_.PutVarUint(nextOperation_);
+	ser_.PutVarUint(condition);
+	serializeExpression(rightExpr, ser_);
+
+	nextOperation_ = OpType::OpAnd;
+	++whereEntriesCount_;
+}
+
+void QueryWrapper::WhereKNN(std::string_view index, reindexer::ConstFloatVectorView vec, const reindexer::KnnSearchParams& params) {
 	ser_.PutVarUint(QueryItemType::QueryKnnCondition);
 	ser_.PutVString(index);
 	ser_.PutVarUint(nextOperation_);
@@ -85,7 +171,7 @@ void QueryWrapper::WhereKNN(std::string_view index, reindexer::ConstFloatVectorV
 	params.Serialize(ser_);
 
 	nextOperation_ = OpType::OpAnd;
-	++queriesCount_;
+	++whereEntriesCount_;
 }
 
 void QueryWrapper::WhereKNN(std::string_view index, std::string_view value, const reindexer::KnnSearchParams& params) {
@@ -97,16 +183,16 @@ void QueryWrapper::WhereKNN(std::string_view index, std::string_view value, cons
 	params.Serialize(ser_);
 
 	nextOperation_ = OpType::OpAnd;
-	++queriesCount_;
+	++whereEntriesCount_;
 }
 
 Error QueryWrapper::OpenBracket() {
 	ser_.PutVarUint(QueryItemType::QueryOpenBracket);
 	ser_.PutVarUint(nextOperation_);
-	openedBrackets_.push_back(queriesCount_);
+	openedBrackets_.push_back(whereEntriesCount_);
 
 	nextOperation_ = OpType::OpAnd;
-	++queriesCount_;
+	++whereEntriesCount_;
 
 	return {};
 }
@@ -138,13 +224,13 @@ void QueryWrapper::DWithin(std::string_view index, double x, double y, double di
 	ser_.PutVariant(reindexer::Variant(distance));
 
 	nextOperation_ = OpType::OpAnd;
-	++queriesCount_;
+	++whereEntriesCount_;
 }
 
 void QueryWrapper::AggregationSort(std::string_view field, bool desc) {
 	ser_.PutVarUint(QueryItemType::QueryAggregationSort);
 	ser_.PutVString(field);
-	ser_.PutVarUint(desc? 1 : 0);
+	ser_.PutVarUint(desc ? 1 : 0);
 }
 
 void QueryWrapper::Aggregate(std::string_view index, AggType type) {
@@ -166,7 +252,7 @@ void QueryWrapper::Aggregation(const reindexer::h_vector<std::string, 2>& fields
 void QueryWrapper::Sort(std::string_view index, bool desc, const reindexer::VariantArray& sortValues) {
 	ser_.PutVarUint(QueryItemType::QuerySortIndex);
 	ser_.PutVString(index);
-	ser_.PutVarUint(desc? 1 : 0);
+	ser_.PutVarUint(desc ? 1 : 0);
 	putKeys(sortValues);
 }
 
@@ -192,24 +278,21 @@ void QueryWrapper::AddValue(QueryItemType type, unsigned value) {
 	ser_.PutVarUint(value);
 }
 
-void QueryWrapper::Modifier(QueryItemType type) {
-	ser_.PutVarUint(type);
-}
+void QueryWrapper::Modifier(QueryItemType type) { ser_.PutVarUint(type); }
 
 namespace {
 void serializeQuery(reindexer::WrSerializer& data, reindexer::WrSerializer& buffer) {
-	buffer.Write(data.Slice()); // do full copy of query data
-	buffer.PutVarUint(QueryItemType::QueryEnd); // close query data
+	buffer.Write(data.Slice());			// do full copy of query data
+	buffer.PutVarUint(QueryItemType::QueryEnd);	// close query data
 }
 
 void serializeJoinQuery(JoinType type, reindexer::WrSerializer& data, reindexer::WrSerializer& buffer) {
 	buffer.PutVarUint(type);
 	serializeQuery(data, buffer);
 }
-} // namespace
+}  // namespace
 
-void QueryWrapper::addJoinQueries(const reindexer::h_vector<QueryWrapper*, 1>& queries, reindexer::WrSerializer& buffer)
- const {
+void QueryWrapper::addJoinQueries(const reindexer::h_vector<QueryWrapper*, 1>& queries, reindexer::WrSerializer& buffer) const {
 	for (auto query : queries) {
 		serializeJoinQuery(query->joinType_, query->ser_, buffer);
 	}
@@ -243,8 +326,7 @@ reindexer::Error QueryWrapper::BuildQuery(reindexer::Query& query) {
 	return error;
 }
 
-reindexer::Error QueryWrapper::SelectQuery(std::unique_ptr<QueryResultsWrapper>& qr,
-										   std::chrono::milliseconds timeout) {
+reindexer::Error QueryWrapper::SelectQuery(std::unique_ptr<QueryResultsWrapper>& qr, std::chrono::milliseconds timeout) {
 	reindexer::Query query;
 	auto err = BuildQuery(query);
 	if (!err.ok()) {
@@ -259,8 +341,7 @@ reindexer::Error QueryWrapper::SelectQuery(std::unique_ptr<QueryResultsWrapper>&
 	return db_->SelectQuery(query, *qr, timeout);
 }
 
-reindexer::Error QueryWrapper::UpdateQuery(std::unique_ptr<QueryResultsWrapper>& qr,
-										   std::chrono::milliseconds timeout) {
+reindexer::Error QueryWrapper::UpdateQuery(std::unique_ptr<QueryResultsWrapper>& qr, std::chrono::milliseconds timeout) {
 	reindexer::Query query;
 	auto err = BuildQuery(query);
 	if (!err.ok()) {
@@ -279,14 +360,13 @@ reindexer::Error QueryWrapper::DeleteQuery(size_t& count, std::chrono::milliseco
 	return db_->DeleteQuery(query, count, timeout);
 }
 
-void QueryWrapper::Set(std::string_view field, const reindexer::VariantArray& values,
-					   IsExpression isExpression) {
+void QueryWrapper::Set(std::string_view field, const reindexer::VariantArray& values, IsExpression isExpression) {
 	ser_.PutVarUint(QueryItemType::QueryUpdateFieldV2);
 	ser_.PutVString(field);
-	ser_.PutVarUint(values.size() > 1? 1 : 0); // is array flag
-	ser_.PutVarUint(values.size()); // values count
+	ser_.PutVarUint(values.size() > 1 ? 1 : 0); 	// is array flag
+	ser_.PutVarUint(values.size()); 		// values count
 	for (const auto& value : values) {
-		ser_.PutVarUint(isExpression == IsExpression::Yes? 1 : 0); // is expression
+		ser_.PutVarUint(isExpression == IsExpression::Yes ? 1 : 0); // is expression
 		ser_.PutVariant(value);
 	}
 }
@@ -294,10 +374,10 @@ void QueryWrapper::Set(std::string_view field, const reindexer::VariantArray& va
 void QueryWrapper::SetObject(std::string_view field, const reindexer::h_vector<std::string, 2>& values) {
 	ser_.PutVarUint(QueryItemType::QueryUpdateObject);
 	ser_.PutVString(field);
-	ser_.PutVarUint(values.size()); // values count
-	ser_.PutVarUint(values.size() > 1? 1 : 0); // is array flag
+	ser_.PutVarUint(values.size());			// values count
+	ser_.PutVarUint(values.size() > 1 ? 1 : 0);	// is array flag
 	for (const auto& value : values) {
-		ser_.PutVarUint(0); // function/value flag
+		ser_.PutVarUint(0);	 // function/value flag
 		ser_.PutVariant(reindexer::Variant(value));
 		break;
 	}
@@ -321,6 +401,7 @@ void QueryWrapper::Join(JoinType type, QueryWrapper* joinQuery) {
 		ser_.PutVarUint(QueryJoinCondition);
 		ser_.PutVarUint(joinType_);
 		ser_.PutVarUint(joinQueries_.size());
+		++whereEntriesCount_;
 	}
 
 	joinQuery->joinType_ = joinType_;
@@ -360,7 +441,7 @@ void QueryWrapper::AddFunctions(const reindexer::h_vector<std::string, 2>& funct
 
 void QueryWrapper::AddEqualPosition(const reindexer::h_vector<std::string, 2>& equalPositions) {
 	ser_.PutVarUint(QueryItemType::QueryEqualPosition);
-	ser_.PutVarUint(openedBrackets_.empty()? 0 : int(openedBrackets_.back() + 1));
+	ser_.PutVarUint(openedBrackets_.empty() ? 0 : int(openedBrackets_.back() + 1));
 	ser_.PutVarUint(equalPositions.size());
 	for (const auto& position : equalPositions) {
 		ser_.PutVString(position);

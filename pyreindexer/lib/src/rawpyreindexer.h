@@ -62,6 +62,7 @@ static PyObject* WhereSubQuery(PyObject* self, PyObject* args);
 static PyObject* WhereFieldSubQuery(PyObject* self, PyObject* args);
 static PyObject* WhereUUID(PyObject* self, PyObject* args);
 static PyObject* WhereBetweenFields(PyObject* self, PyObject* args);
+static PyObject* WhereExpressions(PyObject* self, PyObject* args);
 static PyObject* WhereKNN(PyObject* self, PyObject* args);
 static PyObject* WhereKNNString(PyObject* self, PyObject* args);
 static PyObject* OpenBracket(PyObject* self, PyObject* args);
@@ -151,6 +152,7 @@ static PyMethodDef module_methods[] = {
 	{"where_field_subquery", WhereFieldSubQuery, METH_VARARGS, "add where condition for sub-query"},
 	{"where_uuid", WhereUUID, METH_VARARGS, "add where condition with UUIDs"},
 	{"where_between_fields", WhereBetweenFields, METH_VARARGS, "add comparing two fields where condition"},
+	{"where_expressions", WhereExpressions, METH_VARARGS, "add where condition with left/right expressions"},
 	{"where_knn", WhereKNN, METH_VARARGS, "add where condition with KNN"},
 	{"where_knn_string", WhereKNNString, METH_VARARGS, "add where condition with KNN via string"},
 	{"open_bracket", OpenBracket, METH_VARARGS, "open bracket for where condition"},
