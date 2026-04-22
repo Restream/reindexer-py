@@ -410,43 +410,80 @@ class TestQuerySelectAggregations:
     def test_query_select_distinct(self, db, namespace, index, index_and_duplicate_items):
         # Given("Create namespace with index and duplicate items")
         items = index_and_duplicate_items
-        # Given ("Create new query")
-        query = db.query.new(namespace)
         # When ("Make select query with distinct")
-        query_result = query.distinct("idx").must_execute()
+        query = db.query.new(namespace)
+        query.distinct("idx")
+        query_result = query.must_execute()
         # Then ("Check that only distinct items is in result")
         expected_ids = [0, 1, 3]
         expected_items = [items[i] for i in expected_ids]
-        assert_that(list(query_result), equal_to(expected_items), "Wrong query results")
+        assert_that(list(query_result), equal_to(expected_items))
         # Then ("Check aggregation results")
         expected_ids_str = [str(i) for i in expected_ids]
         assert_that(query_result.get_agg_results(),
                     has_item(has_entries(type="distinct", fields=["idx"],
-                                         distincts=contains_inanyorder(*expected_ids_str))),
-                    "Wrong aggregation results")
+                                         distincts=contains_inanyorder(*expected_ids_str))))
+
+    def test_query_select_distinct_sort_offset_limit(self, db, namespace, index, index_and_duplicate_items):
+        # Given("Create namespace with index and duplicate items")
+        items = index_and_duplicate_items
+        # When ("Make select query with distinct")
+        query = db.query.new(namespace)
+        query.distinct("idx").sort("id", True).limit(2).offset(1)
+        query_result = query.must_execute()
+        # Then ("Check that only distinct items is in result")
+        expected_ids = [1, 0]
+        expected_items = [items[i] for i in expected_ids]
+        assert_that(list(query_result), equal_to(expected_items))
+        # Then ("Check aggregation results")
+        expected_ids_str = [str(i) for i in expected_ids]
+        assert_that(query_result.get_agg_results(),
+                    has_item(has_entries(type="distinct", fields=["idx"],
+                                         distincts=contains_inanyorder(*expected_ids_str))))
+
+    def test_query_select_multi_distinct(self, db, namespace, index):
+        # Given("Create namespace with index and duplicate items")
+        db.index.create(namespace, {"name": "idx1", "json_paths": ["idx1"], "field_type": "int", "index_type": "hash"})
+        db.index.create(namespace, {"name": "id2x", "json_paths": ["idx2"], "field_type": "int", "index_type": "tree"})
+        items = [{"id": 0, "idx1": 0, "idx2": 0},
+                 {"id": 1, "idx1": 0, "idx2": 1},
+                 {"id": 2, "idx1": 2, "idx2": 0},
+                 {"id": 3, "idx1": 0, "idx2": 0}]
+        create_items(db, namespace, items)
+        # When ("Make select query with multiple fields distinct")
+        query = db.query.new(namespace)
+        query.distinct("idx1", "idx2")
+        query_result = query.must_execute()
+        # Then ("Check that only distinct items is in result")
+        expected_items = items[:-1]
+        assert_that(list(query_result), equal_to(expected_items))
+        # Then ("Check aggregation results")
+        expected_ids_str = [[str(i["idx1"]), str(i["idx2"])] for i in expected_items]
+        assert_that(
+            query_result.get_agg_results(),
+            has_item(has_entries(type="distinct", fields=["idx1", "idx2"],
+                                 distincts=contains_inanyorder(*expected_ids_str)))
+        )
 
     def test_query_select_facet(self, db, namespace, index, index_and_duplicate_items):
         # Given("Create namespace with index and duplicate items")
-        # Given ("Create new query")
-        query = db.query.new(namespace)
         # When ("Make select query with facet")
-        query.aggregate_facet("idx")
+        query = db.query.new(namespace)
+        query.facet("idx")
         query_result = query.must_execute()
         # Then ("Check that result is empty")
-        assert_that(list(query_result), empty(), "Wrong query results")
+        assert_that(list(query_result), empty())
         # Then ("Check aggregation results")
         expected_facets = [{"count": 1, "values": ["0"]}, {"count": 2, "values": ["1"]}, {"count": 1, "values": ["3"]}]
         assert_that(query_result.get_agg_results(),
                     has_item(has_entries(type="facet", fields=["idx"],
-                                         facets=contains_inanyorder(*expected_facets))),
-                    "Wrong aggregation results")
+                                         facets=contains_inanyorder(*expected_facets))))
 
     def test_query_select_facet_sort_offset_limit(self, db, namespace, index, index_and_duplicate_items):
         # Given("Create namespace with index and duplicate items")
-        # Given ("Create new query")
-        query = db.query.new(namespace)
         # When ("Make select query with facet")
-        query.aggregate_facet("id", "idx").sort("id", True).limit(2).offset(1)
+        query = db.query.new(namespace)
+        query.facet("id", "idx").sort("id", True).limit(2).offset(1)
         query_result = query.must_execute()
         # Then ("Check that result is empty")
         assert_that(list(query_result), empty(), "Wrong query results")
@@ -454,8 +491,7 @@ class TestQuerySelectAggregations:
         expected_facets = [{"count": 1, "values": ["2", "1"]}, {"count": 1, "values": ["1", "1"]}]
         assert_that(query_result.get_agg_results(),
                     has_item(has_entries(type="facet", fields=["id", "idx"],
-                                         facets=contains_inanyorder(*expected_facets))),
-                    "Wrong aggregation results")
+                                         facets=contains_inanyorder(*expected_facets))))
 
 
 class TestQuerySelectWhereExpressions:

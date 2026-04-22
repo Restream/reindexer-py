@@ -48,7 +48,7 @@ public:
 	void DWithin(std::string_view index, double x, double y, double distance);
 
 	void Aggregate(std::string_view index, AggType type);
-	void Aggregation(const reindexer::h_vector<std::string, 2>& fields);
+	void Aggregation(const reindexer::h_vector<std::string, 2>& fields, AggType type);
 	void AggregationSort(std::string_view field, bool desc);
 
 	void Sort(std::string_view index, bool desc, const reindexer::VariantArray& sortValues);

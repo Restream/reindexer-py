@@ -990,9 +990,6 @@ PyObject* aggregate(PyObject* self, PyObject* args, AggType type) {
 	Py_RETURN_NONE;
 }
 } // namespace
-static PyObject* AggregateDistinct(PyObject* self, PyObject* args) {
-	return aggregate(self, args, AggType::AggDistinct);
-}
 static PyObject* AggregateSum(PyObject* self, PyObject* args) { return aggregate(self, args, AggType::AggSum); }
 static PyObject* AggregateAvg(PyObject* self, PyObject* args) { return aggregate(self, args, AggType::AggAvg); }
 static PyObject* AggregateMin(PyObject* self, PyObject* args) { return aggregate(self, args, AggType::AggMin); }
@@ -1031,7 +1028,8 @@ static PyObject* AggregationSort(PyObject* self, PyObject* args) {
 	return pyErr({});
 }
 
-static PyObject* Aggregation(PyObject* self, PyObject* args) {
+namespace {
+static PyObject* aggregation(PyObject* self, PyObject* args, AggType type) {
 	uintptr_t queryWrapperAddr = 0;
 	PyObject* fieldsList = nullptr;  // borrowed ref after ParseTuple if passed
 	if (!PyArg_ParseTuple(args, "kO!", &queryWrapperAddr, &PyList_Type, &fieldsList)) {
@@ -1052,9 +1050,16 @@ static PyObject* Aggregation(PyObject* self, PyObject* args) {
 		Py_DECREF(fieldsList);
 	}
 
-	getWrapper<QueryWrapper>(queryWrapperAddr)->Aggregation(fields);
+	getWrapper<QueryWrapper>(queryWrapperAddr)->Aggregation(fields, type);
 
 	return pyErr({});
+}
+} // namespace
+static PyObject* AggregateDistinct(PyObject* self, PyObject* args) {
+	return aggregation(self, args, AggType::AggDistinct);
+}
+static PyObject* AggregateFacet(PyObject* self, PyObject* args) {
+	return aggregation(self, args, AggType::AggFacet);
 }
 
 static PyObject* Sort(PyObject* self, PyObject* args) {

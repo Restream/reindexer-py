@@ -1457,12 +1457,12 @@ Finds for the maximum at the specified index
 #### Returns:
     (:obj:`Query`): Query object for further customizations
 
-<a id="pyreindexer.query.Query.aggregate_facet"></a>
+<a id="pyreindexer.query.Query.facet"></a>
 
 ### Query.aggregate\_facet
 
 ```python
-def aggregate_facet(*fields: str) -> Query._AggregateFacet
+def facet(*fields: str) -> Query._AggregateFacet
 ```
 
 Gets fields facet value. Applicable to multiple data fields and the result of that could be sorted
