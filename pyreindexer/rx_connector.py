@@ -136,7 +136,7 @@ class RxConnector(RaiserRx):
 
         if dsn.startswith('builtin://'):
             self.api = __import__('rawpyreindexerb')
-        elif dsn.startswith('cproto://'):
+        elif dsn.startswith(('cproto://', 'cprotos://', 'ucproto://')):
             self.api = __import__('rawpyreindexerc')
         else:
             raise ConnectionError(f"Unknown Reindexer connection protocol for dsn: {dsn}")
