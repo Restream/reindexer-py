@@ -63,6 +63,16 @@ class NamespaceApiMethods:
         return self.api.namespace_drop(ns_name, timeout)
 
     @api_method
+    def truncate(self, ns_name, timeout: timedelta = ConnectorApi.default_timeout):
+        """ Truncate namespace """
+        return self.api.namespace_truncate(ns_name, timeout)
+
+    @api_method
+    def rename(self, old_ns_name, new_ns_name, timeout: timedelta = ConnectorApi.default_timeout):
+        """ Rename namespace """
+        return self.api.namespace_rename(old_ns_name, new_ns_name, timeout)
+
+    @api_method
     def enumerate(self, enum_not_opened=False, timeout: timedelta = ConnectorApi.default_timeout):
         """ Get namespaces list """
         return self.api.namespaces_enum(enum_not_opened, timeout)

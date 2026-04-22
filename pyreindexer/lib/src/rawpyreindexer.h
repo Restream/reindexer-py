@@ -23,6 +23,8 @@ static PyObject* ExecSQL(PyObject* self, PyObject* args);
 static PyObject* NamespaceOpen(PyObject* self, PyObject* args);
 static PyObject* NamespaceClose(PyObject* self, PyObject* args);
 static PyObject* NamespaceDrop(PyObject* self, PyObject* args);
+static PyObject* NamespaceTruncate(PyObject* self, PyObject* args);
+static PyObject* NamespaceRename(PyObject* self, PyObject* args);
 static PyObject* EnumNamespaces(PyObject* self, PyObject* args);
 // index
 static PyObject* IndexAdd(PyObject* self, PyObject* args);
@@ -113,6 +115,8 @@ static PyMethodDef module_methods[] = {
 	{"namespace_open", NamespaceOpen, METH_VARARGS, "open namespace"},
 	{"namespace_close", NamespaceClose, METH_VARARGS, "close namespace"},
 	{"namespace_drop", NamespaceDrop, METH_VARARGS, "drop namespace"},
+	{"namespace_truncate", NamespaceTruncate, METH_VARARGS, "truncate namespace"},
+	{"namespace_rename", NamespaceRename, METH_VARARGS, "rename namespace"},
 	{"namespaces_enum", EnumNamespaces, METH_VARARGS, "enum namespaces"},
 	// index
 	{"index_add", IndexAdd, METH_VARARGS, "add index"},

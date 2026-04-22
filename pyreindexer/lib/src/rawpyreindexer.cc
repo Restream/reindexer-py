@@ -187,6 +187,30 @@ static PyObject* NamespaceDrop(PyObject* self, PyObject* args) {
 	return pyErr(err);
 }
 
+static PyObject* NamespaceTruncate(PyObject* self, PyObject* args) {
+	uintptr_t rx = 0;
+	char* ns = nullptr;
+	unsigned timeout = 0;
+	if (!PyArg_ParseTuple(args, "ksI", &rx, &ns, &timeout)) {
+		return nullptr;
+	}
+
+	auto err = getWrapper<DBInterface>(rx)->TruncateNamespace(ns, std::chrono::milliseconds(timeout));
+	return pyErr(err);
+}
+
+static PyObject* NamespaceRename(PyObject* self, PyObject* args) {
+	uintptr_t rx = 0;
+	char *oldNs = nullptr, *newNs = nullptr;
+	unsigned timeout = 0;
+	if (!PyArg_ParseTuple(args, "kssI", &rx, &oldNs, &newNs, &timeout)) {
+		return nullptr;
+	}
+
+	auto err = getWrapper<DBInterface>(rx)->RenameNamespace(oldNs, newNs, std::chrono::milliseconds(timeout));
+	return pyErr(err);
+}
+
 static PyObject* EnumNamespaces(PyObject* self, PyObject* args) {
 	uintptr_t rx = 0;
 	unsigned enumAll = 0;
