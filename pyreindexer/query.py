@@ -597,8 +597,8 @@ class Query(RaiserQuery):
         self.err_code, self.err_msg = self.api.aggregate_distinct(self.query_wrapper_ptr, params)
         return self
 
-    class _Aggregation(RaiserQuery):
-        """An object representing the context of a Reindexer aggregate: distinct, facet
+    class _AggregateFacet(RaiserQuery):
+        """An object representing the context of a Reindexer aggregate facet
 
         #### Attributes:
             api (module): An API module for Reindexer calls
@@ -607,7 +607,7 @@ class Query(RaiserQuery):
         """
 
         def __init__(self, query: Query):
-            """Constructs a new Reindexer _Aggregation object
+            """Constructs a new Reindexer AggregateFacetRequest object
 
             #### Arguments:
                 (:obj:`Query`): Query object for further customizations
@@ -618,43 +618,43 @@ class Query(RaiserQuery):
             self.api = query.api
             self.query_wrapper_ptr = query.query_wrapper_ptr
 
-        def limit(self, limit: int) -> Query._Aggregation:
-            """Limits the aggregation results
+        def limit(self, limit: int) -> Query._AggregateFacet:
+            """Limits facet aggregation results
 
             #### Arguments:
-                limit (int): Limit of aggregation results
+                limit (int): Limit of aggregation of facet
 
             #### Returns:
-                (:obj:`_Aggregation`): Object for further customizations
+                (:obj:`_AggregateFacet`): Facet object for further customizations
 
             """
 
             self.api.aggregation_limit(self.query_wrapper_ptr, limit)
             return self
 
-        def offset(self, offset: int) -> Query._Aggregation:
-            """Sets offset for the aggregation results
+        def offset(self, offset: int) -> Query._AggregateFacet:
+            """Sets offset of the facet aggregation results
 
             #### Arguments:
-                limit (int): Offset of aggregation results
+                limit (int): Offset in facet aggregation results
 
             #### Returns:
-                (:obj:`_Aggregation`): Object for further customizations
+                (:obj:`_AggregateFacet`): Facet object for further customizations
 
             """
 
             self.api.aggregation_offset(self.query_wrapper_ptr, offset)
             return self
 
-        def sort(self, field: str, desc: bool = False) -> Query._Aggregation:
-            """Sorts by field value
+        def sort(self, field: str, desc: bool = False) -> Query._AggregateFacet:
+            """Sorts facets by field value
 
             #### Arguments:
-                field (str): Item field
+                field (str): Item field. Use field `count` to sort by facet's count value
                 desc (bool): Sort in descending order flag
 
             #### Returns:
-                (:obj:`_Aggregation`): Object for further customizations
+                (:obj:`_AggregateFacet`): Facet object for further customizations
 
             """
 
@@ -662,23 +662,23 @@ class Query(RaiserQuery):
             return self
 
     @RaiserQuery.raise_if_error
-    def facet(self, *fields: str) -> Query._Aggregation:
+    def aggregate_facet(self, *fields: str) -> Query._AggregateFacet:
         """ Gets fields facet value. Applicable to multiple data fields and the result of that could be sorted
             by any data column or `count` and cut off by offset and limit. In order to support this functionality,
-            this method returns _Aggregation which has methods sort, limit and offset
+            this method returns _AggregateFacet which has methods sort, limit and offset
 
         #### Arguments:
             fields (*string): Field names for facet, fields should not be empty
 
         #### Returns:
-            (:obj:`_Aggregation`): Request object for further customizations
+            (:obj:`_AggregateFacet`): Request object for further customizations
 
         """
 
         params: list = self.__convert_strs_to_list(fields)
 
         self.err_code, self.err_msg = self.api.aggregate_facet(self.query_wrapper_ptr, params)
-        return self._Aggregation(self)
+        return self._AggregateFacet(self)
 
     @RaiserQuery.raise_if_error
     def sort(self, index: str, desc: bool = False,

@@ -184,7 +184,7 @@
     - [Query.distinct](#querydistinct)
       - [Arguments](#arguments-45)
       - [Returns](#returns-27)
-    - [Query.facet](#queryfacet)
+    - [Query.aggregate_facet](#queryaggregate_facet)
       - [Arguments](#arguments-46)
       - [Returns](#returns-28)
     - [Query.sort](#querysort)
@@ -1533,23 +1533,23 @@ Gets fields distinct value. Applicable to multiple data fields
 #### Returns:
     (:obj:`Query`): Query object for further customizations
 
-<a id="pyreindexer.query.Query.facet"></a>
+<a id="pyreindexer.query.Query.aggregate_facet"></a>
 
-### Query.facet
+### Query.aggregate\_facet
 
 ```python
-def facet(*fields: str) -> Query._Aggregation
+def aggregate_facet(*fields: str) -> Query._AggregateFacet
 ```
 
 Gets fields facet value. Applicable to multiple data fields and the result of that could be sorted
     by any data column or `count` and cut off by offset and limit. In order to support this functionality,
-    this method returns _Aggregation which has methods sort, limit and offset
+    this method returns _AggregateFacet which has methods sort, limit and offset
 
 #### Arguments:
     fields (*string): Field names for facet, fields should not be empty
 
 #### Returns:
-    (:obj:`_Aggregation`): Request object for further customizations
+    (:obj:`_AggregateFacet`): Request object for further customizations
 
 <a id="pyreindexer.query.Query.sort"></a>
 
