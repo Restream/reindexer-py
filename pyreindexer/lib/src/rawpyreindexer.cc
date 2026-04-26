@@ -4,9 +4,10 @@
 #include "estl/gift_str.h"
 #include "tools/serializer.h"
 
-#include "queryresults_wrapper.h"
-#include "query_wrapper.h"
+#include "pygil.h"
 #include "pyobjtools.h"
+#include "query_wrapper.h"
+#include "queryresults_wrapper.h"
 #include "transaction_wrapper.h"
 
 namespace pyreindexer {
@@ -20,7 +21,6 @@ using ItemT = reindexer::client::Item;
 #else
 using ItemT = reindexer::Item;
 #endif
-
 
 namespace {
 uintptr_t initReindexer(const ReindexerConfig& cfg) {
@@ -46,31 +46,33 @@ PyObject* queryResultsWrapperIterate(uintptr_t qresWrapperAddr) {
 
 	WrSerializer wrSer;
 	static constexpr bool withHeaderLen = false;
-	auto err = qresWrapper->GetItemJSON(wrSer, withHeaderLen);
-	if (!err.ok()) {
-		return Py_BuildValue("isO", err.code(), err.what(), NULL);
+	Error err;
+	{
+		PYREINDEXER_GIL_RELEASE_SCOPE();
+		err = qresWrapper->GetItemJSON(wrSer, withHeaderLen);
+		if (err.ok()) {
+			err = qresWrapper->Next();
+		}
 	}
-
-	err = qresWrapper->Next();
 	if (!err.ok()) {
 		return Py_BuildValue("isO", err.code(), err.what(), NULL);
 	}
 
 	PyObject* dictFromJson = nullptr;
 	try {
-		dictFromJson = PyObjectFromJson(reindexer::giftStr(wrSer.Slice()));  // stolen ref
+		dictFromJson = PyObjectFromJson(reindexer::giftStr(wrSer.Slice()));	 // stolen ref
 	} catch (const Error& err) {
 		Py_XDECREF(dictFromJson);
 
 		return Py_BuildValue("isO", err.code(), err.what(), NULL);
 	}
 
-	PyObject* res = Py_BuildValue("isO", errOK, "", dictFromJson);  // new ref
+	PyObject* res = Py_BuildValue("isO", errOK, "", dictFromJson);	// new ref
 	Py_DECREF(dictFromJson);
 
 	return res;
 }
-} // namespace
+}  // namespace
 
 // common --------------------------------------------------------------------------------------------------------------
 
@@ -82,9 +84,9 @@ static PyObject* Init(PyObject* self, PyObject* args) {
 	unsigned startSpecialThread = 0;
 	unsigned syncRxCoroCount = 0;
 	unsigned maxReplUpdatesSize = 0;
-	if (!PyArg_ParseTuple(args, "iiiIIsIIif", &cfg.fetchAmount, &cfg.reconnectAttempts, &netTimeout,
-						  &enableCompression, &startSpecialThread, &clientName, &syncRxCoroCount,
-						  &maxReplUpdatesSize, &cfg.allocatorCacheLimit, &cfg.allocatorCachePart)) {
+	if (!PyArg_ParseTuple(args, "iiiIIsIIif", &cfg.fetchAmount, &cfg.reconnectAttempts, &netTimeout, &enableCompression,
+						  &startSpecialThread, &clientName, &syncRxCoroCount, &maxReplUpdatesSize, &cfg.allocatorCacheLimit,
+						  &cfg.allocatorCachePart)) {
 		return nullptr;
 	}
 
@@ -138,15 +140,18 @@ static PyObject* ExecSQL(PyObject* self, PyObject* args) {
 
 	auto db = getWrapper<DBInterface>(rx);
 	auto qresult = std::make_unique<QueryResultsWrapper>(db);
-	auto err = qresult->ExecSQL(query, std::chrono::milliseconds(timeout));
-	if (!err.ok()) {
-		return Py_BuildValue("iskII", err.code(), err.what(), 0, 0, 0);
+	Error err;
+	size_t count = 0;
+	size_t totalCount = 0;
+	{
+		PYREINDEXER_GIL_RELEASE_SCOPE();
+		err = qresult->ExecSQL(query, std::chrono::milliseconds(timeout));
+		if (err.ok()) {
+			count = qresult->Count();
+			totalCount = qresult->TotalCount();
+		}
 	}
-
-	const auto count = qresult->Count();
-	const auto totalCount = qresult->TotalCount();
-	return Py_BuildValue("iskII", err.code(), err.what(),
-						 reinterpret_cast<uintptr_t>(qresult.release()), count, totalCount);
+	return Py_BuildValue("iskII", err.code(), err.what(), err.ok() ? reinterpret_cast<uintptr_t>(qresult.release()) : 0, count, totalCount);
 }
 
 // namespace ----------------------------------------------------------------------------------------------------------
@@ -159,7 +164,11 @@ static PyObject* NamespaceOpen(PyObject* self, PyObject* args) {
 		return nullptr;
 	}
 
-	auto err = getWrapper<DBInterface>(rx)->OpenNamespace(ns, std::chrono::milliseconds(timeout));
+	Error err;
+	{
+		PYREINDEXER_GIL_RELEASE_SCOPE();
+		err = getWrapper<DBInterface>(rx)->OpenNamespace(ns, std::chrono::milliseconds(timeout));
+	}
 	return pyErr(err);
 }
 
@@ -171,7 +180,11 @@ static PyObject* NamespaceClose(PyObject* self, PyObject* args) {
 		return nullptr;
 	}
 
-	auto err = getWrapper<DBInterface>(rx)->CloseNamespace(ns, std::chrono::milliseconds(timeout));
+	Error err;
+	{
+		PYREINDEXER_GIL_RELEASE_SCOPE();
+		err = getWrapper<DBInterface>(rx)->CloseNamespace(ns, std::chrono::milliseconds(timeout));
+	}
 	return pyErr(err);
 }
 
@@ -183,7 +196,11 @@ static PyObject* NamespaceDrop(PyObject* self, PyObject* args) {
 		return nullptr;
 	}
 
-	auto err = getWrapper<DBInterface>(rx)->DropNamespace(ns, std::chrono::milliseconds(timeout));
+	Error err;
+	{
+		PYREINDEXER_GIL_RELEASE_SCOPE();
+		err = getWrapper<DBInterface>(rx)->DropNamespace(ns, std::chrono::milliseconds(timeout));
+	}
 	return pyErr(err);
 }
 
@@ -196,8 +213,12 @@ static PyObject* EnumNamespaces(PyObject* self, PyObject* args) {
 	}
 
 	std::vector<reindexer::NamespaceDef> nsDefs;
-	auto err = getWrapper<DBInterface>(rx)->EnumNamespaces(nsDefs, reindexer::EnumNamespacesOpts().WithClosed(enumAll),
-														   std::chrono::milliseconds(timeout));
+	Error err;
+	{
+		PYREINDEXER_GIL_RELEASE_SCOPE();
+		err = getWrapper<DBInterface>(rx)->EnumNamespaces(nsDefs, reindexer::EnumNamespacesOpts().WithClosed(enumAll),
+														  std::chrono::milliseconds(timeout));
+	}
 	if (!err.ok()) {
 		return Py_BuildValue("isO", err.code(), err.what(), NULL);
 	}
@@ -215,7 +236,7 @@ static PyObject* EnumNamespaces(PyObject* self, PyObject* args) {
 
 		PyObject* dictFromJson = nullptr;
 		try {
-			dictFromJson = PyObjectFromJson(reindexer::giftStr(wrSer.Slice()));  // stolen ref
+			dictFromJson = PyObjectFromJson(reindexer::giftStr(wrSer.Slice()));	 // stolen ref
 		} catch (const Error& err) {
 			Py_XDECREF(dictFromJson);
 			Py_DECREF(list);
@@ -258,12 +279,16 @@ static PyObject* IndexAdd(PyObject* self, PyObject* args) {
 
 	Py_DECREF(indexDefDict);
 
-	auto indexDef = IndexDef::FromJSON(reindexer::giftStr(wrSer.Slice()));
-	if (!indexDef) {
-		return pyErr(indexDef.error());
+	Error err;
+	{
+		PYREINDEXER_GIL_RELEASE_SCOPE();
+		auto indexDef = IndexDef::FromJSON(reindexer::giftStr(wrSer.Slice()));
+		if (!indexDef) {
+			err = indexDef.error();
+		} else {
+			err = getWrapper<DBInterface>(rx)->AddIndex(ns, *indexDef, std::chrono::milliseconds(timeout));
+		}
 	}
-
-	auto err = getWrapper<DBInterface>(rx)->AddIndex(ns, *indexDef, std::chrono::milliseconds(timeout));
 	return pyErr(err);
 }
 
@@ -290,12 +315,16 @@ static PyObject* IndexUpdate(PyObject* self, PyObject* args) {
 
 	Py_DECREF(indexDefDict);
 
-	auto indexDef = IndexDef::FromJSON(reindexer::giftStr(wrSer.Slice()));
-	if (!indexDef) {
-		return pyErr(indexDef.error());
+	Error err;
+	{
+		PYREINDEXER_GIL_RELEASE_SCOPE();
+		auto indexDef = IndexDef::FromJSON(reindexer::giftStr(wrSer.Slice()));
+		if (!indexDef) {
+			err = indexDef.error();
+		} else {
+			err = getWrapper<DBInterface>(rx)->UpdateIndex(ns, *indexDef, std::chrono::milliseconds(timeout));
+		}
 	}
-
-	auto err = getWrapper<DBInterface>(rx)->UpdateIndex(ns, *indexDef, std::chrono::milliseconds(timeout));
 	return pyErr(err);
 }
 
@@ -307,7 +336,11 @@ static PyObject* IndexDrop(PyObject* self, PyObject* args) {
 		return nullptr;
 	}
 
-	auto err = getWrapper<DBInterface>(rx)->DropIndex(ns, IndexDef(indexName), std::chrono::milliseconds(timeout));
+	Error err;
+	{
+		PYREINDEXER_GIL_RELEASE_SCOPE();
+		err = getWrapper<DBInterface>(rx)->DropIndex(ns, IndexDef(indexName), std::chrono::milliseconds(timeout));
+	}
 	return pyErr(err);
 }
 
@@ -320,8 +353,7 @@ PyObject* itemModify(PyObject* self, PyObject* args, ItemModifyMode mode) {
 	PyObject* itemDefDict = nullptr;   // borrowed ref after ParseTuple
 	PyObject* preceptsList = nullptr;  // borrowed ref after ParseTuple if passed
 	unsigned timeout = 0;
-	if (!PyArg_ParseTuple(args, "ksO!|O!I", &rx, &ns, &PyDict_Type, &itemDefDict, &PyList_Type, &preceptsList,
-						  &timeout)) {
+	if (!PyArg_ParseTuple(args, "ksO!|O!I", &rx, &ns, &PyDict_Type, &itemDefDict, &PyList_Type, &preceptsList, &timeout)) {
 		return nullptr;
 	}
 
@@ -329,7 +361,11 @@ PyObject* itemModify(PyObject* self, PyObject* args, ItemModifyMode mode) {
 	Py_XINCREF(preceptsList);
 
 	ItemT item;
-	auto err = getWrapper<DBInterface>(rx)->NewItem(ns, item, std::chrono::milliseconds(timeout));
+	Error err;
+	{
+		PYREINDEXER_GIL_RELEASE_SCOPE();
+		err = getWrapper<DBInterface>(rx)->NewItem(ns, item, std::chrono::milliseconds(timeout));
+	}
 	if (!err.ok()) {
 		return pyErr(err);
 	}
@@ -347,7 +383,10 @@ PyObject* itemModify(PyObject* self, PyObject* args, ItemModifyMode mode) {
 
 	Py_DECREF(itemDefDict);
 
-	err = item.Unsafe().FromJSON(wrSer.Slice(), 0, mode == ModeDelete);
+	{
+		PYREINDEXER_GIL_RELEASE_SCOPE();
+		err = item.Unsafe().FromJSON(wrSer.Slice(), 0, mode == ModeDelete);
+	}
 	if (!err.ok()) {
 		Py_XDECREF(preceptsList);
 
@@ -369,26 +408,29 @@ PyObject* itemModify(PyObject* self, PyObject* args, ItemModifyMode mode) {
 
 	Py_XDECREF(preceptsList);
 
-	switch (mode) {
-		case ModeInsert:
-			err = getWrapper<DBInterface>(rx)->Insert(ns, item, std::chrono::milliseconds(timeout));
-			break;
-		case ModeUpdate:
-			err = getWrapper<DBInterface>(rx)->Update(ns, item, std::chrono::milliseconds(timeout));
-			break;
-		case ModeUpsert:
-			err = getWrapper<DBInterface>(rx)->Upsert(ns, item, std::chrono::milliseconds(timeout));
-			break;
-		case ModeDelete:
-			err = getWrapper<DBInterface>(rx)->Delete(ns, item, std::chrono::milliseconds(timeout));
-			break;
-		default:
-			err = {ErrorCode::errLogic, "Unknown item modify mode"};
+	{
+		PYREINDEXER_GIL_RELEASE_SCOPE();
+		switch (mode) {
+			case ModeInsert:
+				err = getWrapper<DBInterface>(rx)->Insert(ns, item, std::chrono::milliseconds(timeout));
+				break;
+			case ModeUpdate:
+				err = getWrapper<DBInterface>(rx)->Update(ns, item, std::chrono::milliseconds(timeout));
+				break;
+			case ModeUpsert:
+				err = getWrapper<DBInterface>(rx)->Upsert(ns, item, std::chrono::milliseconds(timeout));
+				break;
+			case ModeDelete:
+				err = getWrapper<DBInterface>(rx)->Delete(ns, item, std::chrono::milliseconds(timeout));
+				break;
+			default:
+				err = {ErrorCode::errLogic, "Unknown item modify mode"};
+		}
 	}
 
 	return pyErr(err);
 }
-} // namespace
+}  // namespace
 static PyObject* ItemInsert(PyObject* self, PyObject* args) { return itemModify(self, args, ModeInsert); }
 static PyObject* ItemUpdate(PyObject* self, PyObject* args) { return itemModify(self, args, ModeUpdate); }
 static PyObject* ItemUpsert(PyObject* self, PyObject* args) { return itemModify(self, args, ModeUpsert); }
@@ -404,7 +446,11 @@ static PyObject* PutMeta(PyObject* self, PyObject* args) {
 		return nullptr;
 	}
 
-	auto err = getWrapper<DBInterface>(rx)->PutMeta(ns, key, value, std::chrono::milliseconds(timeout));
+	Error err;
+	{
+		PYREINDEXER_GIL_RELEASE_SCOPE();
+		err = getWrapper<DBInterface>(rx)->PutMeta(ns, key, value, std::chrono::milliseconds(timeout));
+	}
 	return pyErr(err);
 }
 
@@ -417,7 +463,11 @@ static PyObject* GetMeta(PyObject* self, PyObject* args) {
 	}
 
 	std::string value;
-	auto err = getWrapper<DBInterface>(rx)->GetMeta(ns, key, value, std::chrono::milliseconds(timeout));
+	Error err;
+	{
+		PYREINDEXER_GIL_RELEASE_SCOPE();
+		err = getWrapper<DBInterface>(rx)->GetMeta(ns, key, value, std::chrono::milliseconds(timeout));
+	}
 	return Py_BuildValue("iss", err.code(), err.what(), value.c_str());
 }
 
@@ -429,7 +479,11 @@ static PyObject* DeleteMeta(PyObject* self, PyObject* args) {
 		return nullptr;
 	}
 
-	auto err = getWrapper<DBInterface>(rx)->DeleteMeta(ns, key, std::chrono::milliseconds(timeout));
+	Error err;
+	{
+		PYREINDEXER_GIL_RELEASE_SCOPE();
+		err = getWrapper<DBInterface>(rx)->DeleteMeta(ns, key, std::chrono::milliseconds(timeout));
+	}
 	return pyErr(err);
 }
 
@@ -442,7 +496,11 @@ static PyObject* EnumMeta(PyObject* self, PyObject* args) {
 	}
 
 	std::vector<std::string> keys;
-	auto err = getWrapper<DBInterface>(rx)->EnumMeta(ns, keys, std::chrono::milliseconds(timeout));
+	Error err;
+	{
+		PYREINDEXER_GIL_RELEASE_SCOPE();
+		err = getWrapper<DBInterface>(rx)->EnumMeta(ns, keys, std::chrono::milliseconds(timeout));
+	}
 	if (!err.ok()) {
 		return Py_BuildValue("isO", err.code(), err.what(), NULL);
 	}
@@ -454,8 +512,8 @@ static PyObject* EnumMeta(PyObject* self, PyObject* args) {
 
 	Py_ssize_t pos = 0;
 	for (const auto& key : keys) {
-		PyObject* pyKey = PyUnicode_FromStringAndSize(key.data(), key.size());  // new ref
-		PyList_SetItem(list, pos, pyKey);  // stolen ref
+		PyObject* pyKey = PyUnicode_FromStringAndSize(key.data(), key.size());	// new ref
+		PyList_SetItem(list, pos, pyKey);										// stolen ref
 		++pos;
 	}
 
@@ -473,7 +531,11 @@ static PyObject* QueryResultsWrapperStatus(PyObject* self, PyObject* args) {
 		return nullptr;
 	}
 
-	auto err = getWrapper<QueryResultsWrapper>(qresWrapperAddr)->Status();
+	Error err;
+	{
+		PYREINDEXER_GIL_RELEASE_SCOPE();
+		err = getWrapper<QueryResultsWrapper>(qresWrapperAddr)->Status();
+	}
 	return pyErr(err);
 }
 
@@ -505,26 +567,28 @@ static PyObject* GetAggregationResults(PyObject* self, PyObject* args) {
 
 	const auto& aggResults = getWrapper<QueryResultsWrapper>(qresWrapperAddr)->GetAggregationResults();
 	WrSerializer wrSer;
-	wrSer << "[";
-	for (size_t i = 0; i < aggResults.size(); ++i) {
-		if (i > 0) {
-			wrSer << ',';
+	{
+		PYREINDEXER_GIL_RELEASE_SCOPE();
+		wrSer << "[";
+		for (size_t i = 0; i < aggResults.size(); ++i) {
+			if (i > 0) {
+				wrSer << ',';
+			}
+			aggResults[i].GetJSON(wrSer);
 		}
-
-		aggResults[i].GetJSON(wrSer);
+		wrSer << "]";
 	}
-	wrSer << "]";
 
 	PyObject* dictFromJson = nullptr;
 	try {
-		dictFromJson = PyObjectFromJson(reindexer::giftStr(wrSer.Slice()));  // stolen ref
+		dictFromJson = PyObjectFromJson(reindexer::giftStr(wrSer.Slice()));	 // stolen ref
 	} catch (const Error& err) {
 		Py_XDECREF(dictFromJson);
 
 		return Py_BuildValue("isO", err.code(), err.what(), NULL);
 	}
 
-	PyObject* res = Py_BuildValue("isO", errOK, "", dictFromJson);  // new ref
+	PyObject* res = Py_BuildValue("isO", errOK, "", dictFromJson);	// new ref
 	Py_DECREF(dictFromJson);
 
 	return res;
@@ -553,18 +617,18 @@ static PyObject* NewTransaction(PyObject* self, PyObject* args) {
 
 	auto db = getWrapper<DBInterface>(rx);
 	auto transaction = std::make_unique<TransactionWrapper>(db);
-	auto err = transaction->Start(ns, std::chrono::milliseconds(timeout));
-	if (!err.ok()) {
-		return Py_BuildValue("isk", err.code(), err.what(), 0);
+	Error err;
+	{
+		PYREINDEXER_GIL_RELEASE_SCOPE();
+		err = transaction->Start(ns, std::chrono::milliseconds(timeout));
 	}
-
-	return Py_BuildValue("isk", errOK, "", reinterpret_cast<uintptr_t>(transaction.release()));
+	return Py_BuildValue("isk", err.code(), err.what(), err.ok() ? reinterpret_cast<uintptr_t>(transaction.release()) : 0);
 }
 
 namespace {
 PyObject* modifyTransaction(PyObject* self, PyObject* args, ItemModifyMode mode) {
 	uintptr_t transactionWrapperAddr = 0;
-	PyObject* defDict = nullptr;   // borrowed ref after ParseTuple
+	PyObject* defDict = nullptr;	   // borrowed ref after ParseTuple
 	PyObject* preceptsList = nullptr;  // borrowed ref after ParseTuple if passed
 	if (!PyArg_ParseTuple(args, "kO!|O!", &transactionWrapperAddr, &PyDict_Type, &defDict, &PyList_Type, &preceptsList)) {
 		return nullptr;
@@ -597,13 +661,6 @@ PyObject* modifyTransaction(PyObject* self, PyObject* args, ItemModifyMode mode)
 
 	Py_DECREF(defDict);
 
-	err = item.FromJSON(wrSer.Slice(), 0, mode == ModeDelete);
-	if (!err.ok()) {
-		Py_XDECREF(preceptsList);
-
-		return pyErr(err);
-	}
-
 	if (preceptsList != nullptr && mode != ModeDelete) {
 		std::vector<std::string> precepts;
 
@@ -624,8 +681,13 @@ PyObject* modifyTransaction(PyObject* self, PyObject* args, ItemModifyMode mode)
 		case ModeInsert:
 		case ModeUpdate:
 		case ModeUpsert:
-		case ModeDelete:
-			err = transaction->Modify(std::move(item), mode);
+		case ModeDelete: {
+			PYREINDEXER_GIL_RELEASE_SCOPE();
+			err = item.FromJSON(wrSer.Slice(), 0, mode == ModeDelete);
+			if (err.ok()) {
+				err = transaction->Modify(std::move(item), mode);
+			}
+		}
 			return pyErr(err);
 		default:
 			return pyErr({ErrorCode::errLogic, "Unknown item modify transaction mode"});
@@ -633,7 +695,7 @@ PyObject* modifyTransaction(PyObject* self, PyObject* args, ItemModifyMode mode)
 
 	return nullptr;
 }
-} // namespace
+}  // namespace
 static PyObject* InsertTransaction(PyObject* self, PyObject* args) { return modifyTransaction(self, args, ModeInsert); }
 static PyObject* UpdateTransaction(PyObject* self, PyObject* args) { return modifyTransaction(self, args, ModeUpdate); }
 static PyObject* UpsertTransaction(PyObject* self, PyObject* args) { return modifyTransaction(self, args, ModeUpsert); }
@@ -647,19 +709,21 @@ PyObject* modifyQueryTransaction(PyObject* self, PyObject* args, QueryType type)
 		return nullptr;
 	}
 
-	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
+	Error err;
+	{
+		PYREINDEXER_GIL_RELEASE_SCOPE();
+		auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
 
-	reindexer::Query rxQuery;
-	auto err = query->BuildQuery(rxQuery);
-	if (!err.ok()) {
-		return pyErr(err);
+		reindexer::Query rxQuery;
+		err = query->BuildQuery(rxQuery);
+		if (err.ok()) {
+			rxQuery.type_ = type;
+			err = getWrapper<TransactionWrapper>(transactionWrapperAddr)->Modify(std::move(rxQuery));
+		}
 	}
-	rxQuery.type_ = type;
-
-	err = getWrapper<TransactionWrapper>(transactionWrapperAddr)->Modify(std::move(rxQuery));
 	return pyErr(err);
 }
-} // namespace
+}  // namespace
 static PyObject* UpdateQueryTransaction(PyObject* self, PyObject* args) {
 	return modifyQueryTransaction(self, args, QueryType::QueryUpdate);
 }
@@ -675,9 +739,12 @@ static PyObject* CommitTransaction(PyObject* self, PyObject* args) {
 	}
 
 	size_t count = 0;
-	auto err = getWrapper<TransactionWrapper>(transactionWrapperAddr)->Commit(count, std::chrono::milliseconds(timeout));
-
-	deleteWrapper<TransactionWrapper>(transactionWrapperAddr); // free memory
+	Error err;
+	{
+		PYREINDEXER_GIL_RELEASE_SCOPE();
+		err = getWrapper<TransactionWrapper>(transactionWrapperAddr)->Commit(count, std::chrono::milliseconds(timeout));
+		deleteWrapper<TransactionWrapper>(transactionWrapperAddr);	// free memory
+	}
 
 	return Py_BuildValue("isI", err.code(), err.what(), count);
 }
@@ -689,9 +756,12 @@ static PyObject* RollbackTransaction(PyObject* self, PyObject* args) {
 		return nullptr;
 	}
 
-	auto err = getWrapper<TransactionWrapper>(transactionWrapperAddr)->Rollback(std::chrono::milliseconds(timeout));
-
-	deleteWrapper<TransactionWrapper>(transactionWrapperAddr); // free memory
+	Error err;
+	{
+		PYREINDEXER_GIL_RELEASE_SCOPE();
+		err = getWrapper<TransactionWrapper>(transactionWrapperAddr)->Rollback(std::chrono::milliseconds(timeout));
+		deleteWrapper<TransactionWrapper>(transactionWrapperAddr);	// free memory
+	}
 
 	return pyErr(err);
 }
@@ -839,20 +909,20 @@ static PyObject* WhereBetweenFields(PyObject* self, PyObject* args) {
 }
 
 static PyObject* WhereExpressions(PyObject* self, PyObject* args) {
-    uintptr_t queryWrapperAddr = 0;
-    PyObject* leftExpr = nullptr;
-    unsigned condition = 0;
-    PyObject* rightExpr = nullptr;
-    if (!PyArg_ParseTuple(args, "kOIO", &queryWrapperAddr, &leftExpr, &condition, &rightExpr)) {
-        return nullptr;
-    }
+	uintptr_t queryWrapperAddr = 0;
+	PyObject* leftExpr = nullptr;
+	unsigned condition = 0;
+	PyObject* rightExpr = nullptr;
+	if (!PyArg_ParseTuple(args, "kOIO", &queryWrapperAddr, &leftExpr, &condition, &rightExpr)) {
+		return nullptr;
+	}
 
-    try {
-        getWrapper<QueryWrapper>(queryWrapperAddr)->WhereExpressions(leftExpr, CondType(condition), rightExpr);
-        return pyErr({});
-    } catch (const reindexer::Error& err) {
-        return pyErr(err);
-    }
+	try {
+		getWrapper<QueryWrapper>(queryWrapperAddr)->WhereExpressions(leftExpr, CondType(condition), rightExpr);
+		return pyErr({});
+	} catch (const reindexer::Error& err) {
+		return pyErr(err);
+	}
 }
 
 namespace {
@@ -891,16 +961,16 @@ reindexer::KnnSearchParams GetParams(bool is_k, unsigned k, bool is_r, double r,
 	}
 	return params;
 }
-}
+}  // namespace
 
 static PyObject* WhereKNN(PyObject* self, PyObject* args) {
 	uintptr_t queryWrapperAddr = 0;
 	char* index = nullptr;
 	double radius = 0.0;
 	unsigned is_radius = 0, is_k = 0, k = 0, ef = 0, nprobe = 0;
-	PyObject* valuesList = nullptr;  // borrowed ref after ParseTuple if passed
-	if (!PyArg_ParseTuple(args, "ksIIIdIIO!", &queryWrapperAddr, &index, &is_k, &k, &is_radius, &radius, &ef, &nprobe,
-						  &PyList_Type, &valuesList)) {
+	PyObject* valuesList = nullptr;	 // borrowed ref after ParseTuple if passed
+	if (!PyArg_ParseTuple(args, "ksIIIdIIO!", &queryWrapperAddr, &index, &is_k, &k, &is_radius, &radius, &ef, &nprobe, &PyList_Type,
+						  &valuesList)) {
 		return nullptr;
 	}
 
@@ -936,8 +1006,7 @@ static PyObject* WhereKNNString(PyObject* self, PyObject* args) {
 	double radius = 0.0;
 	unsigned is_radius = 0, is_k = 0, k = 0, ef = 0, nprobe = 0;
 	char* value = nullptr;
-	if (!PyArg_ParseTuple(args, "ksIIIdIIs", &queryWrapperAddr, &index, &is_k, &k, &is_radius, &radius, &ef, &nprobe,
-						  &value)) {
+	if (!PyArg_ParseTuple(args, "ksIIIdIIs", &queryWrapperAddr, &index, &is_k, &k, &is_radius, &radius, &ef, &nprobe, &value)) {
 		return nullptr;
 	}
 
@@ -957,10 +1026,10 @@ PyObject* addBracket(PyObject* self, PyObject* args, BracketType type) {
 
 	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
 
-	auto err = (type == BracketType::Open)? query->OpenBracket() : query->CloseBracket();
+	auto err = (type == BracketType::Open) ? query->OpenBracket() : query->CloseBracket();
 	return pyErr(err);
 }
-} // namespace
+}  // namespace
 static PyObject* OpenBracket(PyObject* self, PyObject* args) { return addBracket(self, args, BracketType::Open); }
 static PyObject* CloseBracket(PyObject* self, PyObject* args) { return addBracket(self, args, BracketType::Closed); }
 
@@ -989,10 +1058,8 @@ PyObject* aggregate(PyObject* self, PyObject* args, AggType type) {
 
 	Py_RETURN_NONE;
 }
-} // namespace
-static PyObject* AggregateDistinct(PyObject* self, PyObject* args) {
-	return aggregate(self, args, AggType::AggDistinct);
-}
+}  // namespace
+static PyObject* AggregateDistinct(PyObject* self, PyObject* args) { return aggregate(self, args, AggType::AggDistinct); }
 static PyObject* AggregateSum(PyObject* self, PyObject* args) { return aggregate(self, args, AggType::AggSum); }
 static PyObject* AggregateAvg(PyObject* self, PyObject* args) { return aggregate(self, args, AggType::AggAvg); }
 static PyObject* AggregateMin(PyObject* self, PyObject* args) { return aggregate(self, args, AggType::AggMin); }
@@ -1010,13 +1077,9 @@ static PyObject* addValue(PyObject* self, PyObject* args, QueryItemType type) {
 
 	Py_RETURN_NONE;
 }
-} // namespace
-static PyObject* AggregationLimit(PyObject* self, PyObject* args) {
-	return addValue(self, args, QueryItemType::QueryAggregationLimit);
-}
-static PyObject* AggregationOffset(PyObject* self, PyObject* args) {
-	return addValue(self, args, QueryItemType::QueryAggregationOffset);
-}
+}  // namespace
+static PyObject* AggregationLimit(PyObject* self, PyObject* args) { return addValue(self, args, QueryItemType::QueryAggregationLimit); }
+static PyObject* AggregationOffset(PyObject* self, PyObject* args) { return addValue(self, args, QueryItemType::QueryAggregationOffset); }
 
 static PyObject* AggregationSort(PyObject* self, PyObject* args) {
 	uintptr_t queryWrapperAddr = 0;
@@ -1033,7 +1096,7 @@ static PyObject* AggregationSort(PyObject* self, PyObject* args) {
 
 static PyObject* Aggregation(PyObject* self, PyObject* args) {
 	uintptr_t queryWrapperAddr = 0;
-	PyObject* fieldsList = nullptr;  // borrowed ref after ParseTuple if passed
+	PyObject* fieldsList = nullptr;	 // borrowed ref after ParseTuple if passed
 	if (!PyArg_ParseTuple(args, "kO!", &queryWrapperAddr, &PyList_Type, &fieldsList)) {
 		return nullptr;
 	}
@@ -1061,7 +1124,7 @@ static PyObject* Sort(PyObject* self, PyObject* args) {
 	uintptr_t queryWrapperAddr = 0;
 	char* index = nullptr;
 	unsigned desc = 0;
-	PyObject* sortValuesList = nullptr;  // borrowed ref after ParseTuple if passed
+	PyObject* sortValuesList = nullptr;	 // borrowed ref after ParseTuple if passed
 	if (!PyArg_ParseTuple(args, "ksIO!", &queryWrapperAddr, &index, &desc, &PyList_Type, &sortValuesList)) {
 		return nullptr;
 	}
@@ -1096,7 +1159,7 @@ PyObject* logOp(PyObject* self, PyObject* args, OpType opID) {
 
 	Py_RETURN_NONE;
 }
-} // namespace
+}  // namespace
 static PyObject* And(PyObject* self, PyObject* args) { return logOp(self, args, OpType::OpAnd); }
 static PyObject* Or(PyObject* self, PyObject* args) { return logOp(self, args, OpType::OpOr); }
 static PyObject* Not(PyObject* self, PyObject* args) { return logOp(self, args, OpType::OpNot); }
@@ -1112,13 +1175,9 @@ static PyObject* total(PyObject* self, PyObject* args, CalcTotalMode mode) {
 
 	Py_RETURN_NONE;
 }
-} // namespace
-static PyObject* ReqTotal(PyObject* self, PyObject* args) {
-	return total(self, args, CalcTotalMode::ModeAccurateTotal);
-}
-static PyObject* CachedTotal(PyObject* self, PyObject* args) {
-	return total(self, args, CalcTotalMode::ModeCachedTotal);
-}
+}  // namespace
+static PyObject* ReqTotal(PyObject* self, PyObject* args) { return total(self, args, CalcTotalMode::ModeAccurateTotal); }
+static PyObject* CachedTotal(PyObject* self, PyObject* args) { return total(self, args, CalcTotalMode::ModeCachedTotal); }
 
 static PyObject* Limit(PyObject* self, PyObject* args) { return addValue(self, args, QueryItemType::QueryLimit); }
 static PyObject* Offset(PyObject* self, PyObject* args) { return addValue(self, args, QueryItemType::QueryOffset); }
@@ -1147,7 +1206,7 @@ PyObject* modifier(PyObject* self, PyObject* args, QueryItemType type) {
 
 	Py_RETURN_NONE;
 }
-} // namespace
+}  // namespace
 static PyObject* Explain(PyObject* self, PyObject* args) { return modifier(self, args, QueryItemType::QueryExplain); }
 static PyObject* WithRank(PyObject* self, PyObject* args) { return modifier(self, args, QueryItemType::QueryWithRank); }
 
@@ -1159,7 +1218,11 @@ static PyObject* DeleteQuery(PyObject* self, PyObject* args) {
 	}
 
 	size_t count = 0;
-	auto err = getWrapper<QueryWrapper>(queryWrapperAddr)->DeleteQuery(count, std::chrono::milliseconds(timeout));
+	Error err;
+	{
+		PYREINDEXER_GIL_RELEASE_SCOPE();
+		err = getWrapper<QueryWrapper>(queryWrapperAddr)->DeleteQuery(count, std::chrono::milliseconds(timeout));
+	}
 
 	return Py_BuildValue("isI", err.code(), err.what(), count);
 }
@@ -1173,37 +1236,39 @@ static PyObject* executeQuery(PyObject* self, PyObject* args, ExecuteType type) 
 		return nullptr;
 	}
 
-	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
-	std::unique_ptr<QueryResultsWrapper> qresult;
 	Error err;
-	switch (type) {
-		case ExecuteType::Select:
-			err = query->SelectQuery(qresult, std::chrono::milliseconds(timeout));
-			break;
-		case ExecuteType::Update:
-			err = query->UpdateQuery(qresult, std::chrono::milliseconds(timeout));
-			break;
-		default:
-			return pyErr({ErrorCode::errLogic, "Unknown query execute mode"});
+	std::unique_ptr<QueryResultsWrapper> qresult;
+	size_t count = 0;
+	size_t totalCount = 0;
+	{
+		PYREINDEXER_GIL_RELEASE_SCOPE();
+		auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
+		switch (type) {
+			case ExecuteType::Select:
+				err = query->SelectQuery(qresult, std::chrono::milliseconds(timeout));
+				break;
+			case ExecuteType::Update:
+				err = query->UpdateQuery(qresult, std::chrono::milliseconds(timeout));
+				break;
+			default:
+				err = {ErrorCode::errLogic, "Unknown query execute mode"};
+		}
+		if (err.ok()) {
+			count = qresult->Count();
+			totalCount = qresult->TotalCount();
+		}
 	}
-
-	if (!err.ok()) {
-		return Py_BuildValue("iskII", err.code(), err.what(), 0, 0, 0);
-	}
-
-	const auto count = qresult->Count();
-	const auto totalCount = qresult->TotalCount();
-	return Py_BuildValue("iskII", err.code(), err.what(),
-						 reinterpret_cast<uintptr_t>(qresult.release()), count, totalCount);
+	return Py_BuildValue("iskII", err.code(), err.what(), err.ok() ? reinterpret_cast<uintptr_t>(qresult.release()) : 0, count, totalCount);
 }
-} // namespace
+}  // namespace
+
 static PyObject* SelectQuery(PyObject* self, PyObject* args) { return executeQuery(self, args, ExecuteType::Select); }
 static PyObject* UpdateQuery(PyObject* self, PyObject* args) { return executeQuery(self, args, ExecuteType::Update); }
 
 static PyObject* SetObject(PyObject* self, PyObject* args) {
 	uintptr_t queryWrapperAddr = 0;
 	char* field = nullptr;
-	PyObject* valuesList = nullptr;  // borrowed ref after ParseTuple
+	PyObject* valuesList = nullptr;	 // borrowed ref after ParseTuple
 	if (!PyArg_ParseTuple(args, "ksO!", &queryWrapperAddr, &field, &PyList_Type, &valuesList)) {
 		return nullptr;
 	}
@@ -1230,7 +1295,7 @@ static PyObject* SetObject(PyObject* self, PyObject* args) {
 static PyObject* Set(PyObject* self, PyObject* args) {
 	uintptr_t queryWrapperAddr = 0;
 	char* field = nullptr;
-	PyObject* valuesList = nullptr;  // borrowed ref after ParseTuple
+	PyObject* valuesList = nullptr;	 // borrowed ref after ParseTuple
 	if (!PyArg_ParseTuple(args, "ksO!", &queryWrapperAddr, &field, &PyList_Type, &valuesList)) {
 		return nullptr;
 	}
@@ -1327,7 +1392,7 @@ static PyObject* On(PyObject* self, PyObject* args) {
 
 static PyObject* SelectFields(PyObject* self, PyObject* args) {
 	uintptr_t queryWrapperAddr = 0;
-	PyObject* fieldsList = nullptr;  // borrowed ref after ParseTuple if passed
+	PyObject* fieldsList = nullptr;	 // borrowed ref after ParseTuple if passed
 	if (!PyArg_ParseTuple(args, "kO!", &queryWrapperAddr, &PyList_Type, &fieldsList)) {
 		return nullptr;
 	}
@@ -1353,7 +1418,7 @@ static PyObject* SelectFields(PyObject* self, PyObject* args) {
 
 static PyObject* AddFunctions(PyObject* self, PyObject* args) {
 	uintptr_t queryWrapperAddr = 0;
-	PyObject* functionsList = nullptr;  // borrowed ref after ParseTuple if passed
+	PyObject* functionsList = nullptr;	// borrowed ref after ParseTuple if passed
 	if (!PyArg_ParseTuple(args, "kO!", &queryWrapperAddr, &PyList_Type, &functionsList)) {
 		return nullptr;
 	}
@@ -1379,7 +1444,7 @@ static PyObject* AddFunctions(PyObject* self, PyObject* args) {
 
 static PyObject* AddEqualPosition(PyObject* self, PyObject* args) {
 	uintptr_t queryWrapperAddr = 0;
-	PyObject* equalPosesList = nullptr;  // borrowed ref after ParseTuple if passed
+	PyObject* equalPosesList = nullptr;	 // borrowed ref after ParseTuple if passed
 	if (!PyArg_ParseTuple(args, "kO!", &queryWrapperAddr, &PyList_Type, &equalPosesList)) {
 		return nullptr;
 	}
