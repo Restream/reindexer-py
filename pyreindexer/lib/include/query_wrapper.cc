@@ -240,9 +240,9 @@ void QueryWrapper::Aggregate(std::string_view index, AggType type) {
 	ser_.PutVString(index);
 }
 
-void QueryWrapper::Aggregation(const reindexer::h_vector<std::string, 2>& fields) {
+void QueryWrapper::Aggregation(const reindexer::h_vector<std::string, 2>& fields, AggType type) {
 	ser_.PutVarUint(QueryItemType::QueryAggregation);
-	ser_.PutVarUint(AggType::AggFacet);
+	ser_.PutVarUint(type);
 	ser_.PutVarUint(fields.size());
 	for (const auto& field : fields) {
 		ser_.PutVString(field);

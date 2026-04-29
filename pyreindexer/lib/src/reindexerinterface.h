@@ -43,6 +43,8 @@ public:
 	Error OpenNamespace(std::string_view ns, std::chrono::milliseconds timeout);
 	Error CloseNamespace(std::string_view ns, std::chrono::milliseconds timeout);
 	Error DropNamespace(std::string_view ns, std::chrono::milliseconds timeout);
+	Error TruncateNamespace(std::string_view ns, std::chrono::milliseconds timeout);
+	Error RenameNamespace(std::string_view oldNs, const std::string& newNs, std::chrono::milliseconds timeout);
 
 	Error AddIndex(std::string_view ns, const IndexDef& idx, std::chrono::milliseconds timeout);
 	Error UpdateIndex(std::string_view ns, const IndexDef& idx, std::chrono::milliseconds timeout);

@@ -23,6 +23,8 @@ static PyObject* ExecSQL(PyObject* self, PyObject* args);
 static PyObject* NamespaceOpen(PyObject* self, PyObject* args);
 static PyObject* NamespaceClose(PyObject* self, PyObject* args);
 static PyObject* NamespaceDrop(PyObject* self, PyObject* args);
+static PyObject* NamespaceTruncate(PyObject* self, PyObject* args);
+static PyObject* NamespaceRename(PyObject* self, PyObject* args);
 static PyObject* EnumNamespaces(PyObject* self, PyObject* args);
 // index
 static PyObject* IndexAdd(PyObject* self, PyObject* args);
@@ -68,7 +70,6 @@ static PyObject* WhereKNNString(PyObject* self, PyObject* args);
 static PyObject* OpenBracket(PyObject* self, PyObject* args);
 static PyObject* CloseBracket(PyObject* self, PyObject* args);
 static PyObject* DWithin(PyObject* self, PyObject* args);
-static PyObject* AggregateDistinct(PyObject* self, PyObject* args);
 static PyObject* AggregateSum(PyObject* self, PyObject* args);
 static PyObject* AggregateAvg(PyObject* self, PyObject* args);
 static PyObject* AggregateMin(PyObject* self, PyObject* args);
@@ -76,7 +77,8 @@ static PyObject* AggregateMax(PyObject* self, PyObject* args);
 static PyObject* AggregationLimit(PyObject* self, PyObject* args);
 static PyObject* AggregationOffset(PyObject* self, PyObject* args);
 static PyObject* AggregationSort(PyObject* self, PyObject* args);
-static PyObject* Aggregation(PyObject* self, PyObject* args);
+static PyObject* AggregateDistinct(PyObject* self, PyObject* args);
+static PyObject* AggregateFacet(PyObject* self, PyObject* args);
 static PyObject* Sort(PyObject* self, PyObject* args);
 static PyObject* And(PyObject* self, PyObject* args);
 static PyObject* Or(PyObject* self, PyObject* args);
@@ -113,6 +115,8 @@ static PyMethodDef module_methods[] = {
 	{"namespace_open", NamespaceOpen, METH_VARARGS, "open namespace"},
 	{"namespace_close", NamespaceClose, METH_VARARGS, "close namespace"},
 	{"namespace_drop", NamespaceDrop, METH_VARARGS, "drop namespace"},
+	{"namespace_truncate", NamespaceTruncate, METH_VARARGS, "truncate namespace"},
+	{"namespace_rename", NamespaceRename, METH_VARARGS, "rename namespace"},
 	{"namespaces_enum", EnumNamespaces, METH_VARARGS, "enum namespaces"},
 	// index
 	{"index_add", IndexAdd, METH_VARARGS, "add index"},
@@ -158,15 +162,15 @@ static PyMethodDef module_methods[] = {
 	{"open_bracket", OpenBracket, METH_VARARGS, "open bracket for where condition"},
 	{"close_bracket", CloseBracket, METH_VARARGS, "close bracket for where condition"},
 	{"dwithin", DWithin, METH_VARARGS, "add dwithin condition"},
-	{"aggregate_distinct", AggregateDistinct, METH_VARARGS, "list of unique values of field"},
 	{"aggregate_sum", AggregateSum, METH_VARARGS, "sum field value"},
 	{"aggregate_avg", AggregateAvg, METH_VARARGS, "average field value"},
 	{"aggregate_min", AggregateMin, METH_VARARGS, "minimum field value"},
 	{"aggregate_max", AggregateMax, METH_VARARGS, "maximum field value"},
-	{"aggregation_limit", AggregationLimit, METH_VARARGS, "limit facet results"},
-	{"aggregation_offset", AggregationOffset, METH_VARARGS, "set offset for facet results"},
-	{"aggregation_sort", AggregationSort, METH_VARARGS, "sort facets"},
-	{"aggregation", Aggregation, METH_VARARGS, "get fields facet value"},
+	{"aggregation_limit", AggregationLimit, METH_VARARGS, "limit aggregation results"},
+	{"aggregation_offset", AggregationOffset, METH_VARARGS, "offset aggregation results"},
+	{"aggregation_sort", AggregationSort, METH_VARARGS, "sort aggregation results"},
+	{"aggregate_distinct", AggregateDistinct, METH_VARARGS, "list of unique values of field"},
+	{"aggregate_facet", AggregateFacet, METH_VARARGS, "fields facet values"},
 	{"sort", Sort, METH_VARARGS, "apply sort order"},
 	{"op_and", And, METH_VARARGS, "next condition will be added with AND AND"},
 	{"op_or", Or, METH_VARARGS, "next condition will be added with OR AND"},

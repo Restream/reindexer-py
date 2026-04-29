@@ -1,6 +1,5 @@
 # The PyReindexer module provides a connector and its auxiliary tools for interaction with Reindexer. Reindexer static library or reindexer-dev package must be installed
 
-- [The PyReindexer module provides a connector and its auxiliary tools for interaction with Reindexer. Reindexer static library or reindexer-dev package must be installed](#the-pyreindexer-module-provides-a-connector-and-its-auxiliary-tools-for-interaction-with-reindexer-reindexer-static-library-or-reindexer-dev-package-must-be-installed)
 - [pyreindexer.rx\_connector](#pyreindexerrx_connector)
   - [RxConnector Objects](#rxconnector-objects)
       - [Arguments](#arguments)
@@ -16,102 +15,108 @@
     - [RxConnector.namespace\_drop](#rxconnectornamespace_drop)
       - [Arguments](#arguments-3)
       - [Raises](#raises-3)
-    - [RxConnector.namespaces\_enum](#rxconnectornamespaces_enum)
+    - [RxConnector.namespace\_truncate](#rxconnectornamespace_truncate)
       - [Arguments](#arguments-4)
-      - [Returns](#returns)
       - [Raises](#raises-4)
-    - [RxConnector.index\_add](#rxconnectorindex_add)
+    - [RxConnector.namespace\_rename](#rxconnectornamespace_rename)
       - [Arguments](#arguments-5)
       - [Raises](#raises-5)
-    - [RxConnector.index\_update](#rxconnectorindex_update)
+    - [RxConnector.namespaces\_enum](#rxconnectornamespaces_enum)
       - [Arguments](#arguments-6)
+      - [Returns](#returns)
       - [Raises](#raises-6)
-    - [RxConnector.index\_drop](#rxconnectorindex_drop)
+    - [RxConnector.index\_add](#rxconnectorindex_add)
       - [Arguments](#arguments-7)
       - [Raises](#raises-7)
-    - [RxConnector.item\_insert](#rxconnectoritem_insert)
+    - [RxConnector.index\_update](#rxconnectorindex_update)
       - [Arguments](#arguments-8)
       - [Raises](#raises-8)
-    - [RxConnector.item\_update](#rxconnectoritem_update)
+    - [RxConnector.index\_drop](#rxconnectorindex_drop)
       - [Arguments](#arguments-9)
       - [Raises](#raises-9)
-    - [RxConnector.item\_upsert](#rxconnectoritem_upsert)
+    - [RxConnector.item\_insert](#rxconnectoritem_insert)
       - [Arguments](#arguments-10)
       - [Raises](#raises-10)
-    - [RxConnector.item\_delete](#rxconnectoritem_delete)
+    - [RxConnector.item\_update](#rxconnectoritem_update)
       - [Arguments](#arguments-11)
       - [Raises](#raises-11)
-    - [RxConnector.meta\_put](#rxconnectormeta_put)
+    - [RxConnector.item\_upsert](#rxconnectoritem_upsert)
       - [Arguments](#arguments-12)
       - [Raises](#raises-12)
-    - [RxConnector.meta\_get](#rxconnectormeta_get)
+    - [RxConnector.item\_delete](#rxconnectoritem_delete)
       - [Arguments](#arguments-13)
-      - [Returns](#returns-1)
       - [Raises](#raises-13)
-    - [RxConnector.meta\_delete](#rxconnectormeta_delete)
+    - [RxConnector.meta\_put](#rxconnectormeta_put)
       - [Arguments](#arguments-14)
       - [Raises](#raises-14)
-    - [RxConnector.meta\_enum](#rxconnectormeta_enum)
+    - [RxConnector.meta\_get](#rxconnectormeta_get)
       - [Arguments](#arguments-15)
-      - [Returns](#returns-2)
+      - [Returns](#returns-1)
       - [Raises](#raises-15)
-    - [RxConnector.exec\_sql](#rxconnectorexec_sql)
+    - [RxConnector.meta\_delete](#rxconnectormeta_delete)
       - [Arguments](#arguments-16)
-      - [Returns](#returns-3)
       - [Raises](#raises-16)
-    - [RxConnector.new\_transaction](#rxconnectornew_transaction)
+    - [RxConnector.meta\_enum](#rxconnectormeta_enum)
       - [Arguments](#arguments-17)
-      - [Returns](#returns-4)
+      - [Returns](#returns-2)
       - [Raises](#raises-17)
-    - [RxConnector.new\_query](#rxconnectornew_query)
+    - [RxConnector.exec\_sql](#rxconnectorexec_sql)
       - [Arguments](#arguments-18)
-      - [Returns](#returns-5)
+      - [Returns](#returns-3)
       - [Raises](#raises-18)
+    - [RxConnector.new\_transaction](#rxconnectornew_transaction)
+      - [Arguments](#arguments-19)
+      - [Returns](#returns-4)
+      - [Raises](#raises-19)
+    - [RxConnector.new\_query](#rxconnectornew_query)
+      - [Arguments](#arguments-20)
+      - [Returns](#returns-5)
+      - [Raises](#raises-20)
 - [pyreindexer.query\_results](#pyreindexerquery_results)
   - [QueryResults Objects](#queryresults-objects)
       - [Attributes](#attributes-1)
     - [QueryResults.status](#queryresultsstatus)
-      - [Raises](#raises-19)
+      - [Raises](#raises-21)
     - [QueryResults.count](#queryresultscount)
       - [Returns](#returns-6)
     - [QueryResults.total\_count](#queryresultstotal_count)
       - [Returns](#returns-7)
     - [QueryResults.get\_agg\_results](#queryresultsget_agg_results)
       - [Returns](#returns-8)
-      - [Raises](#raises-20)
+      - [Raises](#raises-22)
     - [QueryResults.get\_explain\_results](#queryresultsget_explain_results)
       - [Returns](#returns-9)
-      - [Raises](#raises-21)
+      - [Raises](#raises-23)
 - [pyreindexer.transaction](#pyreindexertransaction)
   - [Transaction Objects](#transaction-objects)
       - [Attributes](#attributes-2)
     - [Transaction.insert](#transactioninsert)
-      - [Arguments](#arguments-19)
-      - [Raises](#raises-22)
-    - [Transaction.update](#transactionupdate)
-      - [Arguments](#arguments-20)
-      - [Raises](#raises-23)
-    - [Transaction.update\_query](#transactionupdate_query)
       - [Arguments](#arguments-21)
       - [Raises](#raises-24)
-    - [Transaction.upsert](#transactionupsert)
+    - [Transaction.update](#transactionupdate)
       - [Arguments](#arguments-22)
       - [Raises](#raises-25)
-    - [Transaction.delete](#transactiondelete)
+    - [Transaction.update\_query](#transactionupdate_query)
       - [Arguments](#arguments-23)
       - [Raises](#raises-26)
-    - [Transaction.delete\_query](#transactiondelete_query)
+    - [Transaction.upsert](#transactionupsert)
       - [Arguments](#arguments-24)
       - [Raises](#raises-27)
-    - [Transaction.commit](#transactioncommit)
+    - [Transaction.delete](#transactiondelete)
       - [Arguments](#arguments-25)
       - [Raises](#raises-28)
-    - [Transaction.commit\_with\_count](#transactioncommit_with_count)
+    - [Transaction.delete\_query](#transactiondelete_query)
       - [Arguments](#arguments-26)
       - [Raises](#raises-29)
-    - [Transaction.rollback](#transactionrollback)
+    - [Transaction.commit](#transactioncommit)
       - [Arguments](#arguments-27)
       - [Raises](#raises-30)
+    - [Transaction.commit\_with\_count](#transactioncommit_with_count)
+      - [Arguments](#arguments-28)
+      - [Raises](#raises-31)
+    - [Transaction.rollback](#transactionrollback)
+      - [Arguments](#arguments-29)
+      - [Raises](#raises-32)
 - [pyreindexer.point](#pyreindexerpoint)
   - [Point Objects](#point-objects)
       - [Attributes](#attributes-3)
@@ -119,167 +124,170 @@
   - [Query Objects](#query-objects)
       - [Attributes](#attributes-4)
     - [Query.where](#querywhere)
-      - [Arguments](#arguments-28)
-      - [Returns](#returns-10)
-      - [Raises](#raises-31)
-    - [Query.where\_query](#querywhere_query)
-      - [Arguments](#arguments-29)
-      - [Returns](#returns-11)
-      - [Raises](#raises-32)
-    - [Query.where\_subquery](#querywhere_subquery)
       - [Arguments](#arguments-30)
+      - [Returns](#returns-10)
+      - [Raises](#raises-33)
+    - [Query.where\_query](#querywhere_query)
+      - [Arguments](#arguments-31)
+      - [Returns](#returns-11)
+      - [Raises](#raises-34)
+    - [Query.where\_subquery](#querywhere_subquery)
+      - [Arguments](#arguments-32)
       - [Returns](#returns-12)
     - [Query.where\_composite](#querywhere_composite)
-      - [Arguments](#arguments-31)
-      - [Returns](#returns-13)
-      - [Raises](#raises-33)
-    - [Query.where\_uuid](#querywhere_uuid)
-      - [Arguments](#arguments-32)
-      - [Returns](#returns-14)
-      - [Raises](#raises-34)
-    - [Query.where\_between\_fields](#querywhere_between_fields)
       - [Arguments](#arguments-33)
-      - [Returns](#returns-15)
-    - [Query.where\_knn](#querywhere_knn)
-      - [Arguments](#arguments-34)
-      - [Returns](#returns-16)
+      - [Returns](#returns-13)
       - [Raises](#raises-35)
-    - [Query.where\_knn\_string](#querywhere_knn_string)
-      - [Arguments](#arguments-35)
-      - [Returns](#returns-17)
+    - [Query.where\_uuid](#querywhere_uuid)
+      - [Arguments](#arguments-34)
+      - [Returns](#returns-14)
       - [Raises](#raises-36)
-    - [Query.open\_bracket](#queryopen_bracket)
-      - [Returns](#returns-18)
-      - [Raises](#raises-37)
-    - [Query.close\_bracket](#queryclose_bracket)
-      - [Returns](#returns-19)
-      - [Raises](#raises-38)
-    - [Query.match](#querymatch)
+    - [Query.where\_between\_fields](#querywhere_between_fields)
+      - [Arguments](#arguments-35)
+      - [Returns](#returns-15)
+    - [Query.where\_expressions](#querywhere_expressions)
       - [Arguments](#arguments-36)
-      - [Returns](#returns-20)
-      - [Raises](#raises-39)
-    - [Query.dwithin](#querydwithin)
+      - [Returns](#returns-16)
+    - [Query.where\_knn](#querywhere_knn)
       - [Arguments](#arguments-37)
-      - [Returns](#returns-21)
-    - [Query.distinct](#querydistinct)
+      - [Returns](#returns-17)
+      - [Raises](#raises-37)
+    - [Query.where\_knn\_string](#querywhere_knn_string)
       - [Arguments](#arguments-38)
+      - [Returns](#returns-18)
+      - [Raises](#raises-38)
+    - [Query.open\_bracket](#queryopen_bracket)
+      - [Returns](#returns-19)
+      - [Raises](#raises-39)
+    - [Query.close\_bracket](#queryclose_bracket)
+      - [Returns](#returns-20)
+      - [Raises](#raises-40)
+    - [Query.match](#querymatch)
+      - [Arguments](#arguments-39)
+      - [Returns](#returns-21)
+      - [Raises](#raises-41)
+    - [Query.dwithin](#querydwithin)
+      - [Arguments](#arguments-40)
       - [Returns](#returns-22)
     - [Query.aggregate\_sum](#queryaggregate_sum)
-      - [Arguments](#arguments-39)
+      - [Arguments](#arguments-41)
       - [Returns](#returns-23)
     - [Query.aggregate\_avg](#queryaggregate_avg)
-      - [Arguments](#arguments-40)
+      - [Arguments](#arguments-42)
       - [Returns](#returns-24)
     - [Query.aggregate\_min](#queryaggregate_min)
-      - [Arguments](#arguments-41)
+      - [Arguments](#arguments-43)
       - [Returns](#returns-25)
     - [Query.aggregate\_max](#queryaggregate_max)
-      - [Arguments](#arguments-42)
-      - [Returns](#returns-26)
-    - [Query.aggregate\_facet](#queryaggregate_facet)
-      - [Arguments](#arguments-43)
-      - [Returns](#returns-27)
-    - [Query.sort](#querysort)
       - [Arguments](#arguments-44)
-      - [Returns](#returns-28)
-      - [Raises](#raises-40)
-    - [Query.sort\_stpoint\_distance](#querysort_stpoint_distance)
+      - [Returns](#returns-26)
+    - [Query.distinct](#querydistinct)
       - [Arguments](#arguments-45)
-      - [Returns](#returns-29)
-    - [Query.sort\_stfield\_distance](#querysort_stfield_distance)
+      - [Returns](#returns-27)
+    - [Query.aggregate_facet](#queryaggregate_facet)
       - [Arguments](#arguments-46)
-      - [Returns](#returns-30)
-      - [Raises](#raises-41)
-    - [Query.op\_and](#queryop_and)
-      - [Returns](#returns-31)
-    - [Query.op\_or](#queryop_or)
-      - [Returns](#returns-32)
-    - [Query.op\_not](#queryop_not)
-      - [Returns](#returns-33)
-    - [Query.request\_total](#queryrequest_total)
+      - [Returns](#returns-28)
+    - [Query.sort](#querysort)
       - [Arguments](#arguments-47)
-      - [Returns](#returns-34)
-    - [Query.cached\_total](#querycached_total)
-      - [Arguments](#arguments-48)
-      - [Returns](#returns-35)
-    - [Query.limit](#querylimit)
-      - [Arguments](#arguments-49)
-      - [Returns](#returns-36)
-    - [Query.offset](#queryoffset)
-      - [Arguments](#arguments-50)
-      - [Returns](#returns-37)
-    - [Query.debug](#querydebug)
-      - [Arguments](#arguments-51)
-      - [Returns](#returns-38)
-    - [Query.strict](#querystrict)
-      - [Arguments](#arguments-52)
-      - [Returns](#returns-39)
-    - [Query.explain](#queryexplain)
-      - [Returns](#returns-40)
-    - [Query.with\_rank](#querywith_rank)
-      - [Returns](#returns-41)
-    - [Query.execute](#queryexecute)
-      - [Arguments](#arguments-53)
-      - [Returns](#returns-42)
+      - [Returns](#returns-29)
       - [Raises](#raises-42)
-    - [Query.delete](#querydelete)
-      - [Arguments](#arguments-54)
-      - [Returns](#returns-43)
+    - [Query.sort\_stpoint\_distance](#querysort_stpoint_distance)
+      - [Arguments](#arguments-48)
+      - [Returns](#returns-30)
+    - [Query.sort\_stfield\_distance](#querysort_stfield_distance)
+      - [Arguments](#arguments-49)
+      - [Returns](#returns-31)
       - [Raises](#raises-43)
-    - [Query.set\_object](#queryset_object)
+    - [Query.op\_and](#queryop_and)
+      - [Returns](#returns-32)
+    - [Query.op\_or](#queryop_or)
+      - [Returns](#returns-33)
+    - [Query.op\_not](#queryop_not)
+      - [Returns](#returns-34)
+    - [Query.request\_total](#queryrequest_total)
+      - [Arguments](#arguments-50)
+      - [Returns](#returns-35)
+    - [Query.cached\_total](#querycached_total)
+      - [Arguments](#arguments-51)
+      - [Returns](#returns-36)
+    - [Query.limit](#querylimit)
+      - [Arguments](#arguments-52)
+      - [Returns](#returns-37)
+    - [Query.offset](#queryoffset)
+      - [Arguments](#arguments-53)
+      - [Returns](#returns-38)
+    - [Query.debug](#querydebug)
+      - [Arguments](#arguments-54)
+      - [Returns](#returns-39)
+    - [Query.strict](#querystrict)
       - [Arguments](#arguments-55)
-      - [Returns](#returns-44)
-      - [Raises](#raises-44)
-    - [Query.set](#queryset)
+      - [Returns](#returns-40)
+    - [Query.explain](#queryexplain)
+      - [Returns](#returns-41)
+    - [Query.with\_rank](#querywith_rank)
+      - [Returns](#returns-42)
+    - [Query.execute](#queryexecute)
       - [Arguments](#arguments-56)
-      - [Returns](#returns-45)
-      - [Raises](#raises-45)
-    - [Query.drop](#querydrop)
+      - [Returns](#returns-43)
+      - [Raises](#raises-44)
+    - [Query.delete](#querydelete)
       - [Arguments](#arguments-57)
-      - [Returns](#returns-46)
-    - [Query.expression](#queryexpression)
+      - [Returns](#returns-44)
+      - [Raises](#raises-45)
+    - [Query.set\_object](#queryset_object)
       - [Arguments](#arguments-58)
-      - [Returns](#returns-47)
-    - [Query.update](#queryupdate)
-      - [Arguments](#arguments-59)
-      - [Returns](#returns-48)
+      - [Returns](#returns-45)
       - [Raises](#raises-46)
-    - [Query.must\_execute](#querymust_execute)
-      - [Arguments](#arguments-60)
-      - [Returns](#returns-49)
+    - [Query.set](#queryset)
+      - [Arguments](#arguments-59)
+      - [Returns](#returns-46)
       - [Raises](#raises-47)
-    - [Query.get](#queryget)
+    - [Query.drop](#querydrop)
+      - [Arguments](#arguments-60)
+      - [Returns](#returns-47)
+    - [Query.expression](#queryexpression)
       - [Arguments](#arguments-61)
-      - [Returns](#returns-50)
-      - [Raises](#raises-48)
-    - [Query.inner\_join](#queryinner_join)
+      - [Returns](#returns-48)
+    - [Query.update](#queryupdate)
       - [Arguments](#arguments-62)
-      - [Returns](#returns-51)
-    - [Query.join](#queryjoin)
+      - [Returns](#returns-49)
+      - [Raises](#raises-48)
+    - [Query.must\_execute](#querymust_execute)
       - [Arguments](#arguments-63)
-      - [Returns](#returns-52)
-    - [Query.left\_join](#queryleft_join)
-      - [Arguments](#arguments-64)
-      - [Returns](#returns-53)
-    - [Query.merge](#querymerge)
-      - [Arguments](#arguments-65)
-      - [Returns](#returns-54)
-    - [Query.on](#queryon)
-      - [Arguments](#arguments-66)
-      - [Returns](#returns-55)
+      - [Returns](#returns-50)
       - [Raises](#raises-49)
-    - [Query.select\_fields](#queryselect_fields)
-      - [Arguments](#arguments-67)
-      - [Returns](#returns-56)
+    - [Query.get](#queryget)
+      - [Arguments](#arguments-64)
+      - [Returns](#returns-51)
       - [Raises](#raises-50)
-    - [Query.functions](#queryfunctions)
+    - [Query.inner\_join](#queryinner_join)
+      - [Arguments](#arguments-65)
+      - [Returns](#returns-52)
+    - [Query.join](#queryjoin)
+      - [Arguments](#arguments-66)
+      - [Returns](#returns-53)
+    - [Query.left\_join](#queryleft_join)
+      - [Arguments](#arguments-67)
+      - [Returns](#returns-54)
+    - [Query.merge](#querymerge)
       - [Arguments](#arguments-68)
-      - [Returns](#returns-57)
-      - [Raises](#raises-51)
-    - [Query.equal\_position](#queryequal_position)
+      - [Returns](#returns-55)
+    - [Query.on](#queryon)
       - [Arguments](#arguments-69)
-      - [Returns](#returns-58)
+      - [Returns](#returns-56)
+      - [Raises](#raises-51)
+    - [Query.select\_fields](#queryselect_fields)
+      - [Arguments](#arguments-70)
+      - [Returns](#returns-57)
       - [Raises](#raises-52)
+    - [Query.functions](#queryfunctions)
+      - [Arguments](#arguments-71)
+      - [Returns](#returns-58)
+      - [Raises](#raises-53)
+    - [Query.equal\_position](#queryequal_position)
+      - [Arguments](#arguments-72)
+      - [Returns](#returns-59)
+      - [Raises](#raises-54)
 - [pyreindexer.index\_search\_params](#pyreindexerindex_search_params)
   - [IndexSearchParamBruteForce Objects](#indexsearchparambruteforce-objects)
       - [Attributes](#attributes-5)
@@ -289,7 +297,7 @@
       - [Attributes](#attributes-7)
 - [pyreindexer.index\_definition](#pyreindexerindex_definition)
   - [IndexDefinition Objects](#indexdefinition-objects)
-      - [Arguments](#arguments-70)
+      - [Arguments](#arguments-73)
 
 <a id="pyreindexer.rx_connector"></a>
 
@@ -300,11 +308,11 @@
 ## RxConnector Objects
 
 ```python
-class RxConnector(RaiserMixin)
+class RxConnector(RaiserRx)
 ```
 
 RxConnector provides a binding to Reindexer upon two shared libraries (hereinafter - APIs): 'rawpyreindexerb.so'
-    and 'rawpyreindexerc.so'. The first one is aimed at built-in usage. That API embeds Reindexer, so it could
+    and 'rawpyreindexerc.so'. The first one is aimed at builtin usage. That API embeds Reindexer, so it could
     be used right in-place as is. The second one acts as a lightweight client which establishes a connection to
     Reindexer server via RPC. The APIs interfaces are completely the same.
 
@@ -409,6 +417,50 @@ Drops the specified namespace
 #### Raises:
     Exception: Raises with an error message when Reindexer instance is not initialized yet
     Exception: Raises with an error message of API return on non-zero error code
+
+<a id="pyreindexer.rx_connector.RxConnector.namespace_truncate"></a>
+
+### RxConnector.namespace\_truncate
+
+```python
+def namespace_truncate(
+    namespace: str, timeout: timedelta = timedelta(milliseconds=0)) -> None
+```
+
+Truncates the specified namespace
+
+#### Arguments:
+    namespace (string): The name of the namespace
+    timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+        Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
+        A value of 0 disables the timeout (default value)
+
+#### Raises:
+    Exception: Raises with an error message when Reindexer instance is not initialized yet
+    Exception: Raises with an error message of API return on non-zero error code
+
+<a id="pyreindexer.rx_connector.RxConnector.namespace_rename"></a>
+
+### RxConnector.namespace\_rename
+
+```python
+def namespace_rename(
+    old_ns_name: str,
+    new_ns_name: str,
+    timeout: timedelta = timedelta(milliseconds=0)) -> None
+```
+
+Renames the specified namespace
+
+#### Arguments:
+    namespace (string): The name of the namespace
+    timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+        Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
+        A value of 0 disables the timeout (default value)
+
+#### Raises:
+    ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
+    ApiError: Raises with an error message of API return on non-zero error code
 
 <a id="pyreindexer.rx_connector.RxConnector.namespaces_enum"></a>
 
@@ -716,7 +768,7 @@ Gets a list of metadata keys from a storage of Reindexer
 
 <a id="pyreindexer.rx_connector.RxConnector.exec_sql"></a>
 
-### RxConnector.exec_sql
+### RxConnector.exec\_sql
 
 ```python
 def exec_sql(
@@ -878,6 +930,10 @@ Returns explain results for the current query
 #### Raises:
     ApiError: Raises with an error message of API return on non-zero error code
 
+<a id="pyreindexer.expressions"></a>
+
+# pyreindexer.expressions
+
 <a id="pyreindexer.transaction"></a>
 
 # pyreindexer.transaction
@@ -887,7 +943,7 @@ Returns explain results for the current query
 ## Transaction Objects
 
 ```python
-class Transaction()
+class Transaction(RaiserTx)
 ```
 
 An object representing the context of a Reindexer transaction
@@ -1095,7 +1151,7 @@ An object representing the context of a Reindexer 2D point
 ## Query Objects
 
 ```python
-class Query()
+class Query(RaiserQuery)
 ```
 
 An object representing the context of a Reindexer query
@@ -1114,11 +1170,9 @@ An object representing the context of a Reindexer query
 ### Query.where
 
 ```python
-def where(
-        index: str,
-        condition: CondType,
-        keys: Union[simple_types, tuple[list[simple_types],
-                                        ...]] = None) -> Query
+def where(index: str,
+          condition: CondType,
+          keys: Union[ValueType, tuple[list[ValueType], ...]] = None) -> Query
 ```
 
 Adds where condition to DB query with args
@@ -1126,7 +1180,7 @@ Adds where condition to DB query with args
 #### Arguments:
     index (string): Field name used in condition clause
     condition (:enum:`CondType`): Type of condition
-    keys (union[simple_types, (list[simple_types], ...)]):
+    keys (union[ValueType, (list[ValueType], ...)]):
         Value of index to be compared with. For composite indexes keys must be list,
         with value of each sub-index
 
@@ -1144,8 +1198,7 @@ Adds where condition to DB query with args
 def where_query(
         sub_query: Query,
         condition: CondType,
-        keys: Union[simple_types, tuple[list[simple_types],
-                                        ...]] = None) -> Query
+        keys: Union[ValueType, tuple[list[ValueType], ...]] = None) -> Query
 ```
 
 Adds sub-query where condition to DB query with args
@@ -1153,7 +1206,7 @@ Adds sub-query where condition to DB query with args
 #### Arguments:
     sub_query (:obj:`Query`): Field name used in condition clause
     condition (:enum:`CondType`): Type of condition
-    keys (union[simple_types, (list[simple_types], ...)]):
+    keys (union[ValueType, (list[ValueType], ...)]):
         Value of index to be compared with. For composite indexes keys must be list,
         with value of each sub-index
 
@@ -1187,7 +1240,7 @@ Adds sub-query where condition to DB query
 
 ```python
 def where_composite(index: str, condition: CondType,
-                    keys: tuple[list[simple_types], ...]) -> Query
+                    keys: tuple[list[ValueType], ...]) -> Query
 ```
 
 Adds where condition to DB query with interface args for composite indexes
@@ -1195,7 +1248,7 @@ Adds where condition to DB query with interface args for composite indexes
 #### Arguments:
     index (string): Field name used in condition clause
     condition (:enum:`CondType`): Type of condition
-    keys (list[simple_types], ...): Values of composite index to be compared with (value of each sub-index).
+    keys (list[ValueType], ...): Values of composite index to be compared with (value of each sub-index).
         Supported variants:
             ([1, "test1"], [2, "test2"])
             [[1, "test1"], [2, "test2"]])
@@ -1251,6 +1304,25 @@ Adds comparing two fields where condition to DB query
 #### Returns:
     (:obj:`Query`): Query object for further customizations
 
+<a id="pyreindexer.query.Query.where_expressions"></a>
+
+### Query.where\_expressions
+
+```python
+def where_expressions(left: Expression, condition: CondType,
+                      right: Expression) -> Query
+```
+
+Adds where condition with expressions
+
+#### Arguments:
+    left (Expression): Left expression (Field, FlatArrayLen, SubQuery)
+    condition (:enum:`CondType`): Type of condition
+    right (Expression): Right expression (Field, Values, Now, SubQuery)
+
+#### Returns:
+    (:obj:`Query`): Query object for further customizations
+
 <a id="pyreindexer.query.Query.where_knn"></a>
 
 ### Query.where\_knn
@@ -1258,7 +1330,8 @@ Adds comparing two fields where condition to DB query
 ```python
 def where_knn(
     index: str, vec: List[float],
-    param: Union[IndexSearchParamBruteForce | IndexSearchParamHnsw | IndexSearchParamIvf]
+    param: Union[IndexSearchParamBruteForce | IndexSearchParamHnsw
+                 | IndexSearchParamIvf]
 ) -> Query
 ```
 
@@ -1268,7 +1341,8 @@ Adds where condition to DB query with float_vector as args.
 #### Arguments:
     index (string): Field name used in condition clause (only float_vector)
     vec (list[float]): KNN value of index to be compared with
-    param (:obj:`union[IndexSearchParamBruteForce|IndexSearchParamHnsw|IndexSearchParamIvf]`): KNN search parameters
+    param (:obj:`union[IndexSearchParamBruteForce|IndexSearchParamHnsw|IndexSearchParamIvf]`):
+        KNN search parameters
 
 #### Returns:
     (:obj:`Query`): Query object for further customizations
@@ -1285,7 +1359,8 @@ Adds where condition to DB query with float_vector as args.
 ```python
 def where_knn_string(
     index: str, value: str,
-    param: Union[IndexSearchParamBruteForce | IndexSearchParamHnsw | IndexSearchParamIvf]
+    param: Union[IndexSearchParamBruteForce | IndexSearchParamHnsw
+                 | IndexSearchParamIvf]
 ) -> Query
 ```
 
@@ -1296,7 +1371,8 @@ Adds where condition to DB query with string as args.
 #### Arguments:
     index (string): Field name used in condition clause (only float_vector)
     value (string): value to be generated using automatic embedding of KNN index value to be compared to
-    param (:obj:`union[IndexSearchParamBruteForce|IndexSearchParamHnsw|IndexSearchParamIvf]`): KNN search parameters
+    param (:obj:`union[IndexSearchParamBruteForce|IndexSearchParamHnsw|IndexSearchParamIvf]`):
+        KNN search parameters
 
 #### Returns:
     (:obj:`Query`): Query object for further customizations
@@ -1377,22 +1453,6 @@ Adds DWithin condition to DB query
 #### Returns:
     (:obj:`Query`): Query object for further customizations
 
-<a id="pyreindexer.query.Query.distinct"></a>
-
-### Query.distinct
-
-```python
-def distinct(index: str) -> Query
-```
-
-Performs distinct for a certain index. Return only items with uniq value of field
-
-#### Arguments:
-    index (string): Field name for distinct operation
-
-#### Returns:
-    (:obj:`Query`): Query object for further customizations
-
 <a id="pyreindexer.query.Query.aggregate_sum"></a>
 
 ### Query.aggregate\_sum
@@ -1457,6 +1517,22 @@ Finds for the maximum at the specified index
 #### Returns:
     (:obj:`Query`): Query object for further customizations
 
+<a id="pyreindexer.query.Query.distinct"></a>
+
+### Query.distinct
+
+```python
+def distinct(*fields: str) -> Query
+```
+
+Gets fields distinct value. Applicable to multiple data fields
+
+#### Arguments:
+    fields (*string): Field names for distinct, fields should not be empty
+
+#### Returns:
+    (:obj:`Query`): Query object for further customizations
+
 <a id="pyreindexer.query.Query.aggregate_facet"></a>
 
 ### Query.aggregate\_facet
@@ -1466,11 +1542,11 @@ def aggregate_facet(*fields: str) -> Query._AggregateFacet
 ```
 
 Gets fields facet value. Applicable to multiple data fields and the result of that could be sorted
-    by any data column or `count` and cut off by offset and limit. In order to support this functionality
-    this method returns AggregationFacetRequest which has methods sort, limit and offset
+    by any data column or `count` and cut off by offset and limit. In order to support this functionality,
+    this method returns _AggregateFacet which has methods sort, limit and offset
 
 #### Arguments:
-    fields (*string): Fields any data column name or `count`, fields should not be empty
+    fields (*string): Field names for facet, fields should not be empty
 
 #### Returns:
     (:obj:`_AggregateFacet`): Request object for further customizations
@@ -1483,8 +1559,7 @@ Gets fields facet value. Applicable to multiple data fields and the result of th
 def sort(
     index: str,
     desc: bool = False,
-    forced_sort_values: Union[simple_types, tuple[list[simple_types],
-                                                  ...]] = None
+    forced_sort_values: Union[ValueType, tuple[list[ValueType], ...]] = None
 ) -> Query
 ```
 
@@ -1495,7 +1570,7 @@ Applies sort order to return from query items. If forced_sort_values argument sp
 #### Arguments:
     index (string): The index name
     desc (bool): Sort in descending order
-    forced_sort_values (union[simple_types, (list[simple_types], ...)]):
+    forced_sort_values (union[ValueType, (list[ValueType], ...)]):
         Value of index to match. For composite indexes keys must be list, with value of each sub-index
 
 #### Returns:
@@ -1761,14 +1836,14 @@ Executes a query, and delete items, matches query
 ### Query.set\_object
 
 ```python
-def set_object(field: str, values: list[simple_types]) -> Query
+def set_object(field: str, values: list[ValueType]) -> Query
 ```
 
 Adds an update query to an object field for an update query
 
 #### Arguments:
     field (string): Field name
-    values (list[simple_types]): List of values to add
+    values (list[ValueType]): List of values to add
 
 #### Returns:
     (:obj:`Query`): Query object for further customizations
@@ -1782,14 +1857,14 @@ Adds an update query to an object field for an update query
 ### Query.set
 
 ```python
-def set(field: str, values: list[simple_types]) -> Query
+def set(field: str, values: list[ValueType]) -> Query
 ```
 
 Adds a field update request to the update request
 
 #### Arguments:
     field (string): Field name
-    values (list[simple_types]): List of values to add
+    values (list[ValueType]): List of values to add
 
 #### Returns:
     (:obj:`Query`): Query object for further customizations
@@ -1994,7 +2069,7 @@ On specifies join condition
 
 <a id="pyreindexer.query.Query.select_fields"></a>
 
-### Query.select_fields
+### Query.select\_fields
 
 ```python
 def select_fields(*fields: str) -> Query
@@ -2069,9 +2144,8 @@ Index search param for brute force index. Equal to basic parameters
 #### Attributes:
     k (int): Expected size of KNN index results. Should not be less than 1
     radius (float): In addition to the parameter `k`, the query results can also be filtered by a `rank` -
-      value using the parameter, witch called `radius`. It's named so because, under the `L2`-metric,
-      it restricts vectors from query result to a sphere of the specified radius. [More about `radius`]
-      (https://github.com/Restream/reindexer/blob/master/float_vector.md)
+        value using the parameter, witch called `radius`. It's named so because, under the `L2`-metric,
+        it restricts vectors from query result to a sphere of the specified radius
 
 <a id="pyreindexer.index_search_params.IndexSearchParamHnsw"></a>
 
@@ -2086,11 +2160,10 @@ Index search param for HNSW index.
 #### Attributes:
     k (int): Expected size of KNN index results. Should not be less than 1
     ef (int): Size of nearest neighbor buffer that will be filled during fetching. Should not be less than 'k',
-    good story when `ef` ~= 1.5 * `k`
+        good story when `ef` ~= 1.5 * `k`
     radius (float): In addition to the parameter `k`, the query results can also be filtered by a `rank` -
-      value using the parameter, witch called `radius`. It's named so because, under the `L2`-metric,
-      it restricts vectors from query result to a sphere of the specified radius. [More about `radius`]
-      (https://github.com/Restream/reindexer/blob/master/float_vector.md)
+        value using the parameter, witch called `radius`. It's named so because, under the `L2`-metric,
+        it restricts vectors from query result to a sphere of the specified radius
 
 <a id="pyreindexer.index_search_params.IndexSearchParamIvf"></a>
 
@@ -2106,9 +2179,8 @@ Index search param for IVF index.
     k (int): Expected size of KNN index results. Should not be less than 1
     nprobe (int): Number of centroids that will be scanned in where. Should not be less than 1
     radius (float): In addition to the parameter `k`, the query results can also be filtered by a `rank` -
-      value using the parameter, witch called `radius`. It's named so because, under the `L2`-metric,
-      it restricts vectors from query result to a sphere of the specified radius. [More about `radius`]
-      (https://github.com/Restream/reindexer/blob/master/float_vector.md)
+        value using the parameter, witch called `radius`. It's named so because, under the `L2`-metric,
+        it restricts vectors from query result to a sphere of the specified radius
 
 <a id="pyreindexer.index_definition"></a>
 
