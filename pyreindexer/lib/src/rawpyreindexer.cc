@@ -2,11 +2,10 @@
 
 #include "core/keyvalue/float_vector.h"
 #include "estl/gift_str.h"
-#include "tools/serializer.h"
 
-#include "queryresults_wrapper.h"
-#include "query_wrapper.h"
 #include "pyobjtools.h"
+#include "query_wrapper.h"
+#include "queryresults_wrapper.h"
 #include "transaction_wrapper.h"
 
 namespace pyreindexer {
@@ -20,7 +19,6 @@ using ItemT = reindexer::client::Item;
 #else
 using ItemT = reindexer::Item;
 #endif
-
 
 namespace {
 uintptr_t initReindexer(const ReindexerConfig& cfg) {
@@ -58,19 +56,19 @@ PyObject* queryResultsWrapperIterate(uintptr_t qresWrapperAddr) {
 
 	PyObject* dictFromJson = nullptr;
 	try {
-		dictFromJson = PyObjectFromJson(reindexer::giftStr(wrSer.Slice()));  // stolen ref
+		dictFromJson = PyObjectFromJson(reindexer::giftStr(wrSer.Slice()));	 // stolen ref
 	} catch (const Error& err) {
 		Py_XDECREF(dictFromJson);
 
 		return Py_BuildValue("isO", err.code(), err.what(), NULL);
 	}
 
-	PyObject* res = Py_BuildValue("isO", errOK, "", dictFromJson);  // new ref
+	PyObject* res = Py_BuildValue("isO", errOK, "", dictFromJson);	// new ref
 	Py_DECREF(dictFromJson);
 
 	return res;
 }
-} // namespace
+}  // namespace
 
 // common --------------------------------------------------------------------------------------------------------------
 
@@ -82,9 +80,9 @@ static PyObject* Init(PyObject* self, PyObject* args) {
 	unsigned startSpecialThread = 0;
 	unsigned syncRxCoroCount = 0;
 	unsigned maxReplUpdatesSize = 0;
-	if (!PyArg_ParseTuple(args, "iiiIIsIIif", &cfg.fetchAmount, &cfg.reconnectAttempts, &netTimeout,
-						  &enableCompression, &startSpecialThread, &clientName, &syncRxCoroCount,
-						  &maxReplUpdatesSize, &cfg.allocatorCacheLimit, &cfg.allocatorCachePart)) {
+	if (!PyArg_ParseTuple(args, "iiiIIsIIif", &cfg.fetchAmount, &cfg.reconnectAttempts, &netTimeout, &enableCompression,
+						  &startSpecialThread, &clientName, &syncRxCoroCount, &maxReplUpdatesSize, &cfg.allocatorCacheLimit,
+						  &cfg.allocatorCachePart)) {
 		return nullptr;
 	}
 
@@ -145,8 +143,7 @@ static PyObject* ExecSQL(PyObject* self, PyObject* args) {
 
 	const auto count = qresult->Count();
 	const auto totalCount = qresult->TotalCount();
-	return Py_BuildValue("iskII", err.code(), err.what(),
-						 reinterpret_cast<uintptr_t>(qresult.release()), count, totalCount);
+	return Py_BuildValue("iskII", err.code(), err.what(), reinterpret_cast<uintptr_t>(qresult.release()), count, totalCount);
 }
 
 // namespace ----------------------------------------------------------------------------------------------------------
@@ -239,7 +236,7 @@ static PyObject* EnumNamespaces(PyObject* self, PyObject* args) {
 
 		PyObject* dictFromJson = nullptr;
 		try {
-			dictFromJson = PyObjectFromJson(reindexer::giftStr(wrSer.Slice()));  // stolen ref
+			dictFromJson = PyObjectFromJson(reindexer::giftStr(wrSer.Slice()));	 // stolen ref
 		} catch (const Error& err) {
 			Py_XDECREF(dictFromJson);
 			Py_DECREF(list);
@@ -344,8 +341,7 @@ PyObject* itemModify(PyObject* self, PyObject* args, ItemModifyMode mode) {
 	PyObject* itemDefDict = nullptr;   // borrowed ref after ParseTuple
 	PyObject* preceptsList = nullptr;  // borrowed ref after ParseTuple if passed
 	unsigned timeout = 0;
-	if (!PyArg_ParseTuple(args, "ksO!|O!I", &rx, &ns, &PyDict_Type, &itemDefDict, &PyList_Type, &preceptsList,
-						  &timeout)) {
+	if (!PyArg_ParseTuple(args, "ksO!|O!I", &rx, &ns, &PyDict_Type, &itemDefDict, &PyList_Type, &preceptsList, &timeout)) {
 		return nullptr;
 	}
 
@@ -412,7 +408,7 @@ PyObject* itemModify(PyObject* self, PyObject* args, ItemModifyMode mode) {
 
 	return pyErr(err);
 }
-} // namespace
+}  // namespace
 static PyObject* ItemInsert(PyObject* self, PyObject* args) { return itemModify(self, args, ModeInsert); }
 static PyObject* ItemUpdate(PyObject* self, PyObject* args) { return itemModify(self, args, ModeUpdate); }
 static PyObject* ItemUpsert(PyObject* self, PyObject* args) { return itemModify(self, args, ModeUpsert); }
@@ -478,8 +474,8 @@ static PyObject* EnumMeta(PyObject* self, PyObject* args) {
 
 	Py_ssize_t pos = 0;
 	for (const auto& key : keys) {
-		PyObject* pyKey = PyUnicode_FromStringAndSize(key.data(), key.size());  // new ref
-		PyList_SetItem(list, pos, pyKey);  // stolen ref
+		PyObject* pyKey = PyUnicode_FromStringAndSize(key.data(), key.size());	// new ref
+		PyList_SetItem(list, pos, pyKey);										// stolen ref
 		++pos;
 	}
 
@@ -541,14 +537,14 @@ static PyObject* GetAggregationResults(PyObject* self, PyObject* args) {
 
 	PyObject* dictFromJson = nullptr;
 	try {
-		dictFromJson = PyObjectFromJson(reindexer::giftStr(wrSer.Slice()));  // stolen ref
+		dictFromJson = PyObjectFromJson(reindexer::giftStr(wrSer.Slice()));	 // stolen ref
 	} catch (const Error& err) {
 		Py_XDECREF(dictFromJson);
 
 		return Py_BuildValue("isO", err.code(), err.what(), NULL);
 	}
 
-	PyObject* res = Py_BuildValue("isO", errOK, "", dictFromJson);  // new ref
+	PyObject* res = Py_BuildValue("isO", errOK, "", dictFromJson);	// new ref
 	Py_DECREF(dictFromJson);
 
 	return res;
@@ -588,7 +584,7 @@ static PyObject* NewTransaction(PyObject* self, PyObject* args) {
 namespace {
 PyObject* modifyTransaction(PyObject* self, PyObject* args, ItemModifyMode mode) {
 	uintptr_t transactionWrapperAddr = 0;
-	PyObject* defDict = nullptr;   // borrowed ref after ParseTuple
+	PyObject* defDict = nullptr;	   // borrowed ref after ParseTuple
 	PyObject* preceptsList = nullptr;  // borrowed ref after ParseTuple if passed
 	if (!PyArg_ParseTuple(args, "kO!|O!", &transactionWrapperAddr, &PyDict_Type, &defDict, &PyList_Type, &preceptsList)) {
 		return nullptr;
@@ -657,7 +653,7 @@ PyObject* modifyTransaction(PyObject* self, PyObject* args, ItemModifyMode mode)
 
 	return nullptr;
 }
-} // namespace
+}  // namespace
 static PyObject* InsertTransaction(PyObject* self, PyObject* args) { return modifyTransaction(self, args, ModeInsert); }
 static PyObject* UpdateTransaction(PyObject* self, PyObject* args) { return modifyTransaction(self, args, ModeUpdate); }
 static PyObject* UpsertTransaction(PyObject* self, PyObject* args) { return modifyTransaction(self, args, ModeUpsert); }
@@ -683,7 +679,7 @@ PyObject* modifyQueryTransaction(PyObject* self, PyObject* args, QueryType type)
 	err = getWrapper<TransactionWrapper>(transactionWrapperAddr)->Modify(std::move(rxQuery));
 	return pyErr(err);
 }
-} // namespace
+}  // namespace
 static PyObject* UpdateQueryTransaction(PyObject* self, PyObject* args) {
 	return modifyQueryTransaction(self, args, QueryType::QueryUpdate);
 }
@@ -701,7 +697,7 @@ static PyObject* CommitTransaction(PyObject* self, PyObject* args) {
 	size_t count = 0;
 	auto err = getWrapper<TransactionWrapper>(transactionWrapperAddr)->Commit(count, std::chrono::milliseconds(timeout));
 
-	deleteWrapper<TransactionWrapper>(transactionWrapperAddr); // free memory
+	deleteWrapper<TransactionWrapper>(transactionWrapperAddr);	// free memory
 
 	return Py_BuildValue("isI", err.code(), err.what(), count);
 }
@@ -715,7 +711,7 @@ static PyObject* RollbackTransaction(PyObject* self, PyObject* args) {
 
 	auto err = getWrapper<TransactionWrapper>(transactionWrapperAddr)->Rollback(std::chrono::milliseconds(timeout));
 
-	deleteWrapper<TransactionWrapper>(transactionWrapperAddr); // free memory
+	deleteWrapper<TransactionWrapper>(transactionWrapperAddr);	// free memory
 
 	return pyErr(err);
 }
@@ -863,20 +859,20 @@ static PyObject* WhereBetweenFields(PyObject* self, PyObject* args) {
 }
 
 static PyObject* WhereExpressions(PyObject* self, PyObject* args) {
-    uintptr_t queryWrapperAddr = 0;
-    PyObject* leftExpr = nullptr;
-    unsigned condition = 0;
-    PyObject* rightExpr = nullptr;
-    if (!PyArg_ParseTuple(args, "kOIO", &queryWrapperAddr, &leftExpr, &condition, &rightExpr)) {
-        return nullptr;
-    }
+	uintptr_t queryWrapperAddr = 0;
+	PyObject* leftExpr = nullptr;
+	unsigned condition = 0;
+	PyObject* rightExpr = nullptr;
+	if (!PyArg_ParseTuple(args, "kOIO", &queryWrapperAddr, &leftExpr, &condition, &rightExpr)) {
+		return nullptr;
+	}
 
-    try {
-        getWrapper<QueryWrapper>(queryWrapperAddr)->WhereExpressions(leftExpr, CondType(condition), rightExpr);
-        return pyErr({});
-    } catch (const reindexer::Error& err) {
-        return pyErr(err);
-    }
+	try {
+		getWrapper<QueryWrapper>(queryWrapperAddr)->WhereExpressions(leftExpr, CondType(condition), rightExpr);
+		return pyErr({});
+	} catch (const reindexer::Error& err) {
+		return pyErr(err);
+	}
 }
 
 namespace {
@@ -915,16 +911,16 @@ reindexer::KnnSearchParams GetParams(bool is_k, unsigned k, bool is_r, double r,
 	}
 	return params;
 }
-}
+}  // namespace
 
 static PyObject* WhereKNN(PyObject* self, PyObject* args) {
 	uintptr_t queryWrapperAddr = 0;
 	char* index = nullptr;
 	double radius = 0.0;
 	unsigned is_radius = 0, is_k = 0, k = 0, ef = 0, nprobe = 0;
-	PyObject* valuesList = nullptr;  // borrowed ref after ParseTuple if passed
-	if (!PyArg_ParseTuple(args, "ksIIIdIIO!", &queryWrapperAddr, &index, &is_k, &k, &is_radius, &radius, &ef, &nprobe,
-						  &PyList_Type, &valuesList)) {
+	PyObject* valuesList = nullptr;	 // borrowed ref after ParseTuple if passed
+	if (!PyArg_ParseTuple(args, "ksIIIdIIO!", &queryWrapperAddr, &index, &is_k, &k, &is_radius, &radius, &ef, &nprobe, &PyList_Type,
+						  &valuesList)) {
 		return nullptr;
 	}
 
@@ -960,8 +956,7 @@ static PyObject* WhereKNNString(PyObject* self, PyObject* args) {
 	double radius = 0.0;
 	unsigned is_radius = 0, is_k = 0, k = 0, ef = 0, nprobe = 0;
 	char* value = nullptr;
-	if (!PyArg_ParseTuple(args, "ksIIIdIIs", &queryWrapperAddr, &index, &is_k, &k, &is_radius, &radius, &ef, &nprobe,
-						  &value)) {
+	if (!PyArg_ParseTuple(args, "ksIIIdIIs", &queryWrapperAddr, &index, &is_k, &k, &is_radius, &radius, &ef, &nprobe, &value)) {
 		return nullptr;
 	}
 
@@ -981,10 +976,10 @@ PyObject* addBracket(PyObject* self, PyObject* args, BracketType type) {
 
 	auto query = getWrapper<QueryWrapper>(queryWrapperAddr);
 
-	auto err = (type == BracketType::Open)? query->OpenBracket() : query->CloseBracket();
+	auto err = (type == BracketType::Open) ? query->OpenBracket() : query->CloseBracket();
 	return pyErr(err);
 }
-} // namespace
+}  // namespace
 static PyObject* OpenBracket(PyObject* self, PyObject* args) { return addBracket(self, args, BracketType::Open); }
 static PyObject* CloseBracket(PyObject* self, PyObject* args) { return addBracket(self, args, BracketType::Closed); }
 
@@ -1055,7 +1050,7 @@ static PyObject* AggregationSort(PyObject* self, PyObject* args) {
 namespace {
 static PyObject* aggregation(PyObject* self, PyObject* args, AggType type) {
 	uintptr_t queryWrapperAddr = 0;
-	PyObject* fieldsList = nullptr;  // borrowed ref after ParseTuple if passed
+	PyObject* fieldsList = nullptr;	 // borrowed ref after ParseTuple if passed
 	if (!PyArg_ParseTuple(args, "kO!", &queryWrapperAddr, &PyList_Type, &fieldsList)) {
 		return nullptr;
 	}
@@ -1090,7 +1085,7 @@ static PyObject* Sort(PyObject* self, PyObject* args) {
 	uintptr_t queryWrapperAddr = 0;
 	char* index = nullptr;
 	unsigned desc = 0;
-	PyObject* sortValuesList = nullptr;  // borrowed ref after ParseTuple if passed
+	PyObject* sortValuesList = nullptr;	 // borrowed ref after ParseTuple if passed
 	if (!PyArg_ParseTuple(args, "ksIO!", &queryWrapperAddr, &index, &desc, &PyList_Type, &sortValuesList)) {
 		return nullptr;
 	}
@@ -1125,7 +1120,7 @@ PyObject* logOp(PyObject* self, PyObject* args, OpType opID) {
 
 	Py_RETURN_NONE;
 }
-} // namespace
+}  // namespace
 static PyObject* And(PyObject* self, PyObject* args) { return logOp(self, args, OpType::OpAnd); }
 static PyObject* Or(PyObject* self, PyObject* args) { return logOp(self, args, OpType::OpOr); }
 static PyObject* Not(PyObject* self, PyObject* args) { return logOp(self, args, OpType::OpNot); }
@@ -1176,7 +1171,7 @@ PyObject* modifier(PyObject* self, PyObject* args, QueryItemType type) {
 
 	Py_RETURN_NONE;
 }
-} // namespace
+}  // namespace
 static PyObject* Explain(PyObject* self, PyObject* args) { return modifier(self, args, QueryItemType::QueryExplain); }
 static PyObject* WithRank(PyObject* self, PyObject* args) { return modifier(self, args, QueryItemType::QueryWithRank); }
 
@@ -1222,17 +1217,16 @@ static PyObject* executeQuery(PyObject* self, PyObject* args, ExecuteType type) 
 
 	const auto count = qresult->Count();
 	const auto totalCount = qresult->TotalCount();
-	return Py_BuildValue("iskII", err.code(), err.what(),
-						 reinterpret_cast<uintptr_t>(qresult.release()), count, totalCount);
+	return Py_BuildValue("iskII", err.code(), err.what(), reinterpret_cast<uintptr_t>(qresult.release()), count, totalCount);
 }
-} // namespace
+}  // namespace
 static PyObject* SelectQuery(PyObject* self, PyObject* args) { return executeQuery(self, args, ExecuteType::Select); }
 static PyObject* UpdateQuery(PyObject* self, PyObject* args) { return executeQuery(self, args, ExecuteType::Update); }
 
 static PyObject* SetObject(PyObject* self, PyObject* args) {
 	uintptr_t queryWrapperAddr = 0;
 	char* field = nullptr;
-	PyObject* valuesList = nullptr;  // borrowed ref after ParseTuple
+	PyObject* valuesList = nullptr;	 // borrowed ref after ParseTuple
 	if (!PyArg_ParseTuple(args, "ksO!", &queryWrapperAddr, &field, &PyList_Type, &valuesList)) {
 		return nullptr;
 	}
@@ -1259,7 +1253,7 @@ static PyObject* SetObject(PyObject* self, PyObject* args) {
 static PyObject* Set(PyObject* self, PyObject* args) {
 	uintptr_t queryWrapperAddr = 0;
 	char* field = nullptr;
-	PyObject* valuesList = nullptr;  // borrowed ref after ParseTuple
+	PyObject* valuesList = nullptr;	 // borrowed ref after ParseTuple
 	if (!PyArg_ParseTuple(args, "ksO!", &queryWrapperAddr, &field, &PyList_Type, &valuesList)) {
 		return nullptr;
 	}
@@ -1356,7 +1350,7 @@ static PyObject* On(PyObject* self, PyObject* args) {
 
 static PyObject* SelectFields(PyObject* self, PyObject* args) {
 	uintptr_t queryWrapperAddr = 0;
-	PyObject* fieldsList = nullptr;  // borrowed ref after ParseTuple if passed
+	PyObject* fieldsList = nullptr;	 // borrowed ref after ParseTuple if passed
 	if (!PyArg_ParseTuple(args, "kO!", &queryWrapperAddr, &PyList_Type, &fieldsList)) {
 		return nullptr;
 	}
@@ -1382,7 +1376,7 @@ static PyObject* SelectFields(PyObject* self, PyObject* args) {
 
 static PyObject* AddFunctions(PyObject* self, PyObject* args) {
 	uintptr_t queryWrapperAddr = 0;
-	PyObject* functionsList = nullptr;  // borrowed ref after ParseTuple if passed
+	PyObject* functionsList = nullptr;	// borrowed ref after ParseTuple if passed
 	if (!PyArg_ParseTuple(args, "kO!", &queryWrapperAddr, &PyList_Type, &functionsList)) {
 		return nullptr;
 	}
@@ -1408,7 +1402,7 @@ static PyObject* AddFunctions(PyObject* self, PyObject* args) {
 
 static PyObject* AddEqualPosition(PyObject* self, PyObject* args) {
 	uintptr_t queryWrapperAddr = 0;
-	PyObject* equalPosesList = nullptr;  // borrowed ref after ParseTuple if passed
+	PyObject* equalPosesList = nullptr;	 // borrowed ref after ParseTuple if passed
 	if (!PyArg_ParseTuple(args, "kO!", &queryWrapperAddr, &PyList_Type, &equalPosesList)) {
 		return nullptr;
 	}

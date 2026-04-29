@@ -1,6 +1,6 @@
 #include "pyobjtools.h"
 
-#include "tools/serializer.h"
+#include "tools/serilize/wrserializer.h"
 #include "vendor/gason/gason.h"
 
 namespace pyreindexer {
@@ -30,8 +30,7 @@ void pyListSerialize(PyObject** list, reindexer::WrSerializer& wrSer) {
 
 void pyDictSerialize(PyObject** dict, reindexer::WrSerializer& wrSer) {
 	if (!PyDict_Check(*dict)) {
-		throw reindexer::Error(ErrorCode::errParseJson,
-								std::string("Dictionary expected, got ") + py_get_type_name(*dict));
+		throw reindexer::Error(ErrorCode::errParseJson, std::string("Dictionary expected, got ") + py_get_type_name(*dict));
 	}
 
 	wrSer << '{';
@@ -75,8 +74,7 @@ void pyValueSerialize(PyObject** value, reindexer::WrSerializer& wrSer) {
 	} else if (PyDict_Check(*value)) {
 		pyDictSerialize(value, wrSer);
 	} else {
-		throw reindexer::Error(ErrorCode::errParseJson,
-								std::string("Unable to parse value of type ") + py_get_type_name(*value));
+		throw reindexer::Error(ErrorCode::errParseJson, std::string("Unable to parse value of type ") + py_get_type_name(*value));
 	}
 }
 
@@ -87,8 +85,7 @@ void PyObjectToJson(PyObject** obj, reindexer::WrSerializer& wrSer) {
 		pyListSerialize(obj, wrSer);
 	} else {
 		throw reindexer::Error(ErrorCode::errParseJson,
-								std::string("PyObject must be a dictionary or a list for JSON serializing, got ")
-								+ py_get_type_name(*obj));
+							   std::string("PyObject must be a dictionary or a list for JSON serializing, got ") + py_get_type_name(*obj));
 	}
 }
 
@@ -143,7 +140,7 @@ reindexer::Variant convert(PyObject** value) {
 			array.push_back(convert(&item));
 		}
 		return reindexer::Variant{array};
-	} else if (PyTuple_Check(*value)){
+	} else if (PyTuple_Check(*value)) {
 		auto size = PyTuple_Size(*value);
 		reindexer::VariantArray array;
 		array.reserve(size);
@@ -153,8 +150,7 @@ reindexer::Variant convert(PyObject** value) {
 		}
 		return reindexer::Variant{array};
 	} else {
-		throw reindexer::Error(ErrorCode::errParseJson,
-								std::string("Unexpected type, got ") + py_get_type_name(*value));
+		throw reindexer::Error(ErrorCode::errParseJson, std::string("Unexpected type, got ") + py_get_type_name(*value));
 	}
 	return {};
 }
@@ -177,42 +173,42 @@ PyObject* pyValueFromJsonValue(const gason::JsonValue& value) {
 
 	switch (value.getTag()) {
 		case gason::JsonTag::NUMBER:
-			pyValue = PyLong_FromLongLong(value.toNumber()); // new ref
+			pyValue = PyLong_FromLongLong(value.toNumber());  // new ref
 			break;
 		case gason::JsonTag::DOUBLE:
-			pyValue = PyFloat_FromDouble(value.toDouble()); // new ref
+			pyValue = PyFloat_FromDouble(value.toDouble());	 // new ref
 			break;
 		case gason::JsonTag::STRING: {
 			auto sv = value.toString();
-			pyValue = PyUnicode_FromStringAndSize(sv.data(), sv.size()); // new ref
+			pyValue = PyUnicode_FromStringAndSize(sv.data(), sv.size());  // new ref
 			break;
 		}
 		case gason::JsonTag::JSON_NULL:
 			pyValue = Py_None;
-			Py_INCREF(pyValue); // new ref
+			Py_INCREF(pyValue);	 // new ref
 			break;
 		case gason::JsonTag::JTRUE:
 			pyValue = Py_True;
-			Py_INCREF(pyValue); // new ref
+			Py_INCREF(pyValue);	 // new ref
 			break;
 		case gason::JsonTag::JFALSE:
 			pyValue = Py_False;
-			Py_INCREF(pyValue); // new ref
+			Py_INCREF(pyValue);	 // new ref
 			break;
 		case gason::JsonTag::ARRAY:
-			pyValue = PyList_New(0); // new ref
+			pyValue = PyList_New(0);  // new ref
 			for (const auto& v : value) {
-				PyObject* dictFromJson = pyValueFromJsonValue(v.value); // stolen ref
-				PyList_Append(pyValue, dictFromJson); // new ref
+				PyObject* dictFromJson = pyValueFromJsonValue(v.value);	 // stolen ref
+				PyList_Append(pyValue, dictFromJson);					 // new ref
 				Py_XDECREF(dictFromJson);
 			}
 			break;
 		case gason::JsonTag::OBJECT:
-			pyValue = PyDict_New(); // new ref
+			pyValue = PyDict_New();	 // new ref
 			for (const auto& v : value) {
-				PyObject* dictFromJson = pyValueFromJsonValue(v.value); // stolen ref
-				PyObject* pyKey = PyUnicode_FromStringAndSize(v.key.data(), v.key.size()); // new ref
-				PyDict_SetItem(pyValue, pyKey, dictFromJson); // new refs
+				PyObject* dictFromJson = pyValueFromJsonValue(v.value);						// stolen ref
+				PyObject* pyKey = PyUnicode_FromStringAndSize(v.key.data(), v.key.size());	// new ref
+				PyDict_SetItem(pyValue, pyKey, dictFromJson);								// new refs
 				Py_XDECREF(pyKey);
 				Py_XDECREF(dictFromJson);
 			}
@@ -228,14 +224,14 @@ PyObject* pyValueFromJsonValue(const gason::JsonValue& value) {
 PyObject* PyObjectFromJson(std::span<char> json) {
 	if (json.empty()) {
 		PyObject* pyValue = Py_None;
-		Py_INCREF(pyValue); // new ref
+		Py_INCREF(pyValue);	 // new ref
 		return pyValue;
 	}
 
 	try {
 		gason::JsonParser parser;
 		auto root = parser.Parse(json);
-		return pyValueFromJsonValue(root.value); // stolen ref
+		return pyValueFromJsonValue(root.value);  // stolen ref
 	} catch (const gason::Exception& ex) {
 		throw reindexer::Error(ErrorCode::errParseJson, std::string("PyObjectFromJson: ") + ex.what());
 	}

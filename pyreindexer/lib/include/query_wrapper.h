@@ -7,7 +7,7 @@
 #include "core/keyvalue/float_vector.h"
 #include "core/type_consts.h"
 #include "estl/h_vector.h"
-#include "tools/serializer.h"
+#include "tools/serilize/wrserializer.h"
 #include "tools/errors.h"
 #ifdef PYREINDEXER_CPROTO
 #include "client/reindexer.h"
