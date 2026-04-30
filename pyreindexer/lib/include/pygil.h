@@ -10,11 +10,17 @@ namespace pyreindexer {
 class GilRelease {
 public:
 	GilRelease() noexcept {
+#if defined(Py_LIMITED_API)
+		// `PyGILState_Check()` is not available in the limited C API.
+		// In this build mode we assume correct usage (the caller holds the GIL).
+		state_ = PyEval_SaveThread();
+#else	// !defined(Py_LIMITED_API)
 		// PyEval_SaveThread requires current thread owns the GIL.
 		// If used incorrectly, we prefer "no-op" over undefined behavior/crash.
 		if (PyGILState_Check()) {
 			state_ = PyEval_SaveThread();
 		}
+#endif	// !defined(Py_LIMITED_API)
 	}
 	GilRelease(const GilRelease&) = delete;
 	GilRelease& operator=(const GilRelease&) = delete;
