@@ -34,6 +34,7 @@ class ConnectorApi(RxConnector):
     def __init__(self, dsn, **kwargs):
         super().__init__(dsn, **kwargs)
         self.namespace = NamespaceApiMethods(self)
+        self.schema = SchemaApiMethods(self)
         self.index = IndexApiMethods(self)
         self.item = ItemApiMethods(self)
         self.query = QueryApiMethods(self)
@@ -76,6 +77,16 @@ class NamespaceApiMethods:
     def enumerate(self, enum_not_opened=False, timeout: timedelta = ConnectorApi.default_timeout):
         """ Get namespaces list """
         return self.api.namespaces_enum(enum_not_opened, timeout)
+
+
+class SchemaApiMethods:
+    def __init__(self, api):
+        self.api = api
+
+    @api_method
+    def set(self, ns_name, schema, timeout: timedelta = ConnectorApi.default_timeout):
+        """ Set schema """
+        return self.api.schema_set(ns_name, schema, timeout)
 
 
 class IndexApiMethods:

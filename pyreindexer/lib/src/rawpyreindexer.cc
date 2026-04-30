@@ -208,7 +208,7 @@ static PyObject* NamespaceRename(PyObject* self, PyObject* args) {
 	return pyErr(err);
 }
 
-static PyObject* EnumNamespaces(PyObject* self, PyObject* args) {
+static PyObject* NamespacesEnum(PyObject* self, PyObject* args) {
 	uintptr_t rx = 0;
 	unsigned enumAll = 0;
 	unsigned timeout = 0;
@@ -252,6 +252,20 @@ static PyObject* EnumNamespaces(PyObject* self, PyObject* args) {
 	Py_DECREF(list);
 
 	return res;
+}
+
+// schema --------------------------------------------------------------------------------------------------------------
+
+static PyObject* SchemaSet(PyObject* self, PyObject* args) {
+	uintptr_t rx = 0;
+	char *ns = nullptr, *schema = nullptr;
+	unsigned timeout = 0;
+	if (!PyArg_ParseTuple(args, "kssI", &rx, &ns, &schema, &timeout)) {
+		return nullptr;
+	}
+
+	auto err = getWrapper<DBInterface>(rx)->SetSchema(ns, schema, std::chrono::milliseconds(timeout));
+	return pyErr(err);
 }
 
 // index ---------------------------------------------------------------------------------------------------------------
@@ -416,7 +430,7 @@ static PyObject* ItemDelete(PyObject* self, PyObject* args) { return itemModify(
 
 // meta ----------------------------------------------------------------------------------------------------------------
 
-static PyObject* PutMeta(PyObject* self, PyObject* args) {
+static PyObject* MetaPut(PyObject* self, PyObject* args) {
 	uintptr_t rx = 0;
 	char *ns = nullptr, *key = nullptr, *value = nullptr;
 	unsigned timeout = 0;
@@ -428,7 +442,7 @@ static PyObject* PutMeta(PyObject* self, PyObject* args) {
 	return pyErr(err);
 }
 
-static PyObject* GetMeta(PyObject* self, PyObject* args) {
+static PyObject* MetaGet(PyObject* self, PyObject* args) {
 	uintptr_t rx = 0;
 	char *ns = nullptr, *key = nullptr;
 	unsigned timeout = 0;
@@ -441,7 +455,7 @@ static PyObject* GetMeta(PyObject* self, PyObject* args) {
 	return Py_BuildValue("iss", err.code(), err.what(), value.c_str());
 }
 
-static PyObject* DeleteMeta(PyObject* self, PyObject* args) {
+static PyObject* MetaDelete(PyObject* self, PyObject* args) {
 	uintptr_t rx = 0;
 	char *ns = nullptr, *key = nullptr;
 	unsigned timeout = 0;
@@ -453,7 +467,7 @@ static PyObject* DeleteMeta(PyObject* self, PyObject* args) {
 	return pyErr(err);
 }
 
-static PyObject* EnumMeta(PyObject* self, PyObject* args) {
+static PyObject* MetaEnum(PyObject* self, PyObject* args) {
 	uintptr_t rx = 0;
 	char* ns = nullptr;
 	unsigned timeout = 0;
