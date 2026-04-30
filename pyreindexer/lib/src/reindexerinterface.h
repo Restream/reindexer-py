@@ -82,7 +82,6 @@ public:
 
 private:
 	DBT db_;
-	std::chrono::milliseconds timeout_{0};
 };
 
 }  // namespace pyreindexer
