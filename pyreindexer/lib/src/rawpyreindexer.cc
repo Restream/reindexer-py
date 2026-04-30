@@ -668,10 +668,10 @@ PyObject* modifyTransaction(PyObject* self, PyObject* args, ItemModifyMode mode)
 	return nullptr;
 }
 }  // namespace
-static PyObject* InsertTransaction(PyObject* self, PyObject* args) { return modifyTransaction(self, args, ModeInsert); }
-static PyObject* UpdateTransaction(PyObject* self, PyObject* args) { return modifyTransaction(self, args, ModeUpdate); }
-static PyObject* UpsertTransaction(PyObject* self, PyObject* args) { return modifyTransaction(self, args, ModeUpsert); }
-static PyObject* DeleteTransaction(PyObject* self, PyObject* args) { return modifyTransaction(self, args, ModeDelete); }
+static PyObject* TransactionInsert(PyObject* self, PyObject* args) { return modifyTransaction(self, args, ModeInsert); }
+static PyObject* TransactionUpdate(PyObject* self, PyObject* args) { return modifyTransaction(self, args, ModeUpdate); }
+static PyObject* TransactionUpsert(PyObject* self, PyObject* args) { return modifyTransaction(self, args, ModeUpsert); }
+static PyObject* TransactionDelete(PyObject* self, PyObject* args) { return modifyTransaction(self, args, ModeDelete); }
 
 namespace {
 PyObject* modifyQueryTransaction(PyObject* self, PyObject* args, QueryType type) {
@@ -694,14 +694,14 @@ PyObject* modifyQueryTransaction(PyObject* self, PyObject* args, QueryType type)
 	return pyErr(err);
 }
 }  // namespace
-static PyObject* UpdateQueryTransaction(PyObject* self, PyObject* args) {
+static PyObject* TransactionUpdateQuery(PyObject* self, PyObject* args) {
 	return modifyQueryTransaction(self, args, QueryType::QueryUpdate);
 }
-static PyObject* DeleteQueryTransaction(PyObject* self, PyObject* args) {
+static PyObject* TransactionDeleteQuery(PyObject* self, PyObject* args) {
 	return modifyQueryTransaction(self, args, QueryType::QueryDelete);
 }
 
-static PyObject* CommitTransaction(PyObject* self, PyObject* args) {
+static PyObject* TransactionCommit(PyObject* self, PyObject* args) {
 	uintptr_t transactionWrapperAddr = 0;
 	unsigned timeout = 0;
 	if (!PyArg_ParseTuple(args, "kI", &transactionWrapperAddr, &timeout)) {
@@ -716,7 +716,7 @@ static PyObject* CommitTransaction(PyObject* self, PyObject* args) {
 	return Py_BuildValue("isI", err.code(), err.what(), count);
 }
 
-static PyObject* RollbackTransaction(PyObject* self, PyObject* args) {
+static PyObject* TransactionRollback(PyObject* self, PyObject* args) {
 	uintptr_t transactionWrapperAddr = 0;
 	unsigned timeout = 0;
 	if (!PyArg_ParseTuple(args, "kI", &transactionWrapperAddr, &timeout)) {

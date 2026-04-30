@@ -60,8 +60,7 @@ class Transaction(RaiserTx):
         """
 
         precepts = [] if precepts is None else precepts
-        self.err_code, self.err_msg = self.api.item_insert_transaction(self.transaction_wrapper_ptr,
-                                                                       item_def, precepts)
+        self.err_code, self.err_msg = self.api.transaction_item_insert(self.transaction_wrapper_ptr, item_def, precepts)
 
     @RaiserTx.raise_if_error
     def update(self, item_def: Dict, precepts: List[str] = None) -> None:
@@ -79,8 +78,7 @@ class Transaction(RaiserTx):
         """
 
         precepts = [] if precepts is None else precepts
-        self.err_code, self.err_msg = self.api.item_update_transaction(self.transaction_wrapper_ptr,
-                                                                       item_def, precepts)
+        self.err_code, self.err_msg = self.api.transaction_item_update(self.transaction_wrapper_ptr, item_def, precepts)
 
     @RaiserTx.raise_if_error
     def update_query(self, query: Query) -> None:
@@ -97,8 +95,7 @@ class Transaction(RaiserTx):
 
         """
 
-        self.err_code, self.err_msg = self.api.modify_transaction(self.transaction_wrapper_ptr,
-                                                                  query.query_wrapper_ptr)
+        self.err_code, self.err_msg = self.api.transaction_modify(self.transaction_wrapper_ptr, query.query_wrapper_ptr)
 
     @RaiserTx.raise_if_error
     def upsert(self, item_def: Dict, precepts: List[str] = None) -> None:
@@ -116,8 +113,7 @@ class Transaction(RaiserTx):
         """
 
         precepts = [] if precepts is None else precepts
-        self.err_code, self.err_msg = self.api.item_upsert_transaction(self.transaction_wrapper_ptr,
-                                                                       item_def, precepts)
+        self.err_code, self.err_msg = self.api.transaction_item_upsert(self.transaction_wrapper_ptr, item_def, precepts)
 
     @RaiserTx.raise_if_error
     def delete(self, item_def: Dict) -> None:
@@ -133,8 +129,7 @@ class Transaction(RaiserTx):
 
         """
 
-        self.err_code, self.err_msg = self.api.item_delete_transaction(self.transaction_wrapper_ptr,
-                                                                       item_def)
+        self.err_code, self.err_msg = self.api.transaction_item_delete(self.transaction_wrapper_ptr, item_def)
 
     @RaiserTx.raise_if_error
     def delete_query(self, query: Query):
@@ -151,8 +146,7 @@ class Transaction(RaiserTx):
 
         """
 
-        self.err_code, self.err_msg = self.api.delete_transaction(self.transaction_wrapper_ptr,
-                                                                  query.query_wrapper_ptr)
+        self.err_code, self.err_msg = self.api.transaction_delete(self.transaction_wrapper_ptr, query.query_wrapper_ptr)
 
     @RaiserTx.raise_if_error
     def commit(self, timeout: timedelta = timedelta(milliseconds=0)) -> None:
@@ -170,8 +164,7 @@ class Transaction(RaiserTx):
         """
 
         milliseconds: int = int(timeout / timedelta(milliseconds=1))
-        self.err_code, self.err_msg, _ = self.api.commit_transaction(self.transaction_wrapper_ptr,
-                                                                     milliseconds)
+        self.err_code, self.err_msg, _ = self.api.transaction_commit(self.transaction_wrapper_ptr, milliseconds)
         self.__finalize()
 
     @RaiserTx.raise_if_error
@@ -190,8 +183,7 @@ class Transaction(RaiserTx):
         """
 
         milliseconds: int = int(timeout / timedelta(milliseconds=1))
-        self.err_code, self.err_msg, count = self.api.commit_transaction(self.transaction_wrapper_ptr,
-                                                                         milliseconds)
+        self.err_code, self.err_msg, count = self.api.transaction_commit(self.transaction_wrapper_ptr, milliseconds)
         self.__finalize()
         return count
 
@@ -211,6 +203,5 @@ class Transaction(RaiserTx):
         """
 
         milliseconds: int = int(timeout / timedelta(milliseconds=1))
-        self.err_code, self.err_msg = self.api.rollback_transaction(self.transaction_wrapper_ptr,
-                                                                    milliseconds)
+        self.err_code, self.err_msg = self.api.transaction_rollback(self.transaction_wrapper_ptr, milliseconds)
         self.__finalize()

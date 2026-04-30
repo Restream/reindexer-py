@@ -50,14 +50,14 @@ static PyObject* GetAggregationResults(PyObject* self, PyObject* args);
 static PyObject* GetExplainResults(PyObject* self, PyObject* args);
 // transaction (sync)
 static PyObject* NewTransaction(PyObject* self, PyObject* args);
-static PyObject* InsertTransaction(PyObject* self, PyObject* args);
-static PyObject* UpdateTransaction(PyObject* self, PyObject* args);
-static PyObject* UpsertTransaction(PyObject* self, PyObject* args);
-static PyObject* DeleteTransaction(PyObject* self, PyObject* args);
-static PyObject* UpdateQueryTransaction(PyObject* self, PyObject* args);
-static PyObject* DeleteQueryTransaction(PyObject* self, PyObject* args);
-static PyObject* CommitTransaction(PyObject* self, PyObject* args);
-static PyObject* RollbackTransaction(PyObject* self, PyObject* args);
+static PyObject* TransactionInsert(PyObject* self, PyObject* args);
+static PyObject* TransactionUpdate(PyObject* self, PyObject* args);
+static PyObject* TransactionUpsert(PyObject* self, PyObject* args);
+static PyObject* TransactionDelete(PyObject* self, PyObject* args);
+static PyObject* TransactionUpdateQuery(PyObject* self, PyObject* args);
+static PyObject* TransactionDeleteQuery(PyObject* self, PyObject* args);
+static PyObject* TransactionCommit(PyObject* self, PyObject* args);
+static PyObject* TransactionRollback(PyObject* self, PyObject* args);
 // query
 static PyObject* CreateQuery(PyObject* self, PyObject* args);
 static PyObject* DestroyQuery(PyObject* self, PyObject* args);
@@ -144,14 +144,14 @@ static PyMethodDef module_methods[] = {
 	{"get_explain_results", GetExplainResults, METH_VARARGS, "get explain results"},
 	// transaction (sync)
 	{"new_transaction", NewTransaction, METH_VARARGS, "start new transaction"},
-	{"item_insert_transaction", InsertTransaction, METH_VARARGS, "item insert transaction"},
-	{"item_update_transaction", UpdateTransaction, METH_VARARGS, "item update transaction"},
-	{"item_upsert_transaction", UpsertTransaction, METH_VARARGS, "item upsert transaction"},
-	{"item_delete_transaction", DeleteTransaction, METH_VARARGS, "item delete transaction"},
-	{"modify_transaction", UpdateQueryTransaction, METH_VARARGS, "update query transaction"},
-	{"delete_transaction", DeleteQueryTransaction, METH_VARARGS, "delete query transaction"},
-	{"commit_transaction", CommitTransaction, METH_VARARGS, "apply transaction changes. Free transaction object memory"},
-	{"rollback_transaction", RollbackTransaction, METH_VARARGS, "rollback transaction changes. Free transaction object memory"},
+	{"transaction_item_insert", TransactionInsert, METH_VARARGS, "item insert transaction"},
+	{"transaction_item_update", TransactionUpdate, METH_VARARGS, "item update transaction"},
+	{"transaction_item_upsert", TransactionUpsert, METH_VARARGS, "item upsert transaction"},
+	{"transaction_item_delete", TransactionDelete, METH_VARARGS, "item delete transaction"},
+	{"transaction_modify", TransactionUpdateQuery, METH_VARARGS, "update query transaction"},
+	{"transaction_delete", TransactionDeleteQuery, METH_VARARGS, "delete query transaction"},
+	{"transaction_commit", TransactionCommit, METH_VARARGS, "apply transaction changes. Free transaction object memory"},
+	{"transaction_rollback", TransactionRollback, METH_VARARGS, "rollback transaction changes. Free transaction object memory"},
 	// query
 	{"create_query", CreateQuery, METH_VARARGS, "create new query"},
 	{"destroy_query", DestroyQuery, METH_VARARGS, "delete query object. Free query object memory"},
