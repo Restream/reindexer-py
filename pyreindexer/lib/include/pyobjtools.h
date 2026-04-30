@@ -5,6 +5,10 @@
 #include "core/keyvalue/variant.h"
 #include "estl/h_vector.h"
 
+namespace reindexer {
+class WrSerializer;
+}
+
 namespace pyreindexer {
 
 struct PyUnicodeUTF8 {

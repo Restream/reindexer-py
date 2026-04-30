@@ -72,6 +72,17 @@ Error ReindexerInterface<DBT>::DropNamespace(std::string_view ns, std::chrono::m
 }
 
 template <typename DBT>
+Error ReindexerInterface<DBT>::TruncateNamespace(std::string_view ns, std::chrono::milliseconds timeout) {
+	return db_.WithTimeout(timeout).TruncateNamespace(ns);
+}
+
+template <typename DBT>
+Error ReindexerInterface<DBT>::RenameNamespace(std::string_view oldNs, const std::string& newNs,
+							    			   std::chrono::milliseconds timeout) {
+	return db_.WithTimeout(timeout).RenameNamespace(oldNs, newNs);
+}
+
+template <typename DBT>
 Error ReindexerInterface<DBT>::AddIndex(std::string_view ns, const IndexDef& idx, std::chrono::milliseconds timeout) {
 	return db_.WithTimeout(timeout).AddIndex(ns, idx);
 }

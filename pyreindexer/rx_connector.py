@@ -136,7 +136,7 @@ class RxConnector(RaiserRx):
 
         if dsn.startswith('builtin://'):
             self.api = __import__('rawpyreindexerb')
-        elif dsn.startswith('cproto://'):
+        elif dsn.startswith(('cproto://', 'cprotos://', 'ucproto://')):
             self.api = __import__('rawpyreindexerc')
         else:
             raise ConnectionError(f"Unknown Reindexer connection protocol for dsn: {dsn}")
@@ -239,6 +239,45 @@ class RxConnector(RaiserRx):
 
         milliseconds: int = int(timeout / timedelta(milliseconds=1))
         self.err_code, self.err_msg = self.api.namespace_drop(self.rx, namespace, milliseconds)
+
+    @RaiserRx.raise_if_error
+    def namespace_truncate(self, namespace: str, timeout: timedelta = timedelta(milliseconds=0)) -> None:
+        """Truncates the specified namespace
+
+        #### Arguments:
+            namespace (string): The name of the namespace
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
+                A value of 0 disables the timeout (default value)
+
+        #### Raises:
+            Exception: Raises with an error message when Reindexer instance is not initialized yet
+            Exception: Raises with an error message of API return on non-zero error code
+
+        """
+
+        milliseconds: int = int(timeout / timedelta(milliseconds=1))
+        self.err_code, self.err_msg = self.api.namespace_truncate(self.rx, namespace, milliseconds)
+
+    @RaiserRx.raise_if_error
+    def namespace_rename(self, old_ns_name: str, new_ns_name: str,
+                         timeout: timedelta = timedelta(milliseconds=0)) -> None:
+        """Renames the specified namespace
+
+        #### Arguments:
+            namespace (string): The name of the namespace
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
+                A value of 0 disables the timeout (default value)
+
+        #### Raises:
+            ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
+            ApiError: Raises with an error message of API return on non-zero error code
+
+        """
+
+        milliseconds: int = int(timeout / timedelta(milliseconds=1))
+        self.err_code, self.err_msg = self.api.namespace_rename(self.rx, old_ns_name, new_ns_name, milliseconds)
 
     @RaiserRx.raise_if_error
     def namespaces_enum(self, enum_not_opened: bool = False,

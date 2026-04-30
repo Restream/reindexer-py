@@ -521,21 +521,6 @@ class Query(RaiserQuery):
         return self
 
     @RaiserQuery.raise_if_error
-    def distinct(self, index: str) -> Query:
-        """Performs distinct for a certain index. Return only items with uniq value of field
-
-        #### Arguments:
-            index (string): Field name for distinct operation
-
-        #### Returns:
-            (:obj:`Query`): Query object for further customizations
-
-        """
-
-        self.api.aggregate_distinct(self.query_wrapper_ptr, index)
-        return self
-
-    @RaiserQuery.raise_if_error
     def aggregate_sum(self, index: str) -> Query:
         """Performs a summation of values for a specified index
 
@@ -593,6 +578,23 @@ class Query(RaiserQuery):
         """
 
         self.api.aggregate_max(self.query_wrapper_ptr, index)
+        return self
+
+    @RaiserQuery.raise_if_error
+    def distinct(self, *fields: str) -> Query:
+        """ Gets fields distinct value. Applicable to multiple data fields
+
+        #### Arguments:
+            fields (*string): Field names for distinct, fields should not be empty
+
+        #### Returns:
+            (:obj:`Query`): Query object for further customizations
+
+        """
+
+        params: list = self.__convert_strs_to_list(fields)
+
+        self.err_code, self.err_msg = self.api.aggregate_distinct(self.query_wrapper_ptr, params)
         return self
 
     class _AggregateFacet(RaiserQuery):
@@ -661,12 +663,12 @@ class Query(RaiserQuery):
 
     @RaiserQuery.raise_if_error
     def aggregate_facet(self, *fields: str) -> Query._AggregateFacet:
-        """Gets fields facet value. Applicable to multiple data fields and the result of that could be sorted
-            by any data column or `count` and cut off by offset and limit. In order to support this functionality
-            this method returns AggregationFacetRequest which has methods sort, limit and offset
+        """ Gets fields facet value. Applicable to multiple data fields and the result of that could be sorted
+            by any data column or `count` and cut off by offset and limit. In order to support this functionality,
+            this method returns _AggregateFacet which has methods sort, limit and offset
 
         #### Arguments:
-            fields (*string): Fields any data column name or `count`, fields should not be empty
+            fields (*string): Field names for facet, fields should not be empty
 
         #### Returns:
             (:obj:`_AggregateFacet`): Request object for further customizations
@@ -675,7 +677,7 @@ class Query(RaiserQuery):
 
         params: list = self.__convert_strs_to_list(fields)
 
-        self.err_code, self.err_msg = self.api.aggregation(self.query_wrapper_ptr, params)
+        self.err_code, self.err_msg = self.api.aggregate_facet(self.query_wrapper_ptr, params)
         return self._AggregateFacet(self)
 
     @RaiserQuery.raise_if_error

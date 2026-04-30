@@ -2,7 +2,6 @@
 
 #include "core/keyvalue/float_vector.h"
 #include "estl/gift_str.h"
-#include "tools/serializer.h"
 
 #include "pygil.h"
 #include "pyobjtools.h"
@@ -201,6 +200,30 @@ static PyObject* NamespaceDrop(PyObject* self, PyObject* args) {
 		PYREINDEXER_GIL_RELEASE_SCOPE();
 		err = getWrapper<DBInterface>(rx)->DropNamespace(ns, std::chrono::milliseconds(timeout));
 	}
+	return pyErr(err);
+}
+
+static PyObject* NamespaceTruncate(PyObject* self, PyObject* args) {
+	uintptr_t rx = 0;
+	char* ns = nullptr;
+	unsigned timeout = 0;
+	if (!PyArg_ParseTuple(args, "ksI", &rx, &ns, &timeout)) {
+		return nullptr;
+	}
+
+	auto err = getWrapper<DBInterface>(rx)->TruncateNamespace(ns, std::chrono::milliseconds(timeout));
+	return pyErr(err);
+}
+
+static PyObject* NamespaceRename(PyObject* self, PyObject* args) {
+	uintptr_t rx = 0;
+	char *oldNs = nullptr, *newNs = nullptr;
+	unsigned timeout = 0;
+	if (!PyArg_ParseTuple(args, "kssI", &rx, &oldNs, &newNs, &timeout)) {
+		return nullptr;
+	}
+
+	auto err = getWrapper<DBInterface>(rx)->RenameNamespace(oldNs, newNs, std::chrono::milliseconds(timeout));
 	return pyErr(err);
 }
 
@@ -1058,8 +1081,7 @@ PyObject* aggregate(PyObject* self, PyObject* args, AggType type) {
 
 	Py_RETURN_NONE;
 }
-}  // namespace
-static PyObject* AggregateDistinct(PyObject* self, PyObject* args) { return aggregate(self, args, AggType::AggDistinct); }
+} // namespace
 static PyObject* AggregateSum(PyObject* self, PyObject* args) { return aggregate(self, args, AggType::AggSum); }
 static PyObject* AggregateAvg(PyObject* self, PyObject* args) { return aggregate(self, args, AggType::AggAvg); }
 static PyObject* AggregateMin(PyObject* self, PyObject* args) { return aggregate(self, args, AggType::AggMin); }
@@ -1094,7 +1116,8 @@ static PyObject* AggregationSort(PyObject* self, PyObject* args) {
 	return pyErr({});
 }
 
-static PyObject* Aggregation(PyObject* self, PyObject* args) {
+namespace {
+static PyObject* aggregation(PyObject* self, PyObject* args, AggType type) {
 	uintptr_t queryWrapperAddr = 0;
 	PyObject* fieldsList = nullptr;	 // borrowed ref after ParseTuple if passed
 	if (!PyArg_ParseTuple(args, "kO!", &queryWrapperAddr, &PyList_Type, &fieldsList)) {
@@ -1115,9 +1138,16 @@ static PyObject* Aggregation(PyObject* self, PyObject* args) {
 		Py_DECREF(fieldsList);
 	}
 
-	getWrapper<QueryWrapper>(queryWrapperAddr)->Aggregation(fields);
+	getWrapper<QueryWrapper>(queryWrapperAddr)->Aggregation(fields, type);
 
 	return pyErr({});
+}
+} // namespace
+static PyObject* AggregateDistinct(PyObject* self, PyObject* args) {
+	return aggregation(self, args, AggType::AggDistinct);
+}
+static PyObject* AggregateFacet(PyObject* self, PyObject* args) {
+	return aggregation(self, args, AggType::AggFacet);
 }
 
 static PyObject* Sort(PyObject* self, PyObject* args) {
@@ -1261,7 +1291,6 @@ static PyObject* executeQuery(PyObject* self, PyObject* args, ExecuteType type) 
 	return Py_BuildValue("iskII", err.code(), err.what(), err.ok() ? reinterpret_cast<uintptr_t>(qresult.release()) : 0, count, totalCount);
 }
 }  // namespace
-
 static PyObject* SelectQuery(PyObject* self, PyObject* args) { return executeQuery(self, args, ExecuteType::Select); }
 static PyObject* UpdateQuery(PyObject* self, PyObject* args) { return executeQuery(self, args, ExecuteType::Update); }
 

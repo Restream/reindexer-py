@@ -3,6 +3,7 @@ loaders:
     packages:
       - pyreindexer.rx_connector
       - pyreindexer.query_results
+      - pyreindexer.expressions
       - pyreindexer.transaction
       - pyreindexer.point
       - pyreindexer.query
