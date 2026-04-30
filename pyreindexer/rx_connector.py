@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import threading
 from datetime import timedelta
 from typing import Dict, List
@@ -265,7 +266,8 @@ class RxConnector(RaiserRx):
         """Renames the specified namespace
 
         #### Arguments:
-            namespace (string): The name of the namespace
+            old_ns_name (string): Old name of the namespace
+            new_ns_name (string): New name of the namespace
             timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
                 Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
                 A value of 0 disables the timeout (default value)
@@ -303,6 +305,27 @@ class RxConnector(RaiserRx):
         milliseconds: int = int(timeout / timedelta(milliseconds=1))
         self.err_code, self.err_msg, res = self.api.namespaces_enum(self.rx, enum_not_opened, milliseconds)
         return res
+
+    @RaiserRx.raise_if_error
+    def schema_set(self, namespace: str, schema: Dict, timeout: timedelta = timedelta(milliseconds=0)) -> None:
+        """Adds schema for the specified namespace
+
+        #### Arguments:
+            namespace (string): The name of the namespace
+            schema (dict): Schema definition
+            timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
+                Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
+                A value of 0 disables the timeout (default value)
+
+        #### Raises:
+            ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
+            ApiError: Raises with an error message of API return on non-zero error code
+
+        """
+
+        milliseconds: int = int(timeout / timedelta(milliseconds=1))
+        schema = json.dumps(schema)
+        self.err_code, self.err_msg = self.api.schema_set(self.rx, namespace, schema, milliseconds)
 
     @RaiserRx.raise_if_error
     def index_add(self, namespace: str, index_def: Dict, timeout: timedelta = timedelta(milliseconds=0)) -> None:

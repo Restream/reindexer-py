@@ -83,6 +83,12 @@ Error ReindexerInterface<DBT>::RenameNamespace(std::string_view oldNs, const std
 }
 
 template <typename DBT>
+Error ReindexerInterface<DBT>::SetSchema(std::string_view ns, std::string_view schema,
+							    		 std::chrono::milliseconds timeout) {
+	return db_.WithTimeout(timeout).SetSchema(ns, schema);
+}
+
+template <typename DBT>
 Error ReindexerInterface<DBT>::AddIndex(std::string_view ns, const IndexDef& idx, std::chrono::milliseconds timeout) {
 	return db_.WithTimeout(timeout).AddIndex(ns, idx);
 }
