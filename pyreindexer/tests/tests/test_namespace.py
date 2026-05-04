@@ -1,9 +1,10 @@
+import json
 from datetime import timedelta
 
 from hamcrest import *
 
 from pyreindexer.exceptions import ApiError
-from tests.helpers.base_helper import create_items, get_ns_items
+from tests.helpers.base_helper import create_items, get_ns_description, get_ns_items
 from tests.test_data.constants import index_definition
 
 
@@ -62,3 +63,35 @@ class TestCrudNamespace:
         namespace_name = "test_ns_not_created"
         assert_that(calling(db.namespace.drop).with_args(namespace_name),
                     raises(ApiError, pattern=f"Namespace '{namespace_name}' does not exist"))
+
+
+class TestSchema:
+
+    def test_set_schema(self, db):
+        # Given("Create namespace in empty database")
+        namespace_name = "test_ns_schema"
+        db.namespace.open(namespace_name, timeout=timedelta(seconds=1))
+        # Given("Set namespace schema")
+        schema = {"required": ["id"], "additionalProperties": False, "type": "object",
+                  "properties": {"id": {"type": "integer"},
+                                 "v1": {"type": "string"},
+                                 "v2": {"type": "number"}}}
+        db.schema.set(namespace_name, schema, timeout=timedelta(seconds=1))
+        schema["x-protobuf-ns-number"] = 0
+        # When ("Check that schema was set")
+        ns_entry = get_ns_description(db, namespace_name)
+        assert_that(ns_entry, has_length(1))
+        assert_that(json.loads(ns_entry[0]["schema"]), equal_to(schema))
+
+        # Given("Set another namespace schema")
+        schema = {"required": ["id", "v2"], "additionalProperties": True, "type": "object",
+                  "properties": {"id": {"type": "integer"},
+                                 "v1": {"type": "string"},
+                                 "v2": {"type": "boolean"}},
+                  "x-protobuf-ns-number": 0}
+        db.schema.set(namespace_name, schema, timeout=timedelta(seconds=1))
+        # When ("Check that schema was set")
+        ns_entry = get_ns_description(db, namespace_name)
+        assert_that(ns_entry, has_item(has_entries(schema=json.dumps(schema))))
+
+        db.namespace.drop(namespace_name, timeout=timedelta(milliseconds=1000))

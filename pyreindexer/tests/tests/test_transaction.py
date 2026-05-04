@@ -6,7 +6,7 @@ from hamcrest import *
 
 from pyreindexer.exceptions import TransactionError
 from pyreindexer.query import CondType
-from tests.helpers.base_helper import get_ns_items, get_ns_vect_items,random_vector
+from tests.helpers.base_helper import get_ns_items, get_ns_vect_items, random_vector
 from tests.helpers.matchers import close_to_dict
 from tests.helpers.transaction import *
 from tests.test_data.constants import item_definition, vector_index_bf, vector_index_hnsw, vector_index_ivf

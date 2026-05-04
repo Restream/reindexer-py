@@ -25,7 +25,9 @@ static PyObject* NamespaceClose(PyObject* self, PyObject* args);
 static PyObject* NamespaceDrop(PyObject* self, PyObject* args);
 static PyObject* NamespaceTruncate(PyObject* self, PyObject* args);
 static PyObject* NamespaceRename(PyObject* self, PyObject* args);
-static PyObject* EnumNamespaces(PyObject* self, PyObject* args);
+static PyObject* NamespacesEnum(PyObject* self, PyObject* args);
+// schema
+static PyObject* SchemaSet(PyObject* self, PyObject* args);
 // index
 static PyObject* IndexAdd(PyObject* self, PyObject* args);
 static PyObject* IndexUpdate(PyObject* self, PyObject* args);
@@ -36,10 +38,10 @@ static PyObject* ItemUpdate(PyObject* self, PyObject* args);
 static PyObject* ItemUpsert(PyObject* self, PyObject* args);
 static PyObject* ItemDelete(PyObject* self, PyObject* args);
 // meta
-static PyObject* PutMeta(PyObject* self, PyObject* args);
-static PyObject* GetMeta(PyObject* self, PyObject* args);
-static PyObject* DeleteMeta(PyObject* self, PyObject* args);
-static PyObject* EnumMeta(PyObject* self, PyObject* args);
+static PyObject* MetaPut(PyObject* self, PyObject* args);
+static PyObject* MetaGet(PyObject* self, PyObject* args);
+static PyObject* MetaDelete(PyObject* self, PyObject* args);
+static PyObject* MetaEnum(PyObject* self, PyObject* args);
 // query results
 static PyObject* QueryResultsWrapperStatus(PyObject* self, PyObject* args);
 static PyObject* QueryResultsWrapperIterate(PyObject* self, PyObject* args);
@@ -48,14 +50,14 @@ static PyObject* GetAggregationResults(PyObject* self, PyObject* args);
 static PyObject* GetExplainResults(PyObject* self, PyObject* args);
 // transaction (sync)
 static PyObject* NewTransaction(PyObject* self, PyObject* args);
-static PyObject* InsertTransaction(PyObject* self, PyObject* args);
-static PyObject* UpdateTransaction(PyObject* self, PyObject* args);
-static PyObject* UpsertTransaction(PyObject* self, PyObject* args);
-static PyObject* DeleteTransaction(PyObject* self, PyObject* args);
-static PyObject* UpdateQueryTransaction(PyObject* self, PyObject* args);
-static PyObject* DeleteQueryTransaction(PyObject* self, PyObject* args);
-static PyObject* CommitTransaction(PyObject* self, PyObject* args);
-static PyObject* RollbackTransaction(PyObject* self, PyObject* args);
+static PyObject* TransactionInsert(PyObject* self, PyObject* args);
+static PyObject* TransactionUpdate(PyObject* self, PyObject* args);
+static PyObject* TransactionUpsert(PyObject* self, PyObject* args);
+static PyObject* TransactionDelete(PyObject* self, PyObject* args);
+static PyObject* TransactionUpdateQuery(PyObject* self, PyObject* args);
+static PyObject* TransactionDeleteQuery(PyObject* self, PyObject* args);
+static PyObject* TransactionCommit(PyObject* self, PyObject* args);
+static PyObject* TransactionRollback(PyObject* self, PyObject* args);
 // query
 static PyObject* CreateQuery(PyObject* self, PyObject* args);
 static PyObject* DestroyQuery(PyObject* self, PyObject* args);
@@ -117,7 +119,9 @@ static PyMethodDef module_methods[] = {
 	{"namespace_drop", NamespaceDrop, METH_VARARGS, "drop namespace"},
 	{"namespace_truncate", NamespaceTruncate, METH_VARARGS, "truncate namespace"},
 	{"namespace_rename", NamespaceRename, METH_VARARGS, "rename namespace"},
-	{"namespaces_enum", EnumNamespaces, METH_VARARGS, "enum namespaces"},
+	{"namespaces_enum", NamespacesEnum, METH_VARARGS, "enum namespaces"},
+	// schema
+	{"schema_set", SchemaSet, METH_VARARGS, "set namespace schema"},
 	// index
 	{"index_add", IndexAdd, METH_VARARGS, "add index"},
 	{"index_update", IndexUpdate, METH_VARARGS, "update index"},
@@ -128,10 +132,10 @@ static PyMethodDef module_methods[] = {
 	{"item_upsert", ItemUpsert, METH_VARARGS, "upsert item"},
 	{"item_delete", ItemDelete, METH_VARARGS, "delete item"},
 	// meta
-	{"meta_put", PutMeta, METH_VARARGS, "put meta"},
-	{"meta_get", GetMeta, METH_VARARGS, "get meta"},
-	{"meta_delete", DeleteMeta, METH_VARARGS, "delete meta"},
-	{"meta_enum", EnumMeta, METH_VARARGS, "enum meta"},
+	{"meta_put", MetaPut, METH_VARARGS, "put meta"},
+	{"meta_get", MetaGet, METH_VARARGS, "get meta"},
+	{"meta_delete", MetaDelete, METH_VARARGS, "delete meta"},
+	{"meta_enum", MetaEnum, METH_VARARGS, "enum meta"},
 	// query results
 	{"query_results_status", QueryResultsWrapperStatus, METH_VARARGS, "get query result status"},
 	{"query_results_iterate", QueryResultsWrapperIterate, METH_VARARGS, "get query result"},
@@ -140,14 +144,14 @@ static PyMethodDef module_methods[] = {
 	{"get_explain_results", GetExplainResults, METH_VARARGS, "get explain results"},
 	// transaction (sync)
 	{"new_transaction", NewTransaction, METH_VARARGS, "start new transaction"},
-	{"item_insert_transaction", InsertTransaction, METH_VARARGS, "item insert transaction"},
-	{"item_update_transaction", UpdateTransaction, METH_VARARGS, "item update transaction"},
-	{"item_upsert_transaction", UpsertTransaction, METH_VARARGS, "item upsert transaction"},
-	{"item_delete_transaction", DeleteTransaction, METH_VARARGS, "item delete transaction"},
-	{"modify_transaction", UpdateQueryTransaction, METH_VARARGS, "update query transaction"},
-	{"delete_transaction", DeleteQueryTransaction, METH_VARARGS, "delete query transaction"},
-	{"commit_transaction", CommitTransaction, METH_VARARGS, "apply changes. Free transaction object memory"},
-	{"rollback_transaction", RollbackTransaction, METH_VARARGS, "rollback changes. Free transaction object memory"},
+	{"transaction_item_insert", TransactionInsert, METH_VARARGS, "item insert transaction"},
+	{"transaction_item_update", TransactionUpdate, METH_VARARGS, "item update transaction"},
+	{"transaction_item_upsert", TransactionUpsert, METH_VARARGS, "item upsert transaction"},
+	{"transaction_item_delete", TransactionDelete, METH_VARARGS, "item delete transaction"},
+	{"transaction_modify", TransactionUpdateQuery, METH_VARARGS, "update query transaction"},
+	{"transaction_delete", TransactionDeleteQuery, METH_VARARGS, "delete query transaction"},
+	{"transaction_commit", TransactionCommit, METH_VARARGS, "apply transaction changes. Free transaction object memory"},
+	{"transaction_rollback", TransactionRollback, METH_VARARGS, "rollback transaction changes. Free transaction object memory"},
 	// query
 	{"create_query", CreateQuery, METH_VARARGS, "create new query"},
 	{"destroy_query", DestroyQuery, METH_VARARGS, "delete query object. Free query object memory"},
