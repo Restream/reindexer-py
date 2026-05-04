@@ -41,13 +41,12 @@ void deleteWrapper(uintptr_t wrapperAddr) {
 PyObject* pyErr(const Error& err) { return Py_BuildValue("is", err.code(), err.what()); }
 
 PyObject* queryResultsWrapperIterate(uintptr_t qresWrapperAddr) {
-	QueryResultsWrapper* qresWrapper = getWrapper<QueryResultsWrapper>(qresWrapperAddr);
-
 	WrSerializer wrSer;
-	static constexpr bool withHeaderLen = false;
 	Error err;
 	{
 		PYREINDEXER_GIL_RELEASE_SCOPE();
+		QueryResultsWrapper* qresWrapper = getWrapper<QueryResultsWrapper>(qresWrapperAddr);
+		static constexpr bool withHeaderLen = false;
 		err = qresWrapper->GetItemJSON(wrSer, withHeaderLen);
 		if (err.ok()) {
 			err = qresWrapper->Next();
@@ -137,13 +136,14 @@ static PyObject* ExecSQL(PyObject* self, PyObject* args) {
 		return nullptr;
 	}
 
-	auto db = getWrapper<DBInterface>(rx);
-	auto qresult = std::make_unique<QueryResultsWrapper>(db);
+	std::unique_ptr<QueryResultsWrapper> qresult;
 	Error err;
 	size_t count = 0;
 	size_t totalCount = 0;
 	{
 		PYREINDEXER_GIL_RELEASE_SCOPE();
+		auto db = getWrapper<DBInterface>(rx);
+		qresult = std::make_unique<QueryResultsWrapper>(db);
 		err = qresult->ExecSQL(query, std::chrono::milliseconds(timeout));
 		if (err.ok()) {
 			count = qresult->Count();
@@ -211,7 +211,11 @@ static PyObject* NamespaceTruncate(PyObject* self, PyObject* args) {
 		return nullptr;
 	}
 
-	auto err = getWrapper<DBInterface>(rx)->TruncateNamespace(ns, std::chrono::milliseconds(timeout));
+	Error err;
+	{
+		PYREINDEXER_GIL_RELEASE_SCOPE();
+		err = getWrapper<DBInterface>(rx)->TruncateNamespace(ns, std::chrono::milliseconds(timeout));
+	}
 	return pyErr(err);
 }
 
@@ -223,7 +227,11 @@ static PyObject* NamespaceRename(PyObject* self, PyObject* args) {
 		return nullptr;
 	}
 
-	auto err = getWrapper<DBInterface>(rx)->RenameNamespace(oldNs, newNs, std::chrono::milliseconds(timeout));
+	Error err;
+	{
+		PYREINDEXER_GIL_RELEASE_SCOPE();
+		err = getWrapper<DBInterface>(rx)->RenameNamespace(oldNs, newNs, std::chrono::milliseconds(timeout));
+	}
 	return pyErr(err);
 }
 
@@ -401,18 +409,7 @@ PyObject* itemModify(PyObject* self, PyObject* args, ItemModifyMode mode) {
 	Py_INCREF(itemDefDict);
 	Py_XINCREF(preceptsList);
 
-	ItemT item;
-	Error err;
-	{
-		PYREINDEXER_GIL_RELEASE_SCOPE();
-		err = getWrapper<DBInterface>(rx)->NewItem(ns, item, std::chrono::milliseconds(timeout));
-	}
-	if (!err.ok()) {
-		return pyErr(err);
-	}
-
 	WrSerializer wrSer;
-
 	try {
 		PyObjectToJson(&itemDefDict, wrSer);
 	} catch (const Error& err) {
@@ -424,18 +421,8 @@ PyObject* itemModify(PyObject* self, PyObject* args, ItemModifyMode mode) {
 
 	Py_DECREF(itemDefDict);
 
-	{
-		PYREINDEXER_GIL_RELEASE_SCOPE();
-		err = item.Unsafe().FromJSON(wrSer.Slice(), 0, mode == ModeDelete);
-	}
-	if (!err.ok()) {
-		Py_XDECREF(preceptsList);
-
-		return pyErr(err);
-	}
-
+	std::vector<std::string> precepts;
 	if (preceptsList != nullptr && mode != ModeDelete) {
-		std::vector<std::string> precepts;
 		try {
 			precepts = ParseStrListToStrVec<std::vector>(&preceptsList);
 		} catch (const Error& err) {
@@ -443,32 +430,39 @@ PyObject* itemModify(PyObject* self, PyObject* args, ItemModifyMode mode) {
 
 			return pyErr(err);
 		}
-
-		item.SetPrecepts(std::move(precepts));
 	}
-
 	Py_XDECREF(preceptsList);
 
+	Error err;
 	{
 		PYREINDEXER_GIL_RELEASE_SCOPE();
-		switch (mode) {
-			case ModeInsert:
-				err = getWrapper<DBInterface>(rx)->Insert(ns, item, std::chrono::milliseconds(timeout));
-				break;
-			case ModeUpdate:
-				err = getWrapper<DBInterface>(rx)->Update(ns, item, std::chrono::milliseconds(timeout));
-				break;
-			case ModeUpsert:
-				err = getWrapper<DBInterface>(rx)->Upsert(ns, item, std::chrono::milliseconds(timeout));
-				break;
-			case ModeDelete:
-				err = getWrapper<DBInterface>(rx)->Delete(ns, item, std::chrono::milliseconds(timeout));
-				break;
-			default:
-				err = {ErrorCode::errLogic, "Unknown item modify mode"};
+		ItemT item;
+		err = getWrapper<DBInterface>(rx)->NewItem(ns, item, std::chrono::milliseconds(timeout));
+		if (err.ok()) {
+			err = item.Unsafe().FromJSON(wrSer.Slice(), 0, mode == ModeDelete);
+		}
+		if (err.ok()) {
+			item.SetPrecepts(std::move(precepts));
+		}
+		if (err.ok()) {
+			switch (mode) {
+				case ModeInsert:
+					err = getWrapper<DBInterface>(rx)->Insert(ns, item, std::chrono::milliseconds(timeout));
+					break;
+				case ModeUpdate:
+					err = getWrapper<DBInterface>(rx)->Update(ns, item, std::chrono::milliseconds(timeout));
+					break;
+				case ModeUpsert:
+					err = getWrapper<DBInterface>(rx)->Upsert(ns, item, std::chrono::milliseconds(timeout));
+					break;
+				case ModeDelete:
+					err = getWrapper<DBInterface>(rx)->Delete(ns, item, std::chrono::milliseconds(timeout));
+					break;
+				default:
+					err = {ErrorCode::errLogic, "Unknown item modify mode"};
+			}
 		}
 	}
-
 	return pyErr(err);
 }
 }  // namespace
@@ -656,11 +650,12 @@ static PyObject* NewTransaction(PyObject* self, PyObject* args) {
 		return nullptr;
 	}
 
-	auto db = getWrapper<DBInterface>(rx);
-	auto transaction = std::make_unique<TransactionWrapper>(db);
+	std::unique_ptr<TransactionWrapper> transaction;
 	Error err;
 	{
 		PYREINDEXER_GIL_RELEASE_SCOPE();
+		auto db = getWrapper<DBInterface>(rx);
+		transaction = std::make_unique<TransactionWrapper>(db);
 		err = transaction->Start(ns, std::chrono::milliseconds(timeout));
 	}
 	return Py_BuildValue("isk", err.code(), err.what(), err.ok() ? reinterpret_cast<uintptr_t>(transaction.release()) : 0);
@@ -678,19 +673,7 @@ PyObject* modifyTransaction(PyObject* self, PyObject* args, ItemModifyMode mode)
 	Py_INCREF(defDict);
 	Py_XINCREF(preceptsList);
 
-	auto transaction = getWrapper<TransactionWrapper>(transactionWrapperAddr);
-
-	ItemT item;
-	auto err = transaction->NewItem(item);
-	if (!err.ok()) {
-		Py_DECREF(defDict);
-		Py_XDECREF(preceptsList);
-
-		return pyErr(err);
-	}
-
 	WrSerializer wrSer;
-
 	try {
 		PyObjectToJson(&defDict, wrSer);
 	} catch (const Error& err) {
@@ -699,12 +682,10 @@ PyObject* modifyTransaction(PyObject* self, PyObject* args, ItemModifyMode mode)
 
 		return pyErr(err);
 	}
-
 	Py_DECREF(defDict);
 
+	std::vector<std::string> precepts;
 	if (preceptsList != nullptr && mode != ModeDelete) {
-		std::vector<std::string> precepts;
-
 		try {
 			precepts = ParseStrListToStrVec<std::vector>(&preceptsList);
 		} catch (const Error& err) {
@@ -712,29 +693,35 @@ PyObject* modifyTransaction(PyObject* self, PyObject* args, ItemModifyMode mode)
 
 			return pyErr(err);
 		}
-
-		item.SetPrecepts(std::move(precepts));
 	}
-
 	Py_XDECREF(preceptsList);
 
-	switch (mode) {
-		case ModeInsert:
-		case ModeUpdate:
-		case ModeUpsert:
-		case ModeDelete: {
-			PYREINDEXER_GIL_RELEASE_SCOPE();
-			err = item.FromJSON(wrSer.Slice(), 0, mode == ModeDelete);
-			if (err.ok()) {
-				err = transaction->Modify(std::move(item), mode);
+	Error err;
+	{
+		PYREINDEXER_GIL_RELEASE_SCOPE();
+		auto transaction = getWrapper<TransactionWrapper>(transactionWrapperAddr);
+		ItemT item;
+		err = transaction->NewItem(item);
+		if (err.ok()) {
+			item.SetPrecepts(std::move(precepts));
+
+			switch (mode) {
+				case ModeInsert:
+				case ModeUpdate:
+				case ModeUpsert:
+				case ModeDelete:
+					err = item.FromJSON(wrSer.Slice(), 0, mode == ModeDelete);
+					if (err.ok()) {
+						err = transaction->Modify(std::move(item), mode);
+					}
+					break;
+				default:
+					err = Error{ErrorCode::errLogic, "Unknown item modify transaction mode"};
+					break;
 			}
 		}
-			return pyErr(err);
-		default:
-			return pyErr({ErrorCode::errLogic, "Unknown item modify transaction mode"});
 	}
-
-	return nullptr;
+	return pyErr(err);
 }
 }  // namespace
 static PyObject* TransactionInsert(PyObject* self, PyObject* args) { return modifyTransaction(self, args, ModeInsert); }
@@ -1099,7 +1086,7 @@ PyObject* aggregate(PyObject* self, PyObject* args, AggType type) {
 
 	Py_RETURN_NONE;
 }
-} // namespace
+}  // namespace
 static PyObject* AggregateSum(PyObject* self, PyObject* args) { return aggregate(self, args, AggType::AggSum); }
 static PyObject* AggregateAvg(PyObject* self, PyObject* args) { return aggregate(self, args, AggType::AggAvg); }
 static PyObject* AggregateMin(PyObject* self, PyObject* args) { return aggregate(self, args, AggType::AggMin); }
@@ -1160,13 +1147,9 @@ static PyObject* aggregation(PyObject* self, PyObject* args, AggType type) {
 
 	return pyErr({});
 }
-} // namespace
-static PyObject* AggregateDistinct(PyObject* self, PyObject* args) {
-	return aggregation(self, args, AggType::AggDistinct);
-}
-static PyObject* AggregateFacet(PyObject* self, PyObject* args) {
-	return aggregation(self, args, AggType::AggFacet);
-}
+}  // namespace
+static PyObject* AggregateDistinct(PyObject* self, PyObject* args) { return aggregation(self, args, AggType::AggDistinct); }
+static PyObject* AggregateFacet(PyObject* self, PyObject* args) { return aggregation(self, args, AggType::AggFacet); }
 
 static PyObject* Sort(PyObject* self, PyObject* args) {
 	uintptr_t queryWrapperAddr = 0;
