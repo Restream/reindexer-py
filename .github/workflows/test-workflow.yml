@@ -9,7 +9,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [ ubuntu-24.04, macos-15 ]
+        platform: [ macos-15 ]
     name: Build reindexer for ${{ matrix.platform }}
     runs-on: ${{ matrix.platform }}
     defaults:
@@ -55,17 +55,7 @@ jobs:
       fail-fast: false
       matrix:
         python: [ "3.9", "3.13" ]
-        platform: [ ubuntu-24.04, macos-15 ]
-        include:
-          - python: "3.8"
-            platform: ubuntu-24.04
-            distutils: stdlib
-          - python: "3.10"
-            platform: ubuntu-24.04
-          - python: "3.11"
-            platform: ubuntu-24.04
-          - python: "3.12"
-            platform: ubuntu-24.04
+        platform: [ macos-15 ]
     runs-on: ${{ matrix.platform }}
     env:
       SETUPTOOLS_USE_DISTUTILS: ${{ matrix.distutils || 'local' }}
