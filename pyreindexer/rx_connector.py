@@ -3,8 +3,9 @@ from __future__ import annotations
 import json
 import threading
 from datetime import timedelta
-from typing import Dict, List
+from typing import Dict, List, Union
 
+from pyreindexer.index_definition import IndexDefinition
 from pyreindexer.query import Query
 from pyreindexer.query_results import QueryResults
 from pyreindexer.raiser_mixin import RaiserRx
@@ -328,12 +329,13 @@ class RxConnector(RaiserRx):
         self.err_code, self.err_msg = self.api.schema_set(self.rx, namespace, schema, milliseconds)
 
     @RaiserRx.raise_if_error
-    def index_add(self, namespace: str, index_def: Dict, timeout: timedelta = timedelta(milliseconds=0)) -> None:
+    def index_add(self, namespace: str, index_def: Union[IndexDefinition, Dict],
+                  timeout: timedelta = timedelta(milliseconds=0)) -> None:
         """Adds an index to the specified namespace
 
         #### Arguments:
             namespace (string): The name of the namespace
-            index_def (dict): A dictionary of index definition
+            index_def (Union[IndexDefinition, dict]): IndexDefinition object | dict with index definition
             timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
                 Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
                 A value of 0 disables the timeout (default value)
@@ -345,15 +347,18 @@ class RxConnector(RaiserRx):
         """
 
         milliseconds: int = int(timeout / timedelta(milliseconds=1))
+        if isinstance(index_def, IndexDefinition):
+            index_def = index_def.to_dict()
         self.err_code, self.err_msg = self.api.index_add(self.rx, namespace, index_def, milliseconds)
 
     @RaiserRx.raise_if_error
-    def index_update(self, namespace: str, index_def: Dict, timeout: timedelta = timedelta(milliseconds=0)) -> None:
+    def index_update(self, namespace: str, index_def: Union[IndexDefinition, Dict],
+                     timeout: timedelta = timedelta(milliseconds=0)) -> None:
         """Updates an index in the specified namespace
 
         #### Arguments:
             namespace (string): The name of the namespace
-            index_def (dict): A dictionary of index definition
+            index_def (Union[IndexDefinition, dict]): IndexDefinition object | dict with index definition
             timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
                 Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
                 A value of 0 disables the timeout (default value)
@@ -365,6 +370,8 @@ class RxConnector(RaiserRx):
         """
 
         milliseconds: int = int(timeout / timedelta(milliseconds=1))
+        if isinstance(index_def, IndexDefinition):
+            index_def = index_def.to_dict()
         self.err_code, self.err_msg = self.api.index_update(self.rx, namespace, index_def, milliseconds)
 
     @RaiserRx.raise_if_error

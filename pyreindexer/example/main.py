@@ -4,6 +4,7 @@ from typing import Final, List
 
 from pyreindexer import RxConnector
 from pyreindexer.exceptions import ApiError
+from pyreindexer.index_definition import IndexDefinition
 from pyreindexer.index_search_params import IndexSearchParamHnsw
 from pyreindexer.query import CondType
 
@@ -29,6 +30,15 @@ def create_index_example(db, namespace):
         db.index_add(namespace, index_definition)
     except ApiError:
         db.index_drop(namespace, 'id', timedelta(milliseconds=1000))
+        db.index_add(namespace, index_definition)
+
+
+def create_index_definition_example(db, namespace):
+    index_definition = IndexDefinition().name("idx").field_type("int").index_type("hash").is_sparse()
+    try:
+        db.index_add(namespace, index_definition)
+    except ApiError:
+        db.index_drop(namespace, "idx")
         db.index_add(namespace, index_definition)
 
 
@@ -287,6 +297,7 @@ def rx_example():
     db.namespace_open(namespace)
 
     create_index_example(db, namespace)
+    create_index_definition_example(db, namespace)
     update_index_example(db, namespace)
 
     create_items_example(db, namespace)

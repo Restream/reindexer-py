@@ -300,6 +300,7 @@
       - [Attributes](#attributes-7)
 - [pyreindexer.index\_definition](#pyreindexerindex_definition)
   - [IndexDefinition Objects](#indexdefinition-objects)
+      - [Examples](#examples)
       - [Arguments](#arguments-74)
 
 <a id="pyreindexer.rx_connector"></a>
@@ -524,15 +525,16 @@ Adds schema for the specified namespace
 ```python
 def index_add(
     namespace: str,
-    index_def: Dict,
-    timeout: timedelta = timedelta(milliseconds=0)) -> None
+    index_def: Union[IndexDefinition, Dict],
+    timeout: timedelta = timedelta(milliseconds=0)
+) -> None
 ```
 
 Adds an index to the specified namespace
 
 #### Arguments:
     namespace (string): The name of the namespace
-    index_def (dict): A dictionary of index definition
+    index_def (Union[IndexDefinition, dict]): IndexDefinition object | dict with index definition
     timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
         Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
         A value of 0 disables the timeout (default value)
@@ -548,15 +550,16 @@ Adds an index to the specified namespace
 ```python
 def index_update(
     namespace: str,
-    index_def: Dict,
-    timeout: timedelta = timedelta(milliseconds=0)) -> None
+    index_def: Union[IndexDefinition, Dict],
+    timeout: timedelta = timedelta(milliseconds=0)
+) -> None
 ```
 
 Updates an index in the specified namespace
 
 #### Arguments:
     namespace (string): The name of the namespace
-    index_def (dict): A dictionary of index definition
+    index_def (Union[IndexDefinition, dict]): IndexDefinition object | dict with index definition
     timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
         Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
         A value of 0 disables the timeout (default value)
@@ -1198,9 +1201,12 @@ An object representing the context of a Reindexer query
 ### Query.where
 
 ```python
-def where(index: str,
-          condition: CondType,
-          keys: Union[ValueType, tuple[list[ValueType], ...]] = None) -> Query
+def where(
+    index: str,
+    condition: CondType,
+    keys: Union[ScalarType, list[ScalarType], tuple[list[ScalarType],
+                                                    ...]] = None
+) -> Query
 ```
 
 Adds where condition to DB query with args
@@ -1208,7 +1214,7 @@ Adds where condition to DB query with args
 #### Arguments:
     index (string): Field name used in condition clause
     condition (:enum:`CondType`): Type of condition
-    keys (union[ValueType, (list[ValueType], ...)]):
+    keys (Union[ScalarType, list[ScalarType], tuple[list[ScalarType], ...]]):
         Value of index to be compared with. For composite indexes keys must be list,
         with value of each sub-index
 
@@ -1224,9 +1230,11 @@ Adds where condition to DB query with args
 
 ```python
 def where_query(
-        sub_query: Query,
-        condition: CondType,
-        keys: Union[ValueType, tuple[list[ValueType], ...]] = None) -> Query
+    sub_query: Query,
+    condition: CondType,
+    keys: Union[ScalarType, list[ScalarType], tuple[list[ScalarType],
+                                                    ...]] = None
+) -> Query
 ```
 
 Adds sub-query where condition to DB query with args
@@ -1234,7 +1242,7 @@ Adds sub-query where condition to DB query with args
 #### Arguments:
     sub_query (:obj:`Query`): Field name used in condition clause
     condition (:enum:`CondType`): Type of condition
-    keys (union[ValueType, (list[ValueType], ...)]):
+    keys (Union[ScalarType, list[ScalarType], tuple[list[ScalarType], ...]]):
         Value of index to be compared with. For composite indexes keys must be list,
         with value of each sub-index
 
@@ -1267,8 +1275,11 @@ Adds sub-query where condition to DB query
 ### Query.where\_composite
 
 ```python
-def where_composite(index: str, condition: CondType,
-                    keys: tuple[list[ValueType], ...]) -> Query
+def where_composite(
+    index: str, condition: CondType,
+    keys: Union[tuple[ScalarType, ...], tuple[list[ScalarType], ...],
+                list[list[ScalarType]], list[tuple[ScalarType, ...]]]
+) -> Query
 ```
 
 Adds where condition to DB query with interface args for composite indexes
@@ -1276,13 +1287,15 @@ Adds where condition to DB query with interface args for composite indexes
 #### Arguments:
     index (string): Field name used in condition clause
     condition (:enum:`CondType`): Type of condition
-    keys (list[ValueType], ...): Values of composite index to be compared with (value of each sub-index).
+    keys (Union[
+            tuple[ScalarType, ...], tuple[list[ScalarType], ...],
+             list[list[ScalarType]], list[tuple[ScalarType, ...]]
+        ]): Values of composite index to be compared with (value of each sub-index).
         Supported variants:
-            ([1, "test1"], [2, "test2"])
-            [[1, "test1"], [2, "test2"]])
-            ([1, "testval1"], )
-            [[1, "testval1"]]
             (1, "testval1")
+            ([1, "test1"], [2, "test2"])
+            [[1, "test1"], [2, "test2"]]
+            [(1, "test1"), (2, "test2")]
 
 #### Returns:
     (:obj:`Query`): Query object for further customizations
@@ -1295,17 +1308,17 @@ Adds where condition to DB query with interface args for composite indexes
 ### Query.where\_uuid
 
 ```python
-def where_uuid(index: str, condition: CondType, *uuids: UUID) -> Query
+def where_uuid(index: str, condition: CondType,
+               keys: Union[UUID, list[UUID]]) -> Query
 ```
 
 Adds where condition to DB query with UUID.
-    `index` MUST be declared as uuid-string index in this case
+    `index` must be declared as uuid-string index in this case
 
 #### Arguments:
     index (string): Field name used in condition clause
     condition (:enum:`CondType`): Type of condition
-    uuids (*:obj:`UUID`): Value of index to be compared with. For composite indexes uuids must be list,
-        with value of each sub-index
+    keys (Union[UUID, list[UUID]]): Value of index to be compared with
 
 #### Returns:
     (:obj:`Query`): Query object for further customizations
@@ -1364,12 +1377,12 @@ def where_knn(
 ```
 
 Adds where condition to DB query with float_vector as args.
-    `index` MUST be declared as float_vector index in this case
+    `index` must be declared as float_vector index in this case
 
 #### Arguments:
     index (string): Field name used in condition clause (only float_vector)
     vec (list[float]): KNN value of index to be compared with
-    param (:obj:`union[IndexSearchParamBruteForce|IndexSearchParamHnsw|IndexSearchParamIvf]`):
+    param (:obj:`Union[IndexSearchParamBruteForce|IndexSearchParamHnsw|IndexSearchParamIvf]`):
         KNN search parameters
 
 #### Returns:
@@ -1393,13 +1406,13 @@ def where_knn_string(
 ```
 
 Adds where condition to DB query with string as args.
-    `index` MUST be declared as float_vector index in this case.
+    `index` must be declared as float_vector index in this case.
     WARNING: Only relevant if automatic embedding is configured for this float_vector index
 
 #### Arguments:
     index (string): Field name used in condition clause (only float_vector)
     value (string): value to be generated using automatic embedding of KNN index value to be compared to
-    param (:obj:`union[IndexSearchParamBruteForce|IndexSearchParamHnsw|IndexSearchParamIvf]`):
+    param (:obj:`Union[IndexSearchParamBruteForce|IndexSearchParamHnsw|IndexSearchParamIvf]`):
         KNN search parameters
 
 #### Returns:
@@ -1587,7 +1600,7 @@ Gets fields facet value. Applicable to multiple data fields and the result of th
 def sort(
     index: str,
     desc: bool = False,
-    forced_sort_values: Union[ValueType, tuple[list[ValueType], ...]] = None
+    forced_sort_values: Union[ScalarType, tuple[list[ScalarType], ...]] = None
 ) -> Query
 ```
 
@@ -1598,7 +1611,7 @@ Applies sort order to return from query items. If forced_sort_values argument sp
 #### Arguments:
     index (string): The index name
     desc (bool): Sort in descending order
-    forced_sort_values (union[ValueType, (list[ValueType], ...)]):
+    forced_sort_values (Union[ScalarType, (list[ScalarType], ...)]):
         Value of index to match. For composite indexes keys must be list, with value of each sub-index
 
 #### Returns:
@@ -1864,14 +1877,14 @@ Executes a query, and delete items, matches query
 ### Query.set\_object
 
 ```python
-def set_object(field: str, values: list[ValueType]) -> Query
+def set_object(field: str, values: list[ScalarType]) -> Query
 ```
 
 Adds an update query to an object field for an update query
 
 #### Arguments:
     field (string): Field name
-    values (list[ValueType]): List of values to add
+    values (list[ScalarType]): List of values to add
 
 #### Returns:
     (:obj:`Query`): Query object for further customizations
@@ -1885,14 +1898,14 @@ Adds an update query to an object field for an update query
 ### Query.set
 
 ```python
-def set(field: str, values: list[ValueType]) -> Query
+def set(field: str, values: list[ScalarType]) -> Query
 ```
 
 Adds a field update request to the update request
 
 #### Arguments:
     field (string): Field name
-    values (list[ValueType]): List of values to add
+    values (list[ScalarType]): List of values to add
 
 #### Returns:
     (:obj:`Query`): Query object for further customizations
@@ -2219,33 +2232,41 @@ Index search param for IVF index.
 ## IndexDefinition Objects
 
 ```python
-class IndexDefinition(dict)
+class IndexDefinition()
 ```
 
-IndexDefinition is a dictionary subclass which allows to construct and manage indexes more efficiently.
-NOT IMPLEMENTED YET. USE FIELDS DESCRIPTION ONLY.
+IndexDefinition allows to construct and manage indexes more efficiently using a fluent interface
+
+#### Examples:
+    ### Create:
+        - idx = IndexDefinition(name='test_index', field_type='string', index_type='hash', is_pk=True)
+            OR
+        - idx = IndexDefinition().name('test_index').field_type('string').index_type('hash').is_pk()
+    ### Update:
+        - idx['collate_mode'] = 'utf8'
+            OR
+        - idx.collate_mode('utf8')
+    ### Get attribute value (only dict-like syntax):
+        - idx_name = idx['name']
 
 #### Arguments:
-    name (str): An index name.
-    json_paths (:obj:`list` of :obj:`str`): A name for mapping a value to a json field.
-    field_type (str): A type of field. Possible values are: `int`, `int64`, `double`, `string`, `bool`,
-    `composite`, `float_vector`.
-    index_type (str): An index type. Possible values are: `hash`, `tree`, `text`, `-`, `hnsw`, `vec_bf`, `ivf`.
-    is_pk (bool): True if a field is a primary key.
-    is_array (bool): True if an index is an array.
-    is_dense (bool): True if an index is dense. Reduce the index size. Saves 8 bytes per unique key value for 'hash'
-        and 'tree' index types. For '-' index type saves 4-8 bytes per each element. Useful for indexes with
-        high selectivity, but for tree and hash indexes with low selectivity can seriously decrease update
-        performance.
-    is_no_column (bool): True if allows to disable column subindex. Reduces the index size.
-        Allows to save ~(`stored_type_size` * `namespace_items_count`) bytes, where `stored_type_size` is the size
-        of the type stored in the index, and `namespace_items_count` is the number of items in the namespace.
-        May reduce performance.
-    is_sparse (bool): True if a value of an index may be not presented.
-    collate_mode (str): Sets an order of values by collate mode. Possible values are:
-        `none`, `ascii`, `utf8`, `numeric`, `custom`.
-    sort_order_letters (str): Order for a sort sequence for a custom collate mode.
-    config (dict): A config for a fulltext and float_vector engine.
-    [More about `fulltext`](https://github.com/Restream/reindexer/blob/master/fulltext.md) or
-    [More about `float_vector`](https://github.com/Restream/reindexer/blob/master/float_vector.md).
+    name (str): An index name
+    json_paths (list[str]): JSON paths for mapping values to fields
+    field_type (str): Field type. Possible values: `int`, `int64`, `double`, `string`, `bool`, 
+        `uuid`, `point`, `composite`, `float_vector`
+    index_type (str): Index type. Possible values: `hash`, `tree`, `text`, `-`, `rtree`, 
+        `hnsw`, `vec_bf`, `ivf`
+    is_pk (bool): True if field is a primary key
+    is_array (bool): True if index is an array
+    is_dense (bool): True if index is dense - reduce the index size,
+        but for tree and hash indexes with low selectivity can seriously decrease update performance
+    is_sparse (bool): True if index value may be absent
+    is_no_column (bool): True to disable column subindex - reduces the index size, but may also reduce performance
+    collate_mode (str): Collation order. Possible values: `none`, `ascii`, `utf8`, `numeric`, `custom`
+    sort_order_letters (str): Custom sort order for `collate_mode='custom'`
+    config (dict): Config for fulltext or float_vector engines
+        [More about `fulltext`](https://github.com/Restream/reindexer/blob/master/fulltext.md)
+        [More about `float_vector`](https://github.com/Restream/reindexer/blob/master/float_vector.md)
+    expire_after (int): TTL in seconds
+    rtree_type (str): RTree index type. Possible values: `rstar`, `linear`, `quadratic`, `greene`
 
