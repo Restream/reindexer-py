@@ -1,4 +1,3 @@
-import json
 from typing import Dict, List, Optional
 
 
@@ -76,7 +75,7 @@ class IndexDefinition:
             is_no_column: bool = False,
             collate_mode: Optional[str] = "none",
             sort_order_letters: str = "",
-            config: Optional[Dict] = {},
+            config: Optional[Dict] = None,
             expire_after: int = 0,
             rtree_type: Optional[str] = None,
     ):
@@ -97,7 +96,7 @@ class IndexDefinition:
 
         self.collate_mode(collate_mode)
         self.sort_order_letters(sort_order_letters)
-        self.config(config)
+        self.config(config if config is not None else {})
         self.expire_after(expire_after)
         if rtree_type is not None:
             self.rtree_type(rtree_type)
@@ -123,14 +122,15 @@ class IndexDefinition:
     def name(self, value: str) -> "IndexDefinition":
         self._validate_type(value, "name")
         self._name = value
-        if not getattr(self, "_json_path", None):
+        if not getattr(self, "_json_paths", None):
             self.json_paths([self._name])
         return self
 
     def json_paths(self, value: List[str]) -> "IndexDefinition":
-        if value is None:
-            self._json_paths = self._name
+        if value is None and getattr(self, "_name", None):
+            self._json_paths = [self._name]
             return self
+
         self._validate_type(value, "json_paths")
         if not all(isinstance(v, str) for v in value):
             raise TypeError("json_paths must be a list of strings")
@@ -223,4 +223,5 @@ class IndexDefinition:
         setter_func(value)
 
     def __repr__(self) -> str:
-        return json.dumps(self.to_dict())
+        params = [f"{k}={v!r}" for k, v in self.to_dict().items()]
+        return f"IndexDefinition({', '.join(params)})"
