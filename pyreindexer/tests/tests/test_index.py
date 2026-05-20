@@ -183,7 +183,7 @@ class TestIndexDefinition:
     def test_create_index_errors(self, db, namespace):
         # Given("Create namespace")
         # When ("Create IndexDefinition object")
-        index_def = IndexDefinition(name="idx", field_type="int", index_type="hash")
+        index_def = IndexDefinition(field_type="int", index_type="hash").name("idx")
         # Then ("Check that we can't use invalid field_type")
         assert_that(calling(index_def.field_type).with_args("random1"), raises(
             ValueError, pattern="field_type must be one of \(.*\), got 'random1'"

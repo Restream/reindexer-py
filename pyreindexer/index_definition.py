@@ -64,7 +64,7 @@ class IndexDefinition:
 
     def __init__(
             self,
-            name: str = "",
+            name: str = None,
             json_paths: Optional[List[str]] = None,
             field_type: Optional[str] = None,
             index_type: Optional[str] = None,
@@ -130,7 +130,6 @@ class IndexDefinition:
         if value is None and getattr(self, "_name", None):
             self._json_paths = [self._name]
             return self
-
         self._validate_type(value, "json_paths")
         if not all(isinstance(v, str) for v in value):
             raise TypeError("json_paths must be a list of strings")
