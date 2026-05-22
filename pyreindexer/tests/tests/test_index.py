@@ -160,6 +160,11 @@ class TestIndexDefinition:
         db.index.update(namespace, index_def)
         ns_entry = get_ns_description(db, namespace)
         assert_that(ns_entry, has_item(has_entry("indexes", has_item(index_def.to_dict()))))
+        # Then ("Update index (update method)")
+        index_def.update({"collate_mode": "utf8", "is_no_column": True})
+        db.index.update(namespace, index_def)
+        ns_entry = get_ns_description(db, namespace)
+        assert_that(ns_entry, has_item(has_entry("indexes", has_item(index_def.to_dict()))))
 
     def test_index_definition_fluent_interface(self, db, namespace):
         # Given("Create namespace")
@@ -177,6 +182,30 @@ class TestIndexDefinition:
         # Then ("Update index (fluent interface)")
         index_def.index_type("hash").is_dense(False)
         db.index.update(namespace, index_def)
+        ns_entry = get_ns_description(db, namespace)
+        assert_that(ns_entry, has_item(has_entry("indexes", has_item(index_def.to_dict()))))
+
+    def test_cant_create_index_without_required_fields(self, db, namespace):
+        # Given("Create namespace")
+        # When ("Create IndexDefinition object")
+        index_def = IndexDefinition()
+        # Then ("Check that we can't add index without name")
+        assert_that(calling(db.index.create).with_args(namespace, index_def), raises(
+            AttributeError, pattern="Index must contain field 'name'"
+        ))
+        index_def.name("index123")
+        # Then ("Check that we can't add index without field_type")
+        assert_that(calling(db.index.create).with_args(namespace, index_def), raises(
+            AttributeError, pattern="Index must contain field 'field_type'"
+        ))
+        index_def.field_type("string")
+        # Then ("Check that we can't add index without index_type")
+        assert_that(calling(db.index.create).with_args(namespace, index_def), raises(
+            AttributeError, pattern="Index must contain field 'index_type'"
+        ))
+        index_def.index_type("hash")
+        # Then ("Now index can be created")
+        db.index.create(namespace, index_def)
         ns_entry = get_ns_description(db, namespace)
         assert_that(ns_entry, has_item(has_entry("indexes", has_item(index_def.to_dict()))))
 
@@ -206,7 +235,7 @@ class TestIndexDefinition:
             index_def.rand1()
         # Then ("Check that we can't set invalid attribute (dict-like)")
         with pytest.raises(KeyError, match="Invalid index attribute 'rand3', must be one of \(.*\)"):
-            index_def["rand3"]="Hello"
+            index_def["rand3"] = "Hello"
         # Then ("Check that we can't get invalid attribute")
         with pytest.raises(KeyError, match="Invalid index attribute 'rand3', must be one of \(.*\)"):
             index_def["rand3"]

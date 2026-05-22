@@ -136,7 +136,7 @@ class TestQuerySelect:
         sub_query = db.query.new(namespace).select_fields("id").where("id", CondType.CondEq, 5)
         # When ("Make select query with where_query and subquery")
         query_result = list(db.query.new(namespace).where_query(sub_query, CondType.CondSet, [2, 3, 5]).execute())
-        # Then ("Check that result is empty")
+        # Then ("Check result contains all expected items")
         assert_that(query_result, equal_to(items), "Wrong query results")
 
     def test_query_select_where_query_empty(self, db, namespace, index, items):

@@ -125,6 +125,13 @@ class RxConnector(RaiserRx):
 
             self._api_close()
 
+    @staticmethod
+    def _check_index_fields(index_def: dict):
+        required_fields = ("name", "json_paths", "field_type", "index_type")
+        for field in required_fields:
+            if field not in index_def:
+                raise AttributeError(f"Index must contain field '{field}'")
+
     def _api_import(self, dsn: str) -> None:
         """Imports an API dynamically depending on protocol specified in dsn
 
@@ -349,6 +356,7 @@ class RxConnector(RaiserRx):
         milliseconds: int = int(timeout / timedelta(milliseconds=1))
         if isinstance(index_def, IndexDefinition):
             index_def = index_def.to_dict()
+        self._check_index_fields(index_def)
         self.err_code, self.err_msg = self.api.index_add(self.rx, namespace, index_def, milliseconds)
 
     @RaiserRx.raise_if_error
@@ -372,6 +380,7 @@ class RxConnector(RaiserRx):
         milliseconds: int = int(timeout / timedelta(milliseconds=1))
         if isinstance(index_def, IndexDefinition):
             index_def = index_def.to_dict()
+        self._check_index_fields(index_def)
         self.err_code, self.err_msg = self.api.index_update(self.rx, namespace, index_def, milliseconds)
 
     @RaiserRx.raise_if_error

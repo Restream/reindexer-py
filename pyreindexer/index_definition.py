@@ -13,6 +13,8 @@ class IndexDefinition:
             - idx['collate_mode'] = 'utf8'
                 OR
             - idx.collate_mode('utf8')
+                OR
+            - idx.update({'collate_mode': 'utf8'})
         ### Get attribute value (only dict-like syntax):
             - idx_name = idx['name']
 
@@ -57,7 +59,7 @@ class IndexDefinition:
         "sort_order_letters": str,
         "config": dict,
         "expire_after": int,
-        "rtree_type": str,
+        "rtree_type": str
     }
 
     _INDEX_ATTRS = tuple(_ATTR_TYPES.keys())
@@ -73,11 +75,11 @@ class IndexDefinition:
             is_dense: bool = False,
             is_sparse: bool = False,
             is_no_column: bool = False,
-            collate_mode: Optional[str] = "none",
+            collate_mode: str = "none",
             sort_order_letters: str = "",
             config: Optional[Dict] = None,
             expire_after: int = 0,
-            rtree_type: Optional[str] = None,
+            rtree_type: Optional[str] = None
     ):
         if name is not None:
             self.name(name)
@@ -209,9 +211,6 @@ class IndexDefinition:
 
     # ========== Dict-like methods ==========
 
-    def to_dict(self) -> dict:
-        return {k[1:]: v for k, v in self.__dict__.items()}
-
     def __getitem__(self, attr: str):
         self._validate_attr(attr)
         return getattr(self, f"_{attr}")
@@ -224,3 +223,11 @@ class IndexDefinition:
     def __repr__(self) -> str:
         params = [f"{k}={v!r}" for k, v in self.to_dict().items()]
         return f"IndexDefinition({', '.join(params)})"
+
+    def to_dict(self) -> dict:
+        return {k[1:]: v for k, v in self.__dict__.items()}
+
+    def update(self, updates: Dict) -> "IndexDefinition":
+        for attr, value in updates.items():
+            self[attr] = value
+        return self

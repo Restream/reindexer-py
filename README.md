@@ -1600,7 +1600,8 @@ Gets fields facet value. Applicable to multiple data fields and the result of th
 def sort(
     index: str,
     desc: bool = False,
-    forced_sort_values: Union[ScalarType, tuple[list[ScalarType], ...]] = None
+    forced_sort_values: Union[ScalarType, list[ScalarType],
+                              tuple[list[ScalarType], ...]] = None
 ) -> Query
 ```
 
@@ -1611,7 +1612,7 @@ Applies sort order to return from query items. If forced_sort_values argument sp
 #### Arguments:
     index (string): The index name
     desc (bool): Sort in descending order
-    forced_sort_values (Union[ScalarType, (list[ScalarType], ...)]):
+    forced_sort_values (Union[ScalarType, list[ScalarType], tuple[list[ScalarType], ...]]):
         Value of index to match. For composite indexes keys must be list, with value of each sub-index
 
 #### Returns:
@@ -2246,6 +2247,8 @@ IndexDefinition allows to construct and manage indexes more efficiently using a 
         - idx['collate_mode'] = 'utf8'
             OR
         - idx.collate_mode('utf8')
+            OR
+        - idx.update({'collate_mode': 'utf8'})
     ### Get attribute value (only dict-like syntax):
         - idx_name = idx['name']
 
@@ -2269,4 +2272,5 @@ IndexDefinition allows to construct and manage indexes more efficiently using a 
         [More about `float_vector`](https://github.com/Restream/reindexer/blob/master/float_vector.md)
     expire_after (int): TTL in seconds
     rtree_type (str): RTree index type. Possible values: `rstar`, `linear`, `quadratic`, `greene`
+
 

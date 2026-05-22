@@ -684,7 +684,7 @@ class Query(RaiserQuery):
 
     @RaiserQuery.raise_if_error
     def sort(self, index: str, desc: bool = False,
-             forced_sort_values: Union[ScalarType, tuple[list[ScalarType], ...]] = None) -> Query:
+             forced_sort_values: Union[ScalarType, list[ScalarType], tuple[list[ScalarType], ...]] = None) -> Query:
         """Applies sort order to return from query items. If forced_sort_values argument specified, then items equal to
             values, if found will be placed in the top positions. Forced sort is support for the first sorting field
             only
@@ -692,7 +692,7 @@ class Query(RaiserQuery):
         #### Arguments:
             index (string): The index name
             desc (bool): Sort in descending order
-            forced_sort_values (Union[ScalarType, (list[ScalarType], ...)]):
+            forced_sort_values (Union[ScalarType, list[ScalarType], tuple[list[ScalarType], ...]]):
                 Value of index to match. For composite indexes keys must be list, with value of each sub-index
 
         #### Returns:
