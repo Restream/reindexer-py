@@ -1,7 +1,7 @@
 from enum import Enum, IntEnum
 from typing import List, Tuple, Union
 
-from pyreindexer.constants import ValueType
+from pyreindexer.constants import ScalarType
 
 
 class ExpressionType(IntEnum):
@@ -40,7 +40,7 @@ class Field(Expression):
 
 
 class Values(Expression):
-    def __init__(self, values: Union[ValueType, List[ValueType]]):
+    def __init__(self, values: Union[ScalarType, List[ScalarType]]):
         self.values = values if isinstance(values, list) else [values]
 
     def _serialize(self) -> Tuple[int, list]:

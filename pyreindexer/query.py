@@ -6,7 +6,7 @@ from enum import Enum
 from typing import List, Optional, Union
 from uuid import UUID
 
-from pyreindexer.constants import ValueType
+from pyreindexer.constants import ScalarType
 from pyreindexer.exceptions import QueryError
 from pyreindexer.expressions import Expression
 from pyreindexer.index_search_params import IndexSearchParamBruteForce, IndexSearchParamHnsw, IndexSearchParamIvf
@@ -110,7 +110,7 @@ class Query(RaiserQuery):
                 KNN search parameters
 
         #### Returns:
-            (:obj:`tuple[ValueType]`): actual parameters
+            (:obj:`tuple[ScalarType]`): actual parameters
 
         #### Raises:
             QueryError: Raises with an error message if no param are specified or have an invalid value
@@ -160,14 +160,14 @@ class Query(RaiserQuery):
         return k, is_k, radius, is_radius, ef, nprobe
 
     @staticmethod
-    def __convert_to_list(param: Union[ValueType, tuple[list[ValueType], ...]]) -> list:
+    def __convert_to_list(param: Union[ScalarType, tuple[list[ScalarType], ...]]) -> list:
         """Converts an input parameter to a list of lists
 
         #### Arguments:
-            param (union[ValueType, (list[ValueType], ...)]): The input parameter
+            param (Union[ScalarType, (list[ScalarType], ...)]): The input parameter
 
         #### Returns:
-            list[union[union[int, bool, float, str], list[union[int, bool, float, str]]]:
+            list[Union[Union[int, bool, float, str], list[Union[int, bool, float, str]]]:
                 Always converted to a list of lists
 
         """
@@ -202,13 +202,13 @@ class Query(RaiserQuery):
 
     @RaiserQuery.raise_if_error
     def __where(self, index: str, condition: CondType,
-                keys: Union[ValueType, tuple[list[ValueType], ...]]) -> Query:
+                keys: Union[ScalarType, list[ScalarType], tuple[list[ScalarType], ...]]) -> Query:
         """Adds where condition to DB query with args
 
         #### Arguments:
             index (string): Field name used in condition clause
             condition (:enum:`CondType`): Type of condition
-            keys (union[ValueType, (list[ValueType], ...)]):
+            keys (Union[ScalarType, list[ScalarType], tuple[list[ScalarType], ...]]:
                 Value of index to be compared with. For composite indexes keys must be list,
                 with value of each sub-index
 
@@ -230,13 +230,13 @@ class Query(RaiserQuery):
         return self
 
     def where(self, index: str, condition: CondType,
-              keys: Union[ValueType, tuple[list[ValueType], ...]] = None) -> Query:
+              keys: Union[ScalarType, list[ScalarType], tuple[list[ScalarType], ...]] = None) -> Query:
         """Adds where condition to DB query with args
 
         #### Arguments:
             index (string): Field name used in condition clause
             condition (:enum:`CondType`): Type of condition
-            keys (union[ValueType, (list[ValueType], ...)]):
+            keys (Union[ScalarType, list[ScalarType], tuple[list[ScalarType], ...]]):
                 Value of index to be compared with. For composite indexes keys must be list,
                 with value of each sub-index
 
@@ -252,13 +252,13 @@ class Query(RaiserQuery):
 
     @RaiserQuery.raise_if_error
     def where_query(self, sub_query: Query, condition: CondType,
-                    keys: Union[ValueType, tuple[list[ValueType], ...]] = None) -> Query:
+                    keys: Union[ScalarType, list[ScalarType], tuple[list[ScalarType], ...]] = None) -> Query:
         """Adds sub-query where condition to DB query with args
 
         #### Arguments:
             sub_query (:obj:`Query`): Field name used in condition clause
             condition (:enum:`CondType`): Type of condition
-            keys (union[ValueType, (list[ValueType], ...)]):
+            keys (Union[ScalarType, list[ScalarType], tuple[list[ScalarType], ...]]):
                 Value of index to be compared with. For composite indexes keys must be list,
                 with value of each sub-index
 
@@ -295,19 +295,25 @@ class Query(RaiserQuery):
                                       sub_query.query_wrapper_ptr)
         return self
 
-    def where_composite(self, index: str, condition: CondType, keys: tuple[list[ValueType], ...]) -> Query:
+    def where_composite(self, index: str, condition: CondType,
+                        keys: Union[
+                            tuple[ScalarType, ...], tuple[list[ScalarType], ...],
+                            list[list[ScalarType]], list[tuple[ScalarType, ...]]
+                        ]) -> Query:
         """Adds where condition to DB query with interface args for composite indexes
 
         #### Arguments:
             index (string): Field name used in condition clause
             condition (:enum:`CondType`): Type of condition
-            keys (list[ValueType], ...): Values of composite index to be compared with (value of each sub-index).
+            keys (Union[
+                    tuple[ScalarType, ...], tuple[list[ScalarType], ...],
+                     list[list[ScalarType]], list[tuple[ScalarType, ...]]
+                ]): Values of composite index to be compared with (value of each sub-index).
                 Supported variants:
-                    ([1, "test1"], [2, "test2"])
-                    [[1, "test1"], [2, "test2"]])
-                    ([1, "testval1"], )
-                    [[1, "testval1"]]
                     (1, "testval1")
+                    ([1, "test1"], [2, "test2"])
+                    [[1, "test1"], [2, "test2"]]
+                    [(1, "test1"), (2, "test2")]
 
         #### Returns:
             (:obj:`Query`): Query object for further customizations
@@ -320,15 +326,14 @@ class Query(RaiserQuery):
         return self.__where(index, condition, keys)
 
     @RaiserQuery.raise_if_error
-    def where_uuid(self, index: str, condition: CondType, *uuids: UUID) -> Query:
+    def where_uuid(self, index: str, condition: CondType, keys: Union[UUID, list[UUID]]) -> Query:
         """Adds where condition to DB query with UUID.
-            `index` MUST be declared as uuid-string index in this case
+            `index` must be declared as uuid-string index in this case
 
         #### Arguments:
             index (string): Field name used in condition clause
             condition (:enum:`CondType`): Type of condition
-            uuids (*:obj:`UUID`): Value of index to be compared with. For composite indexes uuids must be list,
-                with value of each sub-index
+            keys (Union[UUID, list[UUID]]): Value of index to be compared with
 
         #### Returns:
             (:obj:`Query`): Query object for further customizations
@@ -338,12 +343,9 @@ class Query(RaiserQuery):
 
         """
 
-        params: list[str] = []
-        for item in uuids:
-            params.append(str(item))
+        params = [str(param) for param in self.__convert_to_list(keys)]
 
-        self.err_code, self.err_msg = self.api.where_uuid(self.query_wrapper_ptr, index, condition.value,
-                                                          params)
+        self.err_code, self.err_msg = self.api.where_uuid(self.query_wrapper_ptr, index, condition.value, params)
         return self
 
     @RaiserQuery.raise_if_error
@@ -390,12 +392,12 @@ class Query(RaiserQuery):
     def where_knn(self, index: str, vec: List[float],
                   param: Union[IndexSearchParamBruteForce | IndexSearchParamHnsw | IndexSearchParamIvf]) -> Query:
         """Adds where condition to DB query with float_vector as args.
-            `index` MUST be declared as float_vector index in this case
+            `index` must be declared as float_vector index in this case
 
         #### Arguments:
             index (string): Field name used in condition clause (only float_vector)
             vec (list[float]): KNN value of index to be compared with
-            param (:obj:`union[IndexSearchParamBruteForce|IndexSearchParamHnsw|IndexSearchParamIvf]`):
+            param (:obj:`Union[IndexSearchParamBruteForce|IndexSearchParamHnsw|IndexSearchParamIvf]`):
                 KNN search parameters
 
         #### Returns:
@@ -422,13 +424,13 @@ class Query(RaiserQuery):
                          param: Union[
                              IndexSearchParamBruteForce | IndexSearchParamHnsw | IndexSearchParamIvf]) -> Query:
         """Adds where condition to DB query with string as args.
-            `index` MUST be declared as float_vector index in this case.
+            `index` must be declared as float_vector index in this case.
             WARNING: Only relevant if automatic embedding is configured for this float_vector index
 
         #### Arguments:
             index (string): Field name used in condition clause (only float_vector)
             value (string): value to be generated using automatic embedding of KNN index value to be compared to
-            param (:obj:`union[IndexSearchParamBruteForce|IndexSearchParamHnsw|IndexSearchParamIvf]`):
+            param (:obj:`Union[IndexSearchParamBruteForce|IndexSearchParamHnsw|IndexSearchParamIvf]`):
                 KNN search parameters
 
         #### Returns:
@@ -682,7 +684,7 @@ class Query(RaiserQuery):
 
     @RaiserQuery.raise_if_error
     def sort(self, index: str, desc: bool = False,
-             forced_sort_values: Union[ValueType, tuple[list[ValueType], ...]] = None) -> Query:
+             forced_sort_values: Union[ScalarType, list[ScalarType], tuple[list[ScalarType], ...]] = None) -> Query:
         """Applies sort order to return from query items. If forced_sort_values argument specified, then items equal to
             values, if found will be placed in the top positions. Forced sort is support for the first sorting field
             only
@@ -690,7 +692,7 @@ class Query(RaiserQuery):
         #### Arguments:
             index (string): The index name
             desc (bool): Sort in descending order
-            forced_sort_values (union[ValueType, (list[ValueType], ...)]):
+            forced_sort_values (Union[ScalarType, list[ScalarType], tuple[list[ScalarType], ...]]):
                 Value of index to match. For composite indexes keys must be list, with value of each sub-index
 
         #### Returns:
@@ -950,12 +952,12 @@ class Query(RaiserQuery):
         return number
 
     @RaiserQuery.raise_if_error
-    def set_object(self, field: str, values: list[ValueType]) -> Query:
+    def set_object(self, field: str, values: list[ScalarType]) -> Query:
         """Adds an update query to an object field for an update query
 
         #### Arguments:
             field (string): Field name
-            values (list[ValueType]): List of values to add
+            values (list[ScalarType]): List of values to add
 
         #### Returns:
             (:obj:`Query`): Query object for further customizations
@@ -973,12 +975,12 @@ class Query(RaiserQuery):
         return self
 
     @RaiserQuery.raise_if_error
-    def set(self, field: str, values: list[ValueType]) -> Query:
+    def set(self, field: str, values: list[ScalarType]) -> Query:
         """Adds a field update request to the update request
 
         #### Arguments:
             field (string): Field name
-            values (list[ValueType]): List of values to add
+            values (list[ScalarType]): List of values to add
 
         #### Returns:
             (:obj:`Query`): Query object for further customizations

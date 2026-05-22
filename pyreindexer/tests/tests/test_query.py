@@ -130,6 +130,15 @@ class TestQuerySelect:
         # Then ("Check that all items selected in result")
         assert_that(query_result, equal_to(items), "Wrong query results")
 
+    def test_query_select_where_query_array(self, db, namespace, index, items):
+        # Given("Create namespace with index and items")
+        # Given ("Create new query")
+        sub_query = db.query.new(namespace).select_fields("id").where("id", CondType.CondEq, 5)
+        # When ("Make select query with where_query and subquery")
+        query_result = list(db.query.new(namespace).where_query(sub_query, CondType.CondSet, [2, 3, 5]).execute())
+        # Then ("Check result contains all expected items")
+        assert_that(query_result, equal_to(items), "Wrong query results")
+
     def test_query_select_where_query_empty(self, db, namespace, index, items):
         # Given("Create namespace with index and items")
         # Given ("Create new query")
@@ -170,14 +179,38 @@ class TestQuerySelect:
         items = [{"id": 0, "uuid": "f0dbda48-1b92-4aa1-b4dc-39b6867a202e"},
                  {"id": 1, "uuid": "189005c5-106f-4582-9838-f7a5b18649fc"},
                  {"id": 2, "uuid": "50005725-dd9d-4891-a9bc-7c7cb0ed2a3d"}]
-        for item in items:
-            db.item.insert(namespace, item)
-        # Given ("Create new query")
+        create_items(db, namespace, items)
+        # When ("Make select query with where_uuid (single value)")
         query = db.query.new(namespace)
+        item = random.choice(items)
+        uuid_value = uuid.UUID(item["uuid"])
+        query_result = list(query.where_uuid("uuid", CondType.CondEq, uuid_value).must_execute())
+        # Then ("Check that selected item is in result")
+        assert_that(query_result, equal_to([item]), "Wrong query results")
+
+        # When ("Make select query with where_uuid (multiple values)")
+        query = db.query.new(namespace)
+        chosen_items = random.sample(items, 2)
+        uuid_values = [uuid.UUID(i["uuid"]) for i in chosen_items]
+        query_result = list(query.where_uuid("uuid", CondType.CondSet, uuid_values).must_execute())
+        # Then ("Check that selected item is in result")
+        assert_that(query_result, contains_inanyorder(*chosen_items), "Wrong query results")
+
+    def test_query_select_where_uuid_array(self, db, namespace, index):
+        # Given("Create namespace with index")
+        # Given ("Create array uuid index")
+        db.index.create(namespace, {"name": "uuid", "json_paths": ["uuid"], "field_type": "uuid", "index_type": "hash",
+                                    "is_array": True})
+        # Given ("Create items")
+        items = [{"id": 0, "uuid": ["f0dbda48-1b92-4aa1-b4dc-39b6867a202e"]},
+                 {"id": 1, "uuid": ["189005c5-106f-4582-9838-f7a5b18649fb", "189005c5-106f-4582-9838-f7a5b18649fc"]},
+                 {"id": 2, "uuid": ["50005725-dd9d-4891-a9bc-7c7cb0ed2a3a", ["50005725-dd9d-4891-a9bc-7c7cb0ed2a3b"]]}]
+        create_items(db, namespace, items)
         # When ("Make select query with where_uuid")
-        item = items[1]
-        some_uuid = uuid.UUID(item["uuid"])
-        query_result = list(query.where_uuid("uuid", CondType.CondEq, some_uuid).must_execute())
+        query = db.query.new(namespace)
+        item = items[-1]
+        uuid_value = uuid.UUID(item["uuid"][1][0])
+        query_result = list(query.where_uuid("uuid", CondType.CondEq, uuid_value).must_execute())
         # Then ("Check that selected item is in result")
         assert_that(query_result, equal_to([item]), "Wrong query results")
 

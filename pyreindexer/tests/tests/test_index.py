@@ -6,6 +6,7 @@ import pytest
 from hamcrest import *
 
 from pyreindexer.exceptions import ApiError
+from pyreindexer.index_definition import IndexDefinition
 from tests.helpers.base_helper import get_ns_description
 from tests.test_data.constants import (index_definition, updated_index_definition, vector_index_bf, vector_index_hnsw,
                                        vector_index_ivf)
@@ -141,3 +142,100 @@ class TestCrudIndexes:
         }
         err_msg = "Configuration 'embedding:query_embedder' contain field 'URL' with unexpected value: 'abc'"
         assert_that(calling(db.index.create).with_args(namespace, index), raises(ApiError, pattern=err_msg))
+
+
+class TestIndexDefinition:
+
+    def test_index_definition_init(self, db, namespace):
+        # Given("Create namespace")
+        # When ("Add index (init)")
+        index_def = IndexDefinition(name="idx", field_type="int", index_type="hash", is_sparse=True)
+        db.index.create(namespace, index_def)
+        # Then ("Check that index is added")
+        ns_entry = get_ns_description(db, namespace)
+        assert_that(ns_entry, has_item(has_entry("indexes", has_item(index_def.to_dict()))))
+        # Then ("Update index (dict-like)")
+        index_def["index_type"] = "tree"
+        index_def["is_dense"] = False
+        db.index.update(namespace, index_def)
+        ns_entry = get_ns_description(db, namespace)
+        assert_that(ns_entry, has_item(has_entry("indexes", has_item(index_def.to_dict()))))
+        # Then ("Update index (update method)")
+        index_def.update({"collate_mode": "utf8", "is_no_column": True})
+        db.index.update(namespace, index_def)
+        ns_entry = get_ns_description(db, namespace)
+        assert_that(ns_entry, has_item(has_entry("indexes", has_item(index_def.to_dict()))))
+
+    def test_index_definition_fluent_interface(self, db, namespace):
+        # Given("Create namespace")
+        # When ("Add index (fluent interface)")
+        index_def = (IndexDefinition().name("years").
+                     json_paths(["year1", "year2"]).
+                     field_type("int64").
+                     index_type("-").
+                     is_array())
+        index_def.is_dense()
+        db.index.create(namespace, index_def)
+        # Then ("Check that index is added")
+        ns_entry = get_ns_description(db, namespace)
+        assert_that(ns_entry, has_item(has_entry("indexes", has_item(index_def.to_dict()))))
+        # Then ("Update index (fluent interface)")
+        index_def.index_type("hash").is_dense(False)
+        db.index.update(namespace, index_def)
+        ns_entry = get_ns_description(db, namespace)
+        assert_that(ns_entry, has_item(has_entry("indexes", has_item(index_def.to_dict()))))
+
+    def test_cant_create_index_without_required_fields(self, db, namespace):
+        # Given("Create namespace")
+        # When ("Create IndexDefinition object")
+        index_def = IndexDefinition()
+        # Then ("Check that we can't add index without name")
+        assert_that(calling(db.index.create).with_args(namespace, index_def), raises(
+            AttributeError, pattern="Index must contain field 'name'"
+        ))
+        index_def.name("index123")
+        # Then ("Check that we can't add index without field_type")
+        assert_that(calling(db.index.create).with_args(namespace, index_def), raises(
+            AttributeError, pattern="Index must contain field 'field_type'"
+        ))
+        index_def.field_type("string")
+        # Then ("Check that we can't add index without index_type")
+        assert_that(calling(db.index.create).with_args(namespace, index_def), raises(
+            AttributeError, pattern="Index must contain field 'index_type'"
+        ))
+        index_def.index_type("hash")
+        # Then ("Now index can be created")
+        db.index.create(namespace, index_def)
+        ns_entry = get_ns_description(db, namespace)
+        assert_that(ns_entry, has_item(has_entry("indexes", has_item(index_def.to_dict()))))
+
+    def test_create_index_errors(self, db, namespace):
+        # Given("Create namespace")
+        # When ("Create IndexDefinition object")
+        index_def = IndexDefinition(field_type="int", index_type="hash").name("idx")
+        # Then ("Check that we can't use invalid field_type")
+        assert_that(calling(index_def.field_type).with_args("random1"), raises(
+            ValueError, pattern="field_type must be one of \(.*\), got 'random1'"
+        ))
+        # Then ("Check that we can't use invalid index_type")
+        assert_that(calling(index_def.index_type).with_args("random2"), raises(
+            ValueError, pattern="index_type must be one of \(.*\), got 'random2'"
+        ))
+        # Then ("Check that we can't add rtree_type to not geoindex")
+        assert_that(calling(index_def.rtree_type).with_args("rstar"), raises(
+            ValueError, pattern="rtree_type is only available for geoindex \(rtree, point\), not for \(hash, int\)"
+        ))
+
+    def test_index_attrs_errors(self, db, namespace):
+        # Given("Create namespace")
+        # When ("Create IndexDefinition object")
+        index_def = IndexDefinition(name="idx", field_type="int", index_type="hash")
+        # Then ("Check that we can't set invalid attribute")
+        with pytest.raises(AttributeError, match="'IndexDefinition' object has no attribute 'rand1'"):
+            index_def.rand1()
+        # Then ("Check that we can't set invalid attribute (dict-like)")
+        with pytest.raises(KeyError, match="Invalid index attribute 'rand3', must be one of \(.*\)"):
+            index_def["rand3"] = "Hello"
+        # Then ("Check that we can't get invalid attribute")
+        with pytest.raises(KeyError, match="Invalid index attribute 'rand3', must be one of \(.*\)"):
+            index_def["rand3"]
