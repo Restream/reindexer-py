@@ -9,54 +9,59 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [ ubuntu-24.04, macos-15, windows-latest ]
+        #platform: [ ubuntu-24.04, macos-15, windows-latest ]
+        platform: [ windows-latest ]
     name: Build reindexer for ${{ matrix.platform }}
     runs-on: ${{ matrix.platform }}
     defaults:
       run:
         shell: bash
     steps:
-      - name: Install build dependencies (Ubuntu)
-        if: startsWith(matrix.platform, 'ubuntu')
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install -y build-essential cmake
-      - name: Build reindexer (Unix)
-        if: startsWith(matrix.platform, 'ubuntu') || startsWith(matrix.platform, 'macos')
-        run: |
-          git clone https://github.com/Restream/reindexer.git
-          cd reindexer
-          if [[ "${{ matrix.platform }}" == ubuntu-* ]]; then
-            sudo ./dependencies.sh
-          else
-            ./dependencies.sh
-          fi
-          mkdir -p build && cd build
-          cmake ..
-          make -j4
-          cpack
-          find . -name CMakeFiles -o -name "*.cc" -o -name "*.h" -o \
-            -name Makefile -o -name _cmrc -o -name "*.json" -o -name "*.txt" -o -name \
-            "*.in" | xargs -n1 rm -rf
-          rm -rf _CPack_Packages \
-            cpp_src/server/reindexer_server_resources cpp_src/server/face \
-            cpp_src/server/swagger cpp_src/cmd/reindexer_server/contrib \
-            cpp_src/leveldb_lib* cpp_src/snappy_lib* \
-            cpp_src/cmd/reindexer_tool/replxx_lib* Testing cpp_src/gtests/tests/logs
-          find . -empty -type d -delete
+#      - name: Install build dependencies (Ubuntu)
+#        if: startsWith(matrix.platform, 'ubuntu')
+#        run: |
+#          sudo apt-get update -y
+#          sudo apt-get install -y build-essential cmake
+#      - name: Build reindexer (Unix)
+#        if: startsWith(matrix.platform, 'ubuntu') || startsWith(matrix.platform, 'macos')
+#        run: |
+#          git clone https://github.com/Restream/reindexer.git
+#          cd reindexer
+#          if [[ "${{ matrix.platform }}" == ubuntu-* ]]; then
+#            sudo ./dependencies.sh
+#          else
+#            ./dependencies.sh
+#          fi
+#          mkdir -p build && cd build
+#          cmake ..
+#          make -j4
+#          cpack
+#          find . -name CMakeFiles -o -name "*.cc" -o -name "*.h" -o \
+#            -name Makefile -o -name _cmrc -o -name "*.json" -o -name "*.txt" -o -name \
+#            "*.in" | xargs -n1 rm -rf
+#          rm -rf _CPack_Packages \
+#            cpp_src/server/reindexer_server_resources cpp_src/server/face \
+#            cpp_src/server/swagger cpp_src/cmd/reindexer_server/contrib \
+#            cpp_src/leveldb_lib* cpp_src/snappy_lib* \
+#            cpp_src/cmd/reindexer_tool/replxx_lib* Testing cpp_src/gtests/tests/logs
+#          find . -empty -type d -delete
       - name: Build reindexer (Windows)
         if: startsWith(matrix.platform, 'windows')
         shell: pwsh
         run: |
-          conda install openblas -y
-          cd C:\temp\reindexer
+          choco install openblas -y
           git clone https://github.com/Restream/reindexer.git
-          mkdir build && cd build
-          cmake -G "Visual Studio 18 2026" .. -Ax64
-          cmake --build . --config Release /p:MultiProcessorCompilation=true --parallel 4
-          cmake --install . --config Release --prefix C:\reindexer-install
-          cpack
-          cd ..\..
+          cd reindexer
+          mkdir build -Force; cd build
+          cmake .. `
+            -G "Visual Studio 17 2022" `
+            -A x64 `
+            -DCMAKE_INSTALL_PREFIX="$env:GITHUB_WORKSPACE/reindexer-install" `
+            -DBUILD_ANN_INDEXES=builtin `
+            -DBLAS_ROOT="C:\Program Files\OpenBLAS"
+          cmake --build . --config Release --parallel 4
+          cmake --install . --config Release
+          cpack -G ZIP --config Release
 #      - name: Store build artifacts
 #        uses: actions/upload-artifact@v4
 #        with:
