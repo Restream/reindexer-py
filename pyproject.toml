@@ -31,6 +31,19 @@ before-all = """
 """
 archs = ["arm64"]
 
+[tool.cibuildwheel.windows]
+before-build = """
+    conda install openblas -y
+    cd C:\\temp\\reindexer
+    git clone https://github.com/Restream/reindexer.git
+    mkdir build && cd build
+    cmake -G "Visual Studio 18 2026" .. -Ax64
+    cmake --build . --config Release /p:MultiProcessorCompilation=true --parallel 4
+    cmake --install . --config Release --prefix C:\\reindexer-install
+    cd ..\\..
+"""
+archs = ["auto64"]
+
 [build-system]
 requires = [
     "setuptools",

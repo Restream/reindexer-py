@@ -47,7 +47,7 @@ with open('README.md', 'r', encoding='utf-8') as file:
     LONG_DESCRIPTION = file.read()
 
 setup(name=PACKAGE_NAME,
-      version='0.5.130007',
+      version='0.5.1300091',
       description='A connector that allows to interact with Reindexer',
       author='Igor Tulmentyev',
       author_email='contactus@reindexer.io',
@@ -103,5 +103,5 @@ setup(name=PACKAGE_NAME,
           _c2('Topic', 'Software Development', 'Libraries', 'Python Modules'),
           _c2('Topic', 'Software Development', 'Libraries', 'Application Frameworks'),
       ],
-      platforms=['Ubuntu', 'Debian', 'ALT Linux', 'RED OS', 'Astra Linux', 'MacOS'],
+      platforms=['Ubuntu', 'Debian', 'ALT Linux', 'RED OS', 'Astra Linux', 'MacOS', 'Windows'],
       )
