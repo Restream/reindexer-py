@@ -47,7 +47,7 @@ with open('README.md', 'r', encoding='utf-8') as file:
     LONG_DESCRIPTION = file.read()
 
 setup(name=PACKAGE_NAME,
-      version='0.5.130007',
+      version='0.5.130009',
       description='A connector that allows to interact with Reindexer',
       author='Igor Tulmentyev',
       author_email='contactus@reindexer.io',
@@ -71,11 +71,9 @@ setup(name=PACKAGE_NAME,
       package_data={'pyreindexer': [
           'CMakeLists.txt',
           'lib/**/*',
-          'example/main.py',
-          'tests/**/*.py'
+          'example/main.py'
       ]},
       python_requires='>=3.8',
-      install_requires=['PyHamcrest==2.0.2', 'pytest>=6.2.5', 'requests>=2.26.0'],
       options={'bdist_wheel': {'py_limited_api': 'cp38'}},
       classifiers=[
           _c2('Development Status', '4 - Beta'),
