@@ -4,7 +4,7 @@ on:
     branches:
       - master
     paths-ignore:
-      - 'tests/**'
+      - 'pyreindexer/tests/**'
 
 jobs:
   build_wheels:

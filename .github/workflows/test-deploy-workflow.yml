@@ -3,7 +3,7 @@ on:
   pull_request:
     types: [ opened, reopened ]
     paths-ignore:
-      - 'tests/**'
+      - 'pyreindexer/tests/**'
 
 jobs:
   build_wheels:
