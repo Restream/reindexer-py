@@ -49,7 +49,7 @@ jobs:
         if: startsWith(matrix.platform, 'windows')
         shell: pwsh
         run: |
-          choco install openblas -y
+#          choco install openblas -y
           git clone https://github.com/Restream/reindexer.git
           cd reindexer
           mkdir build -Force; cd build
@@ -61,7 +61,7 @@ jobs:
             -DBLAS_ROOT="C:\Program Files\OpenBLAS"
           cmake --build . --config Release --parallel 4
           cmake --install . --config Release
-#          cpack -G ZIP --config Release
+#          cpack
       - name: Store build artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -127,11 +127,17 @@ jobs:
         if: startsWith(matrix.platform, 'windows')
         shell: pwsh
         run: |
-          $installDir = "$env:GITHUB_WORKSPACE/reindexer_build"
-          echo "$installDir/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-          echo "reindexer_ROOT=$installDir" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          echo "CMAKE_PREFIX_PATH=$installDir" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          Write-Host "Reindexer installed in $installDir"
+          $installDir = "$env:GITHUB_WORKSPACE/reindexer_win"
+          "$installDir/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          $configDir = "$installDir/lib/cmake/reindexer"
+          Add-Content $env:GITHUB_ENV "reindexer_DIR=$configDir"
+          Add-Content $env:GITHUB_ENV "CMAKE_PREFIX_PATH=$installDir"
+          if (Test-Path "$configDir/reindexer-config.cmake") {
+            Write-Host "reindexer-config.cmake found"
+          } else {
+            Write-Error "reindexer-config.cmake missing in $configDir"
+            exit 1
+          }
       - name: Set up Python ${{ matrix.python }}
         id: python-install
         uses: actions/setup-python@v5
@@ -148,10 +154,19 @@ jobs:
         run: |
           python -m pip install --upgrade --disable-pip-version-check pip setuptools build
           python -m pip install -r requirements.txt
-      - name: Build PyReindexer
+      - name: Build PyReindexer (Unix)
+        if: startsWith(matrix.platform, 'ubuntu') || startsWith(matrix.platform, 'macos')
         run: |
           python -m build
           python -m pip install .
+      - name: Build PyReindexer (Windows)
+        if: startsWith(matrix.platform, 'windows')
+        run: |
+          python -m build
+          python -m pip install .
+        env:
+          reindexer_DIR: "${{ github.workspace }}/reindexer_win/lib/cmake/reindexer"
+          CMAKE_PREFIX_PATH: "${{ github.workspace }}/reindexer_win"
       - name: Test
         run: |
           cd pyreindexer
