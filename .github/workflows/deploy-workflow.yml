@@ -3,8 +3,6 @@ on:
   push:
     branches:
       - master
-    paths-ignore:
-      - 'pyreindexer/tests/**'
 
 jobs:
   build_wheels:
