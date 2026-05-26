@@ -60,6 +60,8 @@ jobs:
             -DBLAS_ROOT="C:\Program Files\OpenBLAS"
           cmake --build . --config Release --parallel 4
           cmake --install . --config Release
+          Copy-Item -Path "cpp_src/core" -Destination "$env:GITHUB_WORKSPACE/reindexer/build/core" -Recurse -Force
+          Copy-Item -Path "cpp_src/include" -Destination "$env:GITHUB_WORKSPACE/reindexer/build/include" -Recurse -Force
       - name: Store build artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -166,10 +168,8 @@ jobs:
           python -m build
           python -m pip install .
         env:
-          REINDEXER_INCLUDE_DIRS: "${{ github.workspace }}/reindexer_build/cpp_src;${{ github.workspace }}/reindexer_build/cpp_src/include"
+          REINDEXER_INCLUDE_DIRS: "${{ github.workspace }}/reindexer_build;${{ github.workspace }}/reindexer_build/include"
           REINDEXER_LIBRARIES: "${{ github.workspace }}/reindexer_build/cpp_src/Release/reindexer.lib;${{ github.workspace }}/reindexer_build/lib/reindexer_server.lib"
-          REINDEXER_LIB_DIR: "${{ github.workspace }}/reindexer_build/lib"
-          REINDEXER_LINK_DIRS: "${{ github.workspace }}/reindexer_build/lib"
       - name: Test
         run: |
           cd pyreindexer
