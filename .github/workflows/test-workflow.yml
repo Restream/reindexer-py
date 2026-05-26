@@ -61,7 +61,7 @@ jobs:
             -DBLAS_ROOT="C:\Program Files\OpenBLAS"
           cmake --build . --config Release --parallel 4
           cmake --install . --config Release
-          cpack -G ZIP --config Release
+#          cpack -G ZIP --config Release
       - name: Store build artifacts
         uses: actions/upload-artifact@v4
         with:
