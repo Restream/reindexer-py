@@ -27,7 +27,15 @@ else()
 endif()
 
 set(RX_MIN_VERSION 5.13.0)
-find_package(reindexer CONFIG ${RX_MIN_VERSION} REQUIRED)
+if(CIBUILDWHEEL AND WIN32)
+    message(STATUS "[Windows CI] Using manual reindexer paths from environment")
+    set(REINDEXER_INCLUDE_DIRS $ENV{REINDEXER_INCLUDE_DIRS})
+    set(REINDEXER_LIBRARIES $ENV{REINDEXER_LIBRARIES})
+    set(REINDEXER_LIB_DIR $ENV{REINDEXER_LIB_DIR})
+    set(REINDEXER_LINK_DIRS $ENV{REINDEXER_LINK_DIRS})
+else()
+    find_package(reindexer CONFIG ${RX_MIN_VERSION} REQUIRED)
+endif()
 
 option(WITH_GCOV "Enable instrumented code coverage build" OFF)
 

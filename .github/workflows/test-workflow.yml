@@ -60,7 +60,6 @@ jobs:
             -DBLAS_ROOT="C:\Program Files\OpenBLAS"
           cmake --build . --config Release --parallel 4
           cmake --install . --config Release
-#          cpack
       - name: Store build artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -101,6 +100,24 @@ jobs:
         with:
           name: build_${{ matrix.platform }}
           path: reindexer_build
+      - name: Setup Reindexer for Windows
+        if: startsWith(matrix.platform, 'windows')
+        shell: pwsh
+        run: |
+          $root = "$env:GITHUB_WORKSPACE/reindexer_build"
+
+          $inc = "$root/cpp_src/include;$root/cpp_src"
+          $lib = "$root/cpp_src/Release/reindexer.lib;$root/lib/reindexer_server.lib"
+
+          Add-Content $env:GITHUB_ENV "REINDEXER_INCLUDE_DIRS=$inc"
+          Add-Content $env:GITHUB_ENV "REINDEXER_LIBRARIES=$lib"
+          Add-Content $env:GITHUB_ENV "REINDEXER_LIB_DIR=$root/lib"
+          Add-Content $env:GITHUB_ENV "REINDEXER_LINK_DIRS=$root/lib"
+
+          "$root/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          Write-Host "Windows reindexer paths configured"
+          Write-Host "INCLUDE: $inc"
+          Write-Host "LIBS: $lib"
       - name: Install Reindexer (MacOS)
         if: startsWith(matrix.platform, 'macos')
         run: |
@@ -164,8 +181,10 @@ jobs:
           python -m build
           python -m pip install .
         env:
-          reindexer_DIR: "${{ github.workspace }}/reindexer_win/lib/cmake/reindexer"
-          CMAKE_PREFIX_PATH: "${{ github.workspace }}/reindexer_win"
+          REINDEXER_INCLUDE_DIRS: "${{ github.workspace }}/reindexer_build/cpp_src;${{ github.workspace }}/reindexer_build/cpp_src/include"
+          REINDEXER_LIBRARIES: "${{ github.workspace }}/reindexer_build/cpp_src/Release/reindexer.lib;${{ github.workspace }}/reindexer_build/lib/reindexer_server.lib"
+          REINDEXER_LIB_DIR: "${{ github.workspace }}/reindexer_build/lib"
+          REINDEXER_LINK_DIRS: "${{ github.workspace }}/reindexer_build/lib"
       - name: Test
         run: |
           cd pyreindexer
