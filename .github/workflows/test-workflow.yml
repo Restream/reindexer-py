@@ -60,6 +60,7 @@ jobs:
             -DBLAS_ROOT="C:\Program Files\OpenBLAS"
           cmake --build . --config Release --parallel 4
           cmake --install . --config Release
+          cd ..
           Copy-Item -Path "cpp_src/core" -Destination "$env:GITHUB_WORKSPACE/reindexer/build/core" -Recurse -Force
           Copy-Item -Path "cpp_src/include" -Destination "$env:GITHUB_WORKSPACE/reindexer/build/include" -Recurse -Force
       - name: Store build artifacts
