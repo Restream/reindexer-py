@@ -126,7 +126,7 @@ jobs:
         if: startsWith(matrix.platform, 'windows')
         shell: pwsh
         run: |
-          $installDir = "$env:GITHUB_WORKSPACE/reindexer_win"
+          $installDir = "$env:GITHUB_WORKSPACE/reindexer_build"
           "$installDir/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
           $configDir = "$installDir/lib/cmake/reindexer"
           Add-Content $env:GITHUB_ENV "reindexer_DIR=$configDir"
