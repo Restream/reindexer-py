@@ -71,11 +71,9 @@ setup(name=PACKAGE_NAME,
       package_data={'pyreindexer': [
           'CMakeLists.txt',
           'lib/**/*',
-          'example/main.py',
-          'tests/**/*.py'
+          'example/main.py'
       ]},
       python_requires='>=3.8',
-      install_requires=['PyHamcrest==2.0.2', 'pytest>=6.2.5', 'requests>=2.26.0'],
       options={'bdist_wheel': {'py_limited_api': 'cp38'}},
       classifiers=[
           _c2('Development Status', '4 - Beta'),
