@@ -49,7 +49,6 @@ jobs:
         if: startsWith(matrix.platform, 'windows')
         shell: pwsh
         run: |
-#          choco install openblas -y
           git clone https://github.com/Restream/reindexer.git
           cd reindexer
           mkdir build -Force; cd build
