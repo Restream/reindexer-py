@@ -12,15 +12,15 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - platform: ubuntu-24.04
-            cibw_platform: manylinux
-            name: manylinux-x86_64
-          - platform: ubuntu-24.04
-            cibw_platform: musllinux
-            name: musllinux-x86_64
-          - platform: macos-15
-            name: macos-arm64
-            cibw_platform: ""
+          - name: manylinux-x86_64
+            cibw_only: "*manylinux*"
+            platform: ubuntu-24.04
+          - name: musllinux-x86_64
+            cibw_only: "*musllinux*"
+            platform: ubuntu-24.04
+          - name: macos-arm64
+            cibw_only: ""
+            platform: macos-15
     env:
       DEPLOY_BUILD_PYTHON_VERSION: "3.8"
       MACOSX_DEPLOYMENT_TARGET: "15"
@@ -38,8 +38,8 @@ jobs:
         run: python -m pip install --upgrade pip cibuildwheel
       - name: Build PyReindexer wheels
         run: |
-          if [ -n "${{ matrix.cibw_platform }}" ]; then
-            python -m cibuildwheel --output-dir dist --platform ${{ matrix.cibw_platform }}
+          if [ -n "${{ matrix.cibw_only }}" ]; then
+            python -m cibuildwheel --output-dir dist --only ${{ matrix.cibw_only }}
           else
             python -m cibuildwheel --output-dir dist
           fi
