@@ -1,13 +1,9 @@
 name: Upload Release package to TestPyPI
-#on:
-#  pull_request:
-#    types: [ opened, reopened ]
-#    paths-ignore:
-#      - 'pyreindexer/tests/**'
 on:
-  push:
-    branches-ignore:
-      - master
+  pull_request:
+    types: [ opened, reopened ]
+    paths-ignore:
+      - 'pyreindexer/tests/**'
 
 jobs:
   build_wheels:
