@@ -12,14 +12,13 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: manylinux-x86_64
-            cibw_only: "cp38-manylinux_x86_64"
+          - name: manylinux
+            cibw_platform: "manylinux"
             platform: ubuntu-24.04
-          - name: musllinux-x86_64
-            cibw_only: "cp38-musllinux_x86_64"
+          - name: musllinux
+            cibw_platform: "musllinux"
             platform: ubuntu-24.04
-          - name: macos-arm64
-            cibw_only: ""
+          - name: macos
             platform: macos-15
     env:
       DEPLOY_BUILD_PYTHON_VERSION: "3.8"
@@ -38,11 +37,10 @@ jobs:
         run: python -m pip install --upgrade pip cibuildwheel
       - name: Build PyReindexer wheels
         run: |
-          if [ -n "${{ matrix.cibw_only }}" ]; then
-            python -m cibuildwheel --output-dir dist --only ${{ matrix.cibw_only }}
-          else
-            python -m cibuildwheel --output-dir dist
+          if [ -n "${{ matrix.cibw_platform }}" ]; then
+            export CIBW_BUILD='cp38-${{ matrix.cibw_platform }}_*'
           fi
+          python -m cibuildwheel --output-dir dist
       - name: Store all build artifacts
         uses: actions/upload-artifact@v4
         with:
