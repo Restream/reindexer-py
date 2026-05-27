@@ -15,7 +15,7 @@ before-all = """
     rm -rf reindexer/
 """
 manylinux-x86_64-image = "manylinux_2_28"
-skip = ["*musllinux*"]
+musllinux-x86_64-image = "musllinux_1_2"
 
 [tool.cibuildwheel.macos]
 before-all = """

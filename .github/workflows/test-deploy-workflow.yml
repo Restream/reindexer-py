@@ -1,9 +1,13 @@
 name: Upload Release package to TestPyPI
+#on:
+#  pull_request:
+#    types: [ opened, reopened ]
+#    paths-ignore:
+#      - 'pyreindexer/tests/**'
 on:
-  pull_request:
-    types: [ opened, reopened ]
-    paths-ignore:
-      - 'pyreindexer/tests/**'
+  push:
+    branches-ignore:
+      - master
 
 jobs:
   build_wheels:
@@ -14,7 +18,7 @@ jobs:
       matrix:
         platform: [ ubuntu-24.04, macos-15 ]
     env:
-      DEPLOY_BUILD_PYTHON_VERSION: "3.8"
+      DEPLOY_BUILD_PYTHON_VERSION: "3.9"
       MACOSX_DEPLOYMENT_TARGET: "15"
     defaults:
       run:
