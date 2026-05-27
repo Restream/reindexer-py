@@ -13,10 +13,10 @@ jobs:
       matrix:
         include:
           - name: manylinux-x86_64
-            cibw_only: "cp38-manylinux_*"
+            cibw_only: "cp38-manylinux_x86_64"
             platform: ubuntu-24.04
           - name: musllinux-x86_64
-            cibw_only: "cp38-musllinux_*"
+            cibw_only: "cp38-musllinux_x86_64"
             platform: ubuntu-24.04
           - name: macos-arm64
             cibw_only: ""
