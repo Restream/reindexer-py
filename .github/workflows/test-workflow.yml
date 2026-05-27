@@ -1,8 +1,10 @@
 name: Test the project
 on:
   push:
-    branches-ignore:
+    branches:
       - master
+    paths-ignore:
+      - 'pyreindexer/tests/**'
 
 jobs:
   build_reindexer:
