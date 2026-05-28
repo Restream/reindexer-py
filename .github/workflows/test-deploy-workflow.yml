@@ -7,12 +7,20 @@ on:
 
 jobs:
   build_wheels:
-    name: Build wheels on ${{ matrix.platform }}
+    name: Build wheels (${{ matrix.name }})
     runs-on: ${{ matrix.platform }}
     strategy:
       fail-fast: false
       matrix:
-        platform: [ ubuntu-24.04, macos-15 ]
+        include:
+          - name: manylinux
+            cibw_platform: "manylinux"
+            platform: ubuntu-24.04
+          - name: musllinux
+            cibw_platform: "musllinux"
+            platform: ubuntu-24.04
+          - name: macos
+            platform: macos-15
     env:
       DEPLOY_BUILD_PYTHON_VERSION: "3.8"
       MACOSX_DEPLOYMENT_TARGET: "15"
@@ -29,11 +37,15 @@ jobs:
       - name: Install Python dependencies
         run: python -m pip install --upgrade pip cibuildwheel
       - name: Build PyReindexer wheels
-        run: python -m cibuildwheel --output-dir dist
+        run: |
+          if [ -n "${{ matrix.cibw_platform }}" ]; then
+            export CIBW_BUILD='cp38-${{ matrix.cibw_platform }}_*'
+          fi
+          python -m cibuildwheel --output-dir dist
       - name: Store all build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: pyrx_artifacts_wheels_${{ matrix.platform }}
+          name: pyrx_artifacts_wheels_${{ matrix.name }}
           path: dist/*
 
   build_sdist:
