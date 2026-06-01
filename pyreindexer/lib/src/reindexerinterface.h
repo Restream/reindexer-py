@@ -2,8 +2,8 @@
 
 #include <chrono>
 #include "core/query/query.h"
-#include "core/indexdef.h"
-#include "core/namespacedef.h"
+#include "core/definitions/indexdef.h"
+#include "core/definitions/namespacedef.h"
 #include "tools/errors.h"
 
 namespace pyreindexer {
