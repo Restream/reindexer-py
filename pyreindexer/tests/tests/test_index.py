@@ -215,15 +215,15 @@ class TestIndexDefinition:
         index_def = IndexDefinition(field_type="int", index_type="hash").name("idx")
         # Then ("Check that we can't use invalid field_type")
         assert_that(calling(index_def.field_type).with_args("random1"), raises(
-            ValueError, pattern="field_type must be one of \(.*\), got 'random1'"
+            ValueError, pattern="field_type must be one of (.*), got 'random1'"
         ))
         # Then ("Check that we can't use invalid index_type")
         assert_that(calling(index_def.index_type).with_args("random2"), raises(
-            ValueError, pattern="index_type must be one of \(.*\), got 'random2'"
+            ValueError, pattern="index_type must be one of (.*), got 'random2'"
         ))
         # Then ("Check that we can't add rtree_type to not geoindex")
         assert_that(calling(index_def.rtree_type).with_args("rstar"), raises(
-            ValueError, pattern="rtree_type is only available for geoindex \(rtree, point\), not for \(hash, int\)"
+            ValueError, pattern=r"rtree_type is only available for geoindex \(rtree, point\), not for \(hash, int\)"
         ))
 
     def test_index_attrs_errors(self, db, namespace):
@@ -234,8 +234,8 @@ class TestIndexDefinition:
         with pytest.raises(AttributeError, match="'IndexDefinition' object has no attribute 'rand1'"):
             index_def.rand1()
         # Then ("Check that we can't set invalid attribute (dict-like)")
-        with pytest.raises(KeyError, match="Invalid index attribute 'rand3', must be one of \(.*\)"):
+        with pytest.raises(KeyError, match="Invalid index attribute 'rand3', must be one of (.*)"):
             index_def["rand3"] = "Hello"
         # Then ("Check that we can't get invalid attribute")
-        with pytest.raises(KeyError, match="Invalid index attribute 'rand3', must be one of \(.*\)"):
+        with pytest.raises(KeyError, match="Invalid index attribute 'rand3', must be one of (.*)"):
             index_def["rand3"]

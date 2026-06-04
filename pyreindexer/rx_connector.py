@@ -91,6 +91,11 @@ class RxConnector(RaiserRx):
         self.err_msg: str = ''
         self.rx: int = 0
 
+        self._tx_ptrs = set()
+        self._tx_lock = threading.Lock()
+        self._query_ptrs = set()
+        self._query_lock = threading.Lock()
+
         if fetch_amount <= 0:
             raise ValueError("'fetch_amount' must be greater than zero")
 
@@ -100,10 +105,6 @@ class RxConnector(RaiserRx):
                                 start_special_thread, client_name, sync_rxcoro_count,
                                 max_replication_updates_size, allocator_cache_limit, allocator_cache_part)
         self._api_connect(dsn, net_timeout)
-        self._tx_ptrs = set()
-        self._tx_lock = threading.Lock()
-        self._query_ptrs = set()
-        self._query_lock = threading.Lock()
 
     def __del__(self):
         """Closes an API instance on a connector object deletion if the API is initialized
