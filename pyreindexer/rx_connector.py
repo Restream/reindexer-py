@@ -127,11 +127,14 @@ class RxConnector(RaiserRx):
             self._api_close()
 
     @staticmethod
-    def _check_index_fields(index_def: dict):
+    def _check_index_fields(index: dict):
         required_fields = ("name", "json_paths", "field_type", "index_type")
         for field in required_fields:
-            if field not in index_def:
+            if field not in index:
                 raise AttributeError(f"Index must contain field '{field}'")
+        if index["field_type"] == "float_vector":
+            if not index.get("config"):
+                raise AttributeError(f"Vector index must contain nonempty 'config'")
 
     def _api_import(self, dsn: str) -> None:
         """Imports an API dynamically depending on protocol specified in dsn

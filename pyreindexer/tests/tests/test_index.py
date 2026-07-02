@@ -1,4 +1,5 @@
 import copy
+import random
 from datetime import timedelta
 from typing import Final
 
@@ -8,8 +9,8 @@ from hamcrest import *
 from pyreindexer.exceptions import ApiError
 from pyreindexer.index_definition import IndexDefinition
 from tests.helpers.base_helper import get_ns_description
-from tests.test_data.constants import (index_definition, updated_index_definition, vector_index_bf, vector_index_hnsw,
-                                       vector_index_ivf)
+from tests.test_data.constants import (VECTOR_METRICS, index_definition, index_definition_ft, updated_index_definition,
+                                       vector_index_bf, vector_index_hnsw, vector_index_ivf)
 
 
 class TestCrudIndexes:
@@ -132,8 +133,80 @@ class TestCrudIndexes:
         assert_that(ns_entry, has_item(has_entry("indexes", has_item(updated_index_definition))),
                     "Index wasn't updated")
 
-    def test_invalid_index_embedder_config(self, db, namespace, index):
-        # Given ("Create float vector index")
+    def test_empty_fulltext_index_config(self, db, namespace):
+        # When ("Create fulltext vector index with valid config")
+        index = copy.deepcopy(index_definition_ft)
+        del index["config"]
+        db.index.create(namespace, index)
+        # Then ("Index was created")
+        ns_entry = get_ns_description(db, namespace)
+        index["config"] = {}
+        assert_that(ns_entry, has_item(has_entry("indexes", has_item(index))))
+
+    def test_invalid_vector_index_config_bf(self, db, namespace):
+        # When ("Try to create float vector index without config")
+        index = copy.deepcopy(vector_index_bf)
+        del index["config"]
+        err_msg = "Vector index must contain nonempty 'config'"
+        assert_that(calling(db.index.create).with_args(namespace, index), raises(AttributeError, pattern=err_msg))
+        index["config"] = {}
+        assert_that(calling(db.index.create).with_args(namespace, index), raises(AttributeError, pattern=err_msg))
+        # When ("Try to create float vector index with invalid config")
+        index["config"] = {"dimension": 5}
+        err_msg = "Unknown vector metric ''"
+        assert_that(calling(db.index.create).with_args(namespace, index), raises(ApiError, pattern=err_msg))
+        index["config"]["metric"] = random.choice(VECTOR_METRICS)
+        # When ("Create float vector index with valid config")
+        db.index.create(namespace, index)
+        # Then ("Index was created")
+        ns_entry = get_ns_description(db, namespace)
+        index["config"].update({"start_size": 1000})
+        assert_that(ns_entry, has_item(has_entry("indexes", has_item(index))))
+
+    def test_invalid_vector_index_config_hnsw(self, db, namespace):
+        # When ("Try to create float vector index without config")
+        index = copy.deepcopy(vector_index_hnsw)
+        del index["config"]
+        err_msg = "Vector index must contain nonempty 'config'"
+        assert_that(calling(db.index.create).with_args(namespace, index), raises(AttributeError, pattern=err_msg))
+        index["config"] = {}
+        assert_that(calling(db.index.create).with_args(namespace, index), raises(AttributeError, pattern=err_msg))
+        # When ("Try to create float vector index with invalid config")
+        index["config"] = {"dimension": 5}
+        err_msg = "Unknown vector metric ''"
+        assert_that(calling(db.index.create).with_args(namespace, index), raises(ApiError, pattern=err_msg))
+        index["config"]["metric"] = random.choice(VECTOR_METRICS)
+        # When ("Create float vector index with valid config")
+        db.index.create(namespace, index)
+        # Then ("Index was created")
+        ns_entry = get_ns_description(db, namespace)
+        index["config"].update({"start_size": 1000, "ef_construction": 200, "m": 16})
+        assert_that(ns_entry, has_item(has_entry("indexes", has_item(index))))
+
+    def test_invalid_vector_index_config_ivf(self, db, namespace):
+        # When ("Try to create float vector index without config")
+        index = copy.deepcopy(vector_index_ivf)
+        del index["config"]
+        err_msg = "Vector index must contain nonempty 'config'"
+        assert_that(calling(db.index.create).with_args(namespace, index), raises(AttributeError, pattern=err_msg))
+        index["config"] = {}
+        assert_that(calling(db.index.create).with_args(namespace, index), raises(AttributeError, pattern=err_msg))
+        # When ("Try to create float vector index with invalid config")
+        index["config"] = {"dimension": 5}
+        err_msg = "Unknown vector metric ''"
+        assert_that(calling(db.index.create).with_args(namespace, index), raises(ApiError, pattern=err_msg))
+        index["config"]["metric"] = random.choice(VECTOR_METRICS)
+        err_msg = "Ivf index centroids count = 0 is out of bounds .*"
+        assert_that(calling(db.index.create).with_args(namespace, index), raises(ApiError, pattern=err_msg))
+        index["config"]["centroids_count"] = 5
+        # When ("Create float vector index with valid config")
+        db.index.create(namespace, index)
+        # Then ("Index was created")
+        ns_entry = get_ns_description(db, namespace)
+        assert_that(ns_entry, has_item(has_entry("indexes", has_item(index))))
+
+    def test_invalid_vector_index_embedder_config(self, db, namespace):
+        # When ("Try to create float vector index")
         dimension: Final[int] = 5
         index = copy.deepcopy(vector_index_hnsw)
         index["config"]["dimension"] = dimension
