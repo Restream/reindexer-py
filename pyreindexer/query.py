@@ -142,7 +142,7 @@ class Query(RaiserQuery):
             if param.radius is not None:
                 radius = param.radius
                 is_radius = True
-            ef = param.ef if param.ef else 0
+            ef = param.ef if param.ef else 1
         elif isinstance(param, IndexSearchParamIvf):
             if param.nprobe < 1:
                 raise QueryError("Nprobe should not be less than 1")
