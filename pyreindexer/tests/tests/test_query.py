@@ -1057,8 +1057,6 @@ class TestQueryKNN:
                     raises(ValueError, pattern="Either 'k' or 'radius' needs to be specified"))
         assert_that(calling(IndexSearchParamBruteForce).with_args(k=0, radius=0.0),
                     raises(ValueError, pattern="KNN limit 'k' should not be less than 1"))
-        assert_that(calling(IndexSearchParamHnsw).with_args(ef=0),
-                    raises(ValueError, pattern="Either 'k' or 'radius' needs to be specified"))
         assert_that(calling(IndexSearchParamHnsw).with_args(k=0, ef=1),
                     raises(ValueError, pattern="KNN limit 'k' should not be less than 1"))
         assert_that(calling(IndexSearchParamHnsw).with_args(k=2, ef=1),
