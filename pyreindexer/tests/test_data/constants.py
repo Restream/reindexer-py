@@ -6,12 +6,28 @@ index_definition = {
     "is_array": False,
     "is_dense": False,
     "is_sparse": False,
-    'is_no_column': False,
+    "is_no_column": False,
     "collate_mode": "none",
     "sort_order_letters": "",
     "config": {},
     "expire_after": 0,
     "json_paths": ["id"]
+}
+
+index_definition_ft = {
+    "name": "ft_idx",
+    "field_type": "string",
+    "index_type": "text",
+    "is_pk": False,
+    "is_array": False,
+    "is_dense": False,
+    "is_sparse": False,
+    "is_no_column": False,
+    "collate_mode": "none",
+    "sort_order_letters": "",
+    "config": {},
+    "expire_after": 0,
+    "json_paths": ["ft_idx"]
 }
 
 updated_index_definition = {
@@ -22,7 +38,7 @@ updated_index_definition = {
     "is_array": False,
     "is_dense": False,
     "is_sparse": False,
-    'is_no_column': False,
+    "is_no_column": False,
     "collate_mode": "none",
     "sort_order_letters": "",
     "config": {},
@@ -49,7 +65,7 @@ vector_index_bf = {
     "is_array": False,
     "is_dense": False,
     "is_sparse": False,
-    'is_no_column': False,
+    "is_no_column": False,
     "collate_mode": "none",
     "sort_order_letters": "",
     "expire_after": 0,
@@ -65,7 +81,7 @@ vector_index_hnsw = {
     "is_array": False,
     "is_dense": False,
     "is_sparse": False,
-    'is_no_column': False,
+    "is_no_column": False,
     "collate_mode": "none",
     "sort_order_letters": "",
     "expire_after": 0,
@@ -82,7 +98,7 @@ vector_index_ivf = {
     "is_array": False,
     "is_dense": False,
     "is_sparse": False,
-    'is_no_column': False,
+    "is_no_column": False,
     "collate_mode": "none",
     "sort_order_letters": "",
     "expire_after": 0,
@@ -113,3 +129,5 @@ AGGREGATE_FUNCTIONS_MATH = [(lambda x: max(x), "aggregate_max"),
                             (lambda x: min(x), "aggregate_min"),
                             (lambda x: sum(x), "aggregate_sum"),
                             (lambda x: sum(x) / len(x), "aggregate_avg")]
+
+VECTOR_METRICS = ["l2", "inner_product", "cosine"]

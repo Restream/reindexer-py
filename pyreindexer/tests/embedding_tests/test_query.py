@@ -6,8 +6,8 @@ from hamcrest import *
 
 from pyreindexer.exceptions import ApiError, QueryError
 from pyreindexer.index_search_params import IndexSearchParamBruteForce, IndexSearchParamHnsw, IndexSearchParamIvf
-from tests.helpers.base_helper import random_vector
-from tests.helpers.check_helper import check_response_has_close_to_ns_items
+from tests.helpers.base_helper import create_items, random_vector
+from tests.helpers.check_helper import check_response_has_close_to_ns_items, check_response_has_only_close_to_items
 from tests.test_data.constants import vector_index_bf, vector_index_hnsw, vector_index_ivf
 
 
@@ -62,6 +62,73 @@ class TestQueryWhereKNNString:
             .execute())
         # Then ("Check knn select result")
         check_response_has_close_to_ns_items(query_result, items)
+
+    def test_query_where_knn_string_hnsw_streaming(self, db, namespace, index):
+        # Given ("Create float vector index")
+        dimension: Final[int] = 5
+        index = copy.deepcopy(vector_index_hnsw)
+        index["config"]["dimension"] = dimension
+        index["config"]["embedding"] = {
+            "query_embedder": {"URL": "http://127.0.0.1:8000"}
+        }
+        db.index.create(namespace, index)
+        # Given("Insert items")
+        items = [{"id": i, "vec": random_vector(dimension)} for i in range(10)]
+        create_items(db, namespace, items)
+        # When ("Execute knn query (only ef)")
+        value = "word"
+        param = IndexSearchParamHnsw(ef=30)
+        query_result = list(
+            db.query.new(namespace).where_knn_string("vec", value, param)
+            .select_fields("vectors()")
+            .execute())
+        # Then ("Check knn select result")
+        check_response_has_close_to_ns_items(query_result, items)
+        # When ("Execute knn query (empty params)")
+        param = IndexSearchParamHnsw()
+        query_result = list(
+            db.query.new(namespace).where_knn_string("vec", value, param)
+            .select_fields("vectors()")
+            .execute())
+        # Then ("Check knn select result")
+        check_response_has_close_to_ns_items(query_result, items)
+
+    def test_query_where_knn_string_hnsw_streaming_with_limit_and_offset(self, db, namespace, index):
+        # Given ("Create float vector index")
+        dimension: Final[int] = 5
+        index = copy.deepcopy(vector_index_hnsw)
+        index["config"]["dimension"] = dimension
+        index["config"]["embedding"] = {
+            "query_embedder": {"URL": "http://127.0.0.1:8000"}
+        }
+        db.index.create(namespace, index)
+        # Given("Insert items")
+        items = [{"id": i, "vec": random_vector(dimension)} for i in range(10)]
+        create_items(db, namespace, items)
+        # When ("Execute knn query (only ef)")
+        value = "word"
+        param = IndexSearchParamHnsw(ef=40)
+        query_result = list(
+            db.query.new(namespace).where_knn_string("vec", value, param)
+            .select_fields("vectors()")
+            .execute())
+        expected_items = query_result[2:7]
+        # When ("Execute knn query (only ef) with limit and offset")
+        param = IndexSearchParamHnsw(ef=40)
+        query_result = list(
+            db.query.new(namespace).where_knn_string("vec", value, param).limit(5).offset(2)
+            .select_fields("vectors()")
+            .execute())
+        # Then ("Check knn select result")
+        check_response_has_only_close_to_items(query_result, expected_items)
+        # When ("Execute knn query (empty params) with limit and offset")
+        param = IndexSearchParamHnsw()
+        query_result = list(
+            db.query.new(namespace).where_knn_string("vec", value, param).limit(5).offset(2)
+            .select_fields("vectors()")
+            .execute())
+        # Then ("Check knn select result")
+        check_response_has_only_close_to_items(query_result, expected_items)
 
     def test_query_where_knn_string_ivf(self, db, namespace, index):
         # Given ("Create float vector index")

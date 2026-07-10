@@ -29,11 +29,11 @@ class IndexSearchParamHnsw:
             value using the parameter, witch called `radius`. It's named so because, under the `L2`-metric,
             it restricts vectors from query result to a sphere of the specified radius
 
+        If neither `k` nor `radius` are specified, query is considered as streaming
+        and response could be limited via limit/offset
     """
 
-    def __init__(self, ef: int, k: int = None, radius: float = None):
-        if k is None and radius is None:
-            raise ValueError("Either 'k' or 'radius' needs to be specified")
+    def __init__(self, ef: int = None, k: int = None, radius: float = None):
         if k is not None:
             if k < 1:
                 raise ValueError("KNN limit 'k' should not be less than 1")

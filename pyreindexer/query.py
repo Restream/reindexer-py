@@ -134,15 +134,15 @@ class Query(RaiserQuery):
                 radius = param.radius
                 is_radius = True
         elif isinstance(param, IndexSearchParamHnsw):
-            if param.k is not None and param.ef < param.k:
-                raise QueryError("Ef should not be less than K")
             if param.k is not None:
+                if param.ef < param.k:
+                    raise QueryError("Ef should not be less than K")
                 k = param.k
                 is_k = True
             if param.radius is not None:
                 radius = param.radius
                 is_radius = True
-            ef = param.ef
+            ef = param.ef if param.ef else 1
         elif isinstance(param, IndexSearchParamIvf):
             if param.nprobe < 1:
                 raise QueryError("Nprobe should not be less than 1")
