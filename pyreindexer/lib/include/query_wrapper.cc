@@ -314,7 +314,7 @@ reindexer::Error QueryWrapper::BuildQuery(reindexer::Query& query) {
 		}
 
 		reindexer::Serializer fullQueryData{buffer.Buf(), buffer.Len()};
-		query = reindexer::Query::Deserialize(fullQueryData);
+		query = reindexer::Query::Deserialize(fullQueryData, QueryFormatV1);
 	} catch (const reindexer::Error& err) {
 		error = err;
 	} catch (const std::exception& ex) {
