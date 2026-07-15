@@ -1,14 +1,14 @@
 #pragma once
 
-#include <deque>
 #include <Python.h>
+#include <deque>
 
-#include "core/query/knn_search_params.h"
 #include "core/keyvalue/float_vector.h"
+#include "core/query/knn_search_params.h"
 #include "core/type_consts.h"
 #include "estl/h_vector.h"
-#include "tools/serilize/wrserializer.h"
 #include "tools/errors.h"
+#include "tools/serilize/wrserializer.h"
 #ifdef PYREINDEXER_CPROTO
 #include "client/reindexer.h"
 #else
@@ -84,7 +84,8 @@ public:
 	reindexer::Error BuildQuery(reindexer::Query& query);
 
 private:
-    void serializeExpression(PyObject* obj, reindexer::WrSerializer& ser);
+	void serializeExpression(PyObject* obj, reindexer::WrSerializer& ser);
+	void serializeQuery(reindexer::WrSerializer& buffer, bool withJoinQueries, bool withMergeQueries) const;
 	void addJoinQueries(const reindexer::h_vector<QueryWrapper*, 1>& queries, reindexer::WrSerializer& buffer) const;
 	void putKeys(const reindexer::VariantArray& keys);
 
