@@ -76,6 +76,16 @@ class QueryResults:
 
         self._close_iterator()
 
+    def __len__(self) -> int:
+        """Returns a count of results for iterations
+
+        #### Returns
+            int: A count of results
+
+        """
+
+        return self.count()
+
     def status(self) -> None:
         """Check status
 
