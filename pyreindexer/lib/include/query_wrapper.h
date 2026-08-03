@@ -84,8 +84,10 @@ public:
 	reindexer::Error BuildQuery(reindexer::Query& query);
 
 private:
+	enum class SerializedQueryType { MainQuery, JoinQuery, SubQuery };
+
 	void serializeExpression(PyObject* obj, reindexer::WrSerializer& ser);
-	void serializeQuery(reindexer::WrSerializer& buffer, bool withJoinQueries, bool withMergeQueries) const;
+	void serializeQuery(reindexer::WrSerializer& buffer, SerializedQueryType type) const;
 	void addJoinQueries(const reindexer::h_vector<QueryWrapper*, 1>& queries, reindexer::WrSerializer& buffer) const;
 	void putKeys(const reindexer::VariantArray& keys);
 

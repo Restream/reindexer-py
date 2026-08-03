@@ -784,7 +784,7 @@ class TestQuerySelectJoin:
         query2 = db.query.new(second_namespace).where("id", CondType.CondGe, 2)
         join_query1 = query1.left_join(query2, "joined").on("id", CondType.CondEq, "id")
         query3 = db.query.new(second_namespace).where("id", CondType.CondRange, [0, 2])
-        join_query2 = join_query1.inner_join(query3, "joined").on("id", CondType.CondEq, "id")
+        join_query2 = query1.inner_join(query3, "joined").on("id", CondType.CondEq, "id")
         # When ("Make select query with join")
         query_result = list(join_query2.must_execute())
         # Then ("Check that joined items are in result")
@@ -794,6 +794,37 @@ class TestQuerySelectJoin:
              f"joined_2_{second_namespace}": [second_items[1]]}
         ]
         assert_that(query_result, equal_to(expected_items), "Wrong selected items with JOIN")
+
+    def test_query_select_nested_join(self, db, namespace, index, items, second_namespace, second_item):
+        # Given("Create three namespaces with index and items")
+        third_namespace = "test_ns_for_nested_join"
+        third_item = {"id": 1, "third_ns_val": "third_ns_testval_1"}
+        db.namespace.open(third_namespace)
+        try:
+            db.index.create(third_namespace, {
+                "name": "id",
+                "json_paths": ["id"],
+                "field_type": "int",
+                "index_type": "hash",
+                "is_pk": True
+            })
+            db.item.insert(third_namespace, third_item)
+
+            # Given ("Create nested join query")
+            query1 = db.query.new(namespace).where("id", CondType.CondEq, 1)
+            query2 = db.query.new(second_namespace)
+            query3 = db.query.new(third_namespace)
+            query2.inner_join(query3, "joined").on("id", CondType.CondEq, "id")
+
+            # When ("Make select query with nested join")
+            query_result = list(query1.inner_join(query2, "joined").on("id", CondType.CondEq, "id").must_execute())
+
+            # Then ("Check that joined item contains nested joined item")
+            expected_joined_item = {**second_item, f"joined_{third_namespace}": [third_item]}
+            expected_item = {"id": 1, "val": "testval1", f"joined_{second_namespace}": [expected_joined_item]}
+            assert_that(query_result, equal_to([expected_item]), "Wrong selected items with nested JOIN")
+        finally:
+            db.namespace.drop(third_namespace)
 
     def test_cannot_query_select_join_without_on(self, db, namespace, index, items, second_namespace, second_item):
         # Given("Create two namespaces with index and items")
