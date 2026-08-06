@@ -26,7 +26,7 @@ void QueryWrapper::Where(std::string_view index, CondType condition, const reind
 
 void QueryWrapper::WhereSubQuery(QueryWrapper& query, CondType condition, const reindexer::VariantArray& keys) {
 	reindexer::WrSerializer subQuery;
-	query.serializeQuery(subQuery, SerializedQueryType::SubQuery);
+	query.serializeQuery(subQuery);
 	ser_.PutVarUint(QueryItemType::QuerySubQueryCondition);
 	ser_.PutVarUint(nextOperation_);
 	ser_.PutVString(subQuery.Slice());
@@ -39,7 +39,7 @@ void QueryWrapper::WhereSubQuery(QueryWrapper& query, CondType condition, const 
 
 void QueryWrapper::WhereFieldSubQuery(std::string_view index, CondType condition, QueryWrapper& query) {
 	reindexer::WrSerializer subQuery;
-	query.serializeQuery(subQuery, SerializedQueryType::SubQuery);
+	query.serializeQuery(subQuery);
 	ser_.PutVarUint(QueryItemType::QueryFieldSubQueryCondition);
 	ser_.PutVarUint(nextOperation_);
 	ser_.PutVString(index);
@@ -150,7 +150,7 @@ void QueryWrapper::serializeExpression(PyObject* obj, reindexer::WrSerializer& s
 			uintptr_t ptr = static_cast<uintptr_t>(PyLong_AsLong(PyList_GetItem(payload, 0)));
 			auto* subQ = reinterpret_cast<QueryWrapper*>(ptr);
 			reindexer::WrSerializer subQuery;
-			subQ->serializeQuery(subQuery, SerializedQueryType::SubQuery);
+			subQ->serializeQuery(subQuery);
 			ser.PutVString(subQuery.Slice());
 			break;
 		}
@@ -294,30 +294,23 @@ void serializeQueryData(const reindexer::WrSerializer& data, reindexer::WrSerial
 }
 }  // namespace
 
-void QueryWrapper::serializeQuery(reindexer::WrSerializer& buffer, SerializedQueryType type) const {
+void QueryWrapper::serializeQuery(reindexer::WrSerializer& buffer) const {
 	serializeQueryData(ser_, buffer);
 
-	const bool withJoinQueries = type != SerializedQueryType::SubQuery;
-	const bool withMergeQueries = type == SerializedQueryType::MainQuery;
+	buffer.PutVarUint(joinQueries_.size());
+	addJoinQueries(joinQueries_, buffer);
 
-	buffer.PutVarUint(withJoinQueries ? joinQueries_.size() : 0);
-	if (withJoinQueries) {
-		addJoinQueries(joinQueries_, buffer);
-	}
-
-	buffer.PutVarUint(withMergeQueries ? mergedQueries_.size() : 0);
-	if (withMergeQueries) {
-		for (auto mergedQuery : mergedQueries_) {
-			buffer.PutVarUint(JoinType::Merge);
-			mergedQuery->serializeQuery(buffer, SerializedQueryType::JoinQuery);
-		}
+	buffer.PutVarUint(mergedQueries_.size());
+	for (auto mergedQuery : mergedQueries_) {
+		buffer.PutVarUint(JoinType::Merge);
+		mergedQuery->serializeQuery(buffer);
 	}
 }
 
 void QueryWrapper::addJoinQueries(const reindexer::h_vector<QueryWrapper*, 1>& queries, reindexer::WrSerializer& buffer) const {
 	for (auto query : queries) {
 		buffer.PutVarUint(query->joinType_);
-		query->serializeQuery(buffer, SerializedQueryType::JoinQuery);
+		query->serializeQuery(buffer);
 	}
 }
 
@@ -326,7 +319,7 @@ reindexer::Error QueryWrapper::BuildQuery(reindexer::Query& query) {
 	try {
 		// current query (root)
 		reindexer::WrSerializer buffer;
-		serializeQuery(buffer, SerializedQueryType::MainQuery);
+		serializeQuery(buffer);
 
 		reindexer::Serializer fullQueryData{buffer.Buf(), buffer.Len()};
 		query = reindexer::Query::Deserialize(fullQueryData, QueryFormatV2);

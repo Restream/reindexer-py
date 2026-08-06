@@ -795,6 +795,27 @@ class TestQuerySelectJoin:
         ]
         assert_that(query_result, equal_to(expected_items), "Wrong selected items with JOIN")
 
+    def test_query_select_chained_joins_are_siblings(self, db, namespace, index, items,
+                                                     second_namespace, second_items):
+        # Given("Create two namespaces with index and items")
+        query1 = db.query.new(namespace).where("id", CondType.CondRange, [0, 5])
+        query2 = db.query.new(second_namespace).where("id", CondType.CondGe, 2)
+        query3 = db.query.new(second_namespace).where("id", CondType.CondRange, [0, 2])
+
+        # When ("Make select query with chained sibling joins")
+        query_result = list(query1
+                            .left_join(query2, "joined").on("id", CondType.CondEq, "id")
+                            .inner_join(query3, "joined").on("id", CondType.CondEq, "id")
+                            .must_execute())
+
+        # Then ("Check that chained joins are attached to the root query")
+        expected_items = [
+            {"id": 1, "val": "testval1", f"joined_2_{second_namespace}": [second_items[0]]},
+            {"id": 2, "val": "testval2", f"joined_1_{second_namespace}": [second_items[1]],
+             f"joined_2_{second_namespace}": [second_items[1]]}
+        ]
+        assert_that(query_result, equal_to(expected_items), "Wrong selected items with chained JOIN")
+
     def test_query_select_nested_join(self, db, namespace, index, items, second_namespace, second_item):
         # Given("Create three namespaces with index and items")
         third_namespace = "test_ns_for_nested_join"
@@ -826,6 +847,30 @@ class TestQuerySelectJoin:
         finally:
             db.namespace.drop(third_namespace)
 
+    def test_cannot_query_select_join_with_merge(self, db, namespace, index, items,
+                                                 second_namespace, second_items):
+        # Given("Create join query with merge query inside")
+        query1 = db.query.new(namespace)
+        query2 = db.query.new(second_namespace)
+        query3 = db.query.new(namespace)
+        query2.merge(query3)
+
+        # When ("Try to execute query with merge nested into join")
+        assert_that(calling(query1.inner_join(query2, "joined").on("id", CondType.CondEq, "id").execute).with_args(),
+                    raises(ApiError, pattern="MERGEs nested into the JOINs are not supported"))
+
+    def test_cannot_query_select_subquery_with_join(self, db, namespace, index, items,
+                                                   second_namespace, second_items):
+        # Given("Create subquery with join query inside")
+        sub_query = db.query.new(namespace).select_fields("id")
+        query2 = db.query.new(second_namespace)
+        sub_query.inner_join(query2, "joined").on("id", CondType.CondEq, "id")
+
+        # When ("Try to execute query with join nested into subquery")
+        query = db.query.new(namespace).where_subquery("id", CondType.CondSet, sub_query)
+        assert_that(calling(query.execute).with_args(),
+                    raises(ApiError, pattern="Join cannot be in subquery"))
+
     def test_cannot_query_select_join_without_on(self, db, namespace, index, items, second_namespace, second_item):
         # Given("Create two namespaces with index and items")
         # Given ("Create two queries for join")
@@ -850,26 +895,6 @@ class TestQuerySelectJoin:
         # Then ("Check that selected items are in result with join and merge applied")
         item_with_joined = {"id": 1, "val": "testval1", f"joined_{second_namespace}": [second_item]}
         expected_items = [item_with_joined, items[0], item_with_joined, items[3]]
-        assert_that(query_result, equal_to(expected_items), "Wrong query results")
-
-    def test_query_select_join_with_merges(self, db, namespace, index, items, second_namespace, second_items):
-        # Given("Create two namespaces with index and items")
-        # Given ("Create merge query 1")
-        query11 = db.query.new(namespace).where("id", CondType.CondSet, [2, 3])
-        query12 = db.query.new(second_namespace).where("id", CondType.CondEq, 5)
-        merge_query1 = query11.merge(query12)
-        # Given ("Create merge query 2")
-        query21 = db.query.new(second_namespace).where("id", CondType.CondLt, 4).where("id", CondType.CondGe, 2)
-        query22 = db.query.new(namespace).where("id", CondType.CondRange, [3, 5])
-        merge_query2 = query21.merge(query22)
-        # When ("Make select query with join")
-        query_result = list(merge_query1.inner_join(merge_query2, "joined").on("id", CondType.CondEq, "id").execute())
-        # Then ("Check that selected items are in result with join and merge applied")
-        expected_items = [{"id": 2, "val": "testval2",
-                           f"joined_{second_namespace}": [{"id": 2, "second_ns_val": "second_ns_testval_2"}]},
-                          {"id": 3, "val": "testval3",
-                           f"joined_{second_namespace}": [{"id": 3, "second_ns_val": "second_ns_testval_3"}]},
-                          {"id": 5, "second_ns_val": "second_ns_testval_5"}]
         assert_that(query_result, equal_to(expected_items), "Wrong query results")
 
     def test_query_select_sort_and_inner_join(self, db, namespace, index, items, second_namespace, second_items):

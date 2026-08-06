@@ -1118,6 +1118,9 @@ class Query(RaiserQuery):
 
         """
 
+        if self.root is not None:
+            return self.root.__join(query, field, join_type)
+
         if query.root is not None:
             raise QueryError("Query.join call on already joined query. You should create new Query")
 
