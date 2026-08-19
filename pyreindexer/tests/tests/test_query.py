@@ -3,6 +3,7 @@ import json
 import random
 import time
 import uuid
+from collections.abc import Sized
 from datetime import timedelta
 from typing import Final
 
@@ -14,6 +15,7 @@ from pyreindexer.expressions import Field, FlatArrayLen, Now, SubQuery, TimeUnit
 from pyreindexer.index_search_params import IndexSearchParamBruteForce, IndexSearchParamHnsw, IndexSearchParamIvf
 from pyreindexer.point import Point
 from pyreindexer.query import CondType, LogLevel, StrictMode
+from pyreindexer.query_results import QueryResults
 from tests.helpers.base_helper import (await_vectors_quantization, calculate_distance, create_items, get_ns_items,
                                        random_vector)
 from tests.helpers.check_helper import check_response_has_close_to_ns_items, check_response_has_only_close_to_items
@@ -22,6 +24,18 @@ from tests.test_data.constants import (AGGREGATE_FUNCTIONS_MATH, VECTOR_METRICS,
 
 
 class TestQuerySelect:
+    def test_query_select_sized(self, db, namespace, index, items):
+        # Given("Create namespace with index and items")
+        # Given ("Create new query")
+        query = db.query.new(namespace)
+        # When ("Make select query")
+        query_result = query.must_execute()
+        # Then ("Check that QueryResults is Sized-compatible")
+        assert_that(query_result.count(), greater_than(0), "QueryResults must be greater than 0")
+        assert_that(query_result.count(), equal_to(len(query_result)), "count() and len() must match")
+        assert_that(query_result, instance_of(Sized), "QueryResults must be an instance of Sized")
+        assert_that(issubclass(QueryResults, Sized), equal_to(True), "QueryResults must be a subclass of Sized")
+
     def test_query_select_where(self, db, namespace, index, items):
         # Given("Create namespace with index and items")
         # Given ("Create new query")
