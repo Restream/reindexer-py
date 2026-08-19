@@ -146,6 +146,54 @@ def query_example(db, namespace):
         print(f'item: {item}')
 
 
+def nested_join_query_example(db):
+    namespaces = [
+        'nested_join_companies',
+        'nested_join_departments',
+        'nested_join_employees',
+    ]
+
+    for namespace in namespaces:
+        try:
+            db.namespace_drop(namespace)
+        except ApiError:
+            pass
+
+    company_ns, department_ns, employee_ns = namespaces
+    try:
+        for namespace in namespaces:
+            db.namespace_open(namespace)
+            create_index_example(db, namespace)
+
+        company = {'id': 1, 'name': 'company_1'}
+        department = {'id': 1, 'name': 'department_1'}
+        employee = {'id': 1, 'name': 'employee_1'}
+
+        db.item_insert(company_ns, company)
+        db.item_insert(department_ns, department)
+        db.item_insert(employee_ns, employee)
+
+        department_query = db.new_query(department_ns)
+        employee_query = db.new_query(employee_ns)
+        department_query.inner_join(employee_query, 'joined').on('id', CondType.CondEq, 'id')
+
+        query_result = (db.new_query(company_ns)
+                        .where('id', CondType.CondEq, 1)
+                        .inner_join(department_query, 'joined')
+                        .on('id', CondType.CondEq, 'id')
+                        .must_execute(timedelta(milliseconds=1000)))
+
+        print(f'Nested join query results count: {query_result.count()}')
+        for item in query_result:
+            print(f'nested join item: {item}')
+    finally:
+        for namespace in namespaces:
+            try:
+                db.namespace_drop(namespace)
+            except ApiError:
+                pass
+
+
 def modify_query_transaction(db, namespace):
     # start transaction
     transaction = db.new_transaction(namespace)
@@ -321,6 +369,8 @@ def rx_example():
     transaction_example(db, namespace, items_copy)
 
     query_example(db, namespace)
+
+    nested_join_query_example(db)
 
     modify_query_transaction(db, namespace)
 

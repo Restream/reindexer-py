@@ -9,6 +9,7 @@
 namespace pyreindexer {
 QueryWrapper::QueryWrapper(DBInterface* db, std::string_view ns) : db_{db} {
 	assert(db_);
+	ser_.PutVarUint(QueryFormatV2);
 	ser_.PutVString(ns);
 }
 
@@ -24,9 +25,11 @@ void QueryWrapper::Where(std::string_view index, CondType condition, const reind
 }
 
 void QueryWrapper::WhereSubQuery(QueryWrapper& query, CondType condition, const reindexer::VariantArray& keys) {
+	reindexer::WrSerializer subQuery;
+	query.serializeQuery(subQuery);
 	ser_.PutVarUint(QueryItemType::QuerySubQueryCondition);
 	ser_.PutVarUint(nextOperation_);
-	ser_.PutVString(query.ser_.Slice());
+	ser_.PutVString(subQuery.Slice());
 	ser_.PutVarUint(condition);
 	putKeys(keys);
 
@@ -35,11 +38,13 @@ void QueryWrapper::WhereSubQuery(QueryWrapper& query, CondType condition, const 
 }
 
 void QueryWrapper::WhereFieldSubQuery(std::string_view index, CondType condition, QueryWrapper& query) {
+	reindexer::WrSerializer subQuery;
+	query.serializeQuery(subQuery);
 	ser_.PutVarUint(QueryItemType::QueryFieldSubQueryCondition);
 	ser_.PutVarUint(nextOperation_);
 	ser_.PutVString(index);
 	ser_.PutVarUint(condition);
-	ser_.PutVString(query.ser_.Slice());
+	ser_.PutVString(subQuery.Slice());
 
 	nextOperation_ = OpType::OpAnd;
 	++whereEntriesCount_;
@@ -144,7 +149,9 @@ void QueryWrapper::serializeExpression(PyObject* obj, reindexer::WrSerializer& s
 			}
 			uintptr_t ptr = static_cast<uintptr_t>(PyLong_AsLong(PyList_GetItem(payload, 0)));
 			auto* subQ = reinterpret_cast<QueryWrapper*>(ptr);
-			ser.PutVString(subQ->ser_.Slice());
+			reindexer::WrSerializer subQuery;
+			subQ->serializeQuery(subQuery);
+			ser.PutVString(subQuery.Slice());
 			break;
 		}
 		default:
@@ -281,20 +288,29 @@ void QueryWrapper::AddValue(QueryItemType type, unsigned value) {
 void QueryWrapper::Modifier(QueryItemType type) { ser_.PutVarUint(type); }
 
 namespace {
-void serializeQuery(reindexer::WrSerializer& data, reindexer::WrSerializer& buffer) {
-	buffer.Write(data.Slice());			// do full copy of query data
-	buffer.PutVarUint(QueryItemType::QueryEnd);	// close query data
-}
-
-void serializeJoinQuery(JoinType type, reindexer::WrSerializer& data, reindexer::WrSerializer& buffer) {
-	buffer.PutVarUint(type);
-	serializeQuery(data, buffer);
+void serializeQueryData(const reindexer::WrSerializer& data, reindexer::WrSerializer& buffer) {
+	buffer.Write(data.Slice());					 // do full copy of query data
+	buffer.PutVarUint(QueryItemType::QueryEnd);	 // close query data
 }
 }  // namespace
 
+void QueryWrapper::serializeQuery(reindexer::WrSerializer& buffer) const {
+	serializeQueryData(ser_, buffer);
+
+	buffer.PutVarUint(joinQueries_.size());
+	addJoinQueries(joinQueries_, buffer);
+
+	buffer.PutVarUint(mergedQueries_.size());
+	for (auto mergedQuery : mergedQueries_) {
+		buffer.PutVarUint(JoinType::Merge);
+		mergedQuery->serializeQuery(buffer);
+	}
+}
+
 void QueryWrapper::addJoinQueries(const reindexer::h_vector<QueryWrapper*, 1>& queries, reindexer::WrSerializer& buffer) const {
 	for (auto query : queries) {
-		serializeJoinQuery(query->joinType_, query->ser_, buffer);
+		buffer.PutVarUint(query->joinType_);
+		query->serializeQuery(buffer);
 	}
 }
 
@@ -303,18 +319,10 @@ reindexer::Error QueryWrapper::BuildQuery(reindexer::Query& query) {
 	try {
 		// current query (root)
 		reindexer::WrSerializer buffer;
-		serializeQuery(ser_, buffer);
-
-		addJoinQueries(joinQueries_, buffer);
-
-		for (auto mergedQuery : mergedQueries_) {
-			serializeJoinQuery(JoinType::Merge, mergedQuery->ser_, buffer);
-
-			addJoinQueries(mergedQuery->joinQueries_, buffer);
-		}
+		serializeQuery(buffer);
 
 		reindexer::Serializer fullQueryData{buffer.Buf(), buffer.Len()};
-		query = reindexer::Query::Deserialize(fullQueryData);
+		query = reindexer::Query::Deserialize(fullQueryData, QueryFormatV2);
 	} catch (const reindexer::Error& err) {
 		error = err;
 	} catch (const std::exception& ex) {
@@ -363,10 +371,10 @@ reindexer::Error QueryWrapper::DeleteQuery(size_t& count, std::chrono::milliseco
 void QueryWrapper::Set(std::string_view field, const reindexer::VariantArray& values, IsExpression isExpression) {
 	ser_.PutVarUint(QueryItemType::QueryUpdateFieldV2);
 	ser_.PutVString(field);
-	ser_.PutVarUint(values.size() > 1 ? 1 : 0); 	// is array flag
-	ser_.PutVarUint(values.size()); 		// values count
+	ser_.PutVarUint(values.size() > 1 ? 1 : 0);	 // is array flag
+	ser_.PutVarUint(values.size());				 // values count
 	for (const auto& value : values) {
-		ser_.PutVarUint(isExpression == IsExpression::Yes ? 1 : 0); // is expression
+		ser_.PutVarUint(isExpression == IsExpression::Yes ? 1 : 0);	 // is expression
 		ser_.PutVariant(value);
 	}
 }
@@ -374,8 +382,8 @@ void QueryWrapper::Set(std::string_view field, const reindexer::VariantArray& va
 void QueryWrapper::SetObject(std::string_view field, const reindexer::h_vector<std::string, 2>& values) {
 	ser_.PutVarUint(QueryItemType::QueryUpdateObject);
 	ser_.PutVString(field);
-	ser_.PutVarUint(values.size());			// values count
-	ser_.PutVarUint(values.size() > 1 ? 1 : 0);	// is array flag
+	ser_.PutVarUint(values.size());				 // values count
+	ser_.PutVarUint(values.size() > 1 ? 1 : 0);	 // is array flag
 	for (const auto& value : values) {
 		ser_.PutVarUint(0);	 // function/value flag
 		ser_.PutVariant(reindexer::Variant(value));
@@ -391,20 +399,20 @@ void QueryWrapper::Drop(std::string_view field) {
 void QueryWrapper::Join(JoinType type, QueryWrapper* joinQuery) {
 	assert(joinQuery);
 
-	joinType_ = type;
-	if ((joinType_ == JoinType::InnerJoin) && (nextOperation_ == OpType::OpOr)) {
+	auto joinType = type;
+	if ((joinType == JoinType::InnerJoin) && (nextOperation_ == OpType::OpOr)) {
 		nextOperation_ = OpType::OpAnd;
-		joinType_ = JoinType::OrInnerJoin;
+		joinType = JoinType::OrInnerJoin;
 	}
 
-	if (joinType_ != JoinType::LeftJoin) {
+	if (joinType != JoinType::LeftJoin) {
 		ser_.PutVarUint(QueryJoinCondition);
-		ser_.PutVarUint(joinType_);
+		ser_.PutVarUint(joinType);
 		ser_.PutVarUint(joinQueries_.size());
 		++whereEntriesCount_;
 	}
 
-	joinQuery->joinType_ = joinType_;
+	joinQuery->joinType_ = joinType;
 	joinQueries_.push_back(joinQuery);
 }
 
