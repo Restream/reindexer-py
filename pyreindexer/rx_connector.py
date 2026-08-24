@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import json
+import queue
 import threading
 from datetime import timedelta
-from typing import Dict, List, Union
+from typing import Dict, List, Optional, Union
 
 from pyreindexer.index_definition import IndexDefinition
 from pyreindexer.query import Query
@@ -60,7 +61,6 @@ class RxConnector(RaiserRx):
                  allocator_cache_limit: int = -1,
                  allocator_cache_part: float = -1.0):
         """Constructs a new connector object.
-        Initializes an error code and a Reindexer instance descriptor to zero
 
         #### Arguments:
             dsn (string): The connection string which contains a protocol
@@ -91,10 +91,17 @@ class RxConnector(RaiserRx):
         self.err_msg: str = ''
         self.rx: int = 0
 
-        self._tx_ptrs = set()
-        self._tx_lock = threading.Lock()
+        # Ownership ledger of native wrappers. Mutation only under _wrappers_lock.
+        # Query/Transaction.__del__ must not touch these sets, this lock, or C:
+        # GC can run during set.add. It only enqueues the stolen ptr. Queries are
+        # reaped on new_query()/close(); transactions on new_transaction()/commit/
+        # rollback/close().
+        # close() is not safe to call while other threads still use this connector.
         self._query_ptrs = set()
-        self._query_lock = threading.Lock()
+        self._tx_ptrs = set()
+        self._query_gc_queue: queue.SimpleQueue = queue.SimpleQueue()
+        self._tx_gc_queue: queue.SimpleQueue = queue.SimpleQueue()
+        self._wrappers_lock = threading.Lock()
 
         if fetch_amount <= 0:
             raise ValueError("'fetch_amount' must be greater than zero")
@@ -107,24 +114,14 @@ class RxConnector(RaiserRx):
         self._api_connect(dsn, net_timeout)
 
     def __del__(self):
-        """Closes an API instance on a connector object deletion if the API is initialized
+        """Closes the API instance upon connector object deletion if the API is initialized
 
         """
 
-        if self.rx > 0:
-            with self._tx_lock:
-                tx_ptrs_list = list(self._tx_ptrs)
-                self._tx_ptrs.clear()
-            with self._query_lock:
-                query_ptrs_list = list(self._query_ptrs)
-                self._query_ptrs.clear()
-
-            for tx_ptr in tx_ptrs_list:
-                self.api.rollback_transaction(tx_ptr, 0)
-            for q_ptr in query_ptrs_list:
-                self.api.destroy_query(q_ptr)
-
-            self._api_close()
+        try:
+            self._shutdown_wrappers_and_db(suppress=True)
+        except Exception:
+            pass
 
     @staticmethod
     def _check_index_fields(index: dict):
@@ -187,18 +184,123 @@ class RxConnector(RaiserRx):
         self.rx = 0
 
     def close(self) -> None:
-        """Closes the API instance and frees Reindexer resources
+        """Closes the API instance and frees Reindexer resources.
+            Also rolls back leftover transactions and destroys leftover queries
+            that were not finished yet.
+            Do not call `close()` while other threads still use this connector
+            (`execute`, item operations, transactions, `new_query`, and so on).
 
         #### Raises:
             ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
 
         """
 
-        self._api_close()
+        self._shutdown_wrappers_and_db(suppress=False)
+
+    def _take_queued_locked(self, gc_queue: queue.SimpleQueue, ledger: set) -> list:
+        """Move queued ptrs out of the ledger. Caller holds _wrappers_lock."""
+
+        taken = []
+        while True:
+            try:
+                ptr = gc_queue.get_nowait()
+            except queue.Empty:
+                break
+            try:
+                ledger.remove(ptr)
+            except KeyError:
+                continue
+            taken.append(ptr)
+        return taken
+
+    def _take_queued_txs_locked(self) -> list:
+        return self._take_queued_locked(self._tx_gc_queue, self._tx_ptrs)
+
+    def _take_queued_queries_locked(self) -> list:
+        return self._take_queued_locked(self._query_gc_queue, self._query_ptrs)
+
+    def _pop_all_txs_locked(self) -> list:
+        ptrs = self._take_queued_txs_locked()
+        leftover = list(self._tx_ptrs)
+        self._tx_ptrs.clear()
+        ptrs.extend(leftover)
+        return ptrs
+
+    def _pop_all_queries_locked(self) -> list:
+        ptrs = self._take_queued_queries_locked()
+        leftover = list(self._query_ptrs)
+        self._query_ptrs.clear()
+        ptrs.extend(leftover)
+        return ptrs
+
+    def _rollback_native_txs(self, ptrs: list) -> Optional[BaseException]:
+        api = getattr(self, 'api', None)
+        first_err: Optional[BaseException] = None
+        for ptr in ptrs:
+            if api is None:
+                continue
+            try:
+                api.transaction_rollback(ptr, 0)
+            except Exception as e:
+                if first_err is None:
+                    first_err = e
+        return first_err
+
+    def _destroy_native_queries(self, ptrs: list) -> Optional[BaseException]:
+        api = getattr(self, 'api', None)
+        first_err: Optional[BaseException] = None
+        for ptr in ptrs:
+            if api is None:
+                continue
+            try:
+                api.destroy_query(ptr)
+            except Exception as e:
+                if first_err is None:
+                    first_err = e
+        return first_err
+
+    def _reap_queries_locked(self) -> None:
+        """Destroys queued query wrappers. Caller must hold _wrappers_lock.
+
+        destroy_query does not release the GIL, so it is safe (and short) under the lock.
+        """
+
+        self._destroy_native_queries(self._take_queued_queries_locked())
+
+    def _shutdown_wrappers_and_db(self, *, suppress: bool) -> None:
+        """Destroys leftover Query/Tx wrappers, then the Reindexer instance."""
+
+        lock = getattr(self, '_wrappers_lock', None)
+        if lock is None:
+            return
+        first_err: Optional[BaseException] = None
+        with lock:
+            if self.rx <= 0:
+                if not suppress:
+                    self.raise_on_not_init()
+                return
+            tx_ptrs = self._pop_all_txs_locked()
+            query_ptrs = self._pop_all_queries_locked()
+
+        tx_err = self._rollback_native_txs(tx_ptrs)
+        query_err = self._destroy_native_queries(query_ptrs)
+
+        with lock:
+            if self.rx > 0:
+                try:
+                    self._api_close()
+                except Exception as e:
+                    first_err = e
+
+        if suppress:
+            return
+        for err in (tx_err, query_err, first_err):
+            if err is not None:
+                raise err
 
     @RaiserRx.raise_if_error
     def namespace_open(self, namespace: str, timeout: timedelta = timedelta(milliseconds=0)) -> None:
-        """Opens a namespace specified or creates a namespace if it does not exist
+        """Opens the specified namespace or creates it if it does not exist
 
         #### Arguments:
             namespace (string): The name of the namespace
@@ -296,7 +398,7 @@ class RxConnector(RaiserRx):
     @RaiserRx.raise_if_error
     def namespaces_enum(self, enum_not_opened: bool = False,
                         timeout: timedelta = timedelta(milliseconds=0)) -> List[Dict[str, str]]:
-        """Gets a list of namespaces available
+        """Gets a list of available namespaces
 
         #### Arguments:
             enum_not_opened (bool, optional): An enumeration mode flag. If it is
@@ -320,7 +422,7 @@ class RxConnector(RaiserRx):
 
     @RaiserRx.raise_if_error
     def schema_set(self, namespace: str, schema: Dict, timeout: timedelta = timedelta(milliseconds=0)) -> None:
-        """Adds schema for the specified namespace
+        """Sets the schema for the specified namespace
 
         #### Arguments:
             namespace (string): The name of the namespace
@@ -415,7 +517,7 @@ class RxConnector(RaiserRx):
         #### Arguments:
             namespace (string): The name of the namespace
             item_def (dict): A dictionary of item definition
-            precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
+            precepts (:obj:`list` of :obj:`str`): A list of strings representing precepts
             timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
                 Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
                 A value of 0 disables the timeout (default value)
@@ -438,7 +540,7 @@ class RxConnector(RaiserRx):
         #### Arguments:
             namespace (string): The name of the namespace
             item_def (dict): A dictionary of item definition
-            precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
+            precepts (:obj:`list` of :obj:`str`): A list of strings representing precepts
             timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
                 Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
                 A value of 0 disables the timeout (default value)
@@ -461,7 +563,7 @@ class RxConnector(RaiserRx):
         #### Arguments:
             namespace (string): The name of the namespace
             item_def (dict): A dictionary of item definition
-            precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
+            precepts (:obj:`list` of :obj:`str`): A list of strings representing precepts
             timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
                 Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
                 A value of 0 disables the timeout (default value)
@@ -498,7 +600,7 @@ class RxConnector(RaiserRx):
 
     @RaiserRx.raise_if_error
     def meta_put(self, namespace: str, key: str, value: str, timeout: timedelta = timedelta(milliseconds=0)) -> None:
-        """Puts metadata to a storage of Reindexer by key
+        """Puts metadata into the Reindexer storage for the specified key
 
         #### Arguments:
             namespace (string): The name of the namespace
@@ -519,7 +621,7 @@ class RxConnector(RaiserRx):
 
     @RaiserRx.raise_if_error
     def meta_get(self, namespace: str, key: str, timeout: timedelta = timedelta(milliseconds=0)) -> str:
-        """Gets metadata from a storage of Reindexer by key specified
+        """Gets metadata from the Reindexer storage by the specified key
 
         #### Arguments:
             namespace (string): The name of the namespace
@@ -543,7 +645,7 @@ class RxConnector(RaiserRx):
 
     @RaiserRx.raise_if_error
     def meta_delete(self, namespace: str, key: str, timeout: timedelta = timedelta(milliseconds=0)) -> None:
-        """Deletes metadata from a storage of Reindexer by key specified
+        """Deletes metadata from the Reindexer storage by the specified key
 
         #### Arguments:
             namespace (string): The name of the namespace
@@ -563,7 +665,7 @@ class RxConnector(RaiserRx):
 
     @RaiserRx.raise_if_error
     def meta_enum(self, namespace: str, timeout: timedelta = timedelta(milliseconds=0)) -> List[str]:
-        """Gets a list of metadata keys from a storage of Reindexer
+        """Gets a list of metadata keys from the Reindexer storage
 
         #### Arguments:
             namespace (string): The name of the namespace
@@ -610,8 +712,10 @@ class RxConnector(RaiserRx):
 
     @RaiserRx.raise_if_error
     def new_transaction(self, namespace: str, timeout: timedelta = timedelta(milliseconds=0)) -> Transaction:
-        """Starts a new transaction and return the transaction object to processing.
-            Warning: once a timeout is set, it will apply to all subsequent steps in the transaction
+        """Starts a new transaction and returns the transaction object.
+            Warning: once a timeout is set, it will apply to all subsequent steps in the transaction.
+            Also rolls back transactions that were dropped without `commit()`/`rollback()`
+            since the previous `new_transaction()` or `close()`.
 
         #### Arguments:
             namespace (string): The name of the namespace
@@ -629,16 +733,22 @@ class RxConnector(RaiserRx):
         """
 
         milliseconds: int = int(timeout / timedelta(milliseconds=1))
-        self.err_code, self.err_msg, transaction_wrapper_ptr = self.api.new_transaction(self.rx, namespace,
-                                                                                        milliseconds)
-        transaction = Transaction(self, transaction_wrapper_ptr)
-        with self._tx_lock:
-            self._tx_ptrs.add(transaction_wrapper_ptr)
-        return transaction
+        with self._wrappers_lock:
+            self.raise_on_not_init()
+            queued_txs = self._take_queued_txs_locked()
+        self._rollback_native_txs(queued_txs)
+        self.err_code, self.err_msg, transaction_wrapper_ptr = self.api.new_transaction(
+            self.rx, namespace, milliseconds)
+        with self._wrappers_lock:
+            if transaction_wrapper_ptr > 0:
+                self._tx_ptrs.add(transaction_wrapper_ptr)
+        return Transaction(self, transaction_wrapper_ptr)
 
     @RaiserRx.raise_if_error
     def new_query(self, namespace: str) -> Query:
-        """Creates a new query and return the query object to processing
+        """Creates a new query and returns the query object.
+            Also frees native resources of Query objects dropped since the previous
+            `new_query()` or `close()`.
 
         #### Arguments:
             namespace (string): The name of the namespace
@@ -651,8 +761,10 @@ class RxConnector(RaiserRx):
 
         """
 
-        self.err_code, self.err_msg, query_wrapper_ptr = self.api.create_query(self.rx, namespace)
-        query = Query(self, query_wrapper_ptr)
-        with self._query_lock:
-            self._query_ptrs.add(query_wrapper_ptr)
-        return query
+        with self._wrappers_lock:
+            self.raise_on_not_init()
+            self._reap_queries_locked()
+            self.err_code, self.err_msg, query_wrapper_ptr = self.api.create_query(self.rx, namespace)
+            if query_wrapper_ptr > 0:
+                self._query_ptrs.add(query_wrapper_ptr)
+            return Query(self, query_wrapper_ptr)

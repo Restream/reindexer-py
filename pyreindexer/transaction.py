@@ -1,12 +1,17 @@
 from datetime import timedelta
 from typing import Dict, List
 
+from pyreindexer.exceptions import TransactionError
 from pyreindexer.query import Query
 from pyreindexer.raiser_mixin import RaiserTx
 
 
 class Transaction(RaiserTx):
     """An object representing the context of a Reindexer transaction
+
+    Call `commit()` or `rollback()` explicitly to finish a transaction.
+        Dropping the object without that is only a safety net: rollback may be
+        deferred until the next `RxConnector.new_transaction()` or `RxConnector.close()`.
 
     #### Attributes:
         api (module): An API module for Reindexer calls
@@ -27,22 +32,65 @@ class Transaction(RaiserTx):
 
         self.rx = rx
         self.api = rx.api
-        self.transaction_wrapper_ptr: int = transaction_wrapper_ptr
+        self._owned_ptr = [transaction_wrapper_ptr]
         self.err_code: int = 0
         self.err_msg: str = ""
 
+    @property
+    def transaction_wrapper_ptr(self) -> int:
+        try:
+            return self._owned_ptr[0]
+        except (AttributeError, IndexError):
+            return 0
+
+    def _steal_owned_ptr(self) -> int:
+        try:
+            return self._owned_ptr.pop()
+        except (AttributeError, IndexError):
+            return 0
+
     def __del__(self):
-        """Rollbacks a transaction if it was not previously stopped
+        """Enqueues an uncommitted transaction for later rollback.
+
+        Actual rollback runs on the next new_transaction() or close() call.
+        Callers should commit() or rollback() explicitly rather than relying on GC.
 
         """
 
-        if self.transaction_wrapper_ptr > 0 and self.rx.rx > 0:
-            self.rollback(timedelta(milliseconds=0))
+        try:
+            ptr = self._steal_owned_ptr()
+            if ptr <= 0:
+                return
+            rx = getattr(self, 'rx', None)
+            if rx is None:
+                return
+            rx._tx_gc_queue.put(ptr)
+        except Exception:
+            pass
 
-    def __finalize(self):
-        with self.rx._tx_lock:
-            self.rx._tx_ptrs.remove(self.transaction_wrapper_ptr)
-        self.transaction_wrapper_ptr = 0
+    def _claim_locked(self) -> int:
+        """Steal the wrapper ptr and drop it from the ledger. Caller holds _wrappers_lock."""
+
+        ptr = self._steal_owned_ptr()
+        if ptr > 0:
+            self.rx._tx_ptrs.discard(ptr)
+        return ptr
+
+    def _finish_native(self, call):
+        """Claim ownership, then commit/rollback without holding _wrappers_lock."""
+
+        rx = self.rx
+        with rx._wrappers_lock:
+            rx.raise_on_not_init()
+            ptr = self._claim_locked()
+            if ptr <= 0:
+                raise TransactionError("Transaction is over")
+        try:
+            return call(ptr)
+        finally:
+            with rx._wrappers_lock:
+                extra_txs = rx._take_queued_txs_locked()
+            rx._rollback_native_txs(extra_txs)
 
     @RaiserTx.raise_if_error
     def insert(self, item_def: Dict, precepts: List[str] = None) -> None:
@@ -51,7 +99,7 @@ class Transaction(RaiserTx):
 
         #### Arguments:
             item_def (dict): A dictionary of item definition
-            precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
+            precepts (:obj:`list` of :obj:`str`): A list of strings representing precepts
 
         #### Raises:
             TransactionError: Raises with an error message of API return if Transaction is over
@@ -69,7 +117,7 @@ class Transaction(RaiserTx):
 
         #### Arguments:
             item_def (dict): A dictionary of item definition
-            precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
+            precepts (:obj:`list` of :obj:`str`): A list of strings representing precepts
 
         #### Raises:
             TransactionError: Raises with an error message of API return if Transaction is over
@@ -84,7 +132,7 @@ class Transaction(RaiserTx):
     def update_query(self, query: Query) -> None:
         """Updates items with the transaction
             Read-committed isolation is available for read operations.
-            Changes made in active transaction is invisible to current and another transactions.
+            Changes made in an active transaction are invisible to the other transactions.
 
         #### Arguments:
             query (:obj:`Query`): A query object to modify
@@ -104,7 +152,7 @@ class Transaction(RaiserTx):
 
         #### Arguments:
             item_def (dict): A dictionary of item definition
-            precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
+            precepts (:obj:`list` of :obj:`str`): A list of strings representing precepts
 
         #### Raises:
             TransactionError: Raises with an error message of API return if Transaction is over
@@ -135,7 +183,7 @@ class Transaction(RaiserTx):
     def delete_query(self, query: Query):
         """Deletes items with the transaction
             Read-committed isolation is available for read operations.
-            Changes made in active transaction is invisible to current and another transactions.
+            Changes made in an active transaction are invisible to the other transactions.
 
         #### Arguments:
             query (:obj:`Query`): A query object to modify
@@ -150,7 +198,7 @@ class Transaction(RaiserTx):
 
     @RaiserTx.raise_if_error
     def commit(self, timeout: timedelta = timedelta(milliseconds=0)) -> None:
-        """Applies changes
+        """Applies changes and finishes the transaction
 
         #### Arguments:
             timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
@@ -164,12 +212,12 @@ class Transaction(RaiserTx):
         """
 
         milliseconds: int = int(timeout / timedelta(milliseconds=1))
-        self.err_code, self.err_msg, _ = self.api.transaction_commit(self.transaction_wrapper_ptr, milliseconds)
-        self.__finalize()
+        self.err_code, self.err_msg, _ = self._finish_native(
+            lambda ptr: self.api.transaction_commit(ptr, milliseconds))
 
     @RaiserTx.raise_if_error
     def commit_with_count(self, timeout: timedelta = timedelta(milliseconds=0)) -> int:
-        """Applies changes and return the number of count of changed items
+        """Applies changes, finishes the transaction and returns the number of changed items
 
         #### Arguments:
             timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
@@ -183,13 +231,13 @@ class Transaction(RaiserTx):
         """
 
         milliseconds: int = int(timeout / timedelta(milliseconds=1))
-        self.err_code, self.err_msg, count = self.api.transaction_commit(self.transaction_wrapper_ptr, milliseconds)
-        self.__finalize()
+        self.err_code, self.err_msg, count = self._finish_native(
+            lambda ptr: self.api.transaction_commit(ptr, milliseconds))
         return count
 
     @RaiserTx.raise_if_error
     def rollback(self, timeout: timedelta = timedelta(milliseconds=0)) -> None:
-        """Rollbacks changes
+        """Rolls back changes and finishes the transaction
 
         #### Arguments:
             timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
@@ -203,5 +251,5 @@ class Transaction(RaiserTx):
         """
 
         milliseconds: int = int(timeout / timedelta(milliseconds=1))
-        self.err_code, self.err_msg = self.api.transaction_rollback(self.transaction_wrapper_ptr, milliseconds)
-        self.__finalize()
+        self.err_code, self.err_msg = self._finish_native(
+            lambda ptr: self.api.transaction_rollback(ptr, milliseconds))

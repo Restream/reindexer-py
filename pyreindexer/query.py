@@ -61,6 +61,10 @@ class LogLevel(ExtendedEnum):
 class Query(RaiserQuery):
     """An object representing the context of a Reindexer query
 
+    Native query resources are freed on the next `RxConnector.new_query()` call
+        or on `RxConnector.close()`, not necessarily when the Python object is
+        garbage-collected.
+
     #### Attributes:
         api (module): An API module for Reindexer calls
         query_wrapper_ptr (int): A memory pointer to Reindexer query object
@@ -83,23 +87,43 @@ class Query(RaiserQuery):
 
         self.rx = rx
         self.api = rx.api
-        self.query_wrapper_ptr: int = query_wrapper_ptr
+        self._owned_ptr = [query_wrapper_ptr]
         self.err_code: int = 0
         self.err_msg: str = ''
         self.root: Optional[Query] = None
         self.join_queries: list[Query] = []
         self.merged_queries: list[Query] = []
 
+    @property
+    def query_wrapper_ptr(self) -> int:
+        try:
+            return self._owned_ptr[0]
+        except (AttributeError, IndexError):
+            return 0
+
+    def _steal_owned_ptr(self) -> int:
+        try:
+            return self._owned_ptr.pop()
+        except (AttributeError, IndexError):
+            return 0
+
     def __del__(self):
-        """Frees query memory
+        """Enqueues the native query for later destruction.
+
+        Actual destruction runs on the next new_query() or close() call.
 
         """
 
-        if self.query_wrapper_ptr > 0 and self.rx.rx > 0:
-            with self.rx._query_lock:
-                self.rx._query_ptrs.remove(self.query_wrapper_ptr)
-            self.api.destroy_query(self.query_wrapper_ptr)
-            self.query_wrapper_ptr = 0
+        try:
+            ptr = self._steal_owned_ptr()
+            if ptr <= 0:
+                return
+            rx = getattr(self, 'rx', None)
+            if rx is None:
+                return
+            rx._query_gc_queue.put(ptr)
+        except Exception:
+            pass
 
     @staticmethod
     def __where_knn_param(param: Union[IndexSearchParamBruteForce | IndexSearchParamHnsw | IndexSearchParamIvf]):
@@ -231,7 +255,7 @@ class Query(RaiserQuery):
 
     def where(self, index: str, condition: CondType,
               keys: Union[ScalarType, list[ScalarType], tuple[list[ScalarType], ...]] = None) -> Query:
-        """Adds where condition to DB query with args
+        """Adds a where condition to the DB query
 
         #### Arguments:
             index (string): Field name used in condition clause
@@ -253,7 +277,7 @@ class Query(RaiserQuery):
     @RaiserQuery.raise_if_error
     def where_query(self, sub_query: Query, condition: CondType,
                     keys: Union[ScalarType, list[ScalarType], tuple[list[ScalarType], ...]] = None) -> Query:
-        """Adds sub-query where condition to DB query with args
+        """Adds a sub-query where condition to the DB query
 
         #### Arguments:
             sub_query (:obj:`Query`): Field name used in condition clause
@@ -279,7 +303,7 @@ class Query(RaiserQuery):
 
     @RaiserQuery.raise_if_error
     def where_subquery(self, index: str, condition: CondType, sub_query: Query) -> Query:
-        """Adds sub-query where condition to DB query
+        """Adds a sub-query where condition to the DB query
 
         #### Arguments:
             index (string): Field name used in condition clause
@@ -300,7 +324,7 @@ class Query(RaiserQuery):
                             tuple[ScalarType, ...], tuple[list[ScalarType], ...],
                             list[list[ScalarType]], list[tuple[ScalarType, ...]]
                         ]) -> Query:
-        """Adds where condition to DB query with interface args for composite indexes
+        """Adds a where condition to the DB query for composite indexes
 
         #### Arguments:
             index (string): Field name used in condition clause
@@ -327,7 +351,7 @@ class Query(RaiserQuery):
 
     @RaiserQuery.raise_if_error
     def where_uuid(self, index: str, condition: CondType, keys: Union[UUID, list[UUID]]) -> Query:
-        """Adds where condition to DB query with UUID.
+        """Adds a where condition to the DB query with UUID.
             `index` must be declared as uuid-string index in this case
 
         #### Arguments:
@@ -350,7 +374,7 @@ class Query(RaiserQuery):
 
     @RaiserQuery.raise_if_error
     def where_between_fields(self, first_field: str, condition: CondType, second_field: str) -> Query:
-        """Adds comparing two fields where condition to DB query
+        """Adds a where condition comparing two fields to the DB query
 
         #### Arguments:
             first_field (string): First field name used in condition clause
@@ -367,7 +391,7 @@ class Query(RaiserQuery):
 
     @RaiserQuery.raise_if_error
     def where_expressions(self, left: Expression, condition: CondType, right: Expression) -> Query:
-        """Adds where condition with expressions
+        """Adds a where condition with expressions to the DB query
 
         #### Arguments:
             left (Expression): Left expression (Field, FlatArrayLen, SubQuery)
@@ -391,7 +415,7 @@ class Query(RaiserQuery):
     @RaiserQuery.raise_if_error
     def where_knn(self, index: str, vec: List[float],
                   param: Union[IndexSearchParamBruteForce | IndexSearchParamHnsw | IndexSearchParamIvf]) -> Query:
-        """Adds where condition to DB query with float_vector as args.
+        """Adds a where condition to the DB query with a float_vector as args.
             `index` must be declared as float_vector index in this case
 
         #### Arguments:
@@ -423,7 +447,7 @@ class Query(RaiserQuery):
     def where_knn_string(self, index: str, value: str,
                          param: Union[
                              IndexSearchParamBruteForce | IndexSearchParamHnsw | IndexSearchParamIvf]) -> Query:
-        """Adds where condition to DB query with string as args.
+        """Adds a where condition to the DB query with a string as args.
             `index` must be declared as float_vector index in this case.
             WARNING: Only relevant if automatic embedding is configured for this float_vector index
 
@@ -454,7 +478,7 @@ class Query(RaiserQuery):
 
     @RaiserQuery.raise_if_error
     def open_bracket(self) -> Query:
-        """Opens bracket for where condition to DB query
+        """Opens a bracket for the where condition in the DB query
 
         #### Returns:
             (:obj:`Query`): Query object for further customizations
@@ -469,7 +493,7 @@ class Query(RaiserQuery):
 
     @RaiserQuery.raise_if_error
     def close_bracket(self) -> Query:
-        """Closes bracket for where condition to DB query
+        """Closes a bracket for the where condition in the DB query
 
         #### Returns:
             (:obj:`Query`): Query object for further customizations
@@ -484,7 +508,7 @@ class Query(RaiserQuery):
 
     @RaiserQuery.raise_if_error
     def match(self, index: str, *keys: str) -> Query:
-        """Adds string EQ-condition to DB query with string args
+        """Adds a string EQ-condition to the DB query
 
         #### Arguments:
             index (string): Field name used in condition clause
@@ -507,7 +531,7 @@ class Query(RaiserQuery):
 
     @RaiserQuery.raise_if_error
     def dwithin(self, index: str, point: Point, distance: float) -> Query:
-        """Adds DWithin condition to DB query
+        """Adds a DWithin condition to the DB query
 
         #### Arguments:
             index (string): Field name used in condition clause
@@ -539,7 +563,7 @@ class Query(RaiserQuery):
 
     @RaiserQuery.raise_if_error
     def aggregate_avg(self, index: str) -> Query:
-        """Finds for the average at the specified index
+        """Finds the average at the specified index
 
         #### Arguments:
             index (string): Field name for sum operation
@@ -554,7 +578,7 @@ class Query(RaiserQuery):
 
     @RaiserQuery.raise_if_error
     def aggregate_min(self, index: str) -> Query:
-        """Finds for the minimum at the specified index
+        """Finds the minimum at the specified index
 
         #### Arguments:
             index (string): Field name for sum operation
@@ -569,7 +593,7 @@ class Query(RaiserQuery):
 
     @RaiserQuery.raise_if_error
     def aggregate_max(self, index: str) -> Query:
-        """Finds for the maximum at the specified index
+        """Finds the maximum at the specified index
 
         #### Arguments:
             index (string): Field name for sum operation
@@ -584,7 +608,7 @@ class Query(RaiserQuery):
 
     @RaiserQuery.raise_if_error
     def distinct(self, *fields: str) -> Query:
-        """ Gets fields distinct value. Applicable to multiple data fields
+        """Gets distinct values for the specified fields. Applicable to multiple data fields
 
         #### Arguments:
             fields (*string): Field names for distinct, fields should not be empty
@@ -665,7 +689,7 @@ class Query(RaiserQuery):
 
     @RaiserQuery.raise_if_error
     def aggregate_facet(self, *fields: str) -> Query._AggregateFacet:
-        """ Gets fields facet value. Applicable to multiple data fields and the result of that could be sorted
+        """Gets facet values for the specified fields. Applicable to multiple data fields and the result of that could be sorted
             by any data column or `count` and cut off by offset and limit. In order to support this functionality,
             this method returns _AggregateFacet which has methods sort, limit and offset
 
@@ -685,7 +709,7 @@ class Query(RaiserQuery):
     @RaiserQuery.raise_if_error
     def sort(self, index: str, desc: bool = False,
              forced_sort_values: Union[ScalarType, list[ScalarType], tuple[list[ScalarType], ...]] = None) -> Query:
-        """Applies sort order to return from query items. If forced_sort_values argument specified, then items equal to
+        """Applies a sort order to the returned items. If forced_sort_values argument specified, then items equal to
             values, if found will be placed in the top positions. Forced sort is support for the first sorting field
             only
 
@@ -709,7 +733,7 @@ class Query(RaiserQuery):
         return self
 
     def sort_stpoint_distance(self, index: str, point: Point, desc: bool) -> Query:
-        """Applies geometry sort order to return from query items. Wrapper for geometry sorting by shortest distance
+        """Applies a geometry sort order to the returned items based on the shortest distance
             between geometry field and point (ST_Distance)
 
         #### Arguments:
@@ -726,7 +750,7 @@ class Query(RaiserQuery):
         return self.sort(request, desc)
 
     def sort_stfield_distance(self, first_field: str, second_field: str, desc: bool) -> Query:
-        """Applies geometry sort order to return from query items. Wrapper for geometry sorting by shortest distance
+        """Applies a geometry sort order to the returned items based on the shortest distance
             between 2 geometry fields (ST_Distance)
 
         #### Arguments:
@@ -747,8 +771,8 @@ class Query(RaiserQuery):
 
     @RaiserQuery.raise_if_error
     def op_and(self) -> Query:
-        """Next condition will be added with AND.
-            This is the default operation for WHERE statement. Do not have to be called explicitly in user's code.
+        """The next condition will be added with AND.
+            This is the default operation for WHERE statements and does not need to be called explicitly.
             Used in DSL conversion
 
         #### Returns:
@@ -761,9 +785,9 @@ class Query(RaiserQuery):
 
     @RaiserQuery.raise_if_error
     def op_or(self) -> Query:
-        """Next condition will be added with OR.
+        """The next condition will be added with OR.
             Implements short-circuiting:
-            if the previous condition is successful the next will not be evaluated, but except Join conditions
+            if the previous condition evaluates to true, the next will not be evaluated (except for Join conditions)
 
         #### Returns:
             (:obj:`Query`): Query object for further customizations
@@ -775,8 +799,8 @@ class Query(RaiserQuery):
 
     @RaiserQuery.raise_if_error
     def op_not(self) -> Query:
-        """Next condition will be added with NOT AND.
-            Implements short-circuiting: if the previous condition is failed the next will not be evaluated
+        """The next condition will be added with NOT AND.
+            Implements short-circuiting: if the previous condition evaluates to false, the next will not be evaluated
 
         #### Returns:
             (:obj:`Query`): Query object for further customizations
@@ -788,7 +812,7 @@ class Query(RaiserQuery):
 
     @RaiserQuery.raise_if_error
     def request_total(self) -> Query:
-        """Requests total items calculation
+        """Requests the calculation of the total number of items
 
         #### Arguments:
             total_name (string, optional): Name to be requested
@@ -803,7 +827,7 @@ class Query(RaiserQuery):
 
     @RaiserQuery.raise_if_error
     def cached_total(self) -> Query:
-        """Requests cached total items calculation
+        """Requests the cached calculation of the total number of items
 
         #### Arguments:
             total_name (string, optional): Name to be requested
@@ -818,7 +842,7 @@ class Query(RaiserQuery):
 
     @RaiserQuery.raise_if_error
     def limit(self, limit_items: int) -> Query:
-        """Sets a limit (count) of returned items. Analog to sql LIMIT rowsNumber
+        """Sets a limit on the number of returned items. Analogous to SQL LIMIT
 
         #### Arguments:
             limit_items (int): Number of rows to get from result set
@@ -833,7 +857,7 @@ class Query(RaiserQuery):
 
     @RaiserQuery.raise_if_error
     def offset(self, start_offset: int) -> Query:
-        """Sets the number of the first selected row from result query
+        """Sets the offset for the first selected row in the query result
 
         #### Arguments:
             limit_items (int): Index of the first row to get from result set
@@ -848,7 +872,7 @@ class Query(RaiserQuery):
 
     @RaiserQuery.raise_if_error
     def debug(self, level: LogLevel) -> Query:
-        """Changes debug log level on server
+        """Changes the debug log level on the server
 
         #### Arguments:
             level (:enum:`LogLevel`): Debug log level on server
@@ -863,7 +887,7 @@ class Query(RaiserQuery):
 
     @RaiserQuery.raise_if_error
     def strict(self, mode: StrictMode) -> Query:
-        """Changes strict mode
+        """Changes the strict mode
 
         #### Arguments:
             mode (:enum:`StrictMode`): Strict mode
@@ -878,7 +902,7 @@ class Query(RaiserQuery):
 
     @RaiserQuery.raise_if_error
     def explain(self) -> Query:
-        """Enables explain query
+        """Enables query explanation
 
         #### Returns:
             (:obj:`Query`): Query object for further customizations
@@ -890,7 +914,7 @@ class Query(RaiserQuery):
 
     @RaiserQuery.raise_if_error
     def with_rank(self) -> Query:
-        """Outputs fulltext/float_vector rank. Allowed only with fulltext and KNN query
+        """Outputs the fulltext/float_vector rank. Allowed only with fulltext and KNN queries
 
         #### Returns:
             (:obj:`Query`): Query object for further customizations
@@ -928,7 +952,7 @@ class Query(RaiserQuery):
 
     @RaiserQuery.raise_if_error
     def delete(self, timeout: timedelta = timedelta(milliseconds=0)) -> int:
-        """Executes a query, and delete items, matches query
+        """Executes the query and deletes the matching items
 
         #### Arguments:
             timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
@@ -953,7 +977,7 @@ class Query(RaiserQuery):
 
     @RaiserQuery.raise_if_error
     def set_object(self, field: str, values: list[ScalarType]) -> Query:
-        """Adds an update query to an object field for an update query
+        """Adds an object field update to the query
 
         #### Arguments:
             field (string): Field name
@@ -976,7 +1000,7 @@ class Query(RaiserQuery):
 
     @RaiserQuery.raise_if_error
     def set(self, field: str, values: list[ScalarType]) -> Query:
-        """Adds a field update request to the update request
+        """Adds a field update to the query
 
         #### Arguments:
             field (string): Field name
@@ -997,7 +1021,7 @@ class Query(RaiserQuery):
 
     @RaiserQuery.raise_if_error
     def drop(self, index: str) -> Query:
-        """Drops a value for a field
+        """Drops a field from the items
 
         #### Arguments:
             index (string): Field name for drop operation
@@ -1012,7 +1036,7 @@ class Query(RaiserQuery):
 
     @RaiserQuery.raise_if_error
     def expression(self, field: str, value: str) -> Query:
-        """Updates indexed field by arithmetical expression
+        """Updates an indexed field using an arithmetical expression
 
         #### Arguments:
             field (string): Field name
@@ -1028,7 +1052,7 @@ class Query(RaiserQuery):
 
     @RaiserQuery.raise_if_error
     def update(self, timeout: timedelta = timedelta(milliseconds=0)) -> QueryResults:
-        """Executes update query, and update fields in items, which matches query
+        """Executes the update query, modifying the fields in the matching items
 
         #### Arguments:
             timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
@@ -1054,7 +1078,7 @@ class Query(RaiserQuery):
 
     @RaiserQuery.raise_if_error
     def must_execute(self, timeout: timedelta = timedelta(milliseconds=0)) -> QueryResults:
-        """Executes a query, and update fields in items, which matches query, with status check
+        """Executes the query with a status check
 
         #### Arguments:
             timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
@@ -1076,7 +1100,7 @@ class Query(RaiserQuery):
 
     @RaiserQuery.raise_if_error
     def get(self, timeout: timedelta = timedelta(milliseconds=0)) -> (str, bool):
-        """Executes a query, and return 1 JSON item
+        """Executes the query and returns a single JSON item
 
         #### Arguments:
             timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
@@ -1132,8 +1156,8 @@ class Query(RaiserQuery):
         return query
 
     def inner_join(self, query: Query, field: str) -> Query:
-        """Joins 2 queries.
-            Items from the 1-st query are filtered by and expanded with the data from the 2-nd query
+        """Joins two queries.
+            Items from this query are filtered by and expanded with the data from the given query
 
         #### Arguments:
             query (:obj:`Query`): Query object to left join
@@ -1149,8 +1173,8 @@ class Query(RaiserQuery):
         return self.__join(query, field, JoinType.InnerJoin)
 
     def join(self, query: Query, field: str) -> Query:
-        """Join is an alias for LeftJoin. Joins 2 queries.
-            Items from this query are expanded with the data from the `query`
+        """Alias for `left_join`. Joins two queries.
+            Items from this query are expanded with the data from the given query
 
         #### Arguments:
             query (:obj:`Query`): Query object to left join
@@ -1164,7 +1188,7 @@ class Query(RaiserQuery):
         return self.__join(query, field, JoinType.LeftJoin)
 
     def left_join(self, join_query: Query, field: str) -> Query:
-        """Joins 2 queries.
+        """Joins two queries.
             Items from this query are expanded with the data from the join_query.
             One of the conditions below must hold for `field` parameter in order for LeftJoin to work:
                 namespace of `join_query` contains `field` as one of its fields marked as `joined`
@@ -1228,7 +1252,7 @@ class Query(RaiserQuery):
 
     @RaiserQuery.raise_if_error
     def select_fields(self, *fields: str) -> Query:
-        """Sets list of columns in this namespace to be finally selected.
+        """Sets the list of columns to be selected.
             The columns should be specified in the same case as the jsonpaths corresponding to them.
             Non-existent fields and fields in the wrong case are ignored.
             If there are no fields in this list that meet these conditions, then the filter works as "*"
@@ -1251,7 +1275,7 @@ class Query(RaiserQuery):
 
     @RaiserQuery.raise_if_error
     def functions(self, *functions: str) -> Query:
-        """Adds sql-functions to query
+        """Adds SQL functions to the query
 
         #### Arguments:
             functions (*string): Functions declaration
@@ -1271,7 +1295,7 @@ class Query(RaiserQuery):
 
     @RaiserQuery.raise_if_error
     def equal_position(self, *equal_position: str) -> Query:
-        """Adds equal position fields to arrays queries
+        """Adds equal position fields to array queries
 
         #### Arguments:
             equal_poses (*string): Equal position fields to arrays queries
