@@ -1,307 +1,108 @@
 # The PyReindexer module provides a connector and its auxiliary tools for interaction with Reindexer. Reindexer static library or reindexer-dev package must be installed
 
-- [pyreindexer.rx\_connector](#pyreindexerrx_connector)
-  - [RxConnector Objects](#rxconnector-objects)
-      - [Arguments](#arguments)
-      - [Attributes](#attributes)
-    - [RxConnector.close](#rxconnectorclose)
-      - [Raises](#raises)
-    - [RxConnector.namespace\_open](#rxconnectornamespace_open)
-      - [Arguments](#arguments-1)
-      - [Raises](#raises-1)
-    - [RxConnector.namespace\_close](#rxconnectornamespace_close)
-      - [Arguments](#arguments-2)
-      - [Raises](#raises-2)
-    - [RxConnector.namespace\_drop](#rxconnectornamespace_drop)
-      - [Arguments](#arguments-3)
-      - [Raises](#raises-3)
-    - [RxConnector.namespace\_truncate](#rxconnectornamespace_truncate)
-      - [Arguments](#arguments-4)
-      - [Raises](#raises-4)
-    - [RxConnector.namespace\_rename](#rxconnectornamespace_rename)
-      - [Arguments](#arguments-5)
-      - [Raises](#raises-5)
-    - [RxConnector.namespaces\_enum](#rxconnectornamespaces_enum)
-      - [Arguments](#arguments-6)
-      - [Returns](#returns)
-      - [Raises](#raises-6)
-    - [RxConnector.schema\_set](#rxconnectorschema_set)
-      - [Arguments](#arguments-7)
-      - [Raises](#raises-7)
-    - [RxConnector.index\_add](#rxconnectorindex_add)
-      - [Arguments](#arguments-8)
-      - [Raises](#raises-8)
-    - [RxConnector.index\_update](#rxconnectorindex_update)
-      - [Arguments](#arguments-9)
-      - [Raises](#raises-9)
-    - [RxConnector.index\_drop](#rxconnectorindex_drop)
-      - [Arguments](#arguments-10)
-      - [Raises](#raises-10)
-    - [RxConnector.item\_insert](#rxconnectoritem_insert)
-      - [Arguments](#arguments-11)
-      - [Raises](#raises-11)
-    - [RxConnector.item\_update](#rxconnectoritem_update)
-      - [Arguments](#arguments-12)
-      - [Raises](#raises-12)
-    - [RxConnector.item\_upsert](#rxconnectoritem_upsert)
-      - [Arguments](#arguments-13)
-      - [Raises](#raises-13)
-    - [RxConnector.item\_delete](#rxconnectoritem_delete)
-      - [Arguments](#arguments-14)
-      - [Raises](#raises-14)
-    - [RxConnector.meta\_put](#rxconnectormeta_put)
-      - [Arguments](#arguments-15)
-      - [Raises](#raises-15)
-    - [RxConnector.meta\_get](#rxconnectormeta_get)
-      - [Arguments](#arguments-16)
-      - [Returns](#returns-1)
-      - [Raises](#raises-16)
-    - [RxConnector.meta\_delete](#rxconnectormeta_delete)
-      - [Arguments](#arguments-17)
-      - [Raises](#raises-17)
-    - [RxConnector.meta\_enum](#rxconnectormeta_enum)
-      - [Arguments](#arguments-18)
-      - [Returns](#returns-2)
-      - [Raises](#raises-18)
-    - [RxConnector.exec\_sql](#rxconnectorexec_sql)
-      - [Arguments](#arguments-19)
-      - [Returns](#returns-3)
-      - [Raises](#raises-19)
-    - [RxConnector.new\_transaction](#rxconnectornew_transaction)
-      - [Arguments](#arguments-20)
-      - [Returns](#returns-4)
-      - [Raises](#raises-20)
-    - [RxConnector.new\_query](#rxconnectornew_query)
-      - [Arguments](#arguments-21)
-      - [Returns](#returns-5)
-      - [Raises](#raises-21)
-- [pyreindexer.query\_results](#pyreindexerquery_results)
-  - [QueryResults Objects](#queryresults-objects)
-      - [Attributes](#attributes-1)
-    - [QueryResults.status](#queryresultsstatus)
-      - [Raises](#raises-22)
-    - [QueryResults.count](#queryresultscount)
-      - [Returns](#returns-6)
-    - [QueryResults.total\_count](#queryresultstotal_count)
-      - [Returns](#returns-7)
-    - [QueryResults.get\_agg\_results](#queryresultsget_agg_results)
-      - [Returns](#returns-8)
-      - [Raises](#raises-23)
-    - [QueryResults.get\_explain\_results](#queryresultsget_explain_results)
-      - [Returns](#returns-9)
-      - [Raises](#raises-24)
-- [pyreindexer.transaction](#pyreindexertransaction)
-  - [Transaction Objects](#transaction-objects)
-      - [Attributes](#attributes-2)
-    - [Transaction.insert](#transactioninsert)
-      - [Arguments](#arguments-22)
-      - [Raises](#raises-25)
-    - [Transaction.update](#transactionupdate)
-      - [Arguments](#arguments-23)
-      - [Raises](#raises-26)
-    - [Transaction.update\_query](#transactionupdate_query)
-      - [Arguments](#arguments-24)
-      - [Raises](#raises-27)
-    - [Transaction.upsert](#transactionupsert)
-      - [Arguments](#arguments-25)
-      - [Raises](#raises-28)
-    - [Transaction.delete](#transactiondelete)
-      - [Arguments](#arguments-26)
-      - [Raises](#raises-29)
-    - [Transaction.delete\_query](#transactiondelete_query)
-      - [Arguments](#arguments-27)
-      - [Raises](#raises-30)
-    - [Transaction.commit](#transactioncommit)
-      - [Arguments](#arguments-28)
-      - [Raises](#raises-31)
-    - [Transaction.commit\_with\_count](#transactioncommit_with_count)
-      - [Arguments](#arguments-29)
-      - [Raises](#raises-32)
-    - [Transaction.rollback](#transactionrollback)
-      - [Arguments](#arguments-30)
-      - [Raises](#raises-33)
-- [pyreindexer.point](#pyreindexerpoint)
-  - [Point Objects](#point-objects)
-      - [Attributes](#attributes-3)
-- [pyreindexer.query](#pyreindexerquery)
-  - [Query Objects](#query-objects)
-      - [Attributes](#attributes-4)
-    - [Query.where](#querywhere)
-      - [Arguments](#arguments-31)
-      - [Returns](#returns-10)
-      - [Raises](#raises-34)
-    - [Query.where\_query](#querywhere_query)
-      - [Arguments](#arguments-32)
-      - [Returns](#returns-11)
-      - [Raises](#raises-35)
-    - [Query.where\_subquery](#querywhere_subquery)
-      - [Arguments](#arguments-33)
-      - [Returns](#returns-12)
-    - [Query.where\_composite](#querywhere_composite)
-      - [Arguments](#arguments-34)
-      - [Returns](#returns-13)
-      - [Raises](#raises-36)
-    - [Query.where\_uuid](#querywhere_uuid)
-      - [Arguments](#arguments-35)
-      - [Returns](#returns-14)
-      - [Raises](#raises-37)
-    - [Query.where\_between\_fields](#querywhere_between_fields)
-      - [Arguments](#arguments-36)
-      - [Returns](#returns-15)
-    - [Query.where\_expressions](#querywhere_expressions)
-      - [Arguments](#arguments-37)
-      - [Returns](#returns-16)
-    - [Query.where\_knn](#querywhere_knn)
-      - [Arguments](#arguments-38)
-      - [Returns](#returns-17)
-      - [Raises](#raises-38)
-    - [Query.where\_knn\_string](#querywhere_knn_string)
-      - [Arguments](#arguments-39)
-      - [Returns](#returns-18)
-      - [Raises](#raises-39)
-    - [Query.open\_bracket](#queryopen_bracket)
-      - [Returns](#returns-19)
-      - [Raises](#raises-40)
-    - [Query.close\_bracket](#queryclose_bracket)
-      - [Returns](#returns-20)
-      - [Raises](#raises-41)
-    - [Query.match](#querymatch)
-      - [Arguments](#arguments-40)
-      - [Returns](#returns-21)
-      - [Raises](#raises-42)
-    - [Query.dwithin](#querydwithin)
-      - [Arguments](#arguments-41)
-      - [Returns](#returns-22)
-    - [Query.aggregate\_sum](#queryaggregate_sum)
-      - [Arguments](#arguments-42)
-      - [Returns](#returns-23)
-    - [Query.aggregate\_avg](#queryaggregate_avg)
-      - [Arguments](#arguments-43)
-      - [Returns](#returns-24)
-    - [Query.aggregate\_min](#queryaggregate_min)
-      - [Arguments](#arguments-44)
-      - [Returns](#returns-25)
-    - [Query.aggregate\_max](#queryaggregate_max)
-      - [Arguments](#arguments-45)
-      - [Returns](#returns-26)
-    - [Query.distinct](#querydistinct)
-      - [Arguments](#arguments-46)
-      - [Returns](#returns-27)
-    - [Query.aggregate\_facet](#queryaggregate_facet)
-      - [Arguments](#arguments-47)
-      - [Returns](#returns-28)
-    - [Query.sort](#querysort)
-      - [Arguments](#arguments-48)
-      - [Returns](#returns-29)
-      - [Raises](#raises-43)
-    - [Query.sort\_stpoint\_distance](#querysort_stpoint_distance)
-      - [Arguments](#arguments-49)
-      - [Returns](#returns-30)
-    - [Query.sort\_stfield\_distance](#querysort_stfield_distance)
-      - [Arguments](#arguments-50)
-      - [Returns](#returns-31)
-      - [Raises](#raises-44)
-    - [Query.op\_and](#queryop_and)
-      - [Returns](#returns-32)
-    - [Query.op\_or](#queryop_or)
-      - [Returns](#returns-33)
-    - [Query.op\_not](#queryop_not)
-      - [Returns](#returns-34)
-    - [Query.request\_total](#queryrequest_total)
-      - [Arguments](#arguments-51)
-      - [Returns](#returns-35)
-    - [Query.cached\_total](#querycached_total)
-      - [Arguments](#arguments-52)
-      - [Returns](#returns-36)
-    - [Query.limit](#querylimit)
-      - [Arguments](#arguments-53)
-      - [Returns](#returns-37)
-    - [Query.offset](#queryoffset)
-      - [Arguments](#arguments-54)
-      - [Returns](#returns-38)
-    - [Query.debug](#querydebug)
-      - [Arguments](#arguments-55)
-      - [Returns](#returns-39)
-    - [Query.strict](#querystrict)
-      - [Arguments](#arguments-56)
-      - [Returns](#returns-40)
-    - [Query.explain](#queryexplain)
-      - [Returns](#returns-41)
-    - [Query.with\_rank](#querywith_rank)
-      - [Returns](#returns-42)
-    - [Query.execute](#queryexecute)
-      - [Arguments](#arguments-57)
-      - [Returns](#returns-43)
-      - [Raises](#raises-45)
-    - [Query.delete](#querydelete)
-      - [Arguments](#arguments-58)
-      - [Returns](#returns-44)
-      - [Raises](#raises-46)
-    - [Query.set\_object](#queryset_object)
-      - [Arguments](#arguments-59)
-      - [Returns](#returns-45)
-      - [Raises](#raises-47)
-    - [Query.set](#queryset)
-      - [Arguments](#arguments-60)
-      - [Returns](#returns-46)
-      - [Raises](#raises-48)
-    - [Query.drop](#querydrop)
-      - [Arguments](#arguments-61)
-      - [Returns](#returns-47)
-    - [Query.expression](#queryexpression)
-      - [Arguments](#arguments-62)
-      - [Returns](#returns-48)
-    - [Query.update](#queryupdate)
-      - [Arguments](#arguments-63)
-      - [Returns](#returns-49)
-      - [Raises](#raises-49)
-    - [Query.must\_execute](#querymust_execute)
-      - [Arguments](#arguments-64)
-      - [Returns](#returns-50)
-      - [Raises](#raises-50)
-    - [Query.get](#queryget)
-      - [Arguments](#arguments-65)
-      - [Returns](#returns-51)
-      - [Raises](#raises-51)
-    - [Query.inner\_join](#queryinner_join)
-      - [Arguments](#arguments-66)
-      - [Returns](#returns-52)
-    - [Query.join](#queryjoin)
-      - [Arguments](#arguments-67)
-      - [Returns](#returns-53)
-    - [Query.left\_join](#queryleft_join)
-      - [Arguments](#arguments-68)
-      - [Returns](#returns-54)
-    - [Query.merge](#querymerge)
-      - [Arguments](#arguments-69)
-      - [Returns](#returns-55)
-    - [Query.on](#queryon)
-      - [Arguments](#arguments-70)
-      - [Returns](#returns-56)
-      - [Raises](#raises-52)
-    - [Query.select\_fields](#queryselect_fields)
-      - [Arguments](#arguments-71)
-      - [Returns](#returns-57)
-      - [Raises](#raises-53)
-    - [Query.functions](#queryfunctions)
-      - [Arguments](#arguments-72)
-      - [Returns](#returns-58)
-      - [Raises](#raises-54)
-    - [Query.equal\_position](#queryequal_position)
-      - [Arguments](#arguments-73)
-      - [Returns](#returns-59)
-      - [Raises](#raises-55)
-- [pyreindexer.index\_search\_params](#pyreindexerindex_search_params)
-  - [IndexSearchParamBruteForce Objects](#indexsearchparambruteforce-objects)
-      - [Attributes](#attributes-5)
-  - [IndexSearchParamHnsw Objects](#indexsearchparamhnsw-objects)
-      - [Attributes](#attributes-6)
-  - [IndexSearchParamIvf Objects](#indexsearchparamivf-objects)
-      - [Attributes](#attributes-7)
-- [pyreindexer.index\_definition](#pyreindexerindex_definition)
-  - [IndexDefinition Objects](#indexdefinition-objects)
-      - [Examples](#examples)
-      - [Arguments](#arguments-74)
+* [pyreindexer.rx\_connector](#pyreindexer.rx_connector)
+  * [RxConnector](#pyreindexer.rx_connector.RxConnector)
+    * [close](#pyreindexer.rx_connector.RxConnector.close)
+    * [namespace\_open](#pyreindexer.rx_connector.RxConnector.namespace_open)
+    * [namespace\_close](#pyreindexer.rx_connector.RxConnector.namespace_close)
+    * [namespace\_drop](#pyreindexer.rx_connector.RxConnector.namespace_drop)
+    * [namespace\_truncate](#pyreindexer.rx_connector.RxConnector.namespace_truncate)
+    * [namespace\_rename](#pyreindexer.rx_connector.RxConnector.namespace_rename)
+    * [namespaces\_enum](#pyreindexer.rx_connector.RxConnector.namespaces_enum)
+    * [schema\_set](#pyreindexer.rx_connector.RxConnector.schema_set)
+    * [index\_add](#pyreindexer.rx_connector.RxConnector.index_add)
+    * [index\_update](#pyreindexer.rx_connector.RxConnector.index_update)
+    * [index\_drop](#pyreindexer.rx_connector.RxConnector.index_drop)
+    * [item\_insert](#pyreindexer.rx_connector.RxConnector.item_insert)
+    * [item\_update](#pyreindexer.rx_connector.RxConnector.item_update)
+    * [item\_upsert](#pyreindexer.rx_connector.RxConnector.item_upsert)
+    * [item\_delete](#pyreindexer.rx_connector.RxConnector.item_delete)
+    * [meta\_put](#pyreindexer.rx_connector.RxConnector.meta_put)
+    * [meta\_get](#pyreindexer.rx_connector.RxConnector.meta_get)
+    * [meta\_delete](#pyreindexer.rx_connector.RxConnector.meta_delete)
+    * [meta\_enum](#pyreindexer.rx_connector.RxConnector.meta_enum)
+    * [exec\_sql](#pyreindexer.rx_connector.RxConnector.exec_sql)
+    * [new\_transaction](#pyreindexer.rx_connector.RxConnector.new_transaction)
+    * [new\_query](#pyreindexer.rx_connector.RxConnector.new_query)
+* [pyreindexer.query\_results](#pyreindexer.query_results)
+  * [QueryResults](#pyreindexer.query_results.QueryResults)
+    * [status](#pyreindexer.query_results.QueryResults.status)
+    * [count](#pyreindexer.query_results.QueryResults.count)
+    * [total\_count](#pyreindexer.query_results.QueryResults.total_count)
+    * [get\_agg\_results](#pyreindexer.query_results.QueryResults.get_agg_results)
+    * [get\_explain\_results](#pyreindexer.query_results.QueryResults.get_explain_results)
+* [pyreindexer.expressions](#pyreindexer.expressions)
+* [pyreindexer.transaction](#pyreindexer.transaction)
+  * [Transaction](#pyreindexer.transaction.Transaction)
+    * [insert](#pyreindexer.transaction.Transaction.insert)
+    * [update](#pyreindexer.transaction.Transaction.update)
+    * [update\_query](#pyreindexer.transaction.Transaction.update_query)
+    * [upsert](#pyreindexer.transaction.Transaction.upsert)
+    * [delete](#pyreindexer.transaction.Transaction.delete)
+    * [delete\_query](#pyreindexer.transaction.Transaction.delete_query)
+    * [commit](#pyreindexer.transaction.Transaction.commit)
+    * [commit\_with\_count](#pyreindexer.transaction.Transaction.commit_with_count)
+    * [rollback](#pyreindexer.transaction.Transaction.rollback)
+* [pyreindexer.point](#pyreindexer.point)
+  * [Point](#pyreindexer.point.Point)
+* [pyreindexer.query](#pyreindexer.query)
+  * [Query](#pyreindexer.query.Query)
+    * [where](#pyreindexer.query.Query.where)
+    * [where\_query](#pyreindexer.query.Query.where_query)
+    * [where\_subquery](#pyreindexer.query.Query.where_subquery)
+    * [where\_composite](#pyreindexer.query.Query.where_composite)
+    * [where\_uuid](#pyreindexer.query.Query.where_uuid)
+    * [where\_between\_fields](#pyreindexer.query.Query.where_between_fields)
+    * [where\_expressions](#pyreindexer.query.Query.where_expressions)
+    * [where\_knn](#pyreindexer.query.Query.where_knn)
+    * [where\_knn\_string](#pyreindexer.query.Query.where_knn_string)
+    * [open\_bracket](#pyreindexer.query.Query.open_bracket)
+    * [close\_bracket](#pyreindexer.query.Query.close_bracket)
+    * [match](#pyreindexer.query.Query.match)
+    * [dwithin](#pyreindexer.query.Query.dwithin)
+    * [aggregate\_sum](#pyreindexer.query.Query.aggregate_sum)
+    * [aggregate\_avg](#pyreindexer.query.Query.aggregate_avg)
+    * [aggregate\_min](#pyreindexer.query.Query.aggregate_min)
+    * [aggregate\_max](#pyreindexer.query.Query.aggregate_max)
+    * [distinct](#pyreindexer.query.Query.distinct)
+    * [aggregate\_facet](#pyreindexer.query.Query.aggregate_facet)
+    * [sort](#pyreindexer.query.Query.sort)
+    * [sort\_stpoint\_distance](#pyreindexer.query.Query.sort_stpoint_distance)
+    * [sort\_stfield\_distance](#pyreindexer.query.Query.sort_stfield_distance)
+    * [op\_and](#pyreindexer.query.Query.op_and)
+    * [op\_or](#pyreindexer.query.Query.op_or)
+    * [op\_not](#pyreindexer.query.Query.op_not)
+    * [request\_total](#pyreindexer.query.Query.request_total)
+    * [cached\_total](#pyreindexer.query.Query.cached_total)
+    * [limit](#pyreindexer.query.Query.limit)
+    * [offset](#pyreindexer.query.Query.offset)
+    * [debug](#pyreindexer.query.Query.debug)
+    * [strict](#pyreindexer.query.Query.strict)
+    * [explain](#pyreindexer.query.Query.explain)
+    * [with\_rank](#pyreindexer.query.Query.with_rank)
+    * [execute](#pyreindexer.query.Query.execute)
+    * [delete](#pyreindexer.query.Query.delete)
+    * [set\_object](#pyreindexer.query.Query.set_object)
+    * [set](#pyreindexer.query.Query.set)
+    * [drop](#pyreindexer.query.Query.drop)
+    * [expression](#pyreindexer.query.Query.expression)
+    * [update](#pyreindexer.query.Query.update)
+    * [must\_execute](#pyreindexer.query.Query.must_execute)
+    * [get](#pyreindexer.query.Query.get)
+    * [inner\_join](#pyreindexer.query.Query.inner_join)
+    * [join](#pyreindexer.query.Query.join)
+    * [left\_join](#pyreindexer.query.Query.left_join)
+    * [merge](#pyreindexer.query.Query.merge)
+    * [on](#pyreindexer.query.Query.on)
+    * [select\_fields](#pyreindexer.query.Query.select_fields)
+    * [functions](#pyreindexer.query.Query.functions)
+    * [equal\_position](#pyreindexer.query.Query.equal_position)
+* [pyreindexer.index\_search\_params](#pyreindexer.index_search_params)
+  * [IndexSearchParamBruteForce](#pyreindexer.index_search_params.IndexSearchParamBruteForce)
+  * [IndexSearchParamHnsw](#pyreindexer.index_search_params.IndexSearchParamHnsw)
+  * [IndexSearchParamIvf](#pyreindexer.index_search_params.IndexSearchParamIvf)
+* [pyreindexer.index\_definition](#pyreindexer.index_definition)
+  * [IndexDefinition](#pyreindexer.index_definition.IndexDefinition)
 
 <a id="pyreindexer.rx_connector"></a>
 
@@ -354,7 +155,11 @@ RxConnector provides a binding to Reindexer upon two shared libraries (hereinaft
 def close() -> None
 ```
 
-Closes the API instance and frees Reindexer resources
+Closes the API instance and frees Reindexer resources.
+    Also rolls back leftover transactions and destroys leftover queries
+    that were not finished yet.
+    Do not call `close()` while other threads still use this connector
+    (`execute`, item operations, transactions, `new_query`, and so on).
 
 #### Raises:
     ConnectionError: Raises with an error message when Reindexer instance is not initialized yet
@@ -368,7 +173,7 @@ def namespace_open(
     namespace: str, timeout: timedelta = timedelta(milliseconds=0)) -> None
 ```
 
-Opens a namespace specified or creates a namespace if it does not exist
+Opens the specified namespace or creates it if it does not exist
 
 #### Arguments:
     namespace (string): The name of the namespace
@@ -478,7 +283,7 @@ def namespaces_enum(
 ) -> List[Dict[str, str]]
 ```
 
-Gets a list of namespaces available
+Gets a list of available namespaces
 
 #### Arguments:
     enum_not_opened (bool, optional): An enumeration mode flag. If it is
@@ -505,7 +310,7 @@ def schema_set(
     timeout: timedelta = timedelta(milliseconds=0)) -> None
 ```
 
-Adds schema for the specified namespace
+Sets the schema for the specified namespace
 
 #### Arguments:
     namespace (string): The name of the namespace
@@ -610,7 +415,7 @@ Inserts an item with its precepts into the specified namespace
 #### Arguments:
     namespace (string): The name of the namespace
     item_def (dict): A dictionary of item definition
-    precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
+    precepts (:obj:`list` of :obj:`str`): A list of strings representing precepts
     timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
         Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
         A value of 0 disables the timeout (default value)
@@ -637,7 +442,7 @@ Updates an item with its precepts in the specified namespace
 #### Arguments:
     namespace (string): The name of the namespace
     item_def (dict): A dictionary of item definition
-    precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
+    precepts (:obj:`list` of :obj:`str`): A list of strings representing precepts
     timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
         Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
         A value of 0 disables the timeout (default value)
@@ -664,7 +469,7 @@ Updates an item with its precepts in the specified namespace. Creates the item i
 #### Arguments:
     namespace (string): The name of the namespace
     item_def (dict): A dictionary of item definition
-    precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
+    precepts (:obj:`list` of :obj:`str`): A list of strings representing precepts
     timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
         Minimum is 1 millisecond; if set to a lower value, it corresponds to disabling the timeout.
         A value of 0 disables the timeout (default value)
@@ -709,7 +514,7 @@ def meta_put(
     timeout: timedelta = timedelta(milliseconds=0)) -> None
 ```
 
-Puts metadata to a storage of Reindexer by key
+Puts metadata into the Reindexer storage for the specified key
 
 #### Arguments:
     namespace (string): The name of the namespace
@@ -733,7 +538,7 @@ def meta_get(namespace: str,
              timeout: timedelta = timedelta(milliseconds=0)) -> str
 ```
 
-Gets metadata from a storage of Reindexer by key specified
+Gets metadata from the Reindexer storage by the specified key
 
 #### Arguments:
     namespace (string): The name of the namespace
@@ -759,7 +564,7 @@ def meta_delete(
     timeout: timedelta = timedelta(milliseconds=0)) -> None
 ```
 
-Deletes metadata from a storage of Reindexer by key specified
+Deletes metadata from the Reindexer storage by the specified key
 
 #### Arguments:
     namespace (string): The name of the namespace
@@ -782,7 +587,7 @@ def meta_enum(
     timeout: timedelta = timedelta(milliseconds=0)) -> List[str]
 ```
 
-Gets a list of metadata keys from a storage of Reindexer
+Gets a list of metadata keys from the Reindexer storage
 
 #### Arguments:
     namespace (string): The name of the namespace
@@ -832,8 +637,10 @@ def new_transaction(
     timeout: timedelta = timedelta(milliseconds=0)) -> Transaction
 ```
 
-Starts a new transaction and return the transaction object to processing.
-    Warning: once a timeout is set, it will apply to all subsequent steps in the transaction
+Starts a new transaction and returns the transaction object.
+    Warning: once a timeout is set, it will apply to all subsequent steps in the transaction.
+    Also rolls back transactions that were dropped without `commit()`/`rollback()`
+    since the previous `new_transaction()` or `close()`.
 
 #### Arguments:
     namespace (string): The name of the namespace
@@ -856,7 +663,9 @@ Starts a new transaction and return the transaction object to processing.
 def new_query(namespace: str) -> Query
 ```
 
-Creates a new query and return the query object to processing
+Creates a new query and returns the query object.
+    Also frees native resources of Query objects dropped since the previous
+    `new_query()` or `close()`.
 
 #### Arguments:
     namespace (string): The name of the namespace
@@ -979,6 +788,10 @@ class Transaction(RaiserTx)
 
 An object representing the context of a Reindexer transaction
 
+Call `commit()` or `rollback()` explicitly to finish a transaction.
+    Dropping the object without that is only a safety net: rollback may be
+    deferred until the next `RxConnector.new_transaction()` or `RxConnector.close()`.
+
 #### Attributes:
     api (module): An API module for Reindexer calls
     transaction_wrapper_ptr (int): A memory pointer to Reindexer transaction object
@@ -998,7 +811,7 @@ Inserts an item with its precepts to the transaction
 
 #### Arguments:
     item_def (dict): A dictionary of item definition
-    precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
+    precepts (:obj:`list` of :obj:`str`): A list of strings representing precepts
 
 #### Raises:
     TransactionError: Raises with an error message of API return if Transaction is over
@@ -1017,7 +830,7 @@ Updates an item with its precepts to the transaction
 
 #### Arguments:
     item_def (dict): A dictionary of item definition
-    precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
+    precepts (:obj:`list` of :obj:`str`): A list of strings representing precepts
 
 #### Raises:
     TransactionError: Raises with an error message of API return if Transaction is over
@@ -1033,7 +846,7 @@ def update_query(query: Query) -> None
 
 Updates items with the transaction
     Read-committed isolation is available for read operations.
-    Changes made in active transaction is invisible to current and another transactions.
+    Changes made in an active transaction are invisible to the other transactions.
 
 #### Arguments:
     query (:obj:`Query`): A query object to modify
@@ -1055,7 +868,7 @@ Updates an item with its precepts to the transaction. Creates the item if it doe
 
 #### Arguments:
     item_def (dict): A dictionary of item definition
-    precepts (:obj:`list` of :obj:`str`): A dictionary of index definition
+    precepts (:obj:`list` of :obj:`str`): A list of strings representing precepts
 
 #### Raises:
     TransactionError: Raises with an error message of API return if Transaction is over
@@ -1089,7 +902,7 @@ def delete_query(query: Query)
 
 Deletes items with the transaction
     Read-committed isolation is available for read operations.
-    Changes made in active transaction is invisible to current and another transactions.
+    Changes made in an active transaction are invisible to the other transactions.
 
 #### Arguments:
     query (:obj:`Query`): A query object to modify
@@ -1106,7 +919,7 @@ Deletes items with the transaction
 def commit(timeout: timedelta = timedelta(milliseconds=0)) -> None
 ```
 
-Applies changes
+Applies changes and finishes the transaction
 
 #### Arguments:
     timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
@@ -1125,7 +938,7 @@ Applies changes
 def commit_with_count(timeout: timedelta = timedelta(milliseconds=0)) -> int
 ```
 
-Applies changes and return the number of count of changed items
+Applies changes, finishes the transaction and returns the number of changed items
 
 #### Arguments:
     timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
@@ -1144,7 +957,7 @@ Applies changes and return the number of count of changed items
 def rollback(timeout: timedelta = timedelta(milliseconds=0)) -> None
 ```
 
-Rollbacks changes
+Rolls back changes and finishes the transaction
 
 #### Arguments:
     timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
@@ -1187,6 +1000,10 @@ class Query(RaiserQuery)
 
 An object representing the context of a Reindexer query
 
+Native query resources are freed on the next `RxConnector.new_query()` call
+    or on `RxConnector.close()`, not necessarily when the Python object is
+    garbage-collected.
+
 #### Attributes:
     api (module): An API module for Reindexer calls
     query_wrapper_ptr (int): A memory pointer to Reindexer query object
@@ -1209,7 +1026,7 @@ def where(
 ) -> Query
 ```
 
-Adds where condition to DB query with args
+Adds a where condition to the DB query
 
 #### Arguments:
     index (string): Field name used in condition clause
@@ -1237,7 +1054,7 @@ def where_query(
 ) -> Query
 ```
 
-Adds sub-query where condition to DB query with args
+Adds a sub-query where condition to the DB query
 
 #### Arguments:
     sub_query (:obj:`Query`): Field name used in condition clause
@@ -1260,7 +1077,7 @@ Adds sub-query where condition to DB query with args
 def where_subquery(index: str, condition: CondType, sub_query: Query) -> Query
 ```
 
-Adds sub-query where condition to DB query
+Adds a sub-query where condition to the DB query
 
 #### Arguments:
     index (string): Field name used in condition clause
@@ -1282,7 +1099,7 @@ def where_composite(
 ) -> Query
 ```
 
-Adds where condition to DB query with interface args for composite indexes
+Adds a where condition to the DB query for composite indexes
 
 #### Arguments:
     index (string): Field name used in condition clause
@@ -1312,7 +1129,7 @@ def where_uuid(index: str, condition: CondType,
                keys: Union[UUID, list[UUID]]) -> Query
 ```
 
-Adds where condition to DB query with UUID.
+Adds a where condition to the DB query with UUID.
     `index` must be declared as uuid-string index in this case
 
 #### Arguments:
@@ -1335,7 +1152,7 @@ def where_between_fields(first_field: str, condition: CondType,
                          second_field: str) -> Query
 ```
 
-Adds comparing two fields where condition to DB query
+Adds a where condition comparing two fields to the DB query
 
 #### Arguments:
     first_field (string): First field name used in condition clause
@@ -1354,7 +1171,7 @@ def where_expressions(left: Expression, condition: CondType,
                       right: Expression) -> Query
 ```
 
-Adds where condition with expressions
+Adds a where condition with expressions to the DB query
 
 #### Arguments:
     left (Expression): Left expression (Field, FlatArrayLen, SubQuery)
@@ -1376,7 +1193,7 @@ def where_knn(
 ) -> Query
 ```
 
-Adds where condition to DB query with float_vector as args.
+Adds a where condition to the DB query with a float_vector as args.
     `index` must be declared as float_vector index in this case
 
 #### Arguments:
@@ -1405,7 +1222,7 @@ def where_knn_string(
 ) -> Query
 ```
 
-Adds where condition to DB query with string as args.
+Adds a where condition to the DB query with a string as args.
     `index` must be declared as float_vector index in this case.
     WARNING: Only relevant if automatic embedding is configured for this float_vector index
 
@@ -1431,7 +1248,7 @@ Adds where condition to DB query with string as args.
 def open_bracket() -> Query
 ```
 
-Opens bracket for where condition to DB query
+Opens a bracket for the where condition in the DB query
 
 #### Returns:
     (:obj:`Query`): Query object for further customizations
@@ -1447,7 +1264,7 @@ Opens bracket for where condition to DB query
 def close_bracket() -> Query
 ```
 
-Closes bracket for where condition to DB query
+Closes a bracket for the where condition in the DB query
 
 #### Returns:
     (:obj:`Query`): Query object for further customizations
@@ -1463,7 +1280,7 @@ Closes bracket for where condition to DB query
 def match(index: str, *keys: str) -> Query
 ```
 
-Adds string EQ-condition to DB query with string args
+Adds a string EQ-condition to the DB query
 
 #### Arguments:
     index (string): Field name used in condition clause
@@ -1484,7 +1301,7 @@ Adds string EQ-condition to DB query with string args
 def dwithin(index: str, point: Point, distance: float) -> Query
 ```
 
-Adds DWithin condition to DB query
+Adds a DWithin condition to the DB query
 
 #### Arguments:
     index (string): Field name used in condition clause
@@ -1518,7 +1335,7 @@ Performs a summation of values for a specified index
 def aggregate_avg(index: str) -> Query
 ```
 
-Finds for the average at the specified index
+Finds the average at the specified index
 
 #### Arguments:
     index (string): Field name for sum operation
@@ -1534,7 +1351,7 @@ Finds for the average at the specified index
 def aggregate_min(index: str) -> Query
 ```
 
-Finds for the minimum at the specified index
+Finds the minimum at the specified index
 
 #### Arguments:
     index (string): Field name for sum operation
@@ -1550,7 +1367,7 @@ Finds for the minimum at the specified index
 def aggregate_max(index: str) -> Query
 ```
 
-Finds for the maximum at the specified index
+Finds the maximum at the specified index
 
 #### Arguments:
     index (string): Field name for sum operation
@@ -1566,7 +1383,7 @@ Finds for the maximum at the specified index
 def distinct(*fields: str) -> Query
 ```
 
-Gets fields distinct value. Applicable to multiple data fields
+Gets distinct values for the specified fields. Applicable to multiple data fields
 
 #### Arguments:
     fields (*string): Field names for distinct, fields should not be empty
@@ -1582,7 +1399,7 @@ Gets fields distinct value. Applicable to multiple data fields
 def aggregate_facet(*fields: str) -> Query._AggregateFacet
 ```
 
-Gets fields facet value. Applicable to multiple data fields and the result of that could be sorted
+Gets facet values for the specified fields. Applicable to multiple data fields and the result of that could be sorted
     by any data column or `count` and cut off by offset and limit. In order to support this functionality,
     this method returns _AggregateFacet which has methods sort, limit and offset
 
@@ -1605,7 +1422,7 @@ def sort(
 ) -> Query
 ```
 
-Applies sort order to return from query items. If forced_sort_values argument specified, then items equal to
+Applies a sort order to the returned items. If forced_sort_values argument specified, then items equal to
     values, if found will be placed in the top positions. Forced sort is support for the first sorting field
     only
 
@@ -1629,7 +1446,7 @@ Applies sort order to return from query items. If forced_sort_values argument sp
 def sort_stpoint_distance(index: str, point: Point, desc: bool) -> Query
 ```
 
-Applies geometry sort order to return from query items. Wrapper for geometry sorting by shortest distance
+Applies a geometry sort order to the returned items based on the shortest distance
     between geometry field and point (ST_Distance)
 
 #### Arguments:
@@ -1649,7 +1466,7 @@ def sort_stfield_distance(first_field: str, second_field: str,
                           desc: bool) -> Query
 ```
 
-Applies geometry sort order to return from query items. Wrapper for geometry sorting by shortest distance
+Applies a geometry sort order to the returned items based on the shortest distance
     between 2 geometry fields (ST_Distance)
 
 #### Arguments:
@@ -1671,8 +1488,8 @@ Applies geometry sort order to return from query items. Wrapper for geometry sor
 def op_and() -> Query
 ```
 
-Next condition will be added with AND.
-    This is the default operation for WHERE statement. Do not have to be called explicitly in user's code.
+The next condition will be added with AND.
+    This is the default operation for WHERE statements and does not need to be called explicitly.
     Used in DSL conversion
 
 #### Returns:
@@ -1686,9 +1503,9 @@ Next condition will be added with AND.
 def op_or() -> Query
 ```
 
-Next condition will be added with OR.
+The next condition will be added with OR.
     Implements short-circuiting:
-    if the previous condition is successful the next will not be evaluated, but except Join conditions
+    if the previous condition evaluates to true, the next will not be evaluated (except for Join conditions)
 
 #### Returns:
     (:obj:`Query`): Query object for further customizations
@@ -1701,8 +1518,8 @@ Next condition will be added with OR.
 def op_not() -> Query
 ```
 
-Next condition will be added with NOT AND.
-    Implements short-circuiting: if the previous condition is failed the next will not be evaluated
+The next condition will be added with NOT AND.
+    Implements short-circuiting: if the previous condition evaluates to false, the next will not be evaluated
 
 #### Returns:
     (:obj:`Query`): Query object for further customizations
@@ -1715,7 +1532,7 @@ Next condition will be added with NOT AND.
 def request_total() -> Query
 ```
 
-Requests total items calculation
+Requests the calculation of the total number of items
 
 #### Arguments:
     total_name (string, optional): Name to be requested
@@ -1731,7 +1548,7 @@ Requests total items calculation
 def cached_total() -> Query
 ```
 
-Requests cached total items calculation
+Requests the cached calculation of the total number of items
 
 #### Arguments:
     total_name (string, optional): Name to be requested
@@ -1747,7 +1564,7 @@ Requests cached total items calculation
 def limit(limit_items: int) -> Query
 ```
 
-Sets a limit (count) of returned items. Analog to sql LIMIT rowsNumber
+Sets a limit on the number of returned items. Analogous to SQL LIMIT
 
 #### Arguments:
     limit_items (int): Number of rows to get from result set
@@ -1763,7 +1580,7 @@ Sets a limit (count) of returned items. Analog to sql LIMIT rowsNumber
 def offset(start_offset: int) -> Query
 ```
 
-Sets the number of the first selected row from result query
+Sets the offset for the first selected row in the query result
 
 #### Arguments:
     limit_items (int): Index of the first row to get from result set
@@ -1779,7 +1596,7 @@ Sets the number of the first selected row from result query
 def debug(level: LogLevel) -> Query
 ```
 
-Changes debug log level on server
+Changes the debug log level on the server
 
 #### Arguments:
     level (:enum:`LogLevel`): Debug log level on server
@@ -1795,7 +1612,7 @@ Changes debug log level on server
 def strict(mode: StrictMode) -> Query
 ```
 
-Changes strict mode
+Changes the strict mode
 
 #### Arguments:
     mode (:enum:`StrictMode`): Strict mode
@@ -1811,7 +1628,7 @@ Changes strict mode
 def explain() -> Query
 ```
 
-Enables explain query
+Enables query explanation
 
 #### Returns:
     (:obj:`Query`): Query object for further customizations
@@ -1824,7 +1641,7 @@ Enables explain query
 def with_rank() -> Query
 ```
 
-Outputs fulltext/float_vector rank. Allowed only with fulltext and KNN query
+Outputs the fulltext/float_vector rank. Allowed only with fulltext and KNN queries
 
 #### Returns:
     (:obj:`Query`): Query object for further customizations
@@ -1859,7 +1676,7 @@ Executes a select query
 def delete(timeout: timedelta = timedelta(milliseconds=0)) -> int
 ```
 
-Executes a query, and delete items, matches query
+Executes the query and deletes the matching items
 
 #### Arguments:
     timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
@@ -1881,7 +1698,7 @@ Executes a query, and delete items, matches query
 def set_object(field: str, values: list[ScalarType]) -> Query
 ```
 
-Adds an update query to an object field for an update query
+Adds an object field update to the query
 
 #### Arguments:
     field (string): Field name
@@ -1902,7 +1719,7 @@ Adds an update query to an object field for an update query
 def set(field: str, values: list[ScalarType]) -> Query
 ```
 
-Adds a field update request to the update request
+Adds a field update to the query
 
 #### Arguments:
     field (string): Field name
@@ -1922,7 +1739,7 @@ Adds a field update request to the update request
 def drop(index: str) -> Query
 ```
 
-Drops a value for a field
+Drops a field from the items
 
 #### Arguments:
     index (string): Field name for drop operation
@@ -1938,7 +1755,7 @@ Drops a value for a field
 def expression(field: str, value: str) -> Query
 ```
 
-Updates indexed field by arithmetical expression
+Updates an indexed field using an arithmetical expression
 
 #### Arguments:
     field (string): Field name
@@ -1955,7 +1772,7 @@ Updates indexed field by arithmetical expression
 def update(timeout: timedelta = timedelta(milliseconds=0)) -> QueryResults
 ```
 
-Executes update query, and update fields in items, which matches query
+Executes the update query, modifying the fields in the matching items
 
 #### Arguments:
     timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
@@ -1978,7 +1795,7 @@ def must_execute(timeout: timedelta = timedelta(
     milliseconds=0)) -> QueryResults
 ```
 
-Executes a query, and update fields in items, which matches query, with status check
+Executes the query with a status check
 
 #### Arguments:
     timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
@@ -2000,7 +1817,7 @@ Executes a query, and update fields in items, which matches query, with status c
 def get(timeout: timedelta = timedelta(milliseconds=0)) -> (str, bool)
 ```
 
-Executes a query, and return 1 JSON item
+Executes the query and returns a single JSON item
 
 #### Arguments:
     timeout (`datetime.timedelta`): Optional timeout for performing a server-side operation.
@@ -2022,8 +1839,8 @@ Executes a query, and return 1 JSON item
 def inner_join(query: Query, field: str) -> Query
 ```
 
-Joins 2 queries.
-    Items from the 1-st query are filtered by and expanded with the data from the 2-nd query
+Joins two queries.
+    Items from this query are filtered by and expanded with the data from the given query
 
 #### Arguments:
     query (:obj:`Query`): Query object to left join
@@ -2042,8 +1859,8 @@ Joins 2 queries.
 def join(query: Query, field: str) -> Query
 ```
 
-Join is an alias for LeftJoin. Joins 2 queries.
-    Items from this query are expanded with the data from the `query`
+Alias for `left_join`. Joins two queries.
+    Items from this query are expanded with the data from the given query
 
 #### Arguments:
     query (:obj:`Query`): Query object to left join
@@ -2060,7 +1877,7 @@ Join is an alias for LeftJoin. Joins 2 queries.
 def left_join(join_query: Query, field: str) -> Query
 ```
 
-Joins 2 queries.
+Joins two queries.
     Items from this query are expanded with the data from the join_query.
     One of the conditions below must hold for `field` parameter in order for LeftJoin to work:
         namespace of `join_query` contains `field` as one of its fields marked as `joined`
@@ -2117,7 +1934,7 @@ On specifies join condition
 def select_fields(*fields: str) -> Query
 ```
 
-Sets list of columns in this namespace to be finally selected.
+Sets the list of columns to be selected.
     The columns should be specified in the same case as the jsonpaths corresponding to them.
     Non-existent fields and fields in the wrong case are ignored.
     If there are no fields in this list that meet these conditions, then the filter works as "*"
@@ -2139,7 +1956,7 @@ Sets list of columns in this namespace to be finally selected.
 def functions(*functions: str) -> Query
 ```
 
-Adds sql-functions to query
+Adds SQL functions to the query
 
 #### Arguments:
     functions (*string): Functions declaration
@@ -2158,7 +1975,7 @@ Adds sql-functions to query
 def equal_position(*equal_position: str) -> Query
 ```
 
-Adds equal position fields to arrays queries
+Adds equal position fields to array queries
 
 #### Arguments:
     equal_poses (*string): Equal position fields to arrays queries
@@ -2206,6 +2023,9 @@ Index search param for HNSW index.
     radius (float): In addition to the parameter `k`, the query results can also be filtered by a `rank` -
         value using the parameter, witch called `radius`. It's named so because, under the `L2`-metric,
         it restricts vectors from query result to a sphere of the specified radius
+
+    If neither `k` nor `radius` are specified, query is considered as streaming
+    and response could be limited via limit/offset
 
 <a id="pyreindexer.index_search_params.IndexSearchParamIvf"></a>
 
@@ -2272,5 +2092,4 @@ IndexDefinition allows to construct and manage indexes more efficiently using a 
         [More about `float_vector`](https://github.com/Restream/reindexer/blob/master/float_vector.md)
     expire_after (int): TTL in seconds
     rtree_type (str): RTree index type. Possible values: `rstar`, `linear`, `quadratic`, `greene`
-
 
