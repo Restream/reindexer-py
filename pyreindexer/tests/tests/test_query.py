@@ -782,17 +782,17 @@ class TestQuerySelectJoin:
         items[1] = item_with_joined
         assert_that(query_result, equal_to(items[:3]), "Wrong selected items with JOIN")
 
-    def test_query_select_join_with_filter(self, db, namespace, index, items, namespace2, items2):
+    def test_query_select_join_with_filter(self, db, namespace, index, items, second_namespace, second_items):
         # Given("Create two namespaces with index and items")
         # Given ("Create two queries for join")
         query1 = db.query.new(namespace).where("id", CondType.CondGt, 6)
-        query2 = db.query.new(namespace2).where("id", CondType.CondLe, 8)
+        query2 = db.query.new(second_namespace).where("id", CondType.CondLe, 8)
         # When ("Make select query with join")
         result = list(query1.join(query2, "joined").on("id", CondType.CondEq, "id").must_execute())
         # Then ("Check that joined item is in result")
         items1 = [i for i in items if i["id"] > 6]
-        items2 = [i for i in items2 if i["id"] <= 8]
-        check_join(result, items1, "left", items2, "id", namespace2)
+        items2 = [i for i in second_items if i["id"] <= 8]
+        check_join(result, items1, "left", items2, "id", second_namespace)
 
     def test_query_select_inner_join(self, db, namespace, index, items, second_namespace, second_item):
         # Given("Create two namespaces with index and items")
