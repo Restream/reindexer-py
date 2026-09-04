@@ -2,11 +2,12 @@ import copy
 from datetime import timedelta
 from typing import Final
 
+import pytest
 from hamcrest import *
 
 from pyreindexer.exceptions import ApiError
 from tests.helpers.base_helper import random_vector
-from tests.helpers.check_helper import check_response_has_close_to_ns_items
+from tests.helpers.check_helper import check_nested_join, check_response_has_close_to_ns_items
 from tests.test_data.constants import vector_index_bf, vector_index_hnsw, vector_index_ivf
 
 
@@ -18,17 +19,6 @@ class TestSqlQueries:
         items_list = list(db.query.sql(query, timeout=timedelta(milliseconds=1000)))
         # Then ("Check that selected item is in result")
         assert_that(items_list, equal_to([item]), "Can't SQL select data")
-
-    def test_sql_select_with_join(self, db, namespace, index, items, second_namespace, second_item):
-        # Given("Create two namespaces")
-        # When ("Execute SQL query SELECT with JOIN")
-        query = f"SELECT id FROM {namespace} INNER JOIN {second_namespace} " \
-                f"ON {namespace}.id = {second_namespace}.id"
-        item_list = list(db.query.sql(query))
-        # Then ("Check that selected item is in result")
-        item_with_joined = {'id': 1, f'joined_{second_namespace}': [second_item]}
-        assert_that(item_list, equal_to([item_with_joined]),
-                    "Can't SQL select data with JOIN")
 
     def test_sql_select_with_condition(self, db, namespace, index, items):
         # Given("Create namespace with item")
@@ -93,6 +83,44 @@ class TestSqlQueries:
                  "(SELECT * FROM new_ns WHERE non_idx > id AND NOT (id < 100))")
         assert_that(calling(db.query.sql).with_args(query, timeout=timedelta(milliseconds=1)),
                     raises(ApiError, pattern="Context timeout|Read lock (.*) was canceled or timed out (mutex)"))
+
+
+class TestSqlQueriesJoin:
+
+    def test_sql_select_with_join(self, db, namespace, index, items, second_namespace, second_item):
+        # Given("Create two namespaces")
+        # When ("Execute SQL query SELECT with JOIN")
+        query = f"SELECT id FROM {namespace} INNER JOIN {second_namespace} " \
+                f"ON {namespace}.id = {second_namespace}.id"
+        item_list = list(db.query.sql(query))
+        # Then ("Check join")
+        item_with_joined = {'id': 1, f'joined_{second_namespace}': [second_item]}
+        assert_that(item_list, equal_to([item_with_joined]),
+                    "Can't SQL select data with JOIN")
+
+    @pytest.mark.parametrize("type1, type2", [
+        ("inner", "inner"), ("left", "left"), ("inner", "left"), ("left", "inner")
+    ])
+    def test_sql_select_with_nested_join(self, db, nested_join_nss, nested_join_items, type1, type2):
+        # Given ("Create namespaces and items")
+        nss, items = nested_join_nss, nested_join_items
+        # When ("Execute SQL query SELECT with nested JOIN")
+        query = (
+            f"SELECT * FROM {nss['books']} "
+            f"{type1} JOIN (SELECT * FROM {nss['authors']}  "
+            f"{type2} JOIN (SELECT * FROM {nss['locations']}) "
+            f"ON {nss['authors']}.location_id = {nss['locations']}.j_id) "
+            f"ON {nss['books']}.author_id = {nss['authors']}.j_id"
+        )
+        result = list(db.query.sql(query))
+        # Then ("Check nested join")
+        spec = {
+            "join_type": type1, "joined_ns": nss["authors"], "on_field": ["author_id", "j_id"],
+            "items": items["authors"],
+            "children": [{"join_type": type2, "joined_ns": nss["locations"], "on_field": ["location_id", "j_id"],
+                          "items": items["locations"]}]
+        }
+        check_nested_join(result, items["books"], spec)
 
 
 class TestSqlQueriesKNN:

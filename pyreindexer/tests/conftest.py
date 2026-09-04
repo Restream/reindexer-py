@@ -4,6 +4,7 @@ import shutil
 import pytest
 
 from tests.helpers.api import ConnectorApi
+from tests.helpers.base_helper import create_items, supplement_index
 from tests.helpers.log_helper import log_fixture
 from tests.helpers.server_helper import ReindexerServer
 from tests.test_data.constants import composite_index_definition, index_definition, item_definition
@@ -105,8 +106,7 @@ def items(db, namespace):
     Create items to namespace
     """
     items = [{"id": i, "val": f"testval{i}"} for i in range(10)]
-    for item in items:
-        db.item.insert(namespace, item)
+    create_items(db, namespace, items)
     yield items
 
 
@@ -237,3 +237,103 @@ def second_items(db, second_namespace):
     for item in items:
         db.item.insert(second_namespace, item)
     yield items
+
+
+@pytest.fixture(scope="class")
+def nested_join_nss(db):
+    def create_ns(ns_name, indexes):
+        db.namespace.open(ns_name)
+        for idx in indexes:
+            supplement_index(idx)
+            db.index.create(ns_name, idx)
+        return ns_name
+
+    books = create_ns("books", [
+        {"is_pk": True, "name": "id", "field_type": "int"},
+        {"name": "author_id", "field_type": "int", "index_type": "tree"},
+        {"name": "price", "field_type": "int", "index_type": "tree"},
+    ])
+    authors = create_ns("authors", [
+        {"is_pk": True, "name": "id", "field_type": "int"},
+        {"name": "j_id", "field_type": "int"},
+        {"name": "location_id", "field_type": "int", "index_type": "tree"},
+        {"name": "age", "field_type": "int", "index_type": "tree"},
+    ])
+    locations = create_ns("locations", [
+        {"is_pk": True, "name": "id", "field_type": "int"},
+        {"name": "j_id", "field_type": "int"},
+        {"name": "country_id", "field_type": "int", "index_type": "tree"},
+        {"name": "code", "field_type": "int", "index_type": "tree"},
+    ])
+    countries = create_ns("countries", [
+        {"is_pk": True, "name": "id", "field_type": "int"},
+        {"name": "j_id", "field_type": "int"},
+        {"name": "active", "field_type": "bool", "index_type": "-"},
+    ])
+    archive = create_ns("archive", [
+        {"is_pk": True, "name": "id", "field_type": "int"},
+        {"name": "author_id", "field_type": "int", "index_type": "tree"},
+        {"name": "year", "field_type": "int", "index_type": "tree"},
+    ])
+    nss = {
+        "books": books,
+        "authors": authors,
+        "locations": locations,
+        "countries": countries,
+        "archive": archive
+    }
+    yield nss
+    for ns in nss:
+        db.namespace.drop(ns)
+
+
+@pytest.fixture(scope="class")
+def nested_join_items(db, nested_join_nss):
+    items = {
+        "books": [
+            {"id": 1, "author_id": 10, "price": 20},
+            {"id": 2, "author_id": 20, "price": 25},
+            {"id": 3, "author_id": 999, "price": 30},
+            {"id": 4, "author_id": 30, "price": 5},
+            {"id": 5, "author_id": 40, "price": 15},
+            {"id": 6, "author_id": 10, "price": 40},
+            {"id": 7, "author_id": 10, "price": 50},
+            {"id": 8, "author_id": 888, "price": 100},
+            {"id": 9, "author_id": 50, "price": 35},
+        ],
+        "authors": [
+            {"id": 10, "j_id": 10, "location_id": 100, "age": 55},
+            {"id": 11, "j_id": 10, "location_id": 200, "age": 56},
+            {"id": 20, "j_id": 20, "location_id": 200, "age": 42},
+            {"id": 30, "j_id": 30, "location_id": 999, "age": 35},
+            {"id": 40, "j_id": 40, "location_id": 400, "age": 60},
+            {"id": 50, "j_id": 50, "location_id": 50, "age": 28},
+        ],
+        "locations": [
+            {"id": 50, "j_id": 50, "country_id": 1, "code": 7},
+            {"id": 100, "j_id": 100, "country_id": 1, "code": 11},
+            {"id": 150, "j_id": 100, "country_id": 2, "code": 19},
+            {"id": 200, "j_id": 200, "country_id": 2, "code": 50},
+            {"id": 250, "j_id": 200, "country_id": 3, "code": 30},
+            {"id": 400, "j_id": 400, "country_id": 10, "code": 100},
+            {"id": 300, "j_id": 300, "country_id": 1, "code": 0},
+        ],
+        "countries": [
+            {"id": 1, "j_id": 1, "active": True},
+            {"id": 2, "j_id": 1, "active": False},
+            {"id": 3, "j_id": 2, "active": True},
+            {"id": 4, "j_id": 3, "active": False},
+            {"id": 10, "j_id": 10, "active": True},
+            {"id": 11, "j_id": 10, "active": True},
+            {"id": 20, "j_id": 20, "active": True},
+            {"id": 777, "j_id": 777, "active": True},
+        ],
+        "archive": [
+            {"id": 100, "author_id": 10, "year": 30},
+            {"id": 200, "author_id": 30, "year": 30},
+            {"id": 300, "author_id": 20, "year": 1},
+        ]
+    }
+    for ns, items_list in items.items():
+        create_items(db, ns, items_list)
+    return items
