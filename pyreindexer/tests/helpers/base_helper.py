@@ -238,7 +238,12 @@ def _get_on_conditions(spec):
     if "on_conditions" in spec:
         return spec["on_conditions"]
     on_left, on_right = _get_on_fields(spec.get("on_field"))
-    return [{"on_left": on_left, "on_right": on_right}]
+    cond_spec = {"on_left": on_left, "on_right": on_right}
+    for key in ("is_sparse_left", "is_sparse_right", "is_array_left", "is_array_right",
+                "field_type_left", "field_type_right"):
+        if key in spec:
+            cond_spec[key] = spec[key]
+    return [cond_spec]
 
 
 def _find_joined_by_on_conditions(item, items_to_join, on_conditions):
@@ -265,10 +270,6 @@ def _find_joined_by_on_conditions(item, items_to_join, on_conditions):
 
         join_filtered = []
         for item2 in items_to_join:
-            value_left = item.get(on_left)
-            value_right = item2.get(on_right)
-            if is_empty(value_left) and is_empty(value_right):
-                continue
             if compare_by_cond(cond_f, on_left, on_right, item, item2, default_val_left, default_val_right):
                 join_filtered.append(item2)
 

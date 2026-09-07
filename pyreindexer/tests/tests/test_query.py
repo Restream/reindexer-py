@@ -876,6 +876,26 @@ class TestQuerySelectJoin:
         assert_that(calling(query1.inner_join(query2, "joined").execute).with_args(),
                     raises(ApiError, pattern="Join without ON conditions"))
 
+    def test_cannot_join_on_root_query(self, db, namespace, index):
+        # Given("Create two namespaces with index and items")
+        # Given ("Create query")
+        query1 = db.query.new(namespace)
+        # When ("Try to join on the created root query")
+        assert_that(calling(query1.on).with_args("id", CondType.CondEq, "id"),
+                    raises(ApiError, pattern="Can't join on root query"))
+
+    def test_cannot_join_already_joined_query(self, db, nested_join_nss):
+        # Given("Create two namespaces with index and items")
+        nss = nested_join_nss
+        # Given ("Create 3 queries for join")
+        query1 = db.query.new(nss["books"])
+        query2 = db.query.new(nss["authors"])
+        query3 = db.query.new(nss["locations"])
+        # When ("Try to join on already oined query")
+        query1.inner_join(query3, "joined")
+        assert_that(calling(query2.inner_join).with_args(query3, "joined"),
+                    raises(QueryError, pattern="Query.join call on already joined query. You should create new Query"))
+
     def test_query_select_merge_with_joins(self, db, namespace, index, items, second_namespace, second_item):
         # Given("Create two namespaces with index and items")
         # Given ("Create join query 1")
