@@ -18,9 +18,11 @@ from pyreindexer.query import CondType, LogLevel, StrictMode
 from pyreindexer.query_results import QueryResults
 from tests.helpers.base_helper import (await_vectors_quantization, calculate_distance, create_items, get_ns_items,
                                        random_vector)
-from tests.helpers.check_helper import check_response_has_close_to_ns_items, check_response_has_only_close_to_items
-from tests.test_data.constants import (AGGREGATE_FUNCTIONS_MATH, VECTOR_METRICS, vector_index_bf, vector_index_hnsw,
-                                       vector_index_ivf)
+from tests.helpers.check_helper import (check_join, check_nested_join, check_response_has_close_to_ns_items,
+                                        check_response_has_only_close_to_items)
+from tests.helpers.join_helper import add_nested
+from tests.test_data.constants import (AGGREGATE_FUNCTIONS_MATH, JOINS_2_CASES, JOIN_METHOD, VECTOR_METRICS,
+                                       vector_index_bf, vector_index_hnsw, vector_index_ivf)
 
 
 class TestQuerySelect:
@@ -780,6 +782,18 @@ class TestQuerySelectJoin:
         items[1] = item_with_joined
         assert_that(query_result, equal_to(items[:3]), "Wrong selected items with JOIN")
 
+    def test_query_select_join_with_filter(self, db, namespace, index, items, second_namespace, second_items):
+        # Given("Create two namespaces with index and items")
+        # Given ("Create two queries for join")
+        query1 = db.query.new(namespace).where("id", CondType.CondGt, 6)
+        query2 = db.query.new(second_namespace).where("id", CondType.CondLe, 8)
+        # When ("Make select query with join")
+        result = list(query1.join(query2, "joined").on("id", CondType.CondEq, "id").must_execute())
+        # Then ("Check that joined item is in result")
+        items1 = [i for i in items if i["id"] > 6]
+        items2 = [i for i in second_items if i["id"] <= 8]
+        check_join(result, items1, "left", items2, "id", second_namespace)
+
     def test_query_select_inner_join(self, db, namespace, index, items, second_namespace, second_item):
         # Given("Create two namespaces with index and items")
         # Given ("Create two queries for join")
@@ -830,37 +844,6 @@ class TestQuerySelectJoin:
         ]
         assert_that(query_result, equal_to(expected_items), "Wrong selected items with chained JOIN")
 
-    def test_query_select_nested_join(self, db, namespace, index, items, second_namespace, second_item):
-        # Given("Create three namespaces with index and items")
-        third_namespace = "test_ns_for_nested_join"
-        third_item = {"id": 1, "third_ns_val": "third_ns_testval_1"}
-        db.namespace.open(third_namespace)
-        try:
-            db.index.create(third_namespace, {
-                "name": "id",
-                "json_paths": ["id"],
-                "field_type": "int",
-                "index_type": "hash",
-                "is_pk": True
-            })
-            db.item.insert(third_namespace, third_item)
-
-            # Given ("Create nested join query")
-            query1 = db.query.new(namespace).where("id", CondType.CondEq, 1)
-            query2 = db.query.new(second_namespace)
-            query3 = db.query.new(third_namespace)
-            query2.inner_join(query3, "joined").on("id", CondType.CondEq, "id")
-
-            # When ("Make select query with nested join")
-            query_result = list(query1.inner_join(query2, "joined").on("id", CondType.CondEq, "id").must_execute())
-
-            # Then ("Check that joined item contains nested joined item")
-            expected_joined_item = {**second_item, f"joined_{third_namespace}": [third_item]}
-            expected_item = {"id": 1, "val": "testval1", f"joined_{second_namespace}": [expected_joined_item]}
-            assert_that(query_result, equal_to([expected_item]), "Wrong selected items with nested JOIN")
-        finally:
-            db.namespace.drop(third_namespace)
-
     def test_cannot_query_select_join_with_merge(self, db, namespace, index, items,
                                                  second_namespace, second_items):
         # Given("Create join query with merge query inside")
@@ -873,8 +856,7 @@ class TestQuerySelectJoin:
         assert_that(calling(query1.inner_join(query2, "joined").on("id", CondType.CondEq, "id").execute).with_args(),
                     raises(ApiError, pattern="MERGEs nested into the JOINs are not supported"))
 
-    def test_cannot_query_select_subquery_with_join(self, db, namespace, index, items,
-                                                   second_namespace, second_items):
+    def test_cannot_query_select_subquery_with_join(self, db, namespace, index, items, second_namespace, second_items):
         # Given("Create subquery with join query inside")
         sub_query = db.query.new(namespace).select_fields("id")
         query2 = db.query.new(second_namespace)
@@ -893,6 +875,26 @@ class TestQuerySelectJoin:
         # When ("Try to ake select query join without on")
         assert_that(calling(query1.inner_join(query2, "joined").execute).with_args(),
                     raises(ApiError, pattern="Join without ON conditions"))
+
+    def test_cannot_join_on_root_query(self, db, namespace, index):
+        # Given("Create two namespaces with index and items")
+        # Given ("Create query")
+        query1 = db.query.new(namespace)
+        # When ("Try to join on the created root query")
+        assert_that(calling(query1.on).with_args("id", CondType.CondEq, "id"),
+                    raises(ApiError, pattern="Can't join on root query"))
+
+    def test_cannot_join_already_joined_query(self, db, nested_join_nss):
+        # Given("Create two namespaces with index and items")
+        nss = nested_join_nss
+        # Given ("Create 3 queries for join")
+        query1 = db.query.new(nss["books"])
+        query2 = db.query.new(nss["authors"])
+        query3 = db.query.new(nss["locations"])
+        # When ("Try to join on already oined query")
+        query1.inner_join(query3, "joined")
+        assert_that(calling(query2.inner_join).with_args(query3, "joined"),
+                    raises(QueryError, pattern="Query.join call on already joined query. You should create new Query"))
 
     def test_query_select_merge_with_joins(self, db, namespace, index, items, second_namespace, second_item):
         # Given("Create two namespaces with index and items")
@@ -937,6 +939,230 @@ class TestQuerySelectJoin:
         sorted_items2 = sorted(items_2, key=lambda x: x["id"])
         item_with_joined = {"id": 1, "val": "testval1", f"joined_{second_namespace}": sorted_items2}
         assert_that(query_result, equal_to([item_with_joined]), "Wrong selected items with JOIN")
+
+
+class TestQuerySelectNestedJoin:
+
+    @pytest.mark.parametrize("type1, type2", [
+        ("inner", "inner"), ("left", "left"), ("inner", "left"), ("left", "inner")
+    ])
+    def test_query_select_nested_join(self, db, nested_join_nss, nested_join_items, type1, type2):
+        # Given ("Create namespaces and items")
+        nss, items = nested_join_nss, nested_join_items
+        # When ("Create new queries")
+        query1 = db.query.new(nss["books"])
+        query2 = db.query.new(nss["authors"])
+        query3 = db.query.new(nss["locations"])
+        join1 = getattr(query1, JOIN_METHOD[type1])
+        join2 = getattr(query2, JOIN_METHOD[type2])
+        # When ("Execute query with nested JOIN")
+        join2(query3, "joined").on("location_id", CondType.CondEq, "j_id")
+        result = list(join1(query2, "joined").on("author_id", CondType.CondEq, "j_id").must_execute())
+        # Then ("Check nested join")
+        spec = {
+            "join_type": type1, "joined_ns": nss["authors"], "on_field": ["author_id", "j_id"],
+            "items": items["authors"],
+            "children": [{"join_type": type2, "joined_ns": nss["locations"], "on_field": ["location_id", "j_id"],
+                          "items": items["locations"]}]
+        }
+        check_nested_join(result, items["books"], spec)
+
+    @pytest.mark.parametrize("type1, type2", [
+        ("inner", "inner"), ("left", "left"), ("inner", "left"), ("left", "inner")
+    ])
+    def test_query_select_nested_join_and_select_filters(self, db, nested_join_nss, nested_join_items,
+                                                         type1, type2):
+        # Given ("Create namespaces and items")
+        nss, items = nested_join_nss, nested_join_items
+        # When ("Create new queries")
+        query1 = db.query.new(nss["books"]).where("id", CondType.CondGe, 3)
+        query2 = db.query.new(nss["authors"]).where("id", CondType.CondGt, 6).select_fields("id")
+        query3 = db.query.new(nss["locations"]).where("id", CondType.CondSet, [8, 10]).select_fields("id")
+        join1 = getattr(query1, JOIN_METHOD[type1])
+        join2 = getattr(query2, JOIN_METHOD[type2])
+        # When ("Execute query with nested JOIN")
+        join2(query3, "joined").on("location_id", CondType.CondEq, "j_id")
+        result = list(join1(query2, "joined").on("author_id", CondType.CondEq, "j_id").must_execute())
+        # Then ("Check nested join")
+        spec = {
+            "join_type": type1, "joined_ns": nss["authors"], "on_field": ["author_id", "j_id"],
+            "items": [i for i in items["authors"] if i["id"] > 6], "select_filter": ["id"],
+            "children": [{"join_type": type2, "joined_ns": nss["locations"], "on_field": ["location_id", "j_id"],
+                          "items": [i for i in items["locations"] if i["id"] in (8, 10)], "select_filter": ["id"]}]
+        }
+        check_nested_join(result, [i for i in items["books"] if i["id"] >= 3], spec)
+
+    @pytest.mark.parametrize("join_type", ["inner", "left"])
+    @pytest.mark.parametrize("limits", [(1, 2), (2, 0), (0, 2), (0, 0)])
+    def test_query_select_nested_join_and_limit(self, db, namespace, nested_join_nss, nested_join_items,
+                                                join_type, limits):
+        # Given ("Create namespaces and items")
+        nss, items = nested_join_nss, nested_join_items
+        # When ("Create new queries")
+        query1 = db.query.new(nss["books"])
+        query2 = db.query.new(nss["authors"]).limit(limits[0])
+        query3 = db.query.new(nss["locations"]).limit(limits[1])
+        join1 = getattr(query1, JOIN_METHOD[join_type])
+        join2 = getattr(query2, JOIN_METHOD[join_type])
+        # When ("Execute query with nested JOIN")
+        join2(query3, "joined").on("location_id", CondType.CondEq, "j_id")
+        result = list(join1(query2, "joined").on("author_id", CondType.CondEq, "j_id").must_execute())
+        # Then ("Check nested join")
+        spec = {
+            "join_type": join_type, "joined_ns": nss["authors"], "on_field": ["author_id", "j_id"],
+            "items": items["authors"], "limit": limits[0],
+            "children": [{"join_type": join_type, "joined_ns": nss["locations"], "on_field": ["location_id", "j_id"],
+                          "items": items["locations"], "limit": limits[1]}]
+        }
+        check_nested_join(result, items["books"], spec)
+
+    @pytest.mark.parametrize("join_type", ["left", "inner"])
+    def test_query_select_nested_join_logical_operators_on(self, db, nested_join_nss, nested_join_items, join_type):
+        # Given ("Create namespaces and items")
+        nss, items = nested_join_nss, nested_join_items
+        join_method = JOIN_METHOD[join_type]
+
+        def run(build_on):
+            # When ("Create new queries")
+            query_books = db.query.new(nss['books'])
+            query_authors = db.query.new(nss['authors'])
+            query_locations = db.query.new(nss['locations'])
+            query_countries = db.query.new(nss['countries'])
+            getattr(query_locations, join_method)(query_countries, "joined").on("country_id", CondType.CondEq, "j_id")
+            build_on(getattr(query_authors, join_method)(query_locations, "joined"))
+            return list(getattr(query_books, join_method)(query_authors, "joined").on("author_id", CondType.CondEq,
+                                                                                      "j_id").must_execute())
+
+        # When ("Execute queries with nested JOIN")
+        # Then ("Check nested join")
+        spec = {"join_type": join_type, "joined_ns": nss["authors"], "on_field": ["author_id", "j_id"],
+                "items": items["authors"], "children": [
+                {"join_type": join_type, "joined_ns": nss["locations"], "items": items["locations"],
+                 "on_conditions": [], "children": [
+                    {"join_type": join_type, "joined_ns": nss["countries"],
+                     "on_field": ["country_id", "j_id"], "items": items["countries"]}]}]}
+        child = spec["children"][0]
+
+        r = run(lambda join_locations: join_locations.on("location_id", CondType.CondEq, "j_id").
+                op_and().on("id", CondType.CondGe, "code"))
+        child["on_conditions"] = [
+            {"op": "and", "on_left": "location_id", "on_right": "j_id", "cond": "eq"},
+            {"op": "and", "on_left": "id", "on_right": "code", "cond": "ge"}]
+        check_nested_join(r, items["books"], spec)
+
+        r = run(lambda join_locations: join_locations.on("location_id", CondType.CondGt, "id").
+                op_or().on("location_id", CondType.CondEq, "j_id"))
+        child["on_conditions"] = [
+            {"op": "and", "on_left": "location_id", "on_right": "id", "cond": "gt"},
+            {"op": "or", "on_left": "location_id", "on_right": "j_id", "cond": "eq"}]
+        check_nested_join(r, items["books"], spec)
+
+        r = run(lambda join_locations: join_locations.op_not().on("location_id", CondType.CondEq, "j_id"))
+        child["on_conditions"] = [
+            {"op": "not", "on_left": "location_id", "on_right": "j_id", "cond": "eq"}]
+        check_nested_join(r, items["books"], spec)
+
+        r = run(lambda join_locations: join_locations.on("location_id", CondType.CondEq, "j_id").
+                op_not().on("j_id", CondType.CondLt, "code"))
+        child["on_conditions"] = [
+            {"op": "and", "on_left": "location_id", "on_right": "j_id", "cond": "eq"},
+            {"op": "not", "on_left": "j_id", "on_right": "code", "cond": "lt"}]
+        check_nested_join(r, items["books"], spec)
+
+        r = run(lambda join_locations: join_locations.op_not().on("location_id", CondType.CondEq, "j_id").
+                op_not().on("j_id", CondType.CondLt, "code"))
+        child["on_conditions"] = [
+            {"op": "not", "on_left": "location_id", "on_right": "j_id", "cond": "eq"},
+            {"op": "not", "on_left": "j_id", "on_right": "code", "cond": "lt"}]
+        check_nested_join(r, items["books"], spec)
+
+        r = run(lambda join_locations: join_locations.op_not().on("location_id", CondType.CondEq, "j_id")
+                .on("j_id", CondType.CondGt, "code").op_not().on("age", CondType.CondGt, "code"))
+        child["on_conditions"] = [
+            {"op": "not", "on_left": "location_id", "on_right": "j_id", "cond": "eq"},
+            {"op": "and", "on_left": "j_id", "on_right": "code", "cond": "gt"},
+            {"op": "not", "on_left": "age", "on_right": "code", "cond": "gt"}]
+        check_nested_join(r, items["books"], spec)
+
+        # TODO: uncomment after support for brackets inside JOIN ON
+        # r = run(lambda join_locations: join_locations.open_bracket().on("location_id", CondType.CondEq, "j_id")
+        #         .op_not().on("j_id", CondType.CondLt, "code")
+        #         .close_bracket().op_or().on("age", CondType.CondLe, "code"))
+        # child["on_conditions"] = [
+        #     {"op": "and", "on_left": "location_id", "on_right": "j_id", "cond": "eq"},
+        #     {"op": "not", "on_left": "j_id", "on_right": "code", "cond": "lt"},
+        #     {"op": "or", "on_left": "age", "on_right": "code", "cond": "le"}]
+        # check_nested_join(r, items["books"], spec)
+
+    @pytest.mark.parametrize("join_type_main", ["left", "inner"])
+    @pytest.mark.parametrize("join_op_1, join_type_1, join_op_2, join_type_2", JOINS_2_CASES)
+    def test_query_select_nested_joins_logical_operators(self, db, nested_join_nss, nested_join_items, join_type_main,
+                                                         join_op_1, join_type_1, join_op_2, join_type_2):
+        # Given ("Create namespaces and items")
+        nss, items = nested_join_nss, nested_join_items
+        # When ("Create new queries")
+        query_books = db.query.new(nss['books'])
+        query_authors = db.query.new(nss['authors'])
+        query_locations = db.query.new(nss['locations'])
+        query_archive = db.query.new(nss['archive'])
+        # When ("Execute query with nested JOIN")
+        query_authors = add_nested(query_authors, join_type_1, join_op_1, query_locations, "j_id")
+        query_authors = add_nested(query_authors, join_type_2, join_op_2, query_archive, "id")
+        # Then ("Check nested join")
+        result = list(getattr(query_books, JOIN_METHOD[join_type_main])(query_authors, "joined").
+                      on("author_id", CondType.CondEq, "j_id").must_execute())
+        spec = {"join_type": join_type_main, "joined_ns": nss["authors"], "on_field": ["author_id", "j_id"],
+                "items": items["authors"], "children": [
+                {"op": join_op_1, "join_type": join_type_1, "joined_ns": nss["locations"],
+                 "on_field": ["location_id", "j_id"], "items": items["locations"]},
+                {"op": join_op_2, "join_type": join_type_2, "joined_ns": nss["archive"],
+                 "on_field": ["location_id", "id"], "items": items["archive"]}]}
+        check_nested_join(result, items["books"], spec)
+
+    @pytest.mark.parametrize("join_type", ["left", "inner"])
+    def test_query_select_nested_joins_with_merge(self, db, nested_join_nss, nested_join_items, join_type):
+        # Given ("Create namespaces and items")
+        nss, items = nested_join_nss, nested_join_items
+        # When ("Create query: books JOIN authors JOIN locations")
+        query_books = db.query.new(nss['books'])
+        query_authors = db.query.new(nss['authors'])
+        query_locations = db.query.new(nss['locations'])
+        join_authors = getattr(query_authors, JOIN_METHOD[join_type])
+        join_authors(query_locations, "joined").on("location_id", CondType.CondEq, "j_id")
+        join_books = getattr(query_books, JOIN_METHOD[join_type])
+        query1 = join_books(query_authors, "joined").on("author_id", CondType.CondEq, "j_id")
+        # When ("Create query: archive JOIN authors JOIN locations")
+        query_archive = db.query.new(nss['archive'])
+        query_authors2 = db.query.new(nss['authors'])
+        query_locations2 = db.query.new(nss['locations'])
+        join_authors2 = getattr(query_authors2, JOIN_METHOD[join_type])
+        join_authors2(query_locations2, "joined").on("location_id", CondType.CondEq, "j_id")
+        join_archive = getattr(query_archive, JOIN_METHOD[join_type])
+        query2 = join_archive(query_authors2, "joined").on("author_id", CondType.CondEq, "j_id")
+        # When ("Execute query with nested JOIN and MERGE")
+        r = list(query1.merge(query2).must_execute())
+        # Then ("Check nested join")
+        spec_books = {
+            "join_type": join_type, "joined_ns": nss["authors"], "on_field": ["author_id", "j_id"],
+            "items": items["authors"],
+            "children": [
+                {"join_type": join_type, "joined_ns": nss["locations"], "on_field": ["location_id", "j_id"],
+                 "items": items["locations"]}
+            ]
+        }
+        spec_archive = {
+            "join_type": join_type, "joined_ns": nss["authors"], "on_field": ["author_id", "j_id"],
+            "items": items["authors"],
+            "children": [
+                {"join_type": join_type, "joined_ns": nss["locations"], "on_field": ["location_id", "j_id"],
+                 "items": items["locations"]}
+            ]
+        }
+        books_results = [item for item in r if "price" in item]
+        archive_results = [item for item in r if "year" in item]
+        assert_that(r, has_length(len(books_results + archive_results)))
+        check_nested_join(books_results, items["books"], spec_books)
+        check_nested_join(archive_results, items["archive"], spec_archive)
 
 
 class TestQueryUpdate:

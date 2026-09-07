@@ -1,3 +1,6 @@
+import operator
+
+
 index_definition = {
     "name": "id",
     "field_type": "int",
@@ -131,3 +134,36 @@ AGGREGATE_FUNCTIONS_MATH = [(lambda x: max(x), "aggregate_max"),
                             (lambda x: sum(x) / len(x), "aggregate_avg")]
 
 VECTOR_METRICS = ["l2", "inner_product", "cosine"]
+
+COND_MAP = {
+    "eq": operator.eq,
+    "gt": operator.gt,
+    "lt": operator.lt,
+    "ge": operator.ge,
+    "le": operator.le,
+    "ne": operator.ne
+}
+
+JOIN_METHOD = {
+    "inner": "inner_join",
+    "left": "join",
+}
+
+JOINS_2_CASES = [
+    ("AND", "left", "AND", "left"),
+    ("AND", "left", "AND", "inner"),
+    ("AND", "inner", "AND", "left"),
+    ("AND", "inner", "AND", "inner"),
+
+    ("AND", "inner", "OR", "inner"),
+
+    ("AND", "left", "NOT", "inner"),
+    ("AND", "inner", "NOT", "inner"),
+
+    ("NOT", "inner", "AND", "left"),
+    ("NOT", "inner", "AND", "inner"),
+
+    ("NOT", "inner", "OR", "inner"),
+
+    ("NOT", "inner", "NOT", "inner")
+]
