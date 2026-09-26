@@ -967,6 +967,53 @@ class TestQuerySelectNestedJoin:
         }
         check_nested_join(result, items["books"], spec)
 
+    def test_query_select_inner_join_with_subquery_in_join_query(self, db, nested_join_nss, nested_join_items):
+        # Given ("Create namespaces and items")
+        nss = nested_join_nss
+        # When ("Create new queries")
+        sub_query = (db.query.new(nss["locations"])
+                     .select_fields("j_id")
+                     .where("id", CondType.CondEq, 100))
+        query_books = db.query.new(nss["books"])
+        query_authors = db.query.new(nss["authors"]).where_subquery("location_id", CondType.CondSet, sub_query)
+        # When ("Execute query with subquery in JOIN query")
+        result = list(query_books.inner_join(query_authors, "joined")
+                      .on("author_id", CondType.CondEq, "j_id").must_execute())
+        # Then ("Check join with subquery")
+        expected_items = [
+            {"id": 1, "author_id": 10, "price": 20,
+             f"joined_{nss['authors']}": [{"id": 10, "j_id": 10, "location_id": 100, "age": 55}]},
+            {"id": 6, "author_id": 10, "price": 40,
+             f"joined_{nss['authors']}": [{"id": 10, "j_id": 10, "location_id": 100, "age": 55}]},
+            {"id": 7, "author_id": 10, "price": 50,
+             f"joined_{nss['authors']}": [{"id": 10, "j_id": 10, "location_id": 100, "age": 55}]},
+        ]
+        assert_that(result, contains_inanyorder(*expected_items), "Wrong selected items with subquery in JOIN query")
+
+    def test_query_select_nested_inner_join_with_subquery_in_nested_join_query(self, db, nested_join_nss,
+                                                                              nested_join_items):
+        # Given ("Create namespaces and items")
+        nss, items = nested_join_nss, nested_join_items
+        # When ("Create new queries")
+        sub_query = (db.query.new(nss["countries"])
+                     .select_fields("j_id")
+                     .where("id", CondType.CondEq, 1))
+        query_books = db.query.new(nss["books"])
+        query_authors = db.query.new(nss["authors"])
+        query_locations = db.query.new(nss["locations"]).where_subquery("country_id", CondType.CondSet, sub_query)
+        # When ("Execute query with subquery in nested JOIN query")
+        query_authors.inner_join(query_locations, "joined").on("location_id", CondType.CondEq, "j_id")
+        result = list(query_books.inner_join(query_authors, "joined")
+                      .on("author_id", CondType.CondEq, "j_id").must_execute())
+        # Then ("Check nested join with subquery")
+        spec = {
+            "join_type": "inner", "joined_ns": nss["authors"], "on_field": ["author_id", "j_id"],
+            "items": items["authors"],
+            "children": [{"join_type": "inner", "joined_ns": nss["locations"], "on_field": ["location_id", "j_id"],
+                          "items": [i for i in items["locations"] if i["country_id"] == 1]}]
+        }
+        check_nested_join(result, items["books"], spec)
+
     @pytest.mark.parametrize("type1, type2", [
         ("inner", "inner"), ("left", "left"), ("inner", "left"), ("left", "inner")
     ])
