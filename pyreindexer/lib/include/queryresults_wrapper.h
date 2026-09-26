@@ -21,17 +21,11 @@ using QueryResultsT = reindexer::QueryResults;
 
 class QueryResultsWrapper {
 public:
-	QueryResultsWrapper(DBInterface* db) : db_{db} {
-		assert(db_);
-	}
+	QueryResultsWrapper(DBInterface* db) : db_{db} { assert(db_); }
 
-	void Wrap(QueryResultsT&& qres) {
-		res_.emplace(std::move(qres));
-	}
+	void Wrap(QueryResultsT&& qres) { res_.emplace(std::move(qres)); }
 
-	Error ExecSQL(std::string_view query, std::chrono::milliseconds timeout) {
-		return db_->ExecSQL(query, *this, timeout);
-	}
+	Error ExecSQL(std::string_view query, std::chrono::milliseconds timeout) { return db_->ExecSQL(query, *this, timeout); }
 
 	Error Status() {
 		assert(res_.has_value());
@@ -70,8 +64,7 @@ public:
 	}
 	const std::string& GetExplainResults() && = delete;
 
-	const std::vector<reindexer::AggregationResult>& GetAggregationResults() &
-	{
+	const std::vector<reindexer::AggregationResult>& GetAggregationResults() & {
 		assert(res_.has_value());
 		return res_->qres.GetAggregationResults();
 	}
@@ -80,8 +73,7 @@ public:
 private:
 	struct Results {
 		Results() = delete;
-		Results(QueryResultsT&& qr) noexcept : qres(std::move(qr)), it(qres.begin())
-		{ }
+		Results(QueryResultsT&& qr) noexcept : qres(std::move(qr)), it(qres.begin()) {}
 		Results(const Results&) noexcept = delete;
 		Results(Results&&) noexcept = delete;
 		Results& operator=(Results&&) noexcept = delete;

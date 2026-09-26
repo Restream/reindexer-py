@@ -745,7 +745,11 @@ PyObject* modifyQueryTransaction(PyObject* self, PyObject* args, QueryType type)
 		reindexer::Query rxQuery;
 		err = query->BuildQuery(rxQuery);
 		if (err.ok()) {
-			rxQuery.type_ = type;
+			// Deserialize already marks UPDATE via Set/Drop/SetObject. DELETE has no such marker in the
+			// binary format, so the public Delete() is the way to set the query type.
+			if (type == QueryType::QueryDelete) {
+				rxQuery.Delete();
+			}
 			err = getWrapper<TransactionWrapper>(transactionWrapperAddr)->Modify(std::move(rxQuery));
 		}
 	}
