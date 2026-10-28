@@ -16,7 +16,8 @@ from pyreindexer.index_search_params import IndexSearchParamBruteForce, IndexSea
 from pyreindexer.point import Point
 from pyreindexer.query import CondType, LogLevel, StrictMode
 from pyreindexer.query_results import QueryResults
-from tests.helpers.base_helper import (await_vectors_quantization, calculate_distance, create_items, get_ns_items,
+from tests.helpers.base_helper import (await_vectors_quantization, calculate_distance, create_items, get_joined,
+                                       get_ns_items,
                                        random_vector)
 from tests.helpers.check_helper import (check_join, check_nested_join, check_response_has_close_to_ns_items,
                                         check_response_has_only_close_to_items)
@@ -349,17 +350,6 @@ class TestQuerySelect:
         query_results_ft = [i["ft"] for i in query_result]
         expected_ft_content = ["one <word>", "<sword> two", "three <work> 333"]
         assert_that(query_results_ft, contains_inanyorder(*expected_ft_content), "Wrong query results")
-
-    def test_query_select_merge(self, db, namespace, index, items, second_namespace, second_item):
-        # Given("Create two namespaces with index and items")
-        # Given ("Create new query")
-        query1 = db.query.new(namespace).where("id", CondType.CondEq, 2)
-        # Given ("Create second query")
-        query2 = db.query.new(second_namespace).where("id", CondType.CondEq, 1)
-        # When ("Make select query with merge")
-        query_result = list(query1.merge(query2).must_execute())
-        # Then ("Check that selected item is in result with merge applied")
-        assert_that(query_result, equal_to([items[2], second_item]), "Wrong query results")
 
     def test_query_select_explain(self, db, namespace, index, items):
         # Given("Create namespace with index and items")
@@ -769,6 +759,64 @@ class TestQuerySelectSort:
         assert_that(calling(query.execute).with_args(), raises(ApiError, pattern=err_msg))
 
 
+class TestQuerySelectMerge:
+    def test_query_select_merge(self, db, namespace, index, items, second_namespace, second_items):
+        # Given("Create two namespaces with index and items")
+        # When ("Make select query with merge")
+        query1 = db.query.new(namespace).where("id", CondType.CondEq, 2)
+        query2 = db.query.new(second_namespace).where("id", CondType.CondSet, [1, 2])
+        query_result = list(query1.merge(query2).must_execute())
+        # Then ("Check merge results")
+        assert_that(query_result, equal_to([items[2]] + second_items[:2]))
+
+    def test_query_select_merge_same_nss(self, db, namespace, index, items):
+        # Given("Create namespace with index and items")
+        # When ("Make select query with merge")
+        query1 = db.query.new(namespace).where("id", CondType.CondSet, [1, 2, 3])
+        query2 = db.query.new(namespace).where("id", CondType.CondRange, [0, 4])
+        query_result = list(query1.merge(query2).must_execute())
+        # Then ("Check there is deduplication in merge results")
+        assert_that(query_result, equal_to([items[i] for i in (1, 2, 3, 0, 4)]))
+
+        # When ("Make select query with merge and select filters")
+        query1 = db.query.new(namespace).where("id", CondType.CondSet, [1, 2]).select_fields("id")
+        query2 = db.query.new(namespace).where("id", CondType.CondRange, [0, 3])
+        query_result = list(query1.merge(query2).must_execute())
+        # Then ("Check there is no deduplication in merge results")
+        expected_items = [{"id": i["id"]} for i in items][1:3] + items[:4]
+        assert_that(query_result, equal_to(expected_items))
+
+    def test_query_select_merge_sort(self, db, namespace, index, items, second_namespace, second_items):
+        # Given("Create two namespaces with index and items")
+        # When ("Make select query with merge and sort")
+        query1 = db.query.new(namespace).where("id", CondType.CondLe, 3)
+        query2 = db.query.new(second_namespace).where("id", CondType.CondLe, 4)
+        query_result = list(query1.merge(query2).sort("id").must_execute())
+        # Then ("Check merge results sorted")
+        expected_items = items[:4] + second_items[:4]
+        expected_items.sort(key=lambda x: x["id"])
+        assert_that(query_result, equal_to(expected_items))
+
+        # When ("Make select query with merge and sort desc")
+        query1 = db.query.new(namespace).where("id", CondType.CondLe, 3).sort("id", True)
+        query2 = db.query.new(second_namespace).where("id", CondType.CondLe, 4)
+        query_result = list(query1.merge(query2).must_execute())
+        # Then ("Check merge results sorted")
+        expected_items = items[:4] + second_items[:4]
+        expected_items.sort(key=lambda x: x["id"])
+        expected_items.reverse()
+        assert_that(query_result, equal_to(expected_items))
+
+    def test_query_select_sort_merged_query_id(self, db, namespace, index, items, second_namespace, second_items):
+        # Given("Create two namespaces with index and items")
+        # When ("Make select query with merge and sort by merged_query_id")
+        query1 = db.query.new(namespace).where("id", CondType.CondEq, 2).sort("merged_query_id()", True)
+        query2 = db.query.new(second_namespace).where("id", CondType.CondSet, [1, 2])
+        query_result = list(query1.merge(query2).must_execute())
+        # Then ("Check merge results sorted")
+        assert_that(query_result, equal_to(second_items[:2] + [items[2]]))
+
+
 class TestQuerySelectJoin:
     def test_query_select_left_join(self, db, namespace, index, items, second_namespace, second_item):
         # Given("Create two namespaces with index and items")
@@ -896,22 +944,38 @@ class TestQuerySelectJoin:
         assert_that(calling(query2.inner_join).with_args(query3, "joined"),
                     raises(QueryError, pattern="Query.join call on already joined query. You should create new Query"))
 
-    def test_query_select_merge_with_joins(self, db, namespace, index, items, second_namespace, second_item):
+    def test_query_select_merge_with_joins(self, db, namespace, index, items, second_namespace, second_items):
         # Given("Create two namespaces with index and items")
         # Given ("Create join query 1")
         query11 = db.query.new(namespace)
         query12 = db.query.new(second_namespace)
         join_query1 = query11.inner_join(query12, "joined").on("id", CondType.CondEq, "id")
         # Given ("Create join query 2")
-        query21 = db.query.new(namespace).where("id", CondType.CondSet, [0, 1, 3])
-        query22 = db.query.new(second_namespace)
+        query21 = db.query.new(second_namespace)
+        query22 = db.query.new(namespace).where("id", CondType.CondSet, [1, 2, 3])
         join_query2 = query21.join(query22, "joined").on("id", CondType.CondEq, "id")
         # When ("Make select query with merge")
         query_result = list(join_query1.merge(join_query2).must_execute())
         # Then ("Check that selected items are in result with join and merge applied")
-        item_with_joined = {"id": 1, "val": "testval1", f"joined_{second_namespace}": [second_item]}
-        expected_items = [item_with_joined, items[0], item_with_joined, items[3]]
-        assert_that(query_result, equal_to(expected_items), "Wrong query results")
+        expected1 = get_joined(items, "inner", second_items, "id", second_namespace)
+        expected2 = get_joined(second_items, "left", items[1:4], "id", namespace)
+        assert_that(query_result, equal_to(expected1 + expected2))
+
+    def test_query_select_merge_with_deduplication(self, db, namespace, index, items, second_namespace, second_items):
+        # Given("Create two namespaces with index and items")
+        # Given ("Create join query 1")
+        query11 = db.query.new(namespace)
+        query12 = db.query.new(second_namespace)
+        join_query1 = query11.inner_join(query12, "joined").on("id", CondType.CondEq, "id")
+        # Given ("Create join query 2")
+        query21 = db.query.new(namespace).where("id", CondType.CondSet, [1, 2, 3])
+        query22 = db.query.new(second_namespace).where("id", CondType.CondGe, 2)
+        join_query2 = query21.inner_join(query22, "joined").on("id", CondType.CondEq, "id")
+        # When ("Make select query with merge")
+        query_result = list(join_query1.merge(join_query2).must_execute())
+        # Then ("Check that selected items are in result with join and merge applied and deduplicated")
+        expected = get_joined(items, "inner", second_items, "id", second_namespace)
+        assert_that(query_result, equal_to(expected))
 
     def test_query_select_sort_and_inner_join(self, db, namespace, index, items, second_namespace, second_items):
         # Given("Create two namespaces with index and items")
@@ -991,7 +1055,7 @@ class TestQuerySelectNestedJoin:
         assert_that(result, contains_inanyorder(*expected_items), "Wrong selected items with subquery in JOIN query")
 
     def test_query_select_nested_inner_join_with_subquery_in_nested_join_query(self, db, nested_join_nss,
-                                                                              nested_join_items):
+                                                                               nested_join_items):
         # Given ("Create namespaces and items")
         nss, items = nested_join_nss, nested_join_items
         # When ("Create new queries")
