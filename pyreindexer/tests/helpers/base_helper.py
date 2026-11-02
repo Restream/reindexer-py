@@ -177,10 +177,10 @@ def get_joined(items_1, join_type, items_2, on_field, second_namespace, select_f
                cond="eq", is_not=False, is_sparse_1=False, is_sparse_2=False, is_array_1=False, is_array_2=False,
                field_type_1="int", field_type_2="int") -> list:
     cond_f = COND_MAP[cond.lower()]
-    if items_1 and not isinstance(items_1[0], dict):
-        items_1 = [i.to_dict() for i in items_1]
-    if items_2 and not isinstance(items_2[0], dict):
-        items_2 = [i.to_dict() for i in items_2]
+    if items_1:
+        items_1 = [i.to_dict() for i in items_1] if not isinstance(items_1[0], dict) else copy.deepcopy(items_1)
+    if items_2:
+        items_2 = [i.to_dict() for i in items_2] if not isinstance(items_2[0], dict) else copy.deepcopy(items_2)
     if select_filter_1:
         items_1 = get_items_with_selected_fields(items_1, select_filter_1)
     joined_ns_name = (f"joined_{second_namespace}" if isinstance(second_namespace, str)
