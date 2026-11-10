@@ -2071,6 +2071,12 @@ IndexDefinition allows to construct and manage indexes more efficiently using a 
         - idx.update({'collate_mode': 'utf8'})
     ### Get attribute value (only dict-like syntax):
         - idx_name = idx['name']
+    ### Conditional full-text index:
+        idx = IndexDefinition(name='title', field_type='string', index_type='text',
+                              indexing_condition="type = 'series'")
+        db.index_add('items', idx)
+        idx.indexing_condition(None)  # Remove the condition
+        db.index_update('items', idx)
 
 #### Arguments:
     name (str): An index name
@@ -2092,4 +2098,7 @@ IndexDefinition allows to construct and manage indexes more efficiently using a 
         [More about `float_vector`](https://github.com/Restream/reindexer/blob/master/float_vector.md)
     expire_after (int): TTL in seconds
     rtree_type (str): RTree index type. Possible values: `rstar`, `linear`, `quadratic`, `greene`
+    indexing_condition (Optional[str]): WHERE expression restricting documents included in a full-text index.
+        Defaults to None. None or an empty string omits the option and removes an existing condition
+        when updating the index
 

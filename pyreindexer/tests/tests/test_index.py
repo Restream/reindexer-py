@@ -258,6 +258,45 @@ class TestIndexDefinition:
         ns_entry = get_ns_description(db, namespace)
         assert_that(ns_entry, has_item(has_entry("indexes", has_item(index_def.to_dict()))))
 
+    def test_indexing_condition_update_and_removal(self, db, namespace, index):
+        index_def = IndexDefinition(name="title", field_type="string", index_type="text",
+                                    indexing_condition="type = 'series'")
+        db.index.create(namespace, index_def)
+        db.item.insert(namespace, {"id": 1, "type": "series", "title": "token"})
+        db.item.insert(namespace, {"id": 2, "type": "movie", "title": "token"})
+
+        def check_condition(expected_condition, expected_ids):
+            results = db.query.sql(f"SELECT * FROM {namespace} WHERE title = 'token'")
+            assert_that([item["id"] for item in results], contains_inanyorder(*expected_ids))
+            ns_entry = get_ns_description(db, namespace)
+            definition = next(idx for idx in ns_entry[0]["indexes"] if idx["name"] == "title")
+            if expected_condition:
+                assert_that(definition, has_entry("indexing_condition", expected_condition))
+            else:
+                assert_that(definition, not_(has_key("indexing_condition")))
+            return IndexDefinition(**definition)
+
+        check_condition("type = 'series'", [1])
+
+        # Reopening and adding the same index without a condition must preserve it.
+        default_index_def = IndexDefinition(name="title", field_type="string", index_type="text")
+        assert_that(default_index_def["indexing_condition"], none())
+        assert_that(default_index_def.to_dict(), not_(has_key("indexing_condition")))
+        db.namespace.close(namespace)
+        db.namespace.open(namespace)
+        db.index.create(namespace, default_index_def)
+        index_def = check_condition("type = 'series'", [1])
+
+        for empty_condition in (None, ""):
+            index_def.indexing_condition("type = 'movie'")
+            db.index.update(namespace, index_def)
+            index_def = check_condition("type = 'movie'", [2])
+
+            index_def["indexing_condition"] = empty_condition
+            assert_that(index_def.to_dict(), not_(has_key("indexing_condition")))
+            db.index.update(namespace, index_def)
+            index_def = check_condition(None, [1, 2])
+
     def test_cant_create_index_without_required_fields(self, db, namespace):
         # Given("Create namespace")
         # When ("Create IndexDefinition object")
