@@ -17,6 +17,12 @@ class IndexDefinition:
             - idx.update({'collate_mode': 'utf8'})
         ### Get attribute value (only dict-like syntax):
             - idx_name = idx['name']
+        ### Conditional full-text index:
+            idx = IndexDefinition(name='title', field_type='string', index_type='text',
+                                  indexing_condition="type = 'series'")
+            db.index_add('items', idx)
+            idx.indexing_condition("")  # Remove the condition
+            db.index_update('items', idx)
 
     #### Arguments:
         name (str): An index name
@@ -38,6 +44,8 @@ class IndexDefinition:
             [More about `float_vector`](https://github.com/Restream/reindexer/blob/master/float_vector.md)
         expire_after (int): TTL in seconds
         rtree_type (str): RTree index type. Possible values: `rstar`, `linear`, `quadratic`, `greene`
+        indexing_condition (str): WHERE expression restricting documents included in a full-text index.
+            An empty string omits the option and removes an existing condition when updating the index
     """
 
     _FIELD_TYPES = ("int", "int64", "double", "string", "bool", "uuid", "point", "composite", "float_vector")
@@ -59,7 +67,8 @@ class IndexDefinition:
         "sort_order_letters": str,
         "config": dict,
         "expire_after": int,
-        "rtree_type": str
+        "rtree_type": str,
+        "indexing_condition": str
     }
 
     _INDEX_ATTRS = tuple(_ATTR_TYPES.keys())
@@ -79,7 +88,8 @@ class IndexDefinition:
             sort_order_letters: str = "",
             config: Optional[Dict] = None,
             expire_after: int = 0,
-            rtree_type: Optional[str] = None
+            rtree_type: Optional[str] = None,
+            indexing_condition: str = ""
     ):
         if name is not None:
             self.name(name)
@@ -102,6 +112,7 @@ class IndexDefinition:
         self.expire_after(expire_after)
         if rtree_type is not None:
             self.rtree_type(rtree_type)
+        self.indexing_condition(indexing_condition)
 
     # ========== Validation ==========
 
@@ -209,6 +220,11 @@ class IndexDefinition:
         self._rtree_type = value
         return self
 
+    def indexing_condition(self, value: str) -> "IndexDefinition":
+        self._validate_type(value, "indexing_condition")
+        self._indexing_condition = value
+        return self
+
     # ========== Dict-like methods ==========
 
     def __getitem__(self, attr: str):
@@ -225,7 +241,7 @@ class IndexDefinition:
         return f"IndexDefinition({', '.join(params)})"
 
     def to_dict(self) -> dict:
-        return {k[1:]: v for k, v in self.__dict__.items()}
+        return {k[1:]: v for k, v in self.__dict__.items() if k != "_indexing_condition" or v}
 
     def update(self, updates: Dict) -> "IndexDefinition":
         for attr, value in updates.items():
