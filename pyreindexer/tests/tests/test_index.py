@@ -276,15 +276,26 @@ class TestIndexDefinition:
                 assert_that(definition, not_(has_key("indexing_condition")))
             return IndexDefinition(**definition)
 
-        index_def = check_condition("type = 'series'", [1])
-        index_def.indexing_condition("type = 'movie'")
-        db.index.update(namespace, index_def)
-        index_def = check_condition("type = 'movie'", [2])
+        check_condition("type = 'series'", [1])
 
-        index_def["indexing_condition"] = ""
-        assert_that(index_def.to_dict(), not_(has_key("indexing_condition")))
-        db.index.update(namespace, index_def)
-        check_condition("", [1, 2])
+        # Reopening and adding the same index without a condition must preserve it.
+        default_index_def = IndexDefinition(name="title", field_type="string", index_type="text")
+        assert_that(default_index_def["indexing_condition"], none())
+        assert_that(default_index_def.to_dict(), not_(has_key("indexing_condition")))
+        db.namespace.close(namespace)
+        db.namespace.open(namespace)
+        db.index.create(namespace, default_index_def)
+        index_def = check_condition("type = 'series'", [1])
+
+        for empty_condition in (None, ""):
+            index_def.indexing_condition("type = 'movie'")
+            db.index.update(namespace, index_def)
+            index_def = check_condition("type = 'movie'", [2])
+
+            index_def["indexing_condition"] = empty_condition
+            assert_that(index_def.to_dict(), not_(has_key("indexing_condition")))
+            db.index.update(namespace, index_def)
+            index_def = check_condition(None, [1, 2])
 
     def test_cant_create_index_without_required_fields(self, db, namespace):
         # Given("Create namespace")
